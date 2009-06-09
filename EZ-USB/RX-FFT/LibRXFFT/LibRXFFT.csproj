@@ -1,0 +1,166 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="3.5" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.21022</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{76F54DCE-B3C0-45E0-9C6F-492F396F3924}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>LibRXFFT</RootNamespace>
+    <AssemblyName>LibRXFFT</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml.Linq">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data.DataSetExtensions">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Class1.cs" />
+    <Compile Include="Components\DifferenciateDisplay.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Components\DifferenciateDisplay.Designer.cs">
+      <DependentUpon>DifferenciateDisplay.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Components\FFTDisplay.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Components\FFTDisplay.Designer.cs">
+      <DependentUpon>FFTDisplay.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Components\StatusLamp.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Components\StatusLamp.Designer.cs">
+      <DependentUpon>StatusLamp.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Components\PhaseDisplay.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Components\PhaseDisplay.Designer.cs">
+      <DependentUpon>PhaseDisplay.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Components\WaterfallDisplay.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Components\WaterfallDisplay.Designer.cs">
+      <DependentUpon>WaterfallDisplay.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Components\WaterfallFFTDisplay.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Components\WaterfallFFTDisplay.Designer.cs">
+      <DependentUpon>WaterfallFFTDisplay.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Components\WaveformDisplay.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Components\WaveformDisplay.Designer.cs">
+      <DependentUpon>WaveformDisplay.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Libraries\ByteUtil.cs" />
+    <Compile Include="Libraries\FFTW\complexarray.cs" />
+    <Compile Include="Libraries\FFTW\FFTTransformer.cs" />
+    <Compile Include="Libraries\FFTW\Interop.cs" />
+    <Compile Include="Libraries\FFTW\Managed.cs" />
+    <Compile Include="Libraries\GMSK\ConvolutionalCoder.cs" />
+    <Compile Include="Libraries\GMSK\DifferenceCode.cs" />
+    <Compile Include="Libraries\GMSK\GMSKDecoder.cs" />
+    <Compile Include="Libraries\GMSK\GMSKDemodulator.cs" />
+    <Compile Include="Libraries\GMSK\InterleaveCoder.cs" />
+    <Compile Include="Libraries\GSM\BCCHBurst.cs" />
+    <Compile Include="Libraries\GSM\Burst.cs" />
+    <Compile Include="Libraries\GSM\CCCHBurst.cs" />
+    <Compile Include="Libraries\GSM\CRC.cs" />
+    <Compile Include="Libraries\GSM\FCHBurst.cs" />
+    <Compile Include="Libraries\GSM\FCCHFinder.cs" />
+    <Compile Include="Libraries\GSM\GSMParameters.cs" />
+    <Compile Include="Libraries\GSM\NormalBurst.cs" />
+    <Compile Include="Libraries\GSM\SCHBurst.cs" />
+    <Compile Include="Libraries\GSM\SequenceGenerator.cs" />
+    <Compile Include="Libraries\GSM\TimeSlotHandler.cs" />
+    <Compile Include="Libraries\GSM_Layer3\L3Handler.cs" />
+    <Compile Include="Libraries\GSM_Layer3\L3Messages.cs" />
+    <Compile Include="Libraries\GSM_Layer3\L3PacketTypes.cs" />
+    <Compile Include="Libraries\GSM_Layer3\PDUList.cs" />
+    <Compile Include="Libraries\ShmemChain\SharedMem.cs" />
+    <Compile Include="Libraries\ShmemChain\SharedMemNative.cs" />
+    <Compile Include="Libraries\SignalProcessing\Differenciator.cs" />
+    <Compile Include="Libraries\SignalProcessing\Oversampler.cs" />
+    <Compile Include="Libraries\SignalProcessing\GaussFilter.cs" />
+    <Compile Include="Libraries\SignalProcessing\SignalPower.cs" />
+    <Compile Include="Libraries\USB-RX\USBRXDevice.cs" />
+    <Compile Include="Libraries\USB-RX\USBRXDeviceNative.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Components\DifferenciateDisplay.resx">
+      <DependentUpon>DifferenciateDisplay.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Components\FFTDisplay.resx">
+      <DependentUpon>FFTDisplay.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Components\StatusLamp.resx">
+      <DependentUpon>StatusLamp.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Components\PhaseDisplay.resx">
+      <DependentUpon>PhaseDisplay.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Components\WaterfallDisplay.resx">
+      <DependentUpon>WaterfallDisplay.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Components\WaterfallFFTDisplay.resx">
+      <DependentUpon>WaterfallFFTDisplay.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Components\WaveformDisplay.resx">
+      <DependentUpon>WaveformDisplay.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

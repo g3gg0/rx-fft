@@ -1,0 +1,44 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RX-FFT", "RX-FFT\RX-FFT.csproj", "{09A5A19D-B824-40C2-86ED-766A93037DB8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GMSK Demodulator", "GMSK Demodulator\GMSK Demodulator.csproj", "{59507C8F-E1C5-4763-8C73-DA2920FD1651}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibRXFFT", "LibRXFFT\LibRXFFT.csproj", "{76F54DCE-B3C0-45E0-9C6F-492F396F3924}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GSM Analyzer", "GSM Analyzer\GSM Analyzer.csproj", "{45BC713D-FD06-448C-982A-B4470586AAC7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GaussGenerator", "GaussGenerator\GaussGenerator.csproj", "{CBCE866B-2955-4C0F-A7B5-374E8E4573C6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{09A5A19D-B824-40C2-86ED-766A93037DB8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{09A5A19D-B824-40C2-86ED-766A93037DB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{09A5A19D-B824-40C2-86ED-766A93037DB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{09A5A19D-B824-40C2-86ED-766A93037DB8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{59507C8F-E1C5-4763-8C73-DA2920FD1651}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{59507C8F-E1C5-4763-8C73-DA2920FD1651}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{59507C8F-E1C5-4763-8C73-DA2920FD1651}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{59507C8F-E1C5-4763-8C73-DA2920FD1651}.Release|Any CPU.Build.0 = Release|Any CPU
+		{76F54DCE-B3C0-45E0-9C6F-492F396F3924}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{76F54DCE-B3C0-45E0-9C6F-492F396F3924}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{76F54DCE-B3C0-45E0-9C6F-492F396F3924}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{76F54DCE-B3C0-45E0-9C6F-492F396F3924}.Release|Any CPU.Build.0 = Release|Any CPU
+		{45BC713D-FD06-448C-982A-B4470586AAC7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{45BC713D-FD06-448C-982A-B4470586AAC7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{45BC713D-FD06-448C-982A-B4470586AAC7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{45BC713D-FD06-448C-982A-B4470586AAC7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CBCE866B-2955-4C0F-A7B5-374E8E4573C6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CBCE866B-2955-4C0F-A7B5-374E8E4573C6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CBCE866B-2955-4C0F-A7B5-374E8E4573C6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CBCE866B-2955-4C0F-A7B5-374E8E4573C6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

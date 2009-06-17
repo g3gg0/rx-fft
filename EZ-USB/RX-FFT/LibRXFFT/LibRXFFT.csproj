@@ -63,10 +63,14 @@
     <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="SlimDX, Version=2.0.7.41, Culture=neutral, PublicKeyToken=b1b0c32fd1ffe4f9, processorArchitecture=AMD64" />
     <Reference Include="System" />
-    <Reference Include="System.Core">
+    <Reference Include="System.Core, Version=3.5.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files\Reference Assemblies\Microsoft\Framework\v3.5\System.Core.dll</HintPath>
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq">
@@ -75,51 +79,82 @@
     <Reference Include="System.Data.DataSetExtensions">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
-    <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Class1.cs" />
-    <Compile Include="Components\DifferenciateDisplay.cs">
+    <Compile Include="Components\DirectX\DirectXPhaseDisplay.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Components\DifferenciateDisplay.Designer.cs">
+    <Compile Include="Components\DirectX\DirectXPhaseDisplay.Designer.cs">
+      <DependentUpon>DirectXPhaseDisplay.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Components\GDI\DifferenciateDisplay.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Components\GDI\DifferenciateDisplay.Designer.cs">
       <DependentUpon>DifferenciateDisplay.cs</DependentUpon>
     </Compile>
-    <Compile Include="Components\FFTDisplay.cs">
+    <Compile Include="Components\DirectX\DirectXPlot.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Components\FFTDisplay.Designer.cs">
+    <Compile Include="Components\DirectX\DirectXWaveformDisplay.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Components\DirectX\DirectXWaveformDisplay.Designer.cs">
+      <DependentUpon>DirectXWaveformDisplay.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Components\DirectX\DirectXFFTDisplay.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Components\DirectX\DirectXFFTDisplay.Designer.cs">
+      <DependentUpon>DirectXFFTDisplay.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Components\DirectX\DirectXWaterfallDisplay.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Components\DirectX\DirectXWaterfallDisplay.Designer.cs">
+      <DependentUpon>DirectXWaterfallDisplay.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Components\DirectX\DirectXWaterfallFFTDisplay.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Components\DirectX\DirectXWaterfallFFTDisplay.Designer.cs">
+      <DependentUpon>DirectXWaterfallFFTDisplay.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Components\GDI\FFTDisplay.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Components\GDI\FFTDisplay.Designer.cs">
       <DependentUpon>FFTDisplay.cs</DependentUpon>
     </Compile>
-    <Compile Include="Components\StatusLamp.cs">
+    <Compile Include="Components\GDI\StatusLamp.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Components\StatusLamp.Designer.cs">
+    <Compile Include="Components\GDI\StatusLamp.Designer.cs">
       <DependentUpon>StatusLamp.cs</DependentUpon>
     </Compile>
-    <Compile Include="Components\PhaseDisplay.cs">
+    <Compile Include="Components\GDI\PhaseDisplay.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Components\PhaseDisplay.Designer.cs">
+    <Compile Include="Components\GDI\PhaseDisplay.Designer.cs">
       <DependentUpon>PhaseDisplay.cs</DependentUpon>
     </Compile>
-    <Compile Include="Components\WaterfallDisplay.cs">
+    <Compile Include="Components\GDI\WaterfallDisplay.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Components\WaterfallDisplay.Designer.cs">
+    <Compile Include="Components\GDI\WaterfallDisplay.Designer.cs">
       <DependentUpon>WaterfallDisplay.cs</DependentUpon>
     </Compile>
-    <Compile Include="Components\WaterfallFFTDisplay.cs">
+    <Compile Include="Components\GDI\WaterfallFFTDisplay.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Components\WaterfallFFTDisplay.Designer.cs">
+    <Compile Include="Components\GDI\WaterfallFFTDisplay.Designer.cs">
       <DependentUpon>WaterfallFFTDisplay.cs</DependentUpon>
     </Compile>
-    <Compile Include="Components\WaveformDisplay.cs">
+    <Compile Include="Components\GDI\WaveformDisplay.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Components\WaveformDisplay.Designer.cs">
+    <Compile Include="Components\GDI\WaveformDisplay.Designer.cs">
       <DependentUpon>WaveformDisplay.cs</DependentUpon>
     </Compile>
     <Compile Include="Libraries\ByteUtil.cs" />
@@ -127,29 +162,38 @@
     <Compile Include="Libraries\FFTW\FFTTransformer.cs" />
     <Compile Include="Libraries\FFTW\Interop.cs" />
     <Compile Include="Libraries\FFTW\Managed.cs" />
+    <Compile Include="Libraries\Globals.cs" />
     <Compile Include="Libraries\GMSK\ConvolutionalCoder.cs" />
     <Compile Include="Libraries\GMSK\DifferenceCode.cs" />
     <Compile Include="Libraries\GMSK\GMSKDecoder.cs" />
     <Compile Include="Libraries\GMSK\GMSKDemodulator.cs" />
     <Compile Include="Libraries\GMSK\InterleaveCoder.cs" />
-    <Compile Include="Libraries\GSM\BCCHBurst.cs" />
-    <Compile Include="Libraries\GSM\Burst.cs" />
-    <Compile Include="Libraries\GSM\CCCHBurst.cs" />
-    <Compile Include="Libraries\GSM\CRC.cs" />
-    <Compile Include="Libraries\GSM\FCHBurst.cs" />
-    <Compile Include="Libraries\GSM\FCCHFinder.cs" />
-    <Compile Include="Libraries\GSM\GSMParameters.cs" />
-    <Compile Include="Libraries\GSM\NormalBurst.cs" />
-    <Compile Include="Libraries\GSM\SCHBurst.cs" />
-    <Compile Include="Libraries\GSM\SequenceGenerator.cs" />
-    <Compile Include="Libraries\GSM\TimeSlotHandler.cs" />
-    <Compile Include="Libraries\GSM_Layer3\L3Handler.cs" />
-    <Compile Include="Libraries\GSM_Layer3\L3Messages.cs" />
-    <Compile Include="Libraries\GSM_Layer3\L3PacketTypes.cs" />
-    <Compile Include="Libraries\GSM_Layer3\PDUList.cs" />
+    <Compile Include="Libraries\GSM\Bursts\BCCHBurst.cs" />
+    <Compile Include="Libraries\GSM\Bursts\Burst.cs" />
+    <Compile Include="Libraries\GSM\Bursts\CCCHBurst.cs" />
+    <Compile Include="Libraries\GSM\Bursts\SACCHBurst.cs" />
+    <Compile Include="Libraries\GSM\CharacterCoding\GSM7Bit.cs" />
+    <Compile Include="Libraries\GSM\Layer1\CRC.cs" />
+    <Compile Include="Libraries\GSM\Bursts\FCHBurst.cs" />
+    <Compile Include="Libraries\GSM\Layer1\FCCHFinder.cs" />
+    <Compile Include="Libraries\GSM\Layer1\GSMParameters.cs" />
+    <Compile Include="Libraries\GSM\Layer2\L2Handler.cs" />
+    <Compile Include="Libraries\GSM\Layer3\CBCHandler.cs" />
+    <Compile Include="Libraries\GSM\Misc\MCCTable.cs" />
+    <Compile Include="Libraries\GSM\Bursts\NormalBurst.cs" />
+    <Compile Include="Libraries\GSM\Bursts\SCHBurst.cs" />
+    <Compile Include="Libraries\GSM\Bursts\SDCCHBurst.cs" />
+    <Compile Include="Libraries\GSM\Layer1\SequenceGenerator.cs" />
+    <Compile Include="Libraries\GSM\Layer1\TimeSlotHandler.cs" />
+    <Compile Include="Libraries\GSM\Layer3\L3Handler.cs" />
+    <Compile Include="Libraries\GSM\Layer3\L3Messages.cs" />
+    <Compile Include="Libraries\GSM\Layer3\L3PacketTypes.cs" />
+    <Compile Include="Libraries\GSM\Layer3\L3PDUList.cs" />
+    <Compile Include="Libraries\SampleSources\ShmemSampleSource.cs" />
     <Compile Include="Libraries\ShmemChain\SharedMem.cs" />
     <Compile Include="Libraries\ShmemChain\SharedMemNative.cs" />
     <Compile Include="Libraries\SignalProcessing\Differenciator.cs" />
+    <Compile Include="Libraries\SignalProcessing\OffsetEstimator.cs" />
     <Compile Include="Libraries\SignalProcessing\Oversampler.cs" />
     <Compile Include="Libraries\SignalProcessing\GaussFilter.cs" />
     <Compile Include="Libraries\SignalProcessing\SignalPower.cs" />
@@ -158,34 +202,57 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Components\DifferenciateDisplay.resx">
+    <EmbeddedResource Include="Components\DirectX\DirectXPhaseDisplay.resx">
+      <DependentUpon>DirectXPhaseDisplay.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Components\GDI\DifferenciateDisplay.resx">
       <DependentUpon>DifferenciateDisplay.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Components\FFTDisplay.resx">
+    <EmbeddedResource Include="Components\DirectX\DirectXWaveformDisplay.resx">
+      <DependentUpon>DirectXWaveformDisplay.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Components\DirectX\DirectXFFTDisplay.resx">
+      <DependentUpon>DirectXFFTDisplay.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Components\DirectX\DirectXWaterfallDisplay.resx">
+      <DependentUpon>DirectXWaterfallDisplay.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Components\DirectX\DirectXWaterfallFFTDisplay.resx">
+      <DependentUpon>DirectXWaterfallFFTDisplay.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Components\GDI\FFTDisplay.resx">
       <DependentUpon>FFTDisplay.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Components\StatusLamp.resx">
+    <EmbeddedResource Include="Components\GDI\StatusLamp.resx">
       <DependentUpon>StatusLamp.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Components\PhaseDisplay.resx">
+    <EmbeddedResource Include="Components\GDI\PhaseDisplay.resx">
       <DependentUpon>PhaseDisplay.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Components\WaterfallDisplay.resx">
+    <EmbeddedResource Include="Components\GDI\WaterfallDisplay.resx">
       <DependentUpon>WaterfallDisplay.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Components\WaterfallFFTDisplay.resx">
+    <EmbeddedResource Include="Components\GDI\WaterfallFFTDisplay.resx">
       <DependentUpon>WaterfallFFTDisplay.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Components\WaveformDisplay.resx">
+    <EmbeddedResource Include="Components\GDI\WaveformDisplay.resx">
       <DependentUpon>WaveformDisplay.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

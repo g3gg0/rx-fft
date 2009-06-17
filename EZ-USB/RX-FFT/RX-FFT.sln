@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GSM Analyzer", "GSM Analyze
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GaussGenerator", "GaussGenerator\GaussGenerator.csproj", "{CBCE866B-2955-4C0F-A7B5-374E8E4573C6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DirectXTest", "DirectXTest\DirectXTest.csproj", "{D5129CDD-3168-41EF-B293-368784C5D243}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -81,6 +83,14 @@ Global
 		{CBCE866B-2955-4C0F-A7B5-374E8E4573C6}.Release|x64.Build.0 = Release|x64
 		{CBCE866B-2955-4C0F-A7B5-374E8E4573C6}.Release|x86.ActiveCfg = Release|x86
 		{CBCE866B-2955-4C0F-A7B5-374E8E4573C6}.Release|x86.Build.0 = Release|x86
+		{D5129CDD-3168-41EF-B293-368784C5D243}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D5129CDD-3168-41EF-B293-368784C5D243}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D5129CDD-3168-41EF-B293-368784C5D243}.Debug|x64.ActiveCfg = Debug|x64
+		{D5129CDD-3168-41EF-B293-368784C5D243}.Debug|x86.ActiveCfg = Debug|x86
+		{D5129CDD-3168-41EF-B293-368784C5D243}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D5129CDD-3168-41EF-B293-368784C5D243}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D5129CDD-3168-41EF-B293-368784C5D243}.Release|x64.ActiveCfg = Release|Any CPU
+		{D5129CDD-3168-41EF-B293-368784C5D243}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

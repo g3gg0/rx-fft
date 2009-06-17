@@ -1,6 +1,6 @@
-﻿namespace LibRXFFT.Components
+﻿namespace LibRXFFT.Components.DirectX
 {
-    partial class FFTDisplay
+    partial class DirectXWaterfallDisplay
     {
         /// <summary> 
         /// Erforderliche Designervariable.
@@ -30,13 +30,12 @@
         {
             this.SuspendLayout();
             // 
-            // FFTDisplay
+            // WaterfallDisplay
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.DoubleBuffered = true;
-            this.Name = "FFTDisplay";
-            this.Size = new System.Drawing.Size(442, 285);
+            this.Name = "DirectXWaterfallDisplay";
+            this.Size = new System.Drawing.Size(538, 333);
             this.ResumeLayout(false);
 
         }

@@ -7,7 +7,7 @@ using LibRXFFT.Libraries;
 using LibRXFFT.Libraries.ShmemChain;
 using Timer = System.Timers.Timer;
 
-namespace LibRXFFT.Components
+namespace LibRXFFT.Components.GDI
 {
     public partial class DifferenciateDisplay : UserControl
     {
@@ -27,7 +27,6 @@ namespace LibRXFFT.Components
         readonly Timer DisplayTimer;
         readonly ArrayList SampleValues = new ArrayList();
         private DisplayFuncState DisplayTimerState;
-        private double lastLastPhase;
         private double totalPhase;
 
         public string DisplayName { get; set; }

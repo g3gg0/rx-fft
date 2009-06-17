@@ -3,16 +3,16 @@ using System.Windows.Forms;
 using LibRXFFT.Libraries;
 using LibRXFFT.Libraries.FFTW;
 
-namespace LibRXFFT.Components
+namespace LibRXFFT.Components.DirectX
 {
-    public partial class WaterfallFFTDisplay : UserControl
+    public partial class DirectXWaterfallFFTDisplay : UserControl
     {
         Mutex FFTLock = new Mutex();
         private FFTTransformer FFT;
         private int _FFTSize = 512;
 
 
-        public WaterfallFFTDisplay()
+        public DirectXWaterfallFFTDisplay()
         {
             InitializeComponent();
         }

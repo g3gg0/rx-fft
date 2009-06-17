@@ -4,11 +4,11 @@ using System.Drawing;
 using System.Timers;
 using System.Windows.Forms;
 using LibRXFFT.Libraries;
-using Timer=System.Timers.Timer;
+using Timer = System.Timers.Timer;
 
-namespace LibRXFFT.Components
+namespace LibRXFFT.Components.GDI
 {
-    public partial class WaveformDisplay : UserControl
+    public partial class PhaseDisplay : UserControl
     {
         bool ThreadActive;
 
@@ -23,16 +23,18 @@ namespace LibRXFFT.Components
         readonly Timer DisplayTimer;
         readonly ArrayList SampleValues = new ArrayList();
         private DisplayFuncState DisplayTimerState;
-        private bool needsUpdate = false;
+
+        double lastPhase = 0;
 
         public string DisplayName { get; set; }
+
         public double ZoomFactor { get; set; }
         public bool ShowFPS { get; set; }
         public bool UseLines { get; set; }
         public int StartSample { get; set; }
         public int MaxSamples { get; set; }
 
-        public WaveformDisplay()
+        public PhaseDisplay()
         {
             UseLines = true;
             ThreadActive = true;
@@ -51,13 +53,13 @@ namespace LibRXFFT.Components
             DisplayTimerState = new DisplayFuncState();
             DisplayTimer = new Timer();
             DisplayTimer.Elapsed += DisplayFunc;
-            DisplayTimer.Interval = 20;
+            DisplayTimer.Interval = 100;
             DisplayTimer.Start();
         }
 
         protected override void OnMouseWheel(MouseEventArgs e)
         {
-            if ( e.Delta > 0 && ZoomFactor < 20.0f)
+            if (e.Delta > 0 && ZoomFactor < 20.0f)
                 ZoomFactor *= 1.1f;
 
             if (e.Delta < 0 && ZoomFactor > 0.01f)
@@ -98,44 +100,44 @@ namespace LibRXFFT.Components
             }
         }
 
-        public void ClearProcessData(double[] samples)
-        {
-            lock (SampleValues)
-            {
-                SampleValues.Clear();
-                for (int pos = 0; pos < samples.Length; pos++)
-                    SampleValues.Add(samples[pos]);
-
-                needsUpdate = true;
-            }
-        }
-
         public void ProcessData(double[] samples)
         {
             lock (SampleValues)
             {
                 for (int pos = 0; pos < samples.Length; pos++)
+                {
                     SampleValues.Add(samples[pos]);
-
-                needsUpdate = true;
+                }
             }
         }
 
-        public void ProcessData(byte[] dataBuffer, int channels, int channel)
+        public void ProcessData(byte[] dataBuffer)
         {
-            if (channels == 0 || channel == 0 || channel > channels)
-                return;
 
             lock (SampleValues)
             {
-                int bytePerSample = channels*2;
-                int byteOffset = (channel-1)*2;
+                int bytePerSamplePair = 4;
 
-                for (int pos = 0; pos < dataBuffer.Length / bytePerSample; pos++)
+                for (int pos = 0; pos < dataBuffer.Length / bytePerSamplePair; pos++)
                 {
-                    SampleValues.Add(ByteUtil.getDoubleFromBytes(dataBuffer, byteOffset + bytePerSample * pos));
+                    double I = ByteUtil.getDoubleFromBytes(dataBuffer, bytePerSamplePair * pos);
+                    double Q = ByteUtil.getDoubleFromBytes(dataBuffer, bytePerSamplePair * pos + 2);
+
+                    double phase = Math.Atan2(I, Q);
+                    double lastPhaseEffective = lastPhase%(2*Math.PI);
+                    double fullRotationAngle = lastPhase - lastPhaseEffective;
+
+                    if (phase - lastPhaseEffective < -(Math.PI / 2))
+                        phase += Math.PI;
+
+                    if (phase - lastPhaseEffective > Math.PI / 2)
+                        phase -= Math.PI;
+
+                    phase += fullRotationAngle;
+                    lastPhase = phase;
+
+                    SampleValues.Add((double)phase);
                 }
-                needsUpdate = true;
             }
         }
 
@@ -159,17 +161,12 @@ namespace LibRXFFT.Components
         {
             DisplayFuncState s = DisplayTimerState;
 
-            if (!needsUpdate)
-                return;
-
             lock (SampleValues)
             {
-                needsUpdate = false;
+                ImageBufferGraph.Clear(colorBG);
 
                 if (SampleValues.Count > 0)
                 {
-                    ImageBufferGraph.Clear(colorBG);
-
                     int startPos = StartSample;
                     int samples = Width;
 
@@ -189,7 +186,7 @@ namespace LibRXFFT.Components
                     {
                         double sampleValue = (double) SampleValues[startPos + pos];
                         int posX = pos;
-                        int posY = (int)(Height - (sampleValue * ZoomFactor * Height))/2;
+                        int posY = (int)(Height - (sampleValue * ZoomFactor * Height)) / 2;
                         posY = Math.Min(posY, Height - 1);
                         posY = Math.Max(posY, 0);
 
@@ -211,10 +208,10 @@ namespace LibRXFFT.Components
                     if (ShowFPS)
                     {
                         if (s.FrameNumber++ > 500 && s.FrameNumber % 20 == 0)
-                            s.FPS = s.FrameNumber/DateTime.Now.Subtract(s.StartTime).TotalSeconds;
-                        ImageBufferGraph.DrawString("FPS: " + (int) s.FPS, s.TextFont, Brushes.Cyan, 10, 10);
+                            s.FPS = s.FrameNumber / DateTime.Now.Subtract(s.StartTime).TotalSeconds;
+                        ImageBufferGraph.DrawString("FPS: " + (int)s.FPS, s.TextFont, Brushes.Cyan, 10, 10);
                     }
-                    if (!string.IsNullOrEmpty(DisplayName))
+                    if ( !string.IsNullOrEmpty(DisplayName))
                         ImageBufferGraph.DrawString(DisplayName, s.TextFont, Brushes.Cyan, 10, 10);
 
                     ImageGraph.DrawImageUnscaled(ImageBuffer, 0, 0);
@@ -222,16 +219,5 @@ namespace LibRXFFT.Components
                 }
             }
         }
-
-        public void Clear()
-        {
-            lock (SampleValues)
-            {
-                SampleValues.Clear();
-                needsUpdate = true;
-            }
-        }
-
-
     }
 }

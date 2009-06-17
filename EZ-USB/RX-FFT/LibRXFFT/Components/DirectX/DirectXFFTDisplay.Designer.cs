@@ -1,6 +1,6 @@
-﻿namespace LibRXFFT.Components
+﻿namespace LibRXFFT.Components.DirectX
 {
-    partial class PhaseDisplay
+    partial class DirectXFFTDisplay
     {
         /// <summary> 
         /// Erforderliche Designervariable.
@@ -18,10 +18,8 @@
                 components.Dispose();
             }
 
-            ThreadActive = false;
-            if (DisplayTimer != null && DisplayTimer.Enabled)
-                DisplayTimer.Stop();
-
+            if ( DisplayThread != null )
+                DisplayThread.Abort();
 
             base.Dispose(disposing);
         }
@@ -36,13 +34,13 @@
         {
             this.SuspendLayout();
             // 
-            // PhaseDisplay
+            // FFTDisplay
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.DoubleBuffered = true;
-            this.Name = "PhaseDisplay";
-            this.Size = new System.Drawing.Size(428, 289);
+            this.Name = "DirectXFFTDisplay";
+            this.Size = new System.Drawing.Size(442, 285);
             this.ResumeLayout(false);
 
         }

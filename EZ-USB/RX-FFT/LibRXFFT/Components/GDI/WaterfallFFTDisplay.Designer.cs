@@ -1,4 +1,6 @@
-﻿namespace LibRXFFT.Components
+﻿
+
+namespace LibRXFFT.Components.GDI
 {
     partial class WaterfallFFTDisplay
     {

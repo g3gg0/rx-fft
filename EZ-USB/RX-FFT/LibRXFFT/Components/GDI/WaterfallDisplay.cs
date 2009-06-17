@@ -9,7 +9,7 @@ using LibRXFFT.Libraries;
 using LibRXFFT.Libraries.FFTW;
 using Timer = System.Timers.Timer;
 
-namespace LibRXFFT.Components
+namespace LibRXFFT.Components.GDI
 {
     public partial class WaterfallDisplay : UserControl
     {
@@ -42,8 +42,6 @@ namespace LibRXFFT.Components
         private int _FFTSize = 512;
         private double FFTPrescaler = 0.05f;
         private double FFTOffset = 0.3f;
-        private double fftPrescalerDefault = 0.05f;
-        private double fftOffsetDefault = 0.3f;
 
         public WaterfallDisplay()
         {

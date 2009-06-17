@@ -1,6 +1,6 @@
-﻿namespace LibRXFFT.Components
+﻿namespace LibRXFFT.Components.GDI
 {
-    partial class WaterfallDisplay
+    partial class StatusLamp
     {
         /// <summary> 
         /// Erforderliche Designervariable.
@@ -30,12 +30,14 @@
         {
             this.SuspendLayout();
             // 
-            // WaterfallDisplay
+            // StatusLamps
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Name = "WaterfallDisplay";
-            this.Size = new System.Drawing.Size(538, 333);
+            this.BackColor = System.Drawing.SystemColors.ControlDark;
+            this.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.Name = "StatusLamps";
+            this.Size = new System.Drawing.Size(8, 8);
             this.ResumeLayout(false);
 
         }

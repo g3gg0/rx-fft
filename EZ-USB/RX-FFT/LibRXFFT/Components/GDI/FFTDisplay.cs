@@ -8,7 +8,7 @@ using LibRXFFT.Libraries;
 using LibRXFFT.Libraries.FFTW;
 using Timer = System.Timers.Timer;
 
-namespace LibRXFFT.Components
+namespace LibRXFFT.Components.GDI
 {
     public partial class FFTDisplay : UserControl
     {
@@ -181,8 +181,6 @@ namespace LibRXFFT.Components
 
                     double[] samples = (double[])SampleValues[0];
                     double ratioX = (double)Width / samples.Length;
-                    int lastX = 0;
-                    int lastY = 0;
 
                     if (ratioX >= 1.0f)
                     {

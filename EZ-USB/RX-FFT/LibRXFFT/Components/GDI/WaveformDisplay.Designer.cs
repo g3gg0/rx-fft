@@ -1,6 +1,6 @@
-﻿namespace LibRXFFT.Components.GraphicalElements
+﻿namespace LibRXFFT.Components.GDI
 {
-    partial class StatusLamp
+    partial class WaveformDisplay
     {
         /// <summary> 
         /// Erforderliche Designervariable.
@@ -17,6 +17,11 @@
             {
                 components.Dispose();
             }
+
+            if (DisplayTimer != null && DisplayTimer.Enabled)
+                DisplayTimer.Stop();
+
+
             base.Dispose(disposing);
         }
 
@@ -30,14 +35,13 @@
         {
             this.SuspendLayout();
             // 
-            // StatusLamp
+            // WaveformDisplay
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.SystemColors.ControlDark;
-            this.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.Name = "StatusLamp";
-            this.Size = new System.Drawing.Size(8, 8);
+            this.DoubleBuffered = true;
+            this.Name = "WaveformDisplay";
+            this.Size = new System.Drawing.Size(428, 289);
             this.ResumeLayout(false);
 
         }

@@ -1,6 +1,6 @@
-﻿namespace LibRXFFT.Components
+﻿namespace LibRXFFT.Components.DirectX
 {
-    partial class WaveformDisplay
+    partial class DirectXPhaseDisplay
     {
         /// <summary> 
         /// Erforderliche Designervariable.
@@ -18,9 +18,8 @@
                 components.Dispose();
             }
 
-            ThreadActive = false;
-            if (DisplayTimer != null && DisplayTimer.Enabled)
-                DisplayTimer.Stop();
+            if (DisplayThread != null)
+                DisplayThread.Abort();
 
 
             base.Dispose(disposing);
@@ -36,12 +35,12 @@
         {
             this.SuspendLayout();
             // 
-            // WaveformDisplay
+            // PhaseDisplay
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.DoubleBuffered = true;
-            this.Name = "WaveformDisplay";
+            this.Name = "PhaseDisplay";
             this.Size = new System.Drawing.Size(428, 289);
             this.ResumeLayout(false);
 

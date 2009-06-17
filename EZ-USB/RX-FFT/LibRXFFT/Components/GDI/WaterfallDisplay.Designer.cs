@@ -1,6 +1,6 @@
-﻿namespace LibRXFFT.Components
+﻿namespace LibRXFFT.Components.GDI
 {
-    partial class DifferenciateDisplay
+    partial class WaterfallDisplay
     {
         /// <summary> 
         /// Erforderliche Designervariable.
@@ -17,12 +17,6 @@
             {
                 components.Dispose();
             }
-
-            ThreadActive = false;
-            if (DisplayTimer != null && DisplayTimer.Enabled)
-                DisplayTimer.Stop();
-
-
             base.Dispose(disposing);
         }
 
@@ -36,13 +30,12 @@
         {
             this.SuspendLayout();
             // 
-            // PhaseDisplay
+            // WaterfallDisplay
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.DoubleBuffered = true;
-            this.Name = "DifferenciateDisplay";
-            this.Size = new System.Drawing.Size(428, 289);
+            this.Name = "WaterfallDisplay";
+            this.Size = new System.Drawing.Size(538, 333);
             this.ResumeLayout(false);
 
         }

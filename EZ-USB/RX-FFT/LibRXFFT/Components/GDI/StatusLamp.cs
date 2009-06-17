@@ -1,18 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Data;
-using System.Linq;
-using System.Text;
+﻿using System.Drawing;
 using System.Windows.Forms;
 
-namespace LibRXFFT.Components.GraphicalElements
+namespace LibRXFFT.Components.GDI
 {
     public partial class StatusLamp : UserControl
     {
         private eLampState _State;
-        private Color[] Colors;
+        private readonly Color[] Colors;
 
         public StatusLamp()
         {

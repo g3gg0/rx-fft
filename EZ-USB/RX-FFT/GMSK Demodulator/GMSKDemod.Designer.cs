@@ -1,4 +1,4 @@
-﻿using LibRXFFT.Components;
+﻿using LibRXFFT.Components.GDI;
 
 namespace GMSK_Demodulator
 {
@@ -50,12 +50,12 @@ namespace GMSK_Demodulator
             this.hScrollBar = new System.Windows.Forms.HScrollBar();
             this.splitContainer3 = new System.Windows.Forms.SplitContainer();
             this.splitContainer4 = new System.Windows.Forms.SplitContainer();
-            this.waveI = new LibRXFFT.Components.WaveformDisplay();
-            this.waveformDisplay1 = new LibRXFFT.Components.WaveformDisplay();
-            this.waveQ = new LibRXFFT.Components.WaveformDisplay();
+            this.waveI = new WaveformDisplay();
+            this.waveformDisplay1 = new WaveformDisplay();
+            this.waveQ = new WaveformDisplay();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
-            this.phaseDisplay = new LibRXFFT.Components.PhaseDisplay();
-            this.differenciateDisplay = new LibRXFFT.Components.DifferenciateDisplay();
+            this.phaseDisplay = new PhaseDisplay();
+            this.differenciateDisplay = new DifferenciateDisplay();
             this.btnPhase = new System.Windows.Forms.Button();
             this.btnDiff = new System.Windows.Forms.Button();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -339,9 +339,9 @@ namespace GMSK_Demodulator
         private System.Windows.Forms.Button btnPause;
         private System.Windows.Forms.SplitContainer splitContainer3;
         private System.Windows.Forms.SplitContainer splitContainer4;
-        private LibRXFFT.Components.WaveformDisplay waveI;
-        private LibRXFFT.Components.WaveformDisplay waveformDisplay1;
-        private LibRXFFT.Components.WaveformDisplay waveQ;
+        private WaveformDisplay waveI;
+        private WaveformDisplay waveformDisplay1;
+        private WaveformDisplay waveQ;
         private System.Windows.Forms.SplitContainer splitContainer5;
         private System.Windows.Forms.Button btnIQ;
         private System.Windows.Forms.HScrollBar hScrollBar;

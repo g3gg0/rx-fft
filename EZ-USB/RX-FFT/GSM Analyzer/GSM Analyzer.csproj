@@ -12,6 +12,10 @@
     <AssemblyName>GSM Analyzer</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <StartupObject>GSM_Analyzer.Program</StartupObject>
+    <TargetZone>LocalIntranet</TargetZone>
+    <GenerateManifests>false</GenerateManifests>
+    <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -58,11 +62,13 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <OutputPath>bin\x86\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>
+    </DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>x86</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -88,11 +94,29 @@
     <Compile Include="BurstVisualizer.Designer.cs">
       <DependentUpon>BurstVisualizer.cs</DependentUpon>
     </Compile>
+    <Compile Include="CFileDecimationDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CFileDecimationDialog.Designer.cs">
+      <DependentUpon>CFileDecimationDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FilterDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FilterDialog.Designer.cs">
+      <DependentUpon>FilterDialog.cs</DependentUpon>
+    </Compile>
     <Compile Include="GSMAnalyzer.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="GSMAnalyzer.Designer.cs">
       <DependentUpon>GSMAnalyzer.cs</DependentUpon>
+    </Compile>
+    <Compile Include="OptionsDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="OptionsDialog.Designer.cs">
+      <DependentUpon>OptionsDialog.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -100,8 +124,19 @@
       <DependentUpon>BurstVisualizer.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="CFileDecimationDialog.resx">
+      <DependentUpon>CFileDecimationDialog.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FilterDialog.resx">
+      <DependentUpon>FilterDialog.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="GSMAnalyzer.resx">
       <DependentUpon>GSMAnalyzer.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="OptionsDialog.resx">
+      <DependentUpon>OptionsDialog.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
@@ -109,10 +144,15 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="StatisticsDialog.resx">
+      <DependentUpon>StatisticsDialog.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <None Include="Properties\app.manifest" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -121,6 +161,12 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <Compile Include="StatisticsDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="StatisticsDialog.Designer.cs">
+      <DependentUpon>StatisticsDialog.cs</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>

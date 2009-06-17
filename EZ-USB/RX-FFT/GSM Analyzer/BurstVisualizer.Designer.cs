@@ -1,4 +1,7 @@
-﻿namespace GSM_Analyzer
+﻿using LibRXFFT.Components.DirectX;
+using LibRXFFT.Components.GDI;
+
+namespace GSM_Analyzer
 {
     partial class BurstVisualizer
     {
@@ -29,8 +32,8 @@
         private void InitializeComponent()
         {
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.waveformDisplay1 = new LibRXFFT.Components.WaveformDisplay();
-            this.waveformDisplay2 = new LibRXFFT.Components.WaveformDisplay();
+            this.waveformDisplay1 = new DirectXWaveformDisplay();
+            this.waveformDisplay2 = new DirectXWaveformDisplay();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -66,7 +69,7 @@
             this.waveformDisplay1.StartSample = 0;
             this.waveformDisplay1.TabIndex = 0;
             this.waveformDisplay1.UseLines = true;
-            this.waveformDisplay1.ZoomFactor = 1;
+            this.waveformDisplay1.YZoomFactor = 1;
             // 
             // waveformDisplay2
             // 
@@ -80,7 +83,7 @@
             this.waveformDisplay2.StartSample = 0;
             this.waveformDisplay2.TabIndex = 0;
             this.waveformDisplay2.UseLines = true;
-            this.waveformDisplay2.ZoomFactor = 1;
+            this.waveformDisplay2.YZoomFactor = 1;
             // 
             // BurstVisualizer
             // 
@@ -100,7 +103,7 @@
         #endregion
 
         private System.Windows.Forms.SplitContainer splitContainer1;
-        private LibRXFFT.Components.WaveformDisplay waveformDisplay1;
-        private LibRXFFT.Components.WaveformDisplay waveformDisplay2;
+        private DirectXWaveformDisplay waveformDisplay1;
+        private DirectXWaveformDisplay waveformDisplay2;
     }
 }

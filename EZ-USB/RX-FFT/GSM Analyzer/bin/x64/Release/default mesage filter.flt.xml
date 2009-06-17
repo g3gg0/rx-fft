@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FilterSettings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <FilteredMessages>
+    <anyType xsi:type="xsd:string">9.1.18</anyType>
+    <anyType xsi:type="xsd:string">9.1.19</anyType>
+    <anyType xsi:type="xsd:string">9.1.20</anyType>
+    <anyType xsi:type="xsd:string">9.1.22</anyType>
+    <anyType xsi:type="xsd:string">9.1.23</anyType>
+    <anyType xsi:type="xsd:string">9.1.24</anyType>
+    <anyType xsi:type="xsd:string">9.1.31</anyType>
+    <anyType xsi:type="xsd:string">9.1.32</anyType>
+    <anyType xsi:type="xsd:string">9.1.33</anyType>
+    <anyType xsi:type="xsd:string">9.1.34</anyType>
+    <anyType xsi:type="xsd:string">9.1.34a</anyType>
+    <anyType xsi:type="xsd:string">9.1.35</anyType>
+    <anyType xsi:type="xsd:string">9.1.36</anyType>
+    <anyType xsi:type="xsd:string">9.1.37</anyType>
+    <anyType xsi:type="xsd:string">9.1.38</anyType>
+    <anyType xsi:type="xsd:string">9.1.39</anyType>
+    <anyType xsi:type="xsd:string">9.1.40</anyType>
+    <anyType xsi:type="xsd:string">9.1.41</anyType>
+    <anyType xsi:type="xsd:string">9.1.42</anyType>
+    <anyType xsi:type="xsd:string">9.1.43</anyType>
+    <anyType xsi:type="xsd:string">9.1.43a</anyType>
+    <anyType xsi:type="xsd:string">9.1.43d</anyType>
+    <anyType xsi:type="xsd:string">9.1.43e</anyType>
+  </FilteredMessages>
+  <ExceptionFields>
+    <anyType xsi:type="xsd:string">IMEI</anyType>
+    <anyType xsi:type="xsd:string">IMEISV</anyType>
+  </ExceptionFields>
+</FilterSettings>

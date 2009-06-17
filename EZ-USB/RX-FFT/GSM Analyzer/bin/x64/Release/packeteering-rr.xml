@@ -1,0 +1,101 @@
+<?xml version="1.0"?>
+<packettype-list>
+<!-- Channel establishment messages: -->
+<packettype type="3C" ref-down="9.1.28a" ref-up="9.1.28a" desc="RR INITIALISATION REQUEST"/>
+<packettype type="3B" ref-down="9.1.1" ref-up="9.1.1" desc="ADDITIONAL ASSIGNMENT"/>
+<packettype type="3F" ref-down="9.1.18" ref-up="9.1.18" desc="IMMEDIATE ASSIGNMENT"/>
+<packettype type="39" ref-down="9.1.19" ref-up="9.1.19" desc="IMMEDIATE ASSIGNMENT EXTENDED"/>
+<packettype type="3A" ref-down="9.1.20" ref-up="9.1.20" desc="IMMEDIATE ASSIGNMENT REJECT"/>
+<packettype type="48" ref-down="9.1.12f" ref-up="9.1.12f" desc="DTM ASSIGNMENT FAILURE"/>
+<packettype type="49" ref-down="9.1.12h" ref-up="9.1.12h" desc="DTM REJECT"/>
+<packettype type="4A" ref-down="9.1.12i" ref-up="9.1.12i" desc="DTM REQUEST"/>
+<packettype type="4B" ref-down="9.1.21f" ref-up="9.1.21f" desc="PACKET ASSIGNMENT"/>
+<!-- Ciphering messages: -->
+<packettype type="35" ref-down="9.1.9" ref-up="9.1.9" desc="CIPHERING MODE COMMAND"/>
+<packettype type="32" ref-down="9.1.10" ref-up="9.1.10" desc="CIPHERING MODE COMPLETE"/>
+<!-- Configuration change messages: -->
+<packettype type="30" ref-down="9.1.12b" ref-up="9.1.12b" desc="CONFIGURATION CHANGE COMMAND"/>
+<packettype type="31" ref-down="9.1.12c" ref-up="9.1.12c" desc="CONFIGURATION CHANGE ACKNOWLEDGE"/>
+<packettype type="33" ref-down="9.1.12d" ref-up="9.1.12d" desc="CONFIGURATION CHANGE REJECT"/>
+<!-- Handover messages: -->
+<packettype type="2E" ref-down="9.1.2" ref-up="9.1.2" desc="ASSIGNMENT COMMAND"/>
+<packettype type="29" ref-down="9.1.3" ref-up="9.1.3" desc="ASSIGNMENT COMPLETE"/>
+<packettype type="2F" ref-down="9.1.4" ref-up="9.1.4" desc="ASSIGNMENT FAILURE"/>
+<packettype type="2B" ref-down="9.1.15" ref-up="9.1.15" desc="HANDOVER COMMAND"/>
+<packettype type="2C" ref-down="9.1.16" ref-up="9.1.16" desc="HANDOVER COMPLETE"/>
+<packettype type="28" ref-down="9.1.17" ref-up="9.1.17" desc="HANDOVER FAILURE"/>
+<packettype type="2D" ref-down="9.1.28" ref-up="9.1.28" desc="PHYSICAL INFORMATION"/>
+<packettype type="4C" ref-down="9.1.12e" ref-up="9.1.12e" desc="DTM ASSIGNMENT COMMAND"/>
+<packettype type="08" ref-down="9.1.21e" ref-up="9.1.21e" desc="RR-CELL CHANGE ORDER"/>
+<packettype type="23" ref-down="9.1.13a" ref-up="9.1.13a" desc="PDCH ASSIGNMENT COMMAND"/>
+<!-- Channel release messages: -->
+<packettype type="0D" ref-down="9.1.7" ref-up="9.1.7" desc="CHANNEL RELEASE"/>
+<packettype type="0A" ref-down="9.1.26" ref-up="9.1.26" desc="PARTIAL RELEASE"/>
+<packettype type="0F" ref-down="9.1.27" ref-up="9.1.27" desc="PARTIAL RELEASE COMPLETE"/>
+<!-- Paging and Notification messages: -->
+<packettype type="21" ref-down="9.1.22" ref-up="9.1.22" desc="PAGING REQUEST TYPE 1"/>
+<packettype type="22" ref-down="9.1.23" ref-up="9.1.23" desc="PAGING REQUEST TYPE 2"/>
+<packettype type="24" ref-down="9.1.24" ref-up="9.1.24" desc="PAGING REQUEST TYPE 3"/>
+<packettype type="27" ref-down="9.1.25" ref-up="9.1.25" desc="PAGING RESPONSE"/>
+<packettype type="20" ref-down="9.1.21b" ref-up="9.1.21b" desc="NOTIFICATION/NCH"/>
+<packettype type="25" ref-down="9.1.21a" ref-up="9.1.21a" desc="NOTIFICATION/FACCH"/>
+<packettype type="26" ref-down="9.1.21d" ref-up="9.1.21d" desc="NOTIFICATION RESPONSE"/>
+<packettype type="0B" ref-down="" ref-up="" desc="Reserved"/>
+<packettype type="4E" ref-down="9.1.21g" ref-up="9.1.21g" desc="PACKET NOTIFICATION"/>
+<!-- 3G Specific messages -->
+<packettype type="60" ref-down="9.1.11a" ref-up="9.1.11a" desc="UTRAN CLASSMARK CHANGE"/>
+<packettype type="62" ref-down="9.1.11b" ref-up="9.1.11b" desc="cdma2000 CLASSMARK CHANGE"/>
+<packettype type="63" ref-down="9.1.15a" ref-up="9.1.15a" desc="INTER SYSTEM TO UTRAN HANDOVER COMMAND"/>
+<packettype type="64" ref-down="9.1.15b" ref-up="9.1.15b" desc="INTER SYSTEM TO CDMA2000 HANDOVER COMMAND"/>
+<!-- System information messages: -->
+<packettype type="18" ref-down="9.1.42" ref-up="9.1.42" desc="SYSTEM INFORMATION TYPE 8"/>
+<packettype type="19" ref-down="9.1.31" ref-up="9.1.31" desc="SYSTEM INFORMATION TYPE 1"/>
+<packettype type="1A" ref-down="9.1.32" ref-up="9.1.32" desc="SYSTEM INFORMATION TYPE 2"/>
+<packettype type="1B" ref-down="9.1.35" ref-up="9.1.35" desc="SYSTEM INFORMATION TYPE 3"/>
+<packettype type="1C" ref-down="9.1.36" ref-up="9.1.36" desc="SYSTEM INFORMATION TYPE 4"/>
+<packettype type="1D" ref-down="9.1.37" ref-up="9.1.37" desc="SYSTEM INFORMATION TYPE 5"/>
+<packettype type="1E" ref-down="9.1.40" ref-up="9.1.40" desc="SYSTEM INFORMATION TYPE 6"/>
+<packettype type="1F" ref-down="9.1.41" ref-up="9.1.41" desc="SYSTEM INFORMATION TYPE 7"/>
+<!-- System information messages: -->
+<packettype type="02" ref-down="9.1.33" ref-up="9.1.33" desc="SYSTEM INFORMATION TYPE 2bis"/>
+<packettype type="03" ref-down="9.1.34" ref-up="9.1.34" desc="SYSTEM INFORMATION TYPE 2ter"/>
+<packettype type="07" ref-down="9.1.34a" ref-up="9.1.34a" desc="SYSTEM INFORMATION TYPE 2quater"/>
+<packettype type="05" ref-down="9.1.38" ref-up="9.1.38" desc="SYSTEM INFORMATION TYPE 5bis"/>
+<packettype type="06" ref-down="9.1.39" ref-up="9.1.39" desc="SYSTEM INFORMATION TYPE 5ter"/>
+<packettype type="04" ref-down="9.1.43" ref-up="9.1.43" desc="SYSTEM INFORMATION TYPE 9"/>
+<packettype type="00" ref-down="9.1.43a" ref-up="9.1.43a" desc="SYSTEM INFORMATION TYPE 13"/>
+<!-- System information messages: -->
+<packettype type="3D" ref-down="9.1.43d" ref-up="9.1.43d" desc="SYSTEM INFORMATION TYPE 16"/>
+<packettype type="3E" ref-down="9.1.43e" ref-up="9.1.43e" desc="SYSTEM INFORMATION TYPE 17"/>
+<!-- System information messages: -->
+<packettype type="40" ref-down="9.1.43.g" ref-up="9.1.43.g" desc="SYSTEM INFORMATION TYPE 18"/>
+<packettype type="41" ref-down="9.1.43f" ref-up="9.1.43f" desc="SYSTEM INFORMATION TYPE 19"/>
+<packettype type="42" ref-down="9.1.43.h" ref-up="9.1.43.h" desc="SYSTEM INFORMATION TYPE 20"/>
+<!-- Miscellaneous messages: -->
+<packettype type="10" ref-down="9.1.5" ref-up="9.1.5" desc="CHANNEL MODE MODIFY"/>
+<packettype type="12" ref-down="9.1.29" ref-up="9.1.29" desc="RR STATUS"/>
+<packettype type="17" ref-down="9.1.6" ref-up="9.1.6" desc="CHANNEL MODE MODIFY ACKNOWLEDGE"/>
+<packettype type="14" ref-down="9.1.13" ref-up="9.1.13" desc="FREQUENCY REDEFINITION"/>
+<packettype type="15" ref-down="9.1.21" ref-up="9.1.21" desc="MEASUREMENT REPORT"/>
+<packettype type="16" ref-down="9.1.11" ref-up="9.1.11" desc="CLASSMARK CHANGE"/>
+<packettype type="13" ref-down="9.1.12" ref-up="9.1.12" desc="CLASSMARK ENQUIRY"/>
+<packettype type="36" ref-down="9.1.52" ref-up="9.1.52" desc="EXTENDED MEASUREMENT REPORT"/>
+<packettype type="37" ref-down="9.1.51" ref-up="9.1.51" desc="EXTENDED MEASUREMENT ORDER"/>
+<packettype type="34" ref-down="9.1.13b" ref-up="9.1.13b" desc="GPRS SUSPENSION REQUEST"/>
+<packettype type="4D" ref-down="9.1.12g" ref-up="9.1.12g" desc="DTM INFORMATION"/>
+<packettype type="09" ref-down="9.1.49" ref-up="9.1.49" desc="VGCS UPLINK GRANT"/>
+<packettype type="0E" ref-down="9.1.48" ref-up="9.1.48" desc="UPLINK RELEASE"/>
+<packettype type="0C" ref-down="" ref-up="" desc="Reserved"/>
+<packettype type="2A" ref-down="9.1.46" ref-up="9.1.46" desc="UPLINK BUSY"/>
+<packettype type="11" ref-down="9.1.44" ref-up="9.1.44" desc="TALKER INDICATION"/>
+<packettype type="38" ref-down="9.1.53" ref-up="9.1.53" desc="APPLICATION INFORMATION"/>
+</packettype-list>
+<!-- Unused sections
+  HANDOVER ACCESS [ARRAY(0x814a1d4)]
+  SYNCHRONIZATION CHANNEL INFORMATION [ARRAY(0x814b788)]
+  UPLINK FREE [ARRAY(0x814d0ec)]
+  UPLINK ACCESS [ARRAY(0x814d08c)]
+  ENHANCED MEASUREMENT REPORT [ARRAY(0x814d23c)]
+  CHANNEL REQUEST [ARRAY(0x814d2cc)]
+  MEASUREMENT INFORMATION [ARRAY(0x814d20c)]
+-->

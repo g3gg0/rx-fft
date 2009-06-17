@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<packettype-list>
+<packettype type="60" ref-down="GSM 04.63 9.1" ref-up="GSM 04.63 9.1" desc="DATA"/>
+<packettype type="61" ref-down="GSM 04.63 9.2" ref-up="GSM 04.63 9.2" desc="IMMEDIATE SETUP"/>
+<packettype type="62" ref-down="GSM 04.63 9.3" ref-up="GSM 04.63 9.3" desc="RELEASE COMPLETE"/>
+<packettype type="63" ref-down="GSM 04.63 9.4" ref-up="GSM 04.63 9.4" desc="SETUP"/>
+<packettype type="64" ref-down="GSM 04.63 9.5" ref-up="GSM 04.63 9.5" desc="SETUP ACKNOWLEDGE"/>
+<packettype type="65" ref-down="GSM 04.63 9.6" ref-up="GSM 04.63 9.6" desc="RESUME"/>
+<packettype type="66" ref-down="GSM 04.63 9.7" ref-up="GSM 04.63 9.7" desc="RESUME ACK"/>
+<packettype type="67" ref-down="GSM 04.63 9.8" ref-up="GSM 04.63 9.8" desc="STATUS"/>
+</packettype-list>
+<!-- Unused sections
+-->

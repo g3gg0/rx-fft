@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<packettype-list>
+<packettype type="00" ref-down="" ref-up="" desc="Escape to nationally specific message types"/>
+<!-- Call establishment messages: -->
+<packettype type="01" ref-down="9.3.1.1" ref-up="9.3.1.2" desc="ALERTING"/>
+<packettype type="08" ref-down="9.3.2" ref-up="9.3.2" desc="CALL CONFIRMED"/>
+<packettype type="02" ref-down="9.3.3" ref-up="9.3.3" desc="CALL PROCEEDING"/>
+<packettype type="07" ref-down="9.3.5.1" ref-up="9.3.5.2" desc="CONNECT"/>
+<packettype type="0F" ref-down="9.3.6" ref-up="9.3.6" desc="CONNECT ACKNOWLEDGE"/>
+<packettype type="0E" ref-down="9.3.8" ref-up="9.3.8" desc="EMERGENCY SETUP"/>
+<packettype type="03" ref-down="9.3.17" ref-up="9.3.17" desc="PROGRESS"/>
+<packettype type="04" ref-down="9.3.17a" ref-up="9.3.17a" desc="CC-ESTABLISHMENT"/>
+<packettype type="06" ref-down="9.3.17b" ref-up="9.3.17b" desc="CC-ESTABLISHMENT CONFIRMED"/>
+<packettype type="0B" ref-down="9.3.18a" ref-up="9.3.18a" desc="RECALL"/>
+<packettype type="09" ref-down="9.3.23a" ref-up="9.3.23a" desc="START CC"/>
+<packettype type="05" ref-down="9.3.23.1" ref-up="9.3.23.2" desc="SETUP"/>
+<!-- Call information phase messages: -->
+<packettype type="17" ref-down="9.3.13" ref-up="9.3.13" desc="MODIFY"/>
+<packettype type="1F" ref-down="9.3.14" ref-up="9.3.14" desc="MODIFY COMPLETE"/>
+<packettype type="13" ref-down="9.3.15" ref-up="9.3.15" desc="MODIFY REJECT"/>
+<packettype type="10" ref-down="9.3.31" ref-up="9.3.31" desc="USER INFORMATION"/>
+<packettype type="18" ref-down="9.3.10" ref-up="9.3.10" desc="HOLD"/>
+<packettype type="19" ref-down="9.3.11" ref-up="9.3.11" desc="HOLD ACKNOWLEDGE"/>
+<packettype type="1A" ref-down="9.3.12" ref-up="9.3.12" desc="HOLD REJECT"/>
+<packettype type="1C" ref-down="9.3.20" ref-up="9.3.20" desc="RETRIEVE"/>
+<packettype type="1D" ref-down="9.3.21" ref-up="9.3.21" desc="RETRIEVE ACKNOWLEDGE"/>
+<packettype type="1E" ref-down="9.3.22" ref-up="9.3.22" desc="RETRIEVE REJECT"/>
+<!-- Call clearing messages: -->
+<packettype type="25" ref-down="9.3.7.1" ref-up="9.3.7.2" desc="DISCONNECT"/>
+<packettype type="2D" ref-down="9.3.18.1" ref-up="9.3.18.2" desc="RELEASE"/>
+<packettype type="2A" ref-down="9.3.19.1" ref-up="9.3.19.2" desc="RELEASE COMPLETE"/>
+<!-- Miscellaneous messages: -->
+<packettype type="39" ref-down="9.3.4" ref-up="9.3.4" desc="CONGESTION CONTROL"/>
+<packettype type="3E" ref-down="9.3.16" ref-up="9.3.16" desc="NOTIFY"/>
+<packettype type="3D" ref-down="9.3.27" ref-up="9.3.27" desc="STATUS"/>
+<packettype type="34" ref-down="9.3.28" ref-up="9.3.28" desc="STATUS ENQUIRY"/>
+<packettype type="35" ref-down="9.3.24" ref-up="9.3.24" desc="START DTMF"/>
+<packettype type="31" ref-down="9.3.29" ref-up="9.3.29" desc="STOP DTMF"/>
+<packettype type="32" ref-down="9.3.30" ref-up="9.3.30" desc="STOP DTMF ACKNOWLEDGE"/>
+<packettype type="36" ref-down="9.3.25" ref-up="9.3.25" desc="START DTMF ACKNOWLEDGE"/>
+<packettype type="37" ref-down="9.3.26" ref-up="9.3.26" desc="START DTMF REJECT"/>
+<packettype type="3A" ref-down="9.3.9.1" ref-up="9.3.9.2" desc="FACILITY"/>
+</packettype-list>
+<!-- Unused sections
+-->

@@ -1,0 +1,1654 @@
+<?xml version="1.0"?>
+<messagedesc-list>
+  <messagedesc ref="9.1.1" name="ADDITIONAL ASSIGNMENT" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.5" presence="M"/>
+      <pduslot iei="72" ref="10.5.2.21" presence="C"/>
+      <pduslot iei="7C" ref="10.5.2.38" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.2" name="ASSIGNMENT COMMAND" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.5a" presence="M"/>
+      <pduslot ref="10.5.2.28" presence="M"/>
+      <pduslot iei="05" ref="10.5.2.13" presence="C"/>
+      <pduslot iei="62" ref="10.5.2.1b" presence="O"/>
+      <pduslot iei="10" ref="10.5.2.21b" presence="C"/>
+      <pduslot iei="63" ref="10.5.2.6" presence="O"/>
+      <pduslot iei="11" ref="10.5.2.6" presence="O"/>
+      <pduslot iei="13" ref="10.5.2.6" presence="O"/>
+      <pduslot iei="14" ref="10.5.2.6" presence="O"/>
+      <pduslot iei="15" ref="10.5.2.6" presence="O"/>
+      <pduslot iei="16" ref="10.5.2.6" presence="O"/>
+      <pduslot iei="17" ref="10.5.2.6" presence="O"/>
+      <pduslot iei="18" ref="10.5.2.6" presence="O"/>
+      <pduslot iei="64" ref="10.5.2.5" presence="O"/>
+      <pduslot iei="66" ref="10.5.2.7" presence="O"/>
+      <pduslot iei="72" ref="10.5.2.21" presence="C"/>
+      <pduslot iei="7C" ref="10.5.2.38" presence="O"/>
+      <pduslot iei="19" ref="10.5.2.13" presence="C"/>
+      <pduslot iei="1C" ref="10.5.2.5a" presence="O"/>
+      <pduslot iei="1D" ref="10.5.2.5" presence="O"/>
+      <pduslot iei="1E" ref="10.5.2.12" presence="C"/>
+      <pduslot iei="21" ref="10.5.2.21" presence="C"/>
+      <pduslot iei="90" ref="10.5.2.9" presence="O"/>
+      <pduslot iei="01" ref="10.5.2.42a" presence="O"/>
+      <pduslot iei="03" ref="10.5.2.21aa" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.3" name="ASSIGNMENT COMPLETE" significance="dual" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.31" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.4" name="ASSIGNMENT FAILURE" significance="dual" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.31" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.5" name="CHANNEL MODE MODIFY" significance="local" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.5a" presence="M"/>
+      <pduslot ref="10.5.2.6" presence="M"/>
+      <pduslot iei="01" ref="10.5.2.42a" presence="O"/>
+      <pduslot iei="03" ref="10.5.2.21aa" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.6" name="CHANNEL MODE MODIFY ACKNOWLEDGE" significance="local" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.5a" presence="M"/>
+      <pduslot ref="10.5.2.6" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.7" name="CHANNEL RELEASE" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.31" presence="M"/>
+      <pduslot iei="73" ref="10.5.2.1a" presence="O"/>
+      <pduslot iei="74" ref="10.5.2.14b" presence="O"/>
+      <pduslot iei="80" ref="10.5.1.10" presence="C"/>
+      <pduslot iei="C0" ref="10.5.2.14c" presence="O"/>
+      <pduslot iei="75" ref="10.5.2.1c" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.9" name="CIPHERING MODE COMMAND" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.9" presence="M"/>
+      <pduslot ref="10.5.2.10" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.10" name="CIPHERING MODE COMPLETE" significance="dual" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot iei="17" ref="10.5.1.4" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.11" name="CLASSMARK CHANGE" significance="dual" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.1.6" presence="M"/>
+      <pduslot iei="20" ref="10.5.1.7" presence="C"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.12" name="CLASSMARK ENQUIRY" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.12b" name="CONFIGURATION CHANGE COMMAND" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.21b" presence="M"/>
+      <pduslot iei="63" ref="10.5.2.6" presence="O"/>
+      <pduslot iei="11" ref="10.5.2.6" presence="O"/>
+      <pduslot iei="13" ref="10.5.2.6" presence="O"/>
+      <pduslot iei="14" ref="10.5.2.6" presence="O"/>
+      <pduslot iei="15" ref="10.5.2.6" presence="O"/>
+      <pduslot iei="16" ref="10.5.2.6" presence="O"/>
+      <pduslot iei="17" ref="10.5.2.6" presence="O"/>
+      <pduslot iei="18" ref="10.5.2.6" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.12c" name="CONFIGURATION CHANGE ACKNOWLEDGE" significance="dual" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.12d" name="CONFIGURATION CHANGE REJECT" significance="dual" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.31" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.13" name="FREQUENCY REDEFINITION" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.5" presence="M"/>
+      <pduslot ref="10.5.2.21" presence="M"/>
+      <pduslot ref="10.5.2.38" presence="M"/>
+      <pduslot iei="62" ref="10.5.2.1b" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.13a" name="PDCH ASSIGNMENT COMMAND" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.5" presence="M"/>
+      <pduslot iei="62" ref="10.5.2.1b" presence="O"/>
+      <pduslot iei="05" ref="10.5.2.13" presence="C"/>
+      <pduslot iei="72" ref="10.5.2.21" presence="C"/>
+      <pduslot iei="7C" ref="10.5.2.38" presence="O"/>
+      <pduslot iei="19" ref="10.5.2.13" presence="C"/>
+      <pduslot iei="1C" ref="10.5.2.5" presence="O"/>
+      <pduslot iei="1E" ref="10.5.2.12" presence="C"/>
+      <pduslot iei="21" ref="10.5.2.21" presence="C"/>
+      <pduslot iei="22" ref="10.5.2.25c" presence="C"/>
+      <pduslot iei="23" ref="10.5.2.25d" presence="C"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.13b" name="GPRS SUSPENSION REQUEST" significance="dual" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.41a" presence="M"/>
+      <pduslot ref="10.5.5.15" presence="M"/>
+      <pduslot ref="10.5.2.47" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.15" name="HANDOVER COMMAND" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.2" presence="M"/>
+      <pduslot ref="10.5.2.5a" presence="M"/>
+      <pduslot ref="10.5.2.15" presence="M"/>
+      <pduslot ref="10.5.2.28a" presence="M"/>
+      <pduslot iei="D0" ref="10.5.2.39" presence="O"/>
+      <pduslot iei="02" ref="10.5.2.14" presence="C"/>
+      <pduslot iei="05" ref="10.5.2.13" presence="C"/>
+      <pduslot iei="62" ref="10.5.2.1b" presence="C"/>
+      <pduslot iei="10" ref="10.5.2.21b" presence="C"/>
+      <pduslot iei="63" ref="10.5.2.6" presence="O"/>
+      <pduslot iei="11" ref="10.5.2.6" presence="O"/>
+      <pduslot iei="13" ref="10.5.2.6" presence="O"/>
+      <pduslot iei="14" ref="10.5.2.6" presence="O"/>
+      <pduslot iei="15" ref="10.5.2.6" presence="O"/>
+      <pduslot iei="16" ref="10.5.2.6" presence="O"/>
+      <pduslot iei="17" ref="10.5.2.6" presence="O"/>
+      <pduslot iei="18" ref="10.5.2.6" presence="O"/>
+      <pduslot iei="64" ref="10.5.2.5" presence="O"/>
+      <pduslot iei="66" ref="10.5.2.7" presence="O"/>
+      <pduslot iei="69" ref="10.5.2.12" presence="C"/>
+      <pduslot iei="72" ref="10.5.2.21" presence="C"/>
+      <pduslot iei="7C" ref="10.5.2.38" presence="O"/>
+      <pduslot iei="7B" ref="10.5.2.41" presence="C"/>
+      <pduslot iei="7D" ref="10.5.2.40" presence="C"/>
+      <pduslot iei="12" ref="10.5.2.14" presence="C"/>
+      <pduslot iei="19" ref="10.5.2.13" presence="C"/>
+      <pduslot iei="1C" ref="10.5.2.5a" presence="O"/>
+      <pduslot iei="1D" ref="10.5.2.5" presence="O"/>
+      <pduslot iei="1E" ref="10.5.2.12" presence="C"/>
+      <pduslot iei="21" ref="10.5.2.21" presence="C"/>
+      <pduslot iei="90" ref="10.5.2.9" presence="O"/>
+      <pduslot iei="01" ref="10.5.2.42a" presence="O"/>
+      <pduslot iei="03" ref="10.5.2.21aa" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.16" name="HANDOVER COMPLETE" significance="dual" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.31" presence="M"/>
+      <pduslot iei="77" ref="10.5.2.21a" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.17" name="HANDOVER FAILURE" significance="dual" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.31" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.18" name="IMMEDIATE ASSIGNMENT" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.5.2.19" presence="M"/>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.26" presence="M"/>
+      <pduslot ref="10.5.2.25b" presence="M"/>
+      <pduslot ref="10.5.2.5" presence="M"/>
+      <pduslot ref="10.5.2.30" presence="M"/>
+      <pduslot ref="10.5.2.40" presence="M"/>
+      <pduslot ref="10.5.2.21" presence="M"/>
+      <pduslot iei="7C" ref="10.5.2.38" presence="O"/>
+      <pduslot ref="10.5.2.16" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.19" name="IMMEDIATE ASSIGNMENT EXTENDED" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.5.2.19" presence="M"/>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.26" presence="M"/>
+      <pduslot ref="10.5.1.8" presence="M"/>
+      <pduslot ref="10.5.2.5" presence="M"/>
+      <pduslot ref="10.5.2.30" presence="M"/>
+      <pduslot ref="10.5.2.40" presence="M"/>
+      <pduslot ref="10.5.2.5" presence="M"/>
+      <pduslot ref="10.5.2.30" presence="M"/>
+      <pduslot ref="10.5.2.40" presence="M"/>
+      <pduslot ref="10.5.2.21" presence="M"/>
+      <pduslot iei="7C" ref="10.5.2.38" presence="O"/>
+      <pduslot ref="10.5.2.18" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.20" name="IMMEDIATE ASSIGNMENT REJECT" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.5.2.19" presence="M"/>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.26" presence="M"/>
+      <pduslot ref="10.5.1.8" presence="M"/>
+      <pduslot ref="10.5.2.30" presence="M"/>
+      <pduslot ref="10.5.2.43" presence="M"/>
+      <pduslot ref="10.5.2.30" presence="M"/>
+      <pduslot ref="10.5.2.43" presence="M"/>
+      <pduslot ref="10.5.2.30" presence="M"/>
+      <pduslot ref="10.5.2.43" presence="M"/>
+      <pduslot ref="10.5.2.30" presence="M"/>
+      <pduslot ref="10.5.2.43" presence="M"/>
+      <pduslot ref="10.5.2.17" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.21" name="MEASUREMENT REPORT" significance="dual" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.20" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.21b" name="NOTIFICATION/NCH" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.5.2.19" presence="M"/>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.22c" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.21d" name="NOTIFICATION RESPONSE" significance="dual" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.1.6" presence="M"/>
+      <pduslot ref="10.5.1.4" presence="M"/>
+      <pduslot ref="10.5.1.9" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.21e" name="RR-CELL CHANGE ORDER" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.2" presence="M"/>
+      <pduslot ref="10.5.2.21c" presence="M"/>
+      <pduslot ref="10.5.1.8" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.22" name="PAGING REQUEST TYPE 1" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.5.2.19" presence="M"/>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.26" presence="M"/>
+      <pduslot ref="10.5.2.8" presence="M"/>
+      <pduslot ref="10.5.1.4" presence="M"/>
+      <pduslot iei="17" ref="10.5.1.4" presence="O"/>
+      <pduslot ref="10.5.2.23" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.23" name="PAGING REQUEST TYPE 2" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.5.2.19" presence="M"/>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.26" presence="M"/>
+      <pduslot ref="10.5.2.8" presence="M"/>
+      <pduslot ref="10.5.2.42" presence="M"/>
+      <pduslot ref="10.5.2.42" presence="M"/>
+      <pduslot iei="17" ref="10.5.1.4" presence="O"/>
+      <pduslot ref="10.5.2.24" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.24" name="PAGING REQUEST TYPE 3" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.5.2.19" presence="M"/>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.26" presence="M"/>
+      <pduslot ref="10.5.2.8" presence="M"/>
+      <pduslot ref="10.5.2.42" presence="M"/>
+      <pduslot ref="10.5.2.42" presence="M"/>
+      <pduslot ref="10.5.2.42" presence="M"/>
+      <pduslot ref="10.5.2.42" presence="M"/>
+      <pduslot ref="10.5.2.25" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.25" name="PAGING RESPONSE" significance="dual" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.1.2" presence="M"/>
+      <pduslot ref="10.5.1.8" presence="M"/>
+      <pduslot ref="10.5.1.6" presence="M"/>
+      <pduslot ref="10.5.1.4" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.26" name="PARTIAL RELEASE" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.5" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.27" name="PARTIAL RELEASE COMPLETE" significance="dual" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.28" name="PHYSICAL INFORMATION" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.40" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.28a" name="RR Initialisation Request" significance="local" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.1.2" presence="M"/>
+      <pduslot ref="10.5.2.4a" presence="M"/>
+      <pduslot ref="10.5.1.6" presence="M"/>
+      <pduslot ref="10.5.2.41a" presence="M"/>
+      <pduslot ref="10.5.2.8a" presence="M"/>
+      <pduslot ref="10.5.2.20a" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.29" name="RR STATUS" significance="local" direction="both">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.31" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.31" name="SYSTEM INFORMATION TYPE 1" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.5.2.19" presence="M"/>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.1b" presence="M"/>
+      <pduslot ref="10.5.2.29" presence="M"/>
+      <pduslot ref="10.5.2.32" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.32" name="SYSTEM INFORMATION TYPE 2" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.5.2.19" presence="M"/>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.22" presence="M"/>
+      <pduslot ref="10.5.2.27" presence="M"/>
+      <pduslot ref="10.5.2.29" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.33" name="SYSTEM INFORMATION TYPE 2bis" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.5.2.19" presence="M"/>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.22" presence="M"/>
+      <pduslot ref="10.5.2.29" presence="M"/>
+      <pduslot ref="10.5.2.33" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.34" name="SYSTEM INFORMATION TYPE 2ter" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.5.2.19" presence="M"/>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.22a" presence="M"/>
+      <pduslot ref="10.5.2.33a" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.34a" name="SYSTEM INFORMATION TYPE 2quater" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.5.2.19" presence="M"/>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.35" name="SYSTEM INFORMATION TYPE 3" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.5.2.19" presence="M"/>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.1.1" presence="M"/>
+      <pduslot ref="10.5.1.3" presence="M"/>
+      <pduslot ref="10.5.2.11" presence="M"/>
+      <pduslot ref="10.5.2.3" presence="M"/>
+      <pduslot ref="10.5.2.4" presence="M"/>
+      <pduslot ref="10.5.2.29" presence="M"/>
+      <pduslot ref="10.5.2.34" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.36" name="SYSTEM INFORMATION TYPE 4" significance="dual" direction="downlink" trigger-pre="CBCHReset" trigger-post="CBCHUpdate">
+    <pduslot-list>
+      <pduslot ref="10.5.2.19" presence="M"/>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.1.3" presence="M"/>
+      <pduslot ref="10.5.2.4" presence="M"/>
+      <pduslot ref="10.5.2.29" presence="M"/>
+      <pduslot iei="64" ref="10.5.2.5" presence="O"/>
+      <pduslot iei="72" ref="10.5.2.21" presence="C"/>
+      <pduslot ref="10.5.2.35" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.37" name="SYSTEM INFORMATION TYPE 5" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.5.2.19" presence="M"/>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.22" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.38" name="SYSTEM INFORMATION TYPE 5bis" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.5.2.19" presence="M"/>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.22" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.39" name="SYSTEM INFORMATION TYPE 5ter" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.5.2.19" presence="M"/>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.22a" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.40" name="SYSTEM INFORMATION TYPE 6" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.5.2.19" presence="M"/>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.1.1" presence="M"/>
+      <pduslot ref="10.5.1.3" presence="M"/>
+      <pduslot ref="10.5.2.3" presence="M"/>
+      <pduslot ref="10.5.2.27" presence="M"/>
+      <pduslot ref="10.5.2.35a" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.41" name="SYSTEM INFORMATION TYPE 7" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.5.2.19" presence="M"/>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.36" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.42" name="SYSTEM INFORMATION TYPE 8" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.5.2.19" presence="M"/>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.37" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.43" name="SYSTEM INFORMATION TYPE 9" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.5.2.19" presence="M"/>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.29" presence="M"/>
+      <pduslot ref="10.5.2.37a" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.43a" name="SYSTEM INFORMATION TYPE 13" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.5.2.19" presence="M"/>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.37b" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.43d" name="SYSTEM INFORMATION TYPE 16" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.5.2.19" presence="M"/>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.37e" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.43e" name="SYSTEM INFORMATION TYPE 17" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.5.2.19" presence="M"/>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.37f" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.44" name="TALKER INDICATION" significance="dual" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.1.6" presence="M"/>
+      <pduslot ref="10.5.1.4" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.46" name="UPLINK BUSY" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.48" name="UPLINK RELEASE" significance="local" direction="both">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.31" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.49" name="VGCS UPLINK GRANT" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.30" presence="M"/>
+      <pduslot ref="10.5.2.40" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.51" name="EXTENDED MEASUREMENT ORDER" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.5.2.19" presence="M"/>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.46" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.52" name="EXTENDED MEASUREMENT REPORT" significance="dual" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.45" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.1.53" name="Application Information" significance="global" direction="both">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.2.48" presence="M"/>
+      <pduslot ref="10.5.2.49" presence="M"/>
+      <pduslot ref="10.5.2.50" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.2.1" name="AUTHENTICATION REJECT" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.2.2" name="AUTHENTICATION REQUEST" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.1.2" presence="M"/>
+      <pduslot ref="10.5.1.8" presence="M"/>
+      <pduslot ref="10.5.3.1" presence="M"/>
+      <pduslot iei="20" ref="10.5.3.1.1" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.2.3" name="AUTHENTICATION RESPONSE" significance="dual" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.3.2" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.2.4" name="CM RE-ESTABLISHMENT REQUEST" significance="dual" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.1.2" presence="M"/>
+      <pduslot ref="10.5.1.8" presence="M"/>
+      <pduslot ref="10.5.1.6" presence="M"/>
+      <pduslot ref="10.5.1.4" presence="M"/>
+      <pduslot iei="13" ref="10.5.1.3" presence="C"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.2.5" name="CM SERVICE ACCEPT" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.2.5a" name="CM SERVICE PROMPT" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.1.10a" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.2.6" name="CM SERVICE REJECT" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.3.6" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.2.7" name="CM SERVICE ABORT" significance="dual" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.2.8" name="ABORT" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.3.6" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.2.9" name="CM SERVICE REQUEST" significance="dual" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.3.3" presence="M"/>
+      <pduslot ref="10.5.1.2" presence="M"/>
+      <pduslot ref="10.5.1.6" presence="M"/>
+      <pduslot ref="10.5.1.4" presence="M"/>
+      <pduslot iei="80" ref="10.5.1.11" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.2.10" name="IDENTITY REQUEST" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.3.4" presence="M"/>
+      <pduslot ref="10.5.1.8" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.2.11" name="IDENTITY RESPONSE" significance="dual" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.1.4" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.2.12" name="IMSI DETACH INDICATION" significance="dual" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.1.5" presence="M"/>
+      <pduslot ref="10.5.1.4" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.2.13" name="LOCATION UPDATING ACCEPT" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.1.3" presence="M"/>
+      <pduslot iei="17" ref="10.5.1.4" presence="O"/>
+      <pduslot iei="A1" ref="10.5.3.7" presence="O"/>
+      <pduslot iei="A2" ref="10.5.3.10" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.2.14" name="LOCATION UPDATING REJECT" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.3.6" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.2.15" name="LOCATION UPDATING REQUEST" significance="dual" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.3.5" presence="M"/>
+      <pduslot ref="10.5.1.2" presence="M"/>
+      <pduslot ref="10.5.1.3" presence="M"/>
+      <pduslot ref="10.5.1.5" presence="M"/>
+      <pduslot ref="10.5.1.4" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.2.15a" name="MM INFORMATION" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot iei="43" ref="10.5.3.5a" presence="O"/>
+      <pduslot iei="45" ref="10.5.3.5a" presence="O"/>
+      <pduslot iei="46" ref="10.5.3.8" presence="O"/>
+      <pduslot iei="47" ref="10.5.3.9" presence="O"/>
+      <pduslot iei="48" ref="10.5.3.11" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.2.16" name="MM STATUS" significance="local" direction="both">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.3.6" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.2.17" name="TMSI REALLOCATION COMMAND" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.1.3" presence="M"/>
+      <pduslot ref="10.5.1.4" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.2.18" name="TMSI REALLOCATION COMPLETE" significance="dual" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.3.1.1" name="ALERTING" significance="global" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot iei="1C" ref="10.5.4.15" presence="O"/>
+      <pduslot iei="1E" ref="10.5.4.21" presence="O"/>
+      <pduslot iei="7E" ref="10.5.4.25" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.3.1.2" name="ALERTING" significance="global" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot iei="1C" ref="10.5.4.15" presence="O"/>
+      <pduslot iei="7E" ref="10.5.4.25" presence="O"/>
+      <pduslot iei="7F" ref="10.5.4.24" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.3.2" name="CALL CONFIRMED" significance="local" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot iei="D0" ref="10.5.4.22" presence="C"/>
+      <pduslot iei="04" ref="10.5.4.5" presence="O"/>
+      <pduslot iei="04" ref="10.5.4.5" presence="O"/>
+      <pduslot iei="08" ref="10.5.4.11" presence="O"/>
+      <pduslot iei="15" ref="10.5.4.5a" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.3.3" name="CALL PROCEEDING" significance="local" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot iei="D0" ref="10.5.4.22" presence="C"/>
+      <pduslot iei="04" ref="10.5.4.5" presence="O"/>
+      <pduslot iei="04" ref="10.5.4.5" presence="O"/>
+      <pduslot iei="1C" ref="10.5.4.15" presence="O"/>
+      <pduslot iei="1E" ref="10.5.4.21" presence="O"/>
+      <pduslot iei="80" ref="10.5.1.11" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.3.4" name="CONGESTION CONTROL" significance="local" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.4.12" presence="M"/>
+      <pduslot ref="10.5.1.8" presence="M"/>
+      <pduslot iei="08" ref="10.5.4.11" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.3.5.1" name="CONNECT" significance="global" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot iei="1C" ref="10.5.4.15" presence="O"/>
+      <pduslot iei="1E" ref="10.5.4.21" presence="O"/>
+      <pduslot iei="4C" ref="10.5.4.13" presence="O"/>
+      <pduslot iei="4D" ref="10.5.4.14" presence="O"/>
+      <pduslot iei="7E" ref="10.5.4.25" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.3.5.2" name="CONNECT" significance="global" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot iei="1C" ref="10.5.4.15" presence="O"/>
+      <pduslot iei="4D" ref="10.5.4.14" presence="O"/>
+      <pduslot iei="7E" ref="10.5.4.25" presence="O"/>
+      <pduslot iei="7F" ref="10.5.4.24" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.3.6" name="CONNECT ACKNOWLEDGE" significance="local" direction="both">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.3.7.1" name="DISCONNECT" significance="global" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.4.11" presence="M"/>
+      <pduslot iei="1C" ref="10.5.4.15" presence="O"/>
+      <pduslot iei="1E" ref="10.5.4.21" presence="O"/>
+      <pduslot iei="7E" ref="10.5.4.25" presence="O"/>
+      <pduslot iei="7B" ref="10.5.4.26" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.3.7.2" name="DISCONNECT" significance="global" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.4.11" presence="M"/>
+      <pduslot iei="1C" ref="10.5.4.15" presence="O"/>
+      <pduslot iei="7E" ref="10.5.4.25" presence="O"/>
+      <pduslot iei="7F" ref="10.5.4.24" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.3.8" name="EMERGENCY SETUP" significance="global" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot iei="04" ref="10.5.4.5" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.3.9.1" name="FACILITY" significance="local" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.4.15" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.3.9.2" name="FACILITY" significance="local" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.4.15" presence="M"/>
+      <pduslot iei="7F" ref="10.5.4.24" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.3.10" name="HOLD" significance="local" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.3.11" name="HOLD ACKNOWLEDGE" significance="local" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.3.12" name="HOLD REJECT" significance="local" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.4.11" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.3.13" name="MODIFY" significance="global" direction="both">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.4.5" presence="M"/>
+      <pduslot iei="7C" ref="10.5.4.18" presence="O"/>
+      <pduslot iei="7D" ref="10.5.4.16" presence="O"/>
+      <pduslot iei="A3" ref="10.5.4.22a" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.3.14" name="MODIFY COMPLETE" significance="global" direction="both">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.4.5" presence="M"/>
+      <pduslot iei="7C" ref="10.5.4.18" presence="O"/>
+      <pduslot iei="7D" ref="10.5.4.16" presence="O"/>
+      <pduslot iei="A3" ref="10.5.4.22a" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.3.15" name="MODIFY REJECT" significance="global" direction="both">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.4.5" presence="M"/>
+      <pduslot ref="10.5.4.11" presence="M"/>
+      <pduslot iei="7C" ref="10.5.4.18" presence="O"/>
+      <pduslot iei="7D" ref="10.5.4.16" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.3.16" name="NOTIFY" significance="access" direction="both">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.4.20" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.3.17" name="PROGRESS" significance="global" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.4.21" presence="M"/>
+      <pduslot iei="7E" ref="10.5.4.25" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.3.17a" name="CC-Establishment" significance="local" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.4.22b" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.3.17b" name="CC-ESTABLISHMENT CONFIRMED" significance="local" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot iei="D0" ref="10.5.4.22" presence="C"/>
+      <pduslot iei="04" ref="10.5.4.5" presence="M"/>
+      <pduslot iei="04" ref="10.5.4.5" presence="O"/>
+      <pduslot iei="08" ref="10.5.4.11" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.3.18.1" name="RELEASE" significance="local" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot iei="08" ref="10.5.4.11" presence="O"/>
+      <pduslot iei="08" ref="10.5.4.11" presence="O"/>
+      <pduslot iei="1C" ref="10.5.4.15" presence="O"/>
+      <pduslot iei="7E" ref="10.5.4.25" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.3.18.2" name="RELEASE" significance="local" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot iei="08" ref="10.5.4.11" presence="O"/>
+      <pduslot iei="08" ref="10.5.4.11" presence="O"/>
+      <pduslot iei="1C" ref="10.5.4.15" presence="O"/>
+      <pduslot iei="7E" ref="10.5.4.25" presence="O"/>
+      <pduslot iei="7F" ref="10.5.4.24" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.3.18a" name="Recall" significance="local" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.4.21a" presence="M"/>
+      <pduslot ref="10.5.4.15" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.3.19.1" name="RELEASE COMPLETE" significance="local" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot iei="08" ref="10.5.4.11" presence="O"/>
+      <pduslot iei="1C" ref="10.5.4.15" presence="O"/>
+      <pduslot iei="7E" ref="10.5.4.25" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.3.19.2" name="RELEASE COMPLETE" significance="local" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot iei="08" ref="10.5.4.11" presence="O"/>
+      <pduslot iei="1C" ref="10.5.4.15" presence="O"/>
+      <pduslot iei="7E" ref="10.5.4.25" presence="O"/>
+      <pduslot iei="7F" ref="10.5.4.24" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.3.20" name="RETRIEVE" significance="local" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.3.21" name="RETRIEVE ACKNOWLEDGE" significance="local" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.3.22" name="RETRIEVE REJECT" significance="local" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.4.11" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.3.23.1" name="SETUP" significance="global" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot iei="D0" ref="10.5.4.22" presence="C"/>
+      <pduslot iei="04" ref="10.5.4.5" presence="O"/>
+      <pduslot iei="04" ref="10.5.4.5" presence="O"/>
+      <pduslot iei="1C" ref="10.5.4.15" presence="O"/>
+      <pduslot iei="1E" ref="10.5.4.21" presence="O"/>
+      <pduslot iei="34" ref="10.5.4.23" presence="O"/>
+      <pduslot iei="5C" ref="10.5.4.9" presence="O"/>
+      <pduslot iei="5D" ref="10.5.4.10" presence="O"/>
+      <pduslot iei="5E" ref="10.5.4.7" presence="O"/>
+      <pduslot iei="6D" ref="10.5.4.8" presence="O"/>
+      <pduslot iei="74" ref="10.5.4.21a" presence="O"/>
+      <pduslot iei="75" ref="10.5.4.21b" presence="O"/>
+      <pduslot iei="D0" ref="10.5.4.22" presence="O"/>
+      <pduslot iei="7C" ref="10.5.4.18" presence="O"/>
+      <pduslot iei="7C" ref="10.5.4.18" presence="C"/>
+      <pduslot iei="D0" ref="10.5.4.22" presence="O"/>
+      <pduslot iei="7D" ref="10.5.4.16" presence="O"/>
+      <pduslot iei="7D" ref="10.5.4.16" presence="C"/>
+      <pduslot iei="7E" ref="10.5.4.25" presence="O"/>
+      <pduslot iei="80" ref="10.5.1.11" presence="O"/>
+      <pduslot iei="19" ref="10.5.4.26" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.3.23.2" name="SETUP" significance="global" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot iei="D0" ref="10.5.4.22" presence="C"/>
+      <pduslot iei="04" ref="10.5.4.5" presence="M"/>
+      <pduslot iei="04" ref="10.5.4.5" presence="O"/>
+      <pduslot iei="1C" ref="10.5.4.15" presence="O"/>
+      <pduslot iei="5D" ref="10.5.4.10" presence="O"/>
+      <pduslot iei="5E" ref="10.5.4.7" presence="M"/>
+      <pduslot iei="6D" ref="10.5.4.8" presence="O"/>
+      <pduslot iei="D0" ref="10.5.4.22" presence="O"/>
+      <pduslot iei="7C" ref="10.5.4.18" presence="O"/>
+      <pduslot iei="7C" ref="10.5.4.18" presence="O"/>
+      <pduslot iei="D0" ref="10.5.4.22" presence="O"/>
+      <pduslot iei="7D" ref="10.5.4.16" presence="O"/>
+      <pduslot iei="7D" ref="10.5.4.16" presence="O"/>
+      <pduslot iei="7E" ref="10.5.4.25" presence="O"/>
+      <pduslot iei="7F" ref="10.5.4.24" presence="O"/>
+      <pduslot iei="A1" ref="10.5.4.11a" presence="C"/>
+      <pduslot iei="A2" ref="10.5.4.11b" presence="C"/>
+      <pduslot iei="15" ref="10.5.4.5a" presence="O"/>
+      <pduslot iei="1D" ref="10.5.4.15" presence="O"/>
+      <pduslot iei="1B" ref="10.5.4.15" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.3.23a" name="START CC" significance="local" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot iei="15" ref="10.5.4.5a" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.3.24" name="START DTMF" significance="local" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot iei="2C" ref="10.5.4.17" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.3.25" name="START DTMF ACKNOWLEDGE" significance="local" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot iei="2C" ref="10.5.4.17" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.3.26" name="START DTMF REJECT" significance="local" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.4.11" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.3.27" name="STATUS" significance="local" direction="both">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.4.11" presence="M"/>
+      <pduslot ref="10.5.4.6" presence="M"/>
+      <pduslot iei="24" ref="10.5.4.4" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.3.28" name="STATUS ENQUIRY" significance="local" direction="both">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.3.29" name="STOP DTMF" significance="local" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.3.30" name="STOP DTMF ACKNOWLEDGE" significance="local" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.3.31" name="USER INFORMATION" significance="access" direction="both">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.4.25" presence="M"/>
+      <pduslot iei="A0" ref="10.5.4.19" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.4.1" name="ATTACH REQUEST" significance="dual" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.5.12" presence="M"/>
+      <pduslot ref="10.5.5.2" presence="M"/>
+      <pduslot ref="10.5.1.2" presence="M"/>
+      <pduslot ref="10.5.5.6" presence="M"/>
+      <pduslot ref="10.5.1.4" presence="M"/>
+      <pduslot ref="10.5.5.15" presence="M"/>
+      <pduslot ref="10.5.5.12a" presence="M"/>
+      <pduslot iei="19" ref="10.5.5.8" presence="O"/>
+      <pduslot iei="17" ref="10.5.7.3" presence="O"/>
+      <pduslot iei="90" ref="10.5.5.4" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.4.2" name="ATTACH ACCEPT" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.5.1" presence="M"/>
+      <pduslot ref="10.5.5.7" presence="M"/>
+      <pduslot ref="10.5.7.3" presence="M"/>
+      <pduslot ref="10.5.7.2" presence="M"/>
+      <pduslot ref="10.5.1.8" presence="M"/>
+      <pduslot ref="10.5.5.15" presence="M"/>
+      <pduslot iei="19" ref="10.5.5.8" presence="O"/>
+      <pduslot iei="17" ref="10.5.7.3" presence="O"/>
+      <pduslot iei="18" ref="10.5.1.4" presence="O"/>
+      <pduslot iei="23" ref="10.5.1.4" presence="O"/>
+      <pduslot iei="25" ref="10.5.5.14" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.4.3" name="ATTACH COMPLETE" significance="dual" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.4.4" name="ATTACH REJECT" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.5.14" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.4.5.1" name="DETACH REQUEST" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.5.5" presence="M"/>
+      <pduslot ref="10.5.5.7" presence="M"/>
+      <pduslot iei="25" ref="10.5.5.14" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.4.5.2" name="DETACH REQUEST" significance="dual" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.5.5" presence="M"/>
+      <pduslot ref="10.5.1.8" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.4.6.1" name="DETACH ACCEPT" significance="dual" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.4.6.2" name="DETACH ACCEPT" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.5.7" presence="M"/>
+      <pduslot ref="10.5.1.8" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.4.7" name="P-TMSI REALLOCATION COMMAND" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.1.4" presence="M"/>
+      <pduslot ref="10.5.5.15" presence="M"/>
+      <pduslot ref="10.5.5.7" presence="M"/>
+      <pduslot ref="10.5.1.8" presence="M"/>
+      <pduslot iei="19" ref="10.5.5.8" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.4.8" name="P-TMSI REALLOCATION COMPLETE" significance="dual" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.4.9" name="AUTHENTICATION AND CIPHERING REQUEST" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.5.3" presence="M"/>
+      <pduslot ref="10.5.5.10" presence="M"/>
+      <pduslot ref="10.5.5.7" presence="M"/>
+      <pduslot ref="10.5.5.19" presence="M"/>
+      <pduslot iei="21" ref="10.5.3.1" presence="O"/>
+      <pduslot iei="08" ref="10.5.1.2" presence="C"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.4.10" name="AUTHENTICATION AND CIPHERING RESPONSE" significance="dual" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.5.19" presence="M"/>
+      <pduslot ref="10.5.1.8" presence="M"/>
+      <pduslot iei="22" ref="10.5.3.2" presence="O"/>
+      <pduslot iei="23" ref="10.5.1.4" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.4.11" name="AUTHENTICATION AND CIPHERING REJECT" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.4.12" name="IDENTITY REQUEST" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.5.9" presence="M"/>
+      <pduslot ref="10.5.5.7" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.4.13" name="IDENTITY RESPONSE" significance="dual" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.1.4" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.4.14" name="ROUTING AREA UPDATE REQUEST" significance="dual" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.5.18" presence="M"/>
+      <pduslot ref="10.5.1.2" presence="M"/>
+      <pduslot ref="10.5.5.15" presence="M"/>
+      <pduslot ref="10.5.5.12a" presence="M"/>
+      <pduslot iei="19" ref="10.5.5.8" presence="O"/>
+      <pduslot iei="17" ref="10.5.7.3" presence="O"/>
+      <pduslot iei="27" ref="10.5.5.6" presence="O"/>
+      <pduslot iei="90" ref="10.5.5.4" presence="O"/>
+      <pduslot iei="31" ref="10.5.5.12" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.4.15" name="ROUTING AREA UPDATE ACCEPT" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.5.7" presence="M"/>
+      <pduslot ref="10.5.5.17" presence="M"/>
+      <pduslot ref="10.5.7.3" presence="M"/>
+      <pduslot ref="10.5.5.15" presence="M"/>
+      <pduslot iei="19" ref="10.5.5.8" presence="O"/>
+      <pduslot iei="18" ref="10.5.1.4" presence="O"/>
+      <pduslot iei="23" ref="10.5.1.4" presence="O"/>
+      <pduslot iei="26" ref="10.5.5.11" presence="O"/>
+      <pduslot iei="17" ref="10.5.7.3" presence="O"/>
+      <pduslot iei="25" ref="10.5.5.14" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.4.16" name="ROUTING AREA UPDATE COMPLETE" significance="dual" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot iei="26" ref="10.5.5.11" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.4.17" name="ROUTING AREA UPDATE REJECT" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.5.14" presence="M"/>
+      <pduslot ref="10.5.5.7" presence="M"/>
+      <pduslot ref="10.5.1.8" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.4.18" name="GMM STATUS" significance="local" direction="both">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.5.14" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.4.19" name="GMM INFORMATION" significance="local" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot iei="43" ref="10.5.3.5a" presence="O"/>
+      <pduslot iei="45" ref="10.5.3.5a" presence="O"/>
+      <pduslot iei="46" ref="10.5.3.8" presence="O"/>
+      <pduslot iei="47" ref="10.5.3.9" presence="O"/>
+      <pduslot iei="48" ref="10.5.3.11" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.5.1" name="ACTIVATE PDP CONTEXT REQUEST" significance="global" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.6.2" presence="M"/>
+      <pduslot ref="10.5.6.9" presence="M"/>
+      <pduslot ref="10.5.6.5" presence="M"/>
+      <pduslot ref="10.5.6.4" presence="M"/>
+      <pduslot iei="28" ref="10.5.6.1" presence="O"/>
+      <pduslot iei="27" ref="10.5.6.3" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.5.2" name="ACTIVATE PDP CONTEXT ACCEPT" significance="global" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.6.9" presence="M"/>
+      <pduslot ref="10.5.6.5" presence="M"/>
+      <pduslot ref="10.5.7.2" presence="M"/>
+      <pduslot ref="10.5.1.8" presence="M"/>
+      <pduslot iei="2B" ref="10.5.6.4" presence="O"/>
+      <pduslot iei="27" ref="10.5.6.3" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.5.3" name="ACTIVATE PDP CONTEXT REJECT" significance="global" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.6.6" presence="M"/>
+      <pduslot iei="27" ref="10.5.6.3" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.5.4" name="REQUEST PDP CONTEXT ACTIVATION" significance="global" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.6.4" presence="M"/>
+      <pduslot iei="28" ref="10.5.6.1" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.5.5" name="REQUEST PDP CONTEXT ACTIVATION REJECT" significance="global" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.6.6" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.5.6" name="MODIFY PDP CONTEXT REQUEST" significance="global" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.7.2" presence="M"/>
+      <pduslot ref="10.5.1.8" presence="M"/>
+      <pduslot ref="10.5.6.9" presence="M"/>
+      <pduslot ref="10.5.6.5" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.5.7" name="MODIFY PDP CONTEXT ACCEPT" significance="global" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.5.8" name="DEACTIVATE PDP CONTEXT REQUEST" significance="global" direction="both">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.6.6" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.5.9" name="DEACTIVATE PDP CONTEXT ACCEPT" significance="global" direction="both">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.5.10" name="ACTIVATE AA PDP CONTEXT REQUEST" significance="global" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.6.2" presence="M"/>
+      <pduslot ref="10.5.6.9" presence="M"/>
+      <pduslot ref="10.5.6.5" presence="M"/>
+      <pduslot ref="10.5.6.4" presence="M"/>
+      <pduslot iei="28" ref="10.5.6.1" presence="O"/>
+      <pduslot iei="27" ref="10.5.6.3" presence="O"/>
+      <pduslot iei="29" ref="10.5.7.3" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.5.11" name="ACTIVATE AA PDP CONTEXT ACCEPT" significance="global" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.6.9" presence="M"/>
+      <pduslot ref="10.5.6.5" presence="M"/>
+      <pduslot ref="10.5.1.4" presence="M"/>
+      <pduslot ref="10.5.6.4" presence="M"/>
+      <pduslot ref="10.5.7.2" presence="M"/>
+      <pduslot ref="10.5.1.8" presence="M"/>
+      <pduslot iei="27" ref="10.5.6.3" presence="O"/>
+      <pduslot iei="29" ref="10.5.7.3" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.5.12" name="ACTIVATE AA PDP CONTEXT REJECT" significance="global" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.6.6" presence="M"/>
+      <pduslot iei="27" ref="10.5.6.3" presence="O"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.5.13" name="DEACTIVATE AA PDP CONTEXT REQUEST" significance="global" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.6.8" presence="M"/>
+      <pduslot ref="10.5.1.8" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.5.14" name="DEACTIVATE AA PDP CONTEXT ACCEPT" significance="global" direction="uplink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="9.5.15" name="SM STATUS" significance="local" direction="both">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.2" presence="M"/>
+      <pduslot ref="10.4" presence="M"/>
+      <pduslot ref="10.5.6.6" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+</messagedesc-list>

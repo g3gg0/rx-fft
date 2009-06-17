@@ -1,0 +1,236 @@
+<mccentries>
+	<entry mcc="289" cc="GE" country="Abkhazia (Georgia)"/> 
+	<entry mcc="412" cc="AF" country="Afghanistan"/>
+	<entry mcc="276" cc="AL" country="Albania"/>
+	<entry mcc="603" cc="DZ" country="Algeria"/>
+	<entry mcc="544" cc="AS" country="American Samoa (US)"/>
+	<entry mcc="213" cc="AD" country="Andorra"/>
+	<entry mcc="631" cc="AO" country="Angola"/>
+	<entry mcc="365" cc="AI" country="Anguilla"/>
+	<entry mcc="344" cc="AG" country="Antigua and Barbuda"/>
+	<entry mcc="722" cc="AR" country="Argentine Republic"/>
+	<entry mcc="283" cc="AM" country="Armenia"/>
+	<entry mcc="363" cc="AW" country="Aruba (Netherlands)"/>
+	<entry mcc="505" cc="AU" country="Australia"/>
+	<entry mcc="232" cc="AT" country="Austria"/>
+	<entry mcc="400" cc="AZ" country="Azerbaijani Republic"/>
+	<entry mcc="364" cc="BS" country="Bahamas"/>
+	<entry mcc="426" cc="BH" country="Bahrain"/>
+	<entry mcc="470" cc="BD" country="Bangladesh"/>
+	<entry mcc="342" cc="BB" country="Barbados"/>
+	<entry mcc="257" cc="BY" country="Belarus"/>
+	<entry mcc="206" cc="BE" country="Belgium"/>
+	<entry mcc="702" cc="BZ" country="Belize"/>
+	<entry mcc="616" cc="BJ" country="Benin"/>
+	<entry mcc="350" cc="BM" country="Bermuda (UK)"/>
+	<entry mcc="402" cc="BT" country="Bhutan"/>
+	<entry mcc="736" cc="BO" country="Bolivia"/>
+	<entry mcc="218" cc="BA" country="Bosnia and Herzegovina"/>
+	<entry mcc="652" cc="BW" country="Botswana"/>
+	<entry mcc="724" cc="BR" country="Brazil"/>
+	<entry mcc="348" cc="VG" country="British Virgin Islands (UK)"/>
+	<entry mcc="528" cc="BN" country="Brunei Darussalam"/>
+	<entry mcc="284" cc="BG" country="Bulgaria"/>
+	<entry mcc="613" cc="BF" country="Burkina Faso"/>
+	<entry mcc="642" cc="BI" country="Burundi"/>
+	<entry mcc="456" cc="KH" country="Cambodia"/>
+	<entry mcc="624" cc="CM" country="Cameroon"/>
+	<entry mcc="302" cc="CA" country="Canada"/>
+	<entry mcc="625" cc="CV" country="Cape Verde"/>
+	<entry mcc="346" cc="KY" country="Cayman Islands (UK)"/>
+	<entry mcc="623" cc="CF" country="Central African Republic"/>
+	<entry mcc="622" cc="TD" country="Chad"/>
+	<entry mcc="730" cc="CL" country="Chile"/>
+	<entry mcc="460" cc="CN" country="China"/>
+	<entry mcc="732" cc="CO" country="Colombia"/>
+	<entry mcc="654" cc="KM" country="Comoros"/>
+	<entry mcc="629" cc="CG" country="Republic of the Congo"/>
+	<entry mcc="548" cc="CK" country="Cook Islands (NZ)"/>
+	<entry mcc="712" cc="CR" country="Costa Rica"/>
+	<entry mcc="612" cc="CI" country="Côte d'Ivoire"/>
+	<entry mcc="219" cc="HR" country="Croatia"/>
+	<entry mcc="368" cc="CU" country="Cuba"/>
+	<entry mcc="280" cc="CY" country="Cyprus"/>
+	<entry mcc="230" cc="CZ" country="Czech Republic"/>
+	<entry mcc="630" cc="CD" country="Democratic Republic of the Congo"/>
+	<entry mcc="238" cc="DK" country="Denmark"/>
+	<entry mcc="638" cc="DJ" country="Djibouti"/>
+	<entry mcc="366" cc="DM" country="Dominica"/>
+	<entry mcc="370" cc="DO" country="Dominican Republic"/>
+	<entry mcc="514" cc="TL" country="East Timor"/>
+	<entry mcc="740" cc="EC" country="Ecuador"/>
+	<entry mcc="602" cc="EG" country="Egypt"/>
+	<entry mcc="706" cc="SV" country="El Salvador"/>
+	<entry mcc="627" cc="GQ" country="Equatorial Guinea"/>
+	<entry mcc="657" cc="ER" country="Eritrea"/>
+	<entry mcc="248" cc="EE" country="Estonia"/>
+	<entry mcc="636" cc="ET" country="Ethiopia"/>
+	<entry mcc="750" cc="FK" country="Falkland Islands (Malvinas)"/>
+	<entry mcc="288" cc="FO" country="Faroe Islands (Denmark)"/>
+	<entry mcc="542" cc="FJ" country="Fiji"/>
+	<entry mcc="244" cc="FI" country="Finland"/>
+	<entry mcc="208" cc="FR" country="France"/>
+	<entry mcc="742" cc="GF" country="French Guiana (France)"/>
+	<entry mcc="547" cc="PF" country="French Polynesia (France)"/>
+	<entry mcc="628" cc="GA" country="Gabonese Republic"/>
+	<entry mcc="607" cc="GM" country="Gambia"/>
+	<entry mcc="282" cc="GE" country="Georgia"/>
+	<entry mcc="262" cc="DE" country="Germany"/>
+	<entry mcc="620" cc="GH" country="Ghana"/>
+	<entry mcc="266" cc="GI" country="Gibraltar (UK)"/>
+	<entry mcc="202" cc="GR" country="Greece"/>
+	<entry mcc="290" cc="GL" country="Greenland (Denmark)"/>
+	<entry mcc="352" cc="GD" country="Grenada"/>
+	<entry mcc="340" cc="GP" country="Guadeloupe (France)"/>
+	<entry mcc="535" cc="GU" country="Guam (US)"/>
+	<entry mcc="704" cc="GT" country="Guatemala"/>
+	<entry mcc="611" cc="GN" country="Guinea"/>
+	<entry mcc="632" cc="GW" country="Guinea-Bissau"/>
+	<entry mcc="738" cc="GY" country="Guyana"/>
+	<entry mcc="372" cc="HT" country="Haiti"/>
+	<entry mcc="708" cc="HN" country="Honduras"/>
+	<entry mcc="454" cc="HK" country="Hong Kong (PRC)"/>
+	<entry mcc="216" cc="HU" country="Hungary"/>
+	<entry mcc="274" cc="IS" country="Iceland"/>
+	<entry mcc="404" cc="IN" country="India"/>
+	<entry mcc="405" cc="IN" country="India"/>
+	<entry mcc="510" cc="ID" country="Indonesia"/>
+	<entry mcc="432" cc="IR" country="Iran"/>
+	<entry mcc="418" cc="IQ" country="Iraq"/>
+	<entry mcc="272" cc="IE" country="Ireland"/>
+	<entry mcc="425" cc="IL" country="Israel"/>
+	<entry mcc="222" cc="IT" country="Italy"/>
+	<entry mcc="338" cc="JM" country="Jamaica"/>
+	<entry mcc="441" cc="JP" country="Japan"/>
+	<entry mcc="440" cc="JP" country="Japan"/>
+	<entry mcc="416" cc="JO" country="Jordan"/>
+	<entry mcc="401" cc="KZ" country="Kazakhstan"/>
+	<entry mcc="639" cc="KE" country="Kenya"/>
+	<entry mcc="545" cc="KI" country="Kiribati"/>
+	<entry mcc="467" cc="KP" country="Korea, North"/>
+	<entry mcc="450" cc="KR" country="Korea, South"/>
+	<entry mcc="419" cc="KW" country="Kuwait"/>
+	<entry mcc="437" cc="KG" country="Kyrgyz Republic"/>
+	<entry mcc="457" cc="LA" country="Laos"/>
+	<entry mcc="247" cc="LV" country="Latvia"/>
+	<entry mcc="415" cc="LB" country="Lebanon"/>
+	<entry mcc="651" cc="LS" country="Lesotho"/>
+	<entry mcc="618" cc="LR" country="Liberia"/>
+	<entry mcc="606" cc="LY" country="Libya"/>
+	<entry mcc="295" cc="LI" country="Liechtenstein"/>
+	<entry mcc="246" cc="LT" country="Lithuania"/>
+	<entry mcc="270" cc="LU" country="Luxembourg"/>
+	<entry mcc="455" cc="MO" country="Macau (PRC)"/>
+	<entry mcc="294" cc="MK" country="Republic of Macedonia"/>
+	<entry mcc="646" cc="MG" country="Madagascar"/>
+	<entry mcc="650" cc="MW" country="Malawi"/>
+	<entry mcc="502" cc="MY" country="Malaysia"/>
+	<entry mcc="472" cc="MV" country="Maldives"/>
+	<entry mcc="610" cc="ML" country="Mali"/>
+	<entry mcc="278" cc="MT" country="Malta"/>
+	<entry mcc="551" cc="MH" country="Marshall Islands"/>
+	<entry mcc="340" cc="MQ" country="Martinique (France)"/>
+	<entry mcc="609" cc="MR" country="Mauritania"/>
+	<entry mcc="617" cc="MU" country="Mauritius"/>
+	<entry mcc="334" cc="MX" country="Mexico"/>
+	<entry mcc="550" cc="FM" country="Federated States of Micronesia"/>
+	<entry mcc="259" cc="MO" country="Moldova"/>
+	<entry mcc="212" cc="MC" country="Monaco"/>
+	<entry mcc="428" cc="MN" country="Mongolia"/>
+	<entry mcc="297" cc="ME" country="Montenegro (Republic of)"/>
+	<entry mcc="354" cc="MS" country="Montserrat (UK)"/>
+	<entry mcc="604" cc="MA" country="Morocco"/>
+	<entry mcc="643" cc="MZ" country="Mozambique"/>
+	<entry mcc="414" cc="MM" country="Myanmar"/>
+	<entry mcc="649" cc="NA" country="Namibia"/>
+	<entry mcc="536" cc="NR" country="Nauru"/>
+	<entry mcc="429" cc="NP" country="Nepal"/>
+	<entry mcc="204" cc="NL" country="Netherlands"/>
+	<entry mcc="362" cc="AN" country="Netherlands Antilles (Netherlands)"/>
+	<entry mcc="546" cc="NC" country="New Caledonia (France)"/>
+	<entry mcc="530" cc="NZ" country="New Zealand"/>
+	<entry mcc="710" cc="NI" country="Nicaragua"/>
+	<entry mcc="614" cc="NE" country="Niger"/>
+	<entry mcc="621" cc="NG" country="Nigeria"/>
+	<entry mcc="534" cc="MP" country="Northern Mariana Islands (US)"/>
+	<entry mcc="242" cc="NO" country="Norway"/>
+	<entry mcc="422" cc="OM" country="Oman"/>
+	<entry mcc="410" cc="PK" country="Pakistan"/>
+	<entry mcc="552" cc="PW" country="Palau"/>
+	<entry mcc="423" cc="PS" country="Palestine"/>
+	<entry mcc="714" cc="PA" country="Panama"/>
+	<entry mcc="537" cc="PG" country="Papua New Guinea"/>
+	<entry mcc="744" cc="PY" country="Paraguay"/>
+	<entry mcc="716" cc="PE" country="Perú"/>
+	<entry mcc="515" cc="PH" country="Philippines"/>
+	<entry mcc="260" cc="PL" country="Poland"/>
+	<entry mcc="268" cc="PT" country="Portugal"/>
+	<entry mcc="330" cc="PR" country="Puerto Rico (US)"/>
+	<entry mcc="427" cc="QA" country="Qatar"/>
+	<entry mcc="647" cc="RE" country="Réunion (France)"/>
+	<entry mcc="226" cc="RO" country="Romania"/>
+	<entry mcc="250" cc="RU" country="Russian Federation"/>
+	<entry mcc="635" cc="RW" country="Rwandese Republic"/>
+	<entry mcc="356" cc="KN" country="Saint Kitts and Nevis"/>
+	<entry mcc="358" cc="LC" country="Saint Lucia"/>
+	<entry mcc="308" cc="PM" country="Saint Pierre and Miquelon (France)"/>
+	<entry mcc="360" cc="VC" country="Saint Vincent and the Grenadines"/>
+	<entry mcc="549" cc="WS" country="Samoa"/>
+	<entry mcc="292" cc="SM" country="San Marino"/>
+	<entry mcc="626" cc="ST" country="São Tomé and Príncipe"/>
+	<entry mcc="420" cc="SA" country="Saudi Arabia"/>
+	<entry mcc="608" cc="SN" country="Senegal"/>
+	<entry mcc="220" cc="RS" country="Serbia (Republic of)"/>
+	<entry mcc="633" cc="SC" country="Seychelles"/>
+	<entry mcc="619" cc="SL" country="Sierra Leone"/>
+	<entry mcc="525" cc="SG" country="Singapore"/>
+	<entry mcc="231" cc="SK" country="Slovakia"/>
+	<entry mcc="293" cc="SI" country="Slovenia"/>
+	<entry mcc="540" cc="SB" country="Solomon Islands"/>
+	<entry mcc="637" cc="SO" country="Somalia"/>
+	<entry mcc="655" cc="ZA" country="South Africa"/>
+	<entry mcc="214" cc="ES" country="Spain"/>
+	<entry mcc="413" cc="LK" country="Sri Lanka"/>
+	<entry mcc="634" cc="SD" country="Sudan"/>
+	<entry mcc="746" cc="SR" country="Suriname"/>
+	<entry mcc="653" cc="SZ" country="Swaziland"/>
+	<entry mcc="240" cc="SE" country="Sweden"/>
+	<entry mcc="228" cc="CH" country="Switzerland"/>
+	<entry mcc="417" cc="SY" country="Syria"/>
+	<entry mcc="466" cc="TW" country="Taiwan"/>
+	<entry mcc="436" cc="TJ" country="Tajikistan"/>
+	<entry mcc="640" cc="TZ" country="Tanzania"/>
+	<entry mcc="520" cc="TH" country="Thailand"/>
+	<entry mcc="615" cc="TG" country="Togolese Republic"/>
+	<entry mcc="539" cc="TO" country="Tonga"/>
+	<entry mcc="374" cc="TT" country="Trinidad and Tobago"/>
+	<entry mcc="605" cc="TN" country="Tunisia"/>
+	<entry mcc="286" cc="TR" country="Turkey"/>
+	<entry mcc="438" cc="TM" country="Turkmenistan"/>
+	<entry mcc="376" cc="TC" country="Turks and Caicos Islands (UK)"/>
+	<entry mcc="641" cc="UG" country="Uganda"/>
+	<entry mcc="255" cc="UA" country="Ukraine"/>
+	<entry mcc="424" cc="AE" country="United Arab Emirates"/>
+	<entry mcc="430" cc="AE" country="United Arab Emirates (Abu Dhabi)"/>
+	<entry mcc="431" cc="AE" country="United Arab Emirates (Dubai)"/>
+	<entry mcc="235" cc="GB" country="United Kingdom"/>
+	<entry mcc="234" cc="GB" country="United Kingdom"/>
+	<entry mcc="310" cc="US" country="United States of America"/>
+	<entry mcc="311" cc="US" country="United States of America"/>
+	<entry mcc="312" cc="US" country="United States of America"/>
+	<entry mcc="313" cc="US" country="United States of America"/>
+	<entry mcc="314" cc="US" country="United States of America"/>
+	<entry mcc="315" cc="US" country="United States of America"/>
+	<entry mcc="316" cc="US" country="United States of America"/>
+	<entry mcc="332" cc="VI" country="United States Virgin Islands (US)"/>
+	<entry mcc="748" cc="UY" country="Uruguay"/>
+	<entry mcc="434" cc="UZ" country="Uzbekistan"/>
+	<entry mcc="541" cc="VU" country="Vanuatu"/>
+	<entry mcc="225" cc="VA" country="Vatican City State"/>
+	<entry mcc="734" cc="VE" country="Venezuela"/>
+	<entry mcc="452" cc="VN" country="Viet Nam"/>
+	<entry mcc="543" cc="WF" country="Wallis and Futuna (France)"/>
+	<entry mcc="421" cc="YE" country="Yemen"/>
+	<entry mcc="645" cc="ZM" country="Zambia"/>
+	<entry mcc="648" cc="ZW" country="Zimbabwe"/>
+</mccentries>

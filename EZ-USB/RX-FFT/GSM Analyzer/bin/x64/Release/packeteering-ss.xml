@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<packettype-list>
+<!-- Clearing messages: -->
+<packettype type="2A" ref-down="2.5" ref-up="2.5" desc="RELEASE COMPLETE"/>
+<!-- Miscellaneous message group: -->
+<packettype type="3A" ref-down="2.3" ref-up="2.3" desc="FACILITY"/>
+<packettype type="3B" ref-down="2.4" ref-up="2.4" desc="REGISTER"/>
+</packettype-list>
+<!-- Unused sections
+-->

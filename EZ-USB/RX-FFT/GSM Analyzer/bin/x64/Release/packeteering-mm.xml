@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<packettype-list>
+<!-- Registration messages: -->
+<packettype type="01" ref-down="9.2.12" ref-up="9.2.12" desc="IMSI DETACH INDICATION"/>
+<packettype type="02" ref-down="9.2.13" ref-up="9.2.13" desc="LOCATION UPDATING ACCEPT"/>
+<packettype type="04" ref-down="9.2.14" ref-up="9.2.14" desc="LOCATION UPDATING REJECT"/>
+<packettype type="08" ref-down="9.2.15" ref-up="9.2.15" desc="LOCATION UPDATING REQUEST"/>
+<!-- Security messages: -->
+<packettype type="11" ref-down="9.2.1" ref-up="9.2.1" desc="AUTHENTICATION REJECT"/>
+<packettype type="12" ref-down="9.2.2" ref-up="9.2.2" desc="AUTHENTICATION REQUEST"/>
+<packettype type="14" ref-down="9.2.3" ref-up="9.2.3" desc="AUTHENTICATION RESPONSE"/>
+<packettype type="18" ref-down="9.2.10" ref-up="9.2.10" desc="IDENTITY REQUEST"/>
+<packettype type="19" ref-down="9.2.11" ref-up="9.2.11" desc="IDENTITY RESPONSE"/>
+<packettype type="1A" ref-down="9.2.17" ref-up="9.2.17" desc="TMSI REALLOCATION COMMAND"/>
+<packettype type="1B" ref-down="9.2.18" ref-up="9.2.18" desc="TMSI REALLOCATION COMPLETE"/>
+<!-- Connection management messages: -->
+<packettype type="21" ref-down="9.2.5" ref-up="9.2.5" desc="CM SERVICE ACCEPT"/>
+<packettype type="22" ref-down="9.2.6" ref-up="9.2.6" desc="CM SERVICE REJECT"/>
+<packettype type="23" ref-down="9.2.7" ref-up="9.2.7" desc="CM SERVICE ABORT"/>
+<packettype type="24" ref-down="9.2.9" ref-up="9.2.9" desc="CM SERVICE REQUEST"/>
+<packettype type="25" ref-down="9.2.5a" ref-up="9.2.5a" desc="CM SERVICE PROMPT"/>
+<packettype type="28" ref-down="9.2.4" ref-up="9.2.4" desc="CM RE-ESTABLISHMENT REQUEST"/>
+<packettype type="29" ref-down="9.2.8" ref-up="9.2.8" desc="ABORT"/>
+<!-- Miscellaneous messages: -->
+<packettype type="30" ref-down="9.2.19" ref-up="9.2.19" desc="MM NULL"/>
+<packettype type="31" ref-down="9.2.16" ref-up="9.2.16" desc="MM STATUS"/>
+<packettype type="32" ref-down="9.2.15a" ref-up="9.2.15a" desc="MM INFORMATION"/>
+</packettype-list>
+<!-- Unused sections
+-->

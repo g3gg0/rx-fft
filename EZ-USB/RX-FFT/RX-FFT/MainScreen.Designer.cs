@@ -44,7 +44,7 @@ namespace RX_FFT
             this.btnOpen = new System.Windows.Forms.Button();
             this.button1 = new System.Windows.Forms.Button();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.waterfallFFTDisplay = new WaterfallFFTDisplay();
+            this.waterfallFFTDisplay = new LibRXFFT.Components.DirectX.DirectXWaterfallFFTDisplay();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -92,7 +92,7 @@ namespace RX_FFT
             this.splitContainer1.SplitterWidth = 1;
             this.splitContainer1.TabIndex = 4;
             // 
-            // waterfallFFTDisplay
+            // directXWaterfallFFTDisplay1
             // 
             this.waterfallFFTDisplay.Dock = System.Windows.Forms.DockStyle.Fill;
             this.waterfallFFTDisplay.FFTSize = 512;
@@ -121,7 +121,7 @@ namespace RX_FFT
         private System.Windows.Forms.Button btnOpen;
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.SplitContainer splitContainer1;
-        private WaterfallFFTDisplay waterfallFFTDisplay;
+        private LibRXFFT.Components.DirectX.DirectXWaterfallFFTDisplay waterfallFFTDisplay;
     }
 }
 

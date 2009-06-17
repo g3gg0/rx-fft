@@ -1,4 +1,7 @@
-﻿namespace GaussGenerator
+﻿using LibRXFFT.Components.DirectX;
+using LibRXFFT.Components.GDI;
+
+namespace GaussGenerator
 {
     partial class GaussGenerator
     {
@@ -39,7 +42,7 @@
             this.txtSequence = new System.Windows.Forms.TextBox();
             this.btnCreate = new System.Windows.Forms.Button();
             this.btnOpen = new System.Windows.Forms.Button();
-            this.waveformDisplay = new LibRXFFT.Components.WaveformDisplay();
+            this.waveformDisplay = new DirectXWaveformDisplay();
             this.label3 = new System.Windows.Forms.Label();
             this.txtOversampling = new System.Windows.Forms.TextBox();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -142,7 +145,7 @@
             this.waveformDisplay.StartSample = 0;
             this.waveformDisplay.TabIndex = 0;
             this.waveformDisplay.UseLines = true;
-            this.waveformDisplay.ZoomFactor = 1;
+            this.waveformDisplay.YZoomFactor = 1;
             // 
             // label3
             // 
@@ -180,7 +183,7 @@
 
         #endregion
 
-        private LibRXFFT.Components.WaveformDisplay waveformDisplay;
+        private DirectXWaveformDisplay waveformDisplay;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.Button btnCreate;
         private System.Windows.Forms.Button btnOpen;

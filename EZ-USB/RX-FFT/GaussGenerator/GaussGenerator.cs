@@ -83,8 +83,13 @@ namespace GaussGenerator
             double[] gaussSamples = filter.Process(samples, Oversampling);
 
             waveformDisplay.Clear();
+            waveformDisplay.XAxisUnit = Oversampling;
+
+            waveformDisplay.XAxisOffset = 128;
             waveformDisplay.ProcessData(new double[128]);
+
             waveformDisplay.ProcessData(gaussSamples);
+
             if (ShmemChannel != null)
             {
                 double[] diffSamples = Differenciator.Differenciate(gaussSamples);

@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using LibRXFFT.Libraries.GMSK;
+using LibRXFFT.Libraries.GSM.Layer1;
 
-namespace LibRXFFT.Libraries.GSM
+namespace LibRXFFT.Libraries.GSM.Bursts
 {
     public class SCHBurst : Burst
     {
@@ -13,15 +14,20 @@ namespace LibRXFFT.Libraries.GSM
         public const double SyncBits = 64;
         public const double Data2Bits = 39;
         public const double SyncOffset = LeadingTailBits + Data1Bits;
-        bool[] SCHData = new bool[78];
-        bool[] SCHDataDecoded = new bool[39];
+        private bool[] SCHData = new bool[78];
+        private bool[] SCHDataDecoded = new bool[39];
 
-        public SCHBurst ()
+        public SCHBurst()
         {
             Name = "SCH";
         }
 
         public override bool ParseData(GSMParameters param, bool[] decodedBurst)
+        {
+            return ParseData(param, decodedBurst, 0);
+        }
+
+        public override bool ParseData(GSMParameters param, bool[] decodedBurst, int sequence)
         {
             Array.Copy(decodedBurst, 3, SCHData, 0, 39);
             Array.Copy(decodedBurst, 106, SCHData, 39, 39);
@@ -49,19 +55,19 @@ namespace LibRXFFT.Libraries.GSM
             long T3 = (10 * T3M) + 1;
 
             long FN;
-            if (T2 < T3)
+            if (T2 <= T3)
                 FN = 51 * ((T3 - T2) % 26) + T3 + 51 * 26 * T1;
             else
                 FN = 51 * (26 - ((T2 - T3) % 26)) + T3 + 51 * 26 * T1;
 
-            param.AbsoluteFrameNumber = FN;
-            param.CurrentControlFrame = T3;
-            param.CurrentTrafficFrame = T2;
-            param.CurrentTimeSlot = 0;
+            if (param.FN != FN)
+                param.FN = FN;
+
+            param.TN = 0;
 
             if (DumpData)
             {
-                StatusMessage = 
+                StatusMessage =
                     "BSIC: " + String.Format("{0,3}", BSIC) +
                     "  T1: " + String.Format("{0,5}", T1) +
                     "  T2: " + String.Format("{0,3}", T2) +

@@ -1,28 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
 using System.Xml;
-using System.Xml.Serialization;
 
-namespace LibRXFFT.Libraries.GSM_Layer3
+namespace LibRXFFT.Libraries.GSM.Layer3
 {
-    public class PacketInfo
+    public class L3PacketInfo
     {
-        public int type;
-        public string refDown;
-        public string refUp;
-        public string description;
+        public int Type;
+        public string RefDown;
+        public string RefUp;
+        public string Description;
     }
 
     public class L3PacketTypes
     {
-        public Dictionary<int, PacketInfo> Map = new Dictionary<int, PacketInfo>();
+        public Dictionary<int, L3PacketInfo> Map = new Dictionary<int, L3PacketInfo>();
 
-        public L3PacketTypes()
+        public L3PacketTypes(string file)
         {
-            XmlTextReader reader = new XmlTextReader("D:\\cygwin\\home\\g3gg0\\dct3\\opengpa\\xml\\packeteering-rr.xml");
+            XmlTextReader reader = new XmlTextReader(file);
             while (reader.Read())
             {
                 switch (reader.NodeType)
@@ -30,48 +27,43 @@ namespace LibRXFFT.Libraries.GSM_Layer3
                     case XmlNodeType.Element:
                         if ("packettype".Equals(reader.Name))
                         {
-                            PacketInfo info = new PacketInfo();
+                            L3PacketInfo info = new L3PacketInfo();
 
                             while (reader.MoveToNextAttribute())
                             {
                                 if ("type".Equals(reader.Name))
-                                    info.type = int.Parse(reader.Value, NumberStyles.HexNumber);
+                                    info.Type = int.Parse(reader.Value, NumberStyles.HexNumber);
 
                                 if ("ref-down".Equals(reader.Name))
-                                    info.refDown = reader.Value;
+                                    info.RefDown = reader.Value;
 
                                 if ("ref-up".Equals(reader.Name))
-                                    info.refUp = reader.Value;
+                                    info.RefUp = reader.Value;
 
                                 if ("desc".Equals(reader.Name))
-                                    info.description = reader.Value;
-
+                                    info.Description = reader.Value;
                             }
-                            Map.Add(info.type, info);
+
+                            Map.Add(info.Type, info);
                         }
                         break;
 
                     case XmlNodeType.Text:
-                        Console.WriteLine(reader.Value);
                         break;
 
                     case XmlNodeType.EndElement:
-                        Console.Write("</" + reader.Name);
-                        Console.WriteLine(">");
                         break;
                 }
             }
         }
 
 
-        public PacketInfo Get(int type)
+        public L3PacketInfo Get(int type)
         {
             if (!Map.ContainsKey(type))
                 return null;
 
             return Map[type];
         }
-
     }
-
 }

@@ -2,36 +2,43 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
 using System.Xml;
 
-namespace LibRXFFT.Libraries.GSM_Layer3
+namespace LibRXFFT.Libraries.GSM.Layer3
 {
-    public class MessageInfo
+    public class L3MessageInfo
     {
-        public string name;
-        public string reference;
-        public string significance;
-        public string direction;
+        public string Name;
+        public string Reference;
+        public string Significance;
+        public string Direction;
+        public string TriggerPre;
+        public string TriggerPost;
 
         public ArrayList Slots = new ArrayList();
+
+        public override string ToString()
+        {
+            return String.Format("{0,-11}", "(" + Reference + ")") + Name;
+        }
     }
 
-    public class MessageSlotInfo
+    public class L3MessageSlotInfo
     {
-        public int iei;
-        public string reference;
-        public string presence;
+        public int IEI;
+        public string Reference;
+        public string Presence;
+        public string TriggerPre;
+        public string TriggerPost;
     }
 
     public class L3Messages
     {
-        public Dictionary<string, MessageInfo> Map = new Dictionary<string, MessageInfo>();
+        public Dictionary<string, L3MessageInfo> Map = new Dictionary<string, L3MessageInfo>();
 
-        public L3Messages()
+        public L3Messages(string file)
         {
-            XmlTextReader reader = new XmlTextReader("D:\\cygwin\\home\\g3gg0\\dct3\\opengpa\\xml\\messagelist.xml");
+            XmlTextReader reader = new XmlTextReader(file);
             while (reader.Read())
             {
                 switch (reader.NodeType)
@@ -39,22 +46,28 @@ namespace LibRXFFT.Libraries.GSM_Layer3
                     case XmlNodeType.Element:
                         if ("messagedesc".Equals(reader.Name))
                         {
-                            MessageInfo info = new MessageInfo();
+                            L3MessageInfo info = new L3MessageInfo();
                             bool nodeDone = false;
 
                             while (reader.MoveToNextAttribute())
                             {
                                 if ("ref".Equals(reader.Name))
-                                    info.reference = reader.Value;
+                                    info.Reference = reader.Value;
 
                                 if ("significance".Equals(reader.Name))
-                                    info.significance = reader.Value;
+                                    info.Significance = reader.Value;
 
                                 if ("direction".Equals(reader.Name))
-                                    info.direction = reader.Value;
+                                    info.Direction = reader.Value;
 
                                 if ("name".Equals(reader.Name))
-                                    info.name = reader.Value;
+                                    info.Name = reader.Value;
+
+                                if ("trigger-pre".Equals(reader.Name))
+                                    info.TriggerPre = reader.Value;
+
+                                if ("trigger-post".Equals(reader.Name))
+                                    info.TriggerPost = reader.Value;
                             }
 
                             while (!nodeDone && reader.Read())
@@ -64,19 +77,24 @@ namespace LibRXFFT.Libraries.GSM_Layer3
                                     case XmlNodeType.Element:
                                         if ("pduslot".Equals(reader.Name))
                                         {
-                                            MessageSlotInfo slot = new MessageSlotInfo();
+                                            L3MessageSlotInfo slot = new L3MessageSlotInfo();
 
                                             while (reader.MoveToNextAttribute())
                                             {
                                                 if ("iei".Equals(reader.Name))
-                                                    slot.iei = int.Parse(reader.Value, NumberStyles.HexNumber);
+                                                    slot.IEI = int.Parse(reader.Value, NumberStyles.HexNumber);
 
                                                 if ("ref".Equals(reader.Name))
-                                                    slot.reference = reader.Value;
+                                                    slot.Reference = reader.Value;
+
+                                                if ("trigger-pre".Equals(reader.Name))
+                                                    slot.TriggerPre = reader.Value;
+
+                                                if ("trigger-post".Equals(reader.Name))
+                                                    slot.TriggerPost = reader.Value;
 
                                                 if ("presence".Equals(reader.Name))
-                                                    slot.presence = reader.Value;
-
+                                                    slot.Presence = reader.Value;
                                             }
                                             info.Slots.Add(slot);
                                         }
@@ -91,7 +109,7 @@ namespace LibRXFFT.Libraries.GSM_Layer3
                                 }
                             }
 
-                            Map.Add(info.reference, info);
+                            Map.Add(info.Reference, info);
                         }
                         break;
 
@@ -105,14 +123,12 @@ namespace LibRXFFT.Libraries.GSM_Layer3
         }
 
 
-        public MessageInfo Get(string reference)
+        public L3MessageInfo Get(string reference)
         {
             if (!Map.ContainsKey(reference))
                 return null;
 
             return Map[reference];
         }
-
     }
-
 }

@@ -8,56 +8,31 @@ namespace LibRXFFT.Libraries
     public class ByteUtil
     {
 
-        public static byte[] BitsToBytes(bool[] srcData)
-        {
-            return BitsToBytes(srcData, null);
-        }
-
-        public static byte[] BitsToBytes(bool[] srcData, byte[] dstData)
-        {
-            int byteCount = (srcData.Length + 7) / 8;
-            int leadingBits = 0;// (byteCount * 8) - srcData.Length;
-
-            if (dstData == null)
-                dstData = new byte[byteCount];
-
-            for (int bytePos = 0; bytePos < srcData.Length / 8; bytePos++)
-            {
-                byte outByte = 0;
-
-                for (int bitPos = 0; bitPos < 8; bitPos++)
-                {
-                    /* when handling the first bit, skip some bits if not aligned properly */
-                    if (bitPos == 0 && bytePos == 0)
-                        bitPos = leadingBits;
-
-                    byte bitValue = (byte)(1 << (7 - bitPos));
-                    bool bitSet = srcData[bytePos * 8 + bitPos];
-
-                    if (bitSet)
-                        outByte |= bitValue;
-                }
-
-                dstData[bytePos] = outByte;
-            }
-
-            return dstData;
-        }
 
         public static byte[] BitsToBytesRev(bool[] srcData)
         {
-            return BitsToBytesRev(srcData, null);
+            return BitsToBytesRev(srcData, null, 0, srcData.Length);
+        }
+
+        public static byte[] BitsToBytesRev(bool[] srcData, int startPos, int bits)
+        {
+            return BitsToBytesRev(srcData, null, startPos, bits);
         }
 
         public static byte[] BitsToBytesRev(bool[] srcData, byte[] dstData)
         {
-            int byteCount = (srcData.Length + 7) / 8;
+            return BitsToBytesRev(srcData, dstData, 0, srcData.Length);
+        }
+
+        public static byte[] BitsToBytesRev(bool[] srcData, byte[] dstData, int startPos, int bits)
+        {
+            int byteCount = (bits + 7) / 8;
             int leadingBits = 0;// (byteCount * 8) - srcData.Length;
 
             if (dstData == null)
                 dstData = new byte[byteCount];
 
-            for (int bytePos = 0; bytePos < srcData.Length / 8; bytePos++)
+            for (int bytePos = 0; bytePos < bits / 8; bytePos++)
             {
                 byte outByte = 0;
 
@@ -68,7 +43,7 @@ namespace LibRXFFT.Libraries
                         bitPos = leadingBits;
 
                     byte bitValue = (byte)(1 << bitPos);
-                    bool bitSet = srcData[bytePos * 8 + bitPos];
+                    bool bitSet = srcData[startPos + bytePos * 8 + bitPos];
 
                     if (bitSet)
                         outByte |= bitValue;

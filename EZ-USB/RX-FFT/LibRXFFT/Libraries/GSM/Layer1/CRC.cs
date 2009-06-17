@@ -3,12 +3,24 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace LibRXFFT.Libraries.GSM
+namespace LibRXFFT.Libraries.GSM.Layer1
 {
     public class CRC
     {
-        public static readonly bool[] PolynomialSCH = new bool[] { true, false, true, false, true, true, true, false, true, false, true };
-        public static readonly bool[] PolynomialFIRE = new bool[] { true, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false, true, false, false, false, false, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false, true };
+        public static readonly bool[] PolynomialSCH = new bool[]
+                                                          {
+                                                              true, false, true, false, true, true, true, false, true,
+                                                              false, true
+                                                          };
+
+        public static readonly bool[] PolynomialFIRE = new bool[]
+                                                           {
+                                                               true, false, false, false, false, false, false, false, false
+                                                               , false, false, false, false, false, true, false, false,
+                                                               true, false, false, false, false, false, true, false, false,
+                                                               false, false, false, false, false, false, false, false,
+                                                               false, false, false, true, false, false, true
+                                                           };
 
         private static void DivMod2(bool[] data, bool[] polynomial)
         {
@@ -81,6 +93,5 @@ namespace LibRXFFT.Libraries.GSM
 
             return true;
         }
-
     }
 }

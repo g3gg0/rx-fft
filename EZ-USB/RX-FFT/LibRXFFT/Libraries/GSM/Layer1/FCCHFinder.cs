@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using LibRXFFT.Libraries.GSM.Bursts;
 
-namespace LibRXFFT.Libraries.GSM
+namespace LibRXFFT.Libraries.GSM.Layer1
 {
     public class FCCHFinder
     {
@@ -20,15 +18,15 @@ namespace LibRXFFT.Libraries.GSM
 
         private double MinHighSampleValue
         {
-            get { return MaxSampleValue * SampleHighMark; }
+            get { return MaxSampleValue*SampleHighMark; }
         }
 
         public FCCHFinder(double oversampling)
         {
-            OversampleBitCount = (int)(FCHBurst.NetBitCount * oversampling);
+            OversampleBitCount = (int) ((FCHBurst.NetBitCount - 2)*oversampling);
         }
 
-        public void Reset ()
+        public void Reset()
         {
             CurrentPosition = 0;
             ConsecutiveHighBits = 0;
@@ -45,6 +43,8 @@ namespace LibRXFFT.Libraries.GSM
 
             /* if the sample value is higher than the highest known, update highest value */
             MaxSampleValue = Math.Max(sampleValue, MaxSampleValue);
+            if (double.IsNaN(MaxSampleValue))
+                MaxSampleValue = sampleValue;
 
             if (sampleValue > MinHighSampleValue)
                 ConsecutiveHighBits++;

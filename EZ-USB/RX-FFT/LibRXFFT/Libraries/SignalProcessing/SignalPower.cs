@@ -15,10 +15,11 @@ namespace LibRXFFT.Libraries.SignalProcessing
             int endPosition = Math.Min(startPos + variation, srcData.Length - refData.Length);
             int maxPos = int.MinValue;
             double maxStrength = double.MinValue;
+            double refFactor = Max(srcData, startPosition, refData.Length/4);
 
             for (int pos = startPosition; pos < endPosition; pos++)
             {
-                double strength = ProcessDiff(srcData, pos, refData);
+                double strength = ProcessDiff(srcData, pos, refData, refFactor);
 
                 if (strength > maxStrength)
                 {
@@ -30,23 +31,26 @@ namespace LibRXFFT.Libraries.SignalProcessing
             return maxPos;
         }
 
-        public static double ProcessMult(double[] srcData, int startPos, double[] refData)
+        public static double ProcessMult(double[] srcData, int startPos, double[] refData, double refFactor)
         {
             double power = 0;
 
             for (int pos = 0; pos < refData.Length; pos++)
-                power += srcData[startPos + pos] * refData[pos];
+                if (startPos >= 0 && startPos + pos < srcData.Length)
+                    power += srcData[startPos + pos] * (refData[pos] * refFactor);
 
             return power;
         }
 
-        public static double ProcessDiff(double[] srcData, int startPos, double[] refData)
+        public static double ProcessDiff(double[] srcData, int startPos, double[] refData, double refFactor)
         {
             double power = 0;
 
             for (int pos = 0; pos < refData.Length; pos++)
             {
-                double diff = srcData[startPos + pos] - refData[pos];
+                double diff = 0;
+                if (startPos >= 0 && startPos + pos < srcData.Length)
+                    diff = srcData[startPos + pos] - (refData[pos] * refFactor);
                 power -= diff * diff;
             }
 
@@ -58,7 +62,8 @@ namespace LibRXFFT.Libraries.SignalProcessing
             double strength = 0;
 
             for (int pos = 0; pos < samples; pos++)
-                strength += srcData[startPos + pos];
+                if (startPos >= 0 && startPos + pos < srcData.Length)
+                    strength += srcData[startPos + pos];
 
             return strength;
         }
@@ -68,7 +73,8 @@ namespace LibRXFFT.Libraries.SignalProcessing
             double strength = double.MinValue;
 
             for (int pos = 0; pos < samples; pos++)
-                strength = Math.Max(strength, srcData[startPos + pos]);
+                if (startPos >= 0 && startPos + pos < srcData.Length)
+                    strength = Math.Max(strength, srcData[startPos + pos]);
 
             return strength;
         }
@@ -78,7 +84,8 @@ namespace LibRXFFT.Libraries.SignalProcessing
             double strength = double.MaxValue;
 
             for (int pos = 0; pos < samples; pos++)
-                strength = Math.Min(strength, srcData[startPos + pos]);
+                if (startPos >= 0 && startPos + pos < srcData.Length)
+                    strength = Math.Min(strength, srcData[startPos + pos]);
 
             return strength;
         }
@@ -88,7 +95,9 @@ namespace LibRXFFT.Libraries.SignalProcessing
             double strength = 0;
 
             for (int pos = 0; pos < samples; pos++)
-                strength += srcData[startPos + pos];
+                if (startPos >= 0 && startPos + pos < srcData.Length)
+                    strength += srcData[startPos + pos];
+
 
             return strength / samples;
         }

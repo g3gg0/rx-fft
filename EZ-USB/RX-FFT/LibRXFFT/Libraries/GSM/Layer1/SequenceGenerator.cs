@@ -1,7 +1,7 @@
 ﻿using LibRXFFT.Libraries.GMSK;
 using LibRXFFT.Libraries.SignalProcessing;
 
-namespace LibRXFFT.Libraries.GSM
+namespace LibRXFFT.Libraries.GSM.Layer1
 {
     public class SequenceGenerator
     {

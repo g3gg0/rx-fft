@@ -1,76 +1,37 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using LibRXFFT.Libraries.GSM;
+using LibRXFFT.Libraries.GSM.Bursts;
 using LibRXFFT.Libraries.SignalProcessing;
 
 namespace LibRXFFT.Libraries.GMSK
 {
-    public enum eDecodeMode
+    public enum eInterpolation
     {
-        Simple,
-        Pattern,
-        MLSE
+        Automatic,
+        None,
+        Linear,
+        SinX
     }
 
     public class GMSKDecoder
     {
-        public double MinPowerFact = 0.20;
-
-        public eDecodeMode Mode = eDecodeMode.MLSE;
         public int StartOffset = 0;
-        private double Oversampling;
-        private double[][] sampleSnaps;
-        private SequenceGenerator generator;
+        public double SubSampleOffset;
 
-        private static bool[][] sequenceTable;
-        public double DCOffsetFact;
+        public eInterpolation Interpolation = eInterpolation.Automatic;
+
+        private const double MinPowerFact = 0.25;
+        private readonly double Oversampling;
+        double DecisionPower = 0.0f;
+
 
         public GMSKDecoder(double oversampling, double BT)
         {
             Oversampling = oversampling;
-            int snapStart = (int)(Oversampling * 2);
-            int snapLen = (int)(Oversampling * 1);
-
-            generator = new SequenceGenerator(Oversampling, BT);
-            SeqTableInit();
-
-            sampleSnaps = new double[32][];
-            byte[] token = new byte[1];
-
-            for (int pos = 0; pos < 32; pos++)
-            {
-                token[0] = (byte)(pos << 3);
-                double[] snap = generator.GenerateDiffEncoded(token);
-
-                sampleSnaps[pos] = new double[snapLen];
-                Array.Copy(snap, snapStart, sampleSnaps[pos], 0, snapLen);
-            }
-
         }
 
-        private void SeqTableInit()
+        public void Reset()
         {
-            sequenceTable = new bool[2][];
-            sequenceTable[0] = new bool[2];
-            sequenceTable[1] = new bool[2];
-
-            /* this table defines, which bits are most likely when the bits before 
-             * appeared and the current value is undeterminable
-             */
-            sequenceTable[0][0] = true;
-            sequenceTable[0][1] = false;
-            sequenceTable[1][0] = true;
-            sequenceTable[1][1] = false;
-        }
-
-        private bool MostLikely(bool bit1, bool bit2)
-        {
-            int pos1 = bit1 ? 1 : 0;
-            int pos2 = bit2 ? 1 : 0;
-
-            return sequenceTable[pos1][pos2];
+            DecisionPower = 0.0f;
         }
 
         public bool[] Decode(double[] srcData)
@@ -80,103 +41,126 @@ namespace LibRXFFT.Libraries.GMSK
 
         public bool[] Decode(double[] srcData, bool[] dstData)
         {
+            bool interpolate;
+
+            switch (Interpolation)
+            {
+                case eInterpolation.Automatic:
+                    if (Oversampling < 4)
+                        interpolate = true;
+                    else
+                        interpolate = false;
+                    break;
+
+                case eInterpolation.None:
+                    interpolate = false;
+                    break;
+
+                default:
+                    interpolate = true;
+                    break;
+            }
+
             if (dstData == null)
                 dstData = new bool[148];
 
-            if (Mode == eDecodeMode.Pattern)
+            /* the first bit gets set to true since we start at bit 1 */
+            dstData[0] = true;
+
+            /* do that only once. find the highest amplitude over some bits */
+            if (DecisionPower == 0.0f)
             {
-                int currentBit = 3;
-
-                dstData[0] = true;
-                dstData[1] = true;
-                dstData[2] = true;
-
-                while (currentBit < 148)
-                {
-                    bool bit = FindBit(srcData, dstData, currentBit);
-
-                    dstData[currentBit++] = bit;
-                }
-
-                return dstData;
+                int firstBits = (int)(10 * Oversampling);
+                double maxPower = SignalPower.Max(srcData, (int)(StartOffset + SubSampleOffset + 5 * Oversampling), firstBits);
+                DecisionPower = maxPower * MinPowerFact;
             }
 
-            if (Mode == eDecodeMode.Simple)
+            for (int currentBit = 1; currentBit < Burst.NetBitCount; currentBit++)
             {
-                for (int currentbit = 0; currentbit < 148; currentbit++)
+                double samplePos = StartOffset + SubSampleOffset + (currentBit + 0.5f) * Oversampling;
+                double sampleValue;
+
+                if (interpolate)
                 {
-                    double sampleValue = srcData[(int)(StartOffset + (currentbit + 0.5f) * Oversampling)];
-
-                    if (sampleValue > 0)
-                        dstData[currentbit] = true;
-                    else
-                        dstData[currentbit] = false;
-                }
-
-                return dstData;
-            }
-
-            if (Mode == eDecodeMode.MLSE)
-            {
-                for (int currentBit = 0; currentBit < Burst.LeadingTailBits; currentBit++)
-                    dstData[currentBit] = true;
-
-                double maxPower = SignalPower.Average(srcData, StartOffset, (int)((Burst.LeadingTailBits - 1) * Oversampling));
-                double decisionPower = maxPower * MinPowerFact;
-
-                for (int currentBit = (int)Burst.LeadingTailBits-1; currentBit < Burst.NetBitCount; currentBit++)
-                {
-                    int samplePos = (int)(StartOffset + (currentBit + 0.5f) * Oversampling);
-                    double sampleValue = srcData[samplePos] - (maxPower*DCOffsetFact);
-
-                    if (sampleValue > decisionPower)
-                        dstData[currentBit] = true;
-                    else if (sampleValue < -decisionPower)
-                        dstData[currentBit] = false;
-                    else
+                    switch (Interpolation)
                     {
-                        bool bit1 = dstData[currentBit - 2];
-                        bool bit2 = dstData[currentBit - 1];
+                        case eInterpolation.Automatic:
+                        case eInterpolation.Linear:
+                            {
+                                double delta = samplePos - Math.Floor(samplePos);
+                                int samplePos1 = (int) samplePos;
+                                int samplePos2 = (int) samplePos + 1;
 
-                        dstData[currentBit] = MostLikely(bit1, bit2);
+                                double sampleValue1;
+                                double sampleValue2;
+
+                                if (samplePos1 >= 0 && samplePos1 < srcData.Length)
+                                    sampleValue1 = srcData[samplePos1];
+                                else
+                                    sampleValue1 = 0;
+
+                                if (samplePos2 >= 0 && samplePos2 < srcData.Length)
+                                    sampleValue2 = srcData[samplePos2];
+                                else
+                                    sampleValue2 = sampleValue1;
+
+
+                                sampleValue = sampleValue1*(1 - delta) + sampleValue2*delta;
+                            }
+                            break;
+
+                        case eInterpolation.SinX:
+                            {
+                                double delta = samplePos - Math.Floor(samplePos);
+                                int samplePos1 = (int) samplePos;
+                                int samplePos2 = (int) samplePos + 1;
+
+                                double sampleValue1;
+                                double sampleValue2;
+
+                                if (samplePos1 >= 0 && samplePos1 < srcData.Length)
+                                    sampleValue1 = srcData[samplePos1];
+                                else
+                                    sampleValue1 = 0;
+
+                                if (samplePos2 >= 0 && samplePos2 < srcData.Length)
+                                    sampleValue2 = srcData[samplePos2];
+                                else
+                                    sampleValue2 = sampleValue1;
+
+                                /* is that correct? */
+                                sampleValue = sampleValue1 * Math.Sin(delta) / delta + sampleValue2 * Math.Sin(1-delta) / (1-delta);
+                            }
+                            break;
+
+                        default:
+                            sampleValue = 0;
+                            break;
                     }
                 }
-
-                return dstData;
-            }
-
-
-            return null;
-        }
-
-        private bool FindBit(double[] srcData, bool[] bits, int bitNum)
-        {
-            double maxStrength = double.MinValue;
-            int maxPos = -1;
-            int startPos = 0;
-
-            if (bits[bitNum - 2])
-                startPos |= 16;
-            if (bits[bitNum - 1])
-                startPos |= 8;
-
-            for (int pos = 0; pos < 7; pos++)
-            {
-                double[] snap = sampleSnaps[startPos + pos];
-                int samplePosition = (int)(StartOffset + bitNum * Oversampling);
-
-                double strength = SignalPower.ProcessDiff(srcData, samplePosition, snap);
-                //Console.Out.WriteLine("pos: " + pos + " strength: " + strength);
-
-                if (strength > maxStrength)
+                else
                 {
-                    maxStrength = strength;
-                    maxPos = pos;
+                    if (samplePos >= 0 && samplePos<srcData.Length)
+                        sampleValue = srcData[(int) samplePos];
+                    else 
+                        sampleValue = 0;
                 }
+
+
+                /* if the bit is undeterminable, then it is the inverse of the last bit */
+                if (sampleValue > DecisionPower)
+                    dstData[currentBit] = true;
+                else if (sampleValue < -DecisionPower)
+                    dstData[currentBit] = false;
+                else
+                    dstData[currentBit] = !dstData[currentBit - 1];
             }
 
-            return maxPos > 3;
+            return dstData;
+
         }
+
+
 
     }
 }

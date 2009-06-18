@@ -88,6 +88,12 @@
     <Compile Include="Components\DirectX\DirectXPhaseDisplay.Designer.cs">
       <DependentUpon>DirectXPhaseDisplay.cs</DependentUpon>
     </Compile>
+    <Compile Include="Components\GDI\CFileDecimationDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Components\GDI\CFileDecimationDialog.Designer.cs">
+      <DependentUpon>CFileDecimationDialog.cs</DependentUpon>
+    </Compile>
     <Compile Include="Components\GDI\DifferenciateDisplay.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -189,7 +195,9 @@
     <Compile Include="Libraries\GSM\Layer3\L3Messages.cs" />
     <Compile Include="Libraries\GSM\Layer3\L3PacketTypes.cs" />
     <Compile Include="Libraries\GSM\Layer3\L3PDUList.cs" />
+    <Compile Include="Libraries\SampleSources\SampleSource.cs" />
     <Compile Include="Libraries\SampleSources\ShmemSampleSource.cs" />
+    <Compile Include="Libraries\SampleSources\USRPSampleSource.cs" />
     <Compile Include="Libraries\ShmemChain\SharedMem.cs" />
     <Compile Include="Libraries\ShmemChain\SharedMemNative.cs" />
     <Compile Include="Libraries\SignalProcessing\Differenciator.cs" />
@@ -204,6 +212,10 @@
   <ItemGroup>
     <EmbeddedResource Include="Components\DirectX\DirectXPhaseDisplay.resx">
       <DependentUpon>DirectXPhaseDisplay.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Components\GDI\CFileDecimationDialog.resx">
+      <DependentUpon>CFileDecimationDialog.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Components\GDI\DifferenciateDisplay.resx">

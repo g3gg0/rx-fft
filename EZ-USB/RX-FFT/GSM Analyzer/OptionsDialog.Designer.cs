@@ -30,6 +30,7 @@
         {
             this.chkFastAtan2 = new System.Windows.Forms.CheckBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.chkSubSample = new System.Windows.Forms.CheckBox();
             this.lblOversampling = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
@@ -41,7 +42,8 @@
             this.chkSniffIMSI = new System.Windows.Forms.CheckBox();
             this.chkShowUnhandled = new System.Windows.Forms.CheckBox();
             this.chkDumpRaw = new System.Windows.Forms.CheckBox();
-            this.chkSubSample = new System.Windows.Forms.CheckBox();
+            this.label4 = new System.Windows.Forms.Label();
+            this.txtInternalOvers = new System.Windows.Forms.TextBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
@@ -49,7 +51,7 @@
             // chkFastAtan2
             // 
             this.chkFastAtan2.AutoSize = true;
-            this.chkFastAtan2.Location = new System.Drawing.Point(10, 76);
+            this.chkFastAtan2.Location = new System.Drawing.Point(10, 103);
             this.chkFastAtan2.Name = "chkFastAtan2";
             this.chkFastAtan2.Size = new System.Drawing.Size(133, 17);
             this.chkFastAtan2.TabIndex = 13;
@@ -59,25 +61,38 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.txtInternalOvers);
             this.groupBox1.Controls.Add(this.chkSubSample);
             this.groupBox1.Controls.Add(this.lblOversampling);
             this.groupBox1.Controls.Add(this.label2);
             this.groupBox1.Controls.Add(this.label3);
+            this.groupBox1.Controls.Add(this.label4);
             this.groupBox1.Controls.Add(this.label1);
             this.groupBox1.Controls.Add(this.txtRate);
             this.groupBox1.Controls.Add(this.chkInvert);
             this.groupBox1.Controls.Add(this.chkFastAtan2);
             this.groupBox1.Location = new System.Drawing.Point(13, 13);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(206, 152);
+            this.groupBox1.Size = new System.Drawing.Size(206, 180);
             this.groupBox1.TabIndex = 14;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "GMSK Processing";
             // 
+            // chkSubSample
+            // 
+            this.chkSubSample.AutoSize = true;
+            this.chkSubSample.Location = new System.Drawing.Point(10, 150);
+            this.chkSubSample.Name = "chkSubSample";
+            this.chkSubSample.Size = new System.Drawing.Size(157, 17);
+            this.chkSubSample.TabIndex = 19;
+            this.chkSubSample.Text = "Subsample offset correction";
+            this.chkSubSample.UseVisualStyleBackColor = true;
+            this.chkSubSample.CheckedChanged += new System.EventHandler(this.chkSubSample_CheckedChanged);
+            // 
             // lblOversampling
             // 
             this.lblOversampling.AutoSize = true;
-            this.lblOversampling.Location = new System.Drawing.Point(89, 44);
+            this.lblOversampling.Location = new System.Drawing.Point(90, 74);
             this.lblOversampling.Name = "lblOversampling";
             this.lblOversampling.Size = new System.Drawing.Size(13, 13);
             this.lblOversampling.TabIndex = 18;
@@ -86,7 +101,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(174, 22);
+            this.label2.Location = new System.Drawing.Point(174, 46);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(20, 13);
             this.label2.TabIndex = 17;
@@ -95,7 +110,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(7, 44);
+            this.label3.Location = new System.Drawing.Point(8, 74);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(74, 13);
             this.label3.TabIndex = 16;
@@ -104,7 +119,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(7, 22);
+            this.label1.Location = new System.Drawing.Point(7, 46);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(79, 13);
             this.label1.TabIndex = 16;
@@ -112,7 +127,7 @@
             // 
             // txtRate
             // 
-            this.txtRate.Location = new System.Drawing.Point(92, 19);
+            this.txtRate.Location = new System.Drawing.Point(93, 43);
             this.txtRate.Name = "txtRate";
             this.txtRate.Size = new System.Drawing.Size(75, 20);
             this.txtRate.TabIndex = 15;
@@ -121,7 +136,7 @@
             // chkInvert
             // 
             this.chkInvert.AutoSize = true;
-            this.chkInvert.Location = new System.Drawing.Point(10, 99);
+            this.chkInvert.Location = new System.Drawing.Point(10, 126);
             this.chkInvert.Name = "chkInvert";
             this.chkInvert.Size = new System.Drawing.Size(113, 17);
             this.chkInvert.TabIndex = 14;
@@ -145,7 +160,7 @@
             this.groupBox2.Controls.Add(this.chkSniffIMSI);
             this.groupBox2.Controls.Add(this.chkShowUnhandled);
             this.groupBox2.Controls.Add(this.chkDumpRaw);
-            this.groupBox2.Location = new System.Drawing.Point(13, 171);
+            this.groupBox2.Location = new System.Drawing.Point(13, 199);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Size = new System.Drawing.Size(206, 95);
             this.groupBox2.TabIndex = 16;
@@ -185,16 +200,22 @@
             this.chkDumpRaw.UseVisualStyleBackColor = true;
             this.chkDumpRaw.CheckedChanged += new System.EventHandler(this.chkDumpRaw_CheckedChanged);
             // 
-            // chkSubSample
+            // label4
             // 
-            this.chkSubSample.AutoSize = true;
-            this.chkSubSample.Location = new System.Drawing.Point(10, 123);
-            this.chkSubSample.Name = "chkSubSample";
-            this.chkSubSample.Size = new System.Drawing.Size(157, 17);
-            this.chkSubSample.TabIndex = 19;
-            this.chkSubSample.Text = "Subsample offset correction";
-            this.chkSubSample.UseVisualStyleBackColor = true;
-            this.chkSubSample.CheckedChanged += new System.EventHandler(this.chkSubSample_CheckedChanged);
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(7, 19);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(79, 13);
+            this.label4.TabIndex = 16;
+            this.label4.Text = "Internal Overs.:";
+            // 
+            // txtInternalOvers
+            // 
+            this.txtInternalOvers.Location = new System.Drawing.Point(93, 19);
+            this.txtInternalOvers.Name = "txtInternalOvers";
+            this.txtInternalOvers.Size = new System.Drawing.Size(74, 20);
+            this.txtInternalOvers.TabIndex = 20;
+            this.txtInternalOvers.TextChanged += new System.EventHandler(this.txtInternalOvers_TextChanged);
             // 
             // OptionsDialog
             // 
@@ -233,5 +254,7 @@
         private System.Windows.Forms.CheckBox chkSniffIMSI;
         private System.Windows.Forms.CheckBox chkShowUnhandled;
         private System.Windows.Forms.CheckBox chkSubSample;
+        private System.Windows.Forms.TextBox txtInternalOvers;
+        private System.Windows.Forms.Label label4;
     }
 }

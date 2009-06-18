@@ -11,6 +11,7 @@ using LibRXFFT.Libraries.GSM.Bursts;
 using LibRXFFT.Libraries.GSM.Layer1;
 using LibRXFFT.Libraries.GSM.Layer2;
 using LibRXFFT.Libraries.GSM.Layer3;
+using LibRXFFT.Libraries.SampleSources;
 using LibRXFFT.Libraries.ShmemChain;
 using LibRXFFT.Libraries.SignalProcessing;
 
@@ -18,11 +19,10 @@ namespace GSM_Analyzer
 {
     public partial class GSMAnalyzer : Form
     {
-        private Stream InputStream;
-        private SharedMem ShmemChannel;
+        public SampleSource Source;
+
         private Thread ReadThread;
         private bool ThreadActive;
-        private int BlockSize = 512;
 
         private double[] BurstLengthCompensation = new[] { -0.75, 0.25, 0.25, 0.25 };
 
@@ -30,19 +30,24 @@ namespace GSM_Analyzer
         private bool SingleStep;
 
         internal TimeSlotHandler Handler;
-        internal readonly GMSKDemodulator Demodulator;
 
         private FilterDialog FilterWindow;
         private BurstVisualizer BurstWindow;
         private OptionsDialog OptionsWindow;
 
-        internal double SamplingRate = 2184533;
-        internal bool SamplingRateChanged = false;
+        internal double DefaultSamplingRate = 2184533;
         public static bool Subsampling = false;
+        public int InternalOversampling = 1;
 
         internal double Oversampling
         {
-            get { return SamplingRate / 270833; }
+            get 
+            {
+                if (Source != null)
+                    return Source.OutputSamplingRate / 270833;
+
+                return DefaultSamplingRate / 270833;
+            }
         }
 
 
@@ -50,7 +55,6 @@ namespace GSM_Analyzer
         {
             InitializeComponent();
             Handler = new TimeSlotHandler(Oversampling, 0.3, AddMessage);
-            Demodulator = new GMSKDemodulator();
 
             if (Handler.L3.StatusMessage != null)
                 MessageBox.Show("   [L3] " + Handler.L3.StatusMessage);
@@ -258,19 +262,14 @@ namespace GSM_Analyzer
 
         private void btnOpen_Click(object sender, EventArgs e)
         {
-            if (InputStream != null)
+            if (Source != null)
             {
                 ThreadActive = false;
                 Thread.Sleep(10);
                 ReadThread.Abort();
-                InputStream.Close();
 
-                if (ShmemChannel != null)
-                {
-                    ShmemChannel.Unregister();
-                    ShmemChannel = null;
-                }
-                InputStream = null;
+                Source.Close();
+                Source = null;
 
                 btnOpen.Text = "Open";
             }
@@ -292,53 +291,21 @@ namespace GSM_Analyzer
 
             if (dlg.ShowDialog() == DialogResult.OK)
             {
-                CFileDecimationDialog dec = new CFileDecimationDialog();
+                Source = new USRPSampleSource(dlg.FileName, InternalOversampling);
 
-                dec.StartPosition = FormStartPosition.Manual;
-                dec.Location = MousePosition;
-                dec.ShowDialog();
+                txtLog.Clear();
+                ThreadActive = true;
+                ReadThread = new Thread(FFTReadFunc);
+                ReadThread.Start();
 
-                if (dec.Decimation < 1)
-                    return;
-
-                /* calculate sampling rate from USRPs decimation rate */
-                SamplingRate = 64000000f / dec.Decimation;
-                SamplingRateChanged = true;
-
-                /* USRP has an inverted spectrum */
-                GMSKDemodulator.InvertedSpectrum = true;
-
-                try
-                {
-                    InputStream = new FileStream(dlg.FileName, FileMode.Open);
-                    BlockSize = 32768;
-
-                    Demodulator.DataFormat = eDataFormat.Direct64BitIQFloat64k;
-                    txtLog.Clear();
-
-                    ThreadActive = true;
-                    ReadThread = new Thread(FFTReadFunc);
-                    ReadThread.Start();
-
-                    btnOpen.Text = "Close";
-                }
-                catch (Exception ex)
-                {
-                    AddMessage("Exception: " + ex);
-                }
+                btnOpen.Text = "Close";
             }
         }
 
         private void btnOpen_SharedMemory(object sender, EventArgs e)
         {
-            ShmemChannel = new SharedMem(0, -1, "GSM Analyzer", 64 * 1024 * 1024);
-            ShmemChannel.ReadTimeout = 10;
-            ShmemChannel.ReadMode = eReadMode.TimeLimited;
-            BlockSize = 512;
-
-            InputStream = ShmemChannel;
-
-            Demodulator.DataFormat = eDataFormat.Direct16BitIQFixedPoint;
+            Source = new ShmemSampleSource("GSM Analyzer", InternalOversampling);
+            
             txtLog.Clear();
             ThreadActive = true;
             ReadThread = new Thread(FFTReadFunc);
@@ -415,11 +382,7 @@ namespace GSM_Analyzer
             long currentPosition = 0;
             long updateLoops = 0;
 
-            double oldSamplingRate = SamplingRate;
-
-            byte[] inBuffer = new byte[BlockSize * Demodulator.BytesPerSamplePair];
-            double[] gsmSignal = new double[BlockSize];
-            double[] gsmStrength = new double[BlockSize];
+            double oldSamplingRate = Source.OutputSamplingRate;
 
             double[] burstBuffer = new double[(int)((Handler.SpareBits + Burst.TotalBitCount) * Oversampling)];
             double[] burstStrengthBuffer = new double[(int)((Handler.SpareBits + Burst.TotalBitCount) * Oversampling)];
@@ -444,255 +407,233 @@ namespace GSM_Analyzer
 
             while (ThreadActive)
             {
-                int read = InputStream.Read(inBuffer, 0, inBuffer.Length);
+                if (!Source.Read())
+                    return;
 
-                if (read != 0 && read != inBuffer.Length)
-                {
-                    parameters.State = eGSMState.Reset;
-                    UpdateUIStatus(parameters);
-                    AddMessage("(Timeout while reading data)" + Environment.NewLine);
-                    Thread.Sleep(500);
-                }
-                else
-                {
-                    int samplesRead = read / Demodulator.BytesPerSamplePair;
+                int samplesRead = Source.SamplesRead;
 
-                    /* if read an even sample count */
-                    if (samplesRead * Demodulator.BytesPerSamplePair == read)
+                /* to allow external rate change */
+                if (Source.SamplingRateChanged)
+                {
+                    Source.SamplingRateChanged = false;
+
+                    if (Oversampling > 1)
                     {
-                        /* when the rate has changed */
-                        if (ShmemChannel != null && ShmemChannel.Rate != 0 && SamplingRate != ShmemChannel.Rate / 2)
-                        {
-                            SamplingRateChanged = true;
-                            SamplingRate = ShmemChannel.Rate / 2;
-                        }
+                        AddMessage("   [GMSK] Sampling Rate changed from " + oldSamplingRate + " to " + Source.OutputSamplingRate + ", Oversampling factor: " + Oversampling + Environment.NewLine);
+                        oldSamplingRate = Source.OutputSamplingRate;
+                        finder = new FCCHFinder(Oversampling);
+                        Handler = new TimeSlotHandler(Oversampling, 0.3, AddMessage);
+                        Handler.Parameters = parameters;
 
-                        /* to allow external rate change */
-                        if (SamplingRateChanged)
-                        {
-                            SamplingRateChanged = false;
-                            if (Oversampling > 1)
+                        burstBuffer = new double[(int) ((Handler.SpareBits + Burst.TotalBitCount)*Oversampling)];
+                        burstStrengthBuffer = new double[(int) ((Handler.SpareBits + Burst.TotalBitCount)*Oversampling)];
+                        burstSamples = (long) Math.Ceiling(Burst.TotalBitCount*Oversampling);
+                        burstSamplesAccurate = Burst.TotalBitCount*Oversampling;
+                        deltaSamplesPerBurst = burstSamples - burstSamplesAccurate;
+                        skipSampleEvery = 1/deltaSamplesPerBurst;
+                        burstCount = 0;
+                        sampleDelta = 0;
+                    }
+                }
+
+
+                for (int pos = 0; pos < samplesRead; pos++)
+                {
+                    double signal = Source.Signal[pos];
+                    double strength = Source.Strength[pos];
+
+                    bool burstSampled = false;
+
+                    /* write this sample into the burst buffer */
+                    if (burstBufferPos < burstBuffer.Length && burstBufferPos > 0)
+                    {
+                        burstBuffer[burstBufferPos] = signal;
+                        burstStrengthBuffer[burstBufferPos] = strength;
+                    }
+                    burstBufferPos++;
+
+                    /* when we should skip one sample, decrease sampleDelta */
+                    if (burstCount >= skipSampleEvery)
+                    {
+                        sampleDelta -= 1;
+                        burstCount -= skipSampleEvery;
+                    }
+
+                    /* have enough samples for one burst? */
+                    if (burstBufferPos >= (burstSamples + sampleDelta))
+                    {
+                        burstSampled = true;
+                        /* reset the delta. it will get set later again */
+                        sampleDelta = 0;
+                    }
+
+                    switch (parameters.State)
+                    {
+                        case eGSMState.Idle:
+                            break;
+
+                        case eGSMState.Reset:
+                            AddMessage("[GSM] Reset" + Environment.NewLine);
+                            L3Handler.ReloadFiles();
+                            currentPosition = 0;
+                            finder.Reset();
+                            parameters.State = eGSMState.FCCHSearch;
+                            ResetStats();
+                            UpdateUIStatus(parameters);
+                            break;
+
+                        case eGSMState.FCCHSearch:
+                            /* let the FCCH finder detect an FCCH burst */
+                            bool fcchFound = false;
+                            try
                             {
-                                AddMessage("   [GMSK] Sampling Rate changed from " + oldSamplingRate + " to " + SamplingRate);
-                                oldSamplingRate = SamplingRate;
-                                finder = new FCCHFinder(Oversampling);
-                                Handler = new TimeSlotHandler(Oversampling, 0.3, AddMessage);
-                                Handler.Parameters = parameters;
-
-                                burstBuffer = new double[(int)((Handler.SpareBits + Burst.TotalBitCount) * Oversampling)];
-                                burstStrengthBuffer = new double[(int)((Handler.SpareBits + Burst.TotalBitCount) * Oversampling)];
-                                burstSamples = (long)Math.Ceiling(Burst.TotalBitCount * Oversampling);
-                                burstSamplesAccurate = Burst.TotalBitCount * Oversampling;
-                                deltaSamplesPerBurst = burstSamples - burstSamplesAccurate;
-                                skipSampleEvery = 1 / deltaSamplesPerBurst;
-                                burstCount = 0;
-                                sampleDelta = 0;
+                                fcchFound = finder.ProcessData(signal, strength);
                             }
-                        }
-
-                        try
-                        {
-                            Demodulator.ProcessData(inBuffer, read, gsmSignal, gsmStrength);
-                        }
-                        catch (Exception e)
-                        {
-                            AddMessage("   [GMSK] Exception: " + e + Environment.NewLine);
-                            return;
-                        }
-
-
-                        for (int pos = 0; pos < samplesRead; pos++)
-                        {
-                            double signal = gsmSignal[pos];
-                            double strength = gsmStrength[pos];
-
-                            bool burstSampled = false;
-
-                            /* write this sample into the burst buffer */
-                            if (burstBufferPos < burstBuffer.Length && burstBufferPos > 0)
+                            catch (Exception e)
                             {
-                                burstBuffer[burstBufferPos] = signal;
-                                burstStrengthBuffer[burstBufferPos] = strength;
-                            }
-                            burstBufferPos++;
-
-                            /* when we should skip one sample, decrease sampleDelta */
-                            if (burstCount >= skipSampleEvery)
-                            {
-                                sampleDelta -= 1;
-                                burstCount -= skipSampleEvery;
+                                AddMessage("   [FCCH] Exception: " + e + Environment.NewLine);
+                                return;
                             }
 
-                            /* have enough samples for one burst? */
-                            if (burstBufferPos >= (burstSamples + sampleDelta))
+                            if (fcchFound)
                             {
-                                burstSampled = true;
-                                /* reset the delta. it will get set later again */
-                                sampleDelta = 0;
+                                parameters.State = eGSMState.SCHSearch;
+                                UpdateUIStatus(parameters);
+
+                                AddMessage("   [FCCH]" + Environment.NewLine);
+
+                                /* save the position where the frame started */
+                                frameStartPosition = finder.BurstStartPosition;
+                                frameStartPosition -= (long) (Oversampling*Handler.SpareBits);
+
+                                /* update the burst buffer pointer */
+                                burstBufferPos = currentPosition - frameStartPosition;
+
+                                /* this is TN 0 */
+                                parameters.FN = 0;
+                                parameters.TN = 0;
                             }
 
-                            switch (parameters.State)
+                            break;
+
+
+                        case eGSMState.SCHSearch:
+                            /* if one burst was sampled */
+                            if (burstSampled)
                             {
-                                case eGSMState.Idle:
-                                    break;
+                                /* if this is the eighth burst, its the first timeslot of the next frame - SCH */
+                                if (parameters.TN == 8)
+                                {
+                                    /* set TN to 7, since handler will increase */
+                                    parameters.TN = 7;
+                                    parameters.FirstSCH = true;
 
-                                case eGSMState.Reset:
-                                    AddMessage("[GSM] Reset" + Environment.NewLine);
-                                    L3Handler.ReloadFiles();
-                                    currentPosition = 0;
-                                    finder.Reset();
-                                    parameters.State = eGSMState.FCCHSearch;
-                                    ResetStats();
-                                    UpdateUIStatus(parameters);
-                                    break;
+                                    /* let the handler process this packet */
+                                    Handler.Decoder.StartOffset = (int) (Oversampling*Handler.SpareBits);
+                                    Handler.Decoder.SubSampleOffset = 0;
+                                    Handler.Handle(burstBuffer);
 
-                                case eGSMState.FCCHSearch:
-                                    /* let the FCCH finder detect an FCCH burst */
-                                    bool fcchFound = false;
-                                    try
+                                    if (parameters.Error)
                                     {
-                                        fcchFound = finder.ProcessData(signal, strength);
-                                    }
-                                    catch (Exception e)
-                                    {
-                                        AddMessage("   [FCCH] Exception: " + e + Environment.NewLine);
-                                        return;
-                                    }
-
-                                    if (fcchFound)
-                                    {
-                                        parameters.State = eGSMState.SCHSearch;
+                                        AddMessage("[GSM] SCH failed -> Reset" + Environment.NewLine);
+                                        parameters.State = eGSMState.Reset;
                                         UpdateUIStatus(parameters);
-
-                                        AddMessage("   [FCCH]" + Environment.NewLine);
-
-                                        /* save the position where the frame started */
-                                        frameStartPosition = finder.BurstStartPosition;
-                                        frameStartPosition -= (long)(Oversampling * Handler.SpareBits);
-
-                                        /* update the burst buffer pointer */
-                                        burstBufferPos = currentPosition - frameStartPosition;
-
-                                        /* this is TN 0 */
-                                        parameters.FN = 0;
-                                        parameters.TN = 0;
+                                        parameters.Error = false;
                                     }
-
-                                    break;
-
-
-                                case eGSMState.SCHSearch:
-                                    /* if one burst was sampled */
-                                    if (burstSampled)
+                                    else
                                     {
-                                        /* if this is the eighth burst, its the first timeslot of the next frame - SCH */
-                                        if (parameters.TN == 8)
-                                        {
-                                            /* set TN to 7, since handler will increase */
-                                            parameters.TN = 7;
-                                            parameters.FirstSCH = true;
-
-                                            /* let the handler process this packet */
-                                            Handler.Decoder.StartOffset = (int)(Oversampling * Handler.SpareBits);
-                                            Handler.Decoder.SubSampleOffset = 0;
-                                            Handler.Handle(burstBuffer);
-
-                                            if (parameters.Error)
-                                            {
-                                                AddMessage("[GSM] SCH failed -> Reset" + Environment.NewLine);
-                                                parameters.State = eGSMState.Reset;
-                                                UpdateUIStatus(parameters);
-                                                parameters.Error = false;
-                                            }
-                                            else
-                                            {
-                                                AddMessage("[GSM] SCH found -> Lock" + Environment.NewLine);
-                                                parameters.State = eGSMState.Lock;
-                                                UpdateUIStatus(parameters);
-                                            }
-                                        }
-                                        else
-                                            parameters.TN++;
-
-
-                                        burstBufferPos = 0;
-
-                                        /* update the burst visualizer */
-                                        if (BurstWindow != null)
-                                        {
-                                            BurstWindow.XAxisOffset = Handler.Decoder.StartOffset;
-                                            BurstWindow.ProcessBurst(burstBuffer, burstStrengthBuffer);
-                                        }
-
-                                        if (SingleStep)
-                                            SingleStepSem.WaitOne();
-
+                                        AddMessage("[GSM] SCH found -> Lock" + Environment.NewLine);
+                                        parameters.State = eGSMState.Lock;
+                                        UpdateUIStatus(parameters);
                                     }
-                                    break;
-
-                                case eGSMState.Lock:
-
-                                    /* when we are already in frame sync and one burst was sampled */
-                                    if (burstSampled)
-                                    {
-                                        Handler.Decoder.StartOffset = (int)(Oversampling * Handler.SpareBits);
-                                        if (Subsampling)
-                                            Handler.Decoder.SubSampleOffset = OffsetEstimator.EstimateOffset(burstBuffer,
-                                                                           (int)(Handler.Decoder.StartOffset + Oversampling / 2 - 5 * Oversampling),
-                                                                           (int)((Burst.NetBitCount - 5) * Oversampling),
-                                                                           Oversampling);
-                                        else
-                                            Handler.Decoder.SubSampleOffset = 0;
-
-                                        if (BurstWindow != null)
-                                        {
-                                            BurstWindow.XAxisOffset = (int)(Handler.Decoder.StartOffset + Handler.Decoder.SubSampleOffset + Oversampling / 2);
-                                            BurstWindow.Oversampling = Oversampling;
-                                            BurstWindow.ProcessBurst(burstBuffer, burstStrengthBuffer);
-                                        }
+                                }
+                                else
+                                    parameters.TN++;
 
 
-                                        Handler.Handle(burstBuffer);
-                                        if (parameters.Error)
-                                        {
-                                            parameters.Error = false;
-                                            AddMessage("[GSM] Packet handling failed -> Reset" + Environment.NewLine);
-                                            parameters.State = eGSMState.Reset;
-                                        }
+                                burstBufferPos = 0;
 
-                                        /* 
+                                /* update the burst visualizer */
+                                if (BurstWindow != null)
+                                {
+                                    BurstWindow.XAxisOffset = Handler.Decoder.StartOffset;
+                                    BurstWindow.ProcessBurst(burstBuffer, burstStrengthBuffer);
+                                }
+
+                                if (SingleStep)
+                                    SingleStepSem.WaitOne();
+                            }
+                            break;
+
+                        case eGSMState.Lock:
+
+                            /* when we are already in frame sync and one burst was sampled */
+                            if (burstSampled)
+                            {
+                                Handler.Decoder.StartOffset = (int) (Oversampling*Handler.SpareBits);
+                                if (Subsampling)
+                                    Handler.Decoder.SubSampleOffset = OffsetEstimator.EstimateOffset(burstBuffer,
+                                                                                                     (int)
+                                                                                                     (Handler.
+                                                                                                          Decoder.
+                                                                                                          StartOffset +
+                                                                                                      Oversampling/2 -
+                                                                                                      5*Oversampling),
+                                                                                                     (int)
+                                                                                                     ((Burst.
+                                                                                                           NetBitCount -
+                                                                                                       5)*
+                                                                                                      Oversampling),
+                                                                                                     Oversampling);
+                                else
+                                    Handler.Decoder.SubSampleOffset = 0;
+
+                                if (BurstWindow != null)
+                                {
+                                    BurstWindow.XAxisOffset =
+                                        (int)
+                                        (Handler.Decoder.StartOffset + Handler.Decoder.SubSampleOffset +
+                                         Oversampling/2);
+                                    BurstWindow.Oversampling = Oversampling;
+                                    BurstWindow.ProcessBurst(burstBuffer, burstStrengthBuffer);
+                                }
+
+
+                                Handler.Handle(burstBuffer);
+                                if (parameters.Error)
+                                {
+                                    parameters.Error = false;
+                                    AddMessage("[GSM] Packet handling failed -> Reset" + Environment.NewLine);
+                                    parameters.State = eGSMState.Reset;
+                                }
+
+                                /* 
                                          * tricky! the BTS sends the bursts with 156 bits instead of 156.25
                                          * but it delays one bit after 4 bursts. compensate this here.
                                          * we do that for the next timeslot
                                          */
-                                        long burstNumber = ((parameters.TN + 1) % 4);
-                                        sampleDelta -= (int)(BurstLengthCompensation[burstNumber] * Oversampling);
+                                long burstNumber = ((parameters.TN + 1)%4);
+                                sampleDelta -= (int) (BurstLengthCompensation[burstNumber]*Oversampling);
 
-                                        /* update counters and reset offset correction */
-                                        burstCount++;
-                                        burstBufferPos = -parameters.SampleOffset;
-                                        parameters.SampleOffset = 0;
+                                /* update counters and reset offset correction */
+                                burstCount++;
+                                burstBufferPos = -parameters.SampleOffset;
+                                parameters.SampleOffset = 0;
 
-                                        /* update UI if necessary */
-                                        if (SingleStep || updateLoops++ >= 20 * 9)
-                                        {
-                                            UpdateUIStatus(parameters);
-                                            UpdateStats(parameters);
-                                            updateLoops = 0;
-                                        }
+                                /* update UI if necessary */
+                                if (SingleStep || updateLoops++ >= 20*9)
+                                {
+                                    UpdateUIStatus(parameters);
+                                    UpdateStats(parameters);
+                                    updateLoops = 0;
+                                }
 
-                                        if (SingleStep)
-                                            SingleStepSem.WaitOne();
-                                    }
-                                    break;
+                                if (SingleStep)
+                                    SingleStepSem.WaitOne();
                             }
-                            currentPosition++;
-                        }
+                            break;
                     }
-                    else
-                    {
-                        Thread.Sleep(500);
-                    }
+                    currentPosition++;
                 }
             }
         }

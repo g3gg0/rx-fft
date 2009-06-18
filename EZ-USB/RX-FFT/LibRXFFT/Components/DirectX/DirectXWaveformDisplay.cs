@@ -59,13 +59,13 @@ namespace LibRXFFT.Components.DirectX
 
         protected override void OnKeyDown(KeyEventArgs e)
         {
-            if (e.Shift)
+            if (e.KeyCode == Keys.ShiftKey)
                 ShiftPressed = true;
         }
 
         protected override void OnKeyUp(KeyEventArgs e)
         {
-            if (e.Shift)
+            if (e.KeyCode == Keys.ShiftKey)
                 ShiftPressed = false;
         }
 

@@ -94,12 +94,6 @@
     <Compile Include="BurstVisualizer.Designer.cs">
       <DependentUpon>BurstVisualizer.cs</DependentUpon>
     </Compile>
-    <Compile Include="CFileDecimationDialog.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="CFileDecimationDialog.Designer.cs">
-      <DependentUpon>CFileDecimationDialog.cs</DependentUpon>
-    </Compile>
     <Compile Include="FilterDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -122,10 +116,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="BurstVisualizer.resx">
       <DependentUpon>BurstVisualizer.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="CFileDecimationDialog.resx">
-      <DependentUpon>CFileDecimationDialog.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FilterDialog.resx">

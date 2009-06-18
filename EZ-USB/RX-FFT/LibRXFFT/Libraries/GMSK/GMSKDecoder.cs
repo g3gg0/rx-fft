@@ -19,7 +19,7 @@ namespace LibRXFFT.Libraries.GMSK
 
         public eInterpolation Interpolation = eInterpolation.Automatic;
 
-        private const double MinPowerFact = 0.25;
+        private const double MinPowerFact = 0.3;
         private readonly double Oversampling;
         double DecisionPower = 0.0f;
 

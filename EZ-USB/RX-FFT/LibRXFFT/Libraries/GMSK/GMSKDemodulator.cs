@@ -13,13 +13,15 @@ namespace LibRXFFT.Libraries.GMSK
     public class GMSKDemodulator
     {
         private double LastPhase;
-        public static bool UseFastAtan2 = true;
-        public static bool InvertedSpectrum = false;
+        public bool UseFastAtan2 = true;
+        public bool InvertedSpectrum = false;
         public int BytesPerSamplePair;
         public int BytesPerSample;
         private eDataFormat _DataFormat;
 
         private SharedMem ShmemOutChan;
+        public static bool UseFastAtan2Default = true;
+        public static bool InvertedSpectrumDefault = false;
 
         public eDataFormat DataFormat
         {
@@ -52,6 +54,9 @@ namespace LibRXFFT.Libraries.GMSK
         public GMSKDemodulator()
         {
             DataFormat = eDataFormat.Direct16BitIQFixedPoint;
+            UseFastAtan2 = UseFastAtan2Default;
+            InvertedSpectrum = InvertedSpectrumDefault;
+
             //ShmemOutChan = new SharedMem(-2, -1, "GMSKDemod");
 
         }

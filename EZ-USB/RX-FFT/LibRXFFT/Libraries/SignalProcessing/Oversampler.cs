@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace LibRXFFT.Libraries.SignalProcessing
 {
@@ -18,10 +15,12 @@ namespace LibRXFFT.Libraries.SignalProcessing
         private double LowVal = -1.0;
         public eOversamplingType Type = eOversamplingType.SinX;
         private double[] DeltaTable;
+        private double Shannon = 0.6;
 
 
         public Oversampler()
         {
+            PrepareDeltaTable();
         }
 
         public Oversampler(double highVal, double lowVal)
@@ -30,13 +29,13 @@ namespace LibRXFFT.Libraries.SignalProcessing
             LowVal = lowVal;
         }
 
-        public void PrepareDeltaTable(int oversampling)
+        public void PrepareDeltaTable()
         {
-            DeltaTable = new double[oversampling];
+            DeltaTable = new double[200];
 
-            for(int pos =0; pos < DeltaTable.Length; pos++)
+            for (int pos = 0; pos < DeltaTable.Length; pos++)
             {
-                DeltaTable[pos] = Math.Sin(pos * Math.PI) / (pos * Math.PI);
+                DeltaTable[pos] = Math.Sin(Shannon * pos * Math.PI) / (pos * Math.PI);
             }
         }
 
@@ -65,7 +64,13 @@ namespace LibRXFFT.Libraries.SignalProcessing
 
         public double[] Oversample(double[] srcData, double oversampling)
         {
-            double[] outData = new double[(int)(srcData.Length * oversampling)];
+            return Oversample(srcData, null, oversampling);
+        }
+
+        public double[] Oversample(double[] srcData, double[] outData, double oversampling)
+        {
+            if (outData == null)
+                outData = new double[(int)(srcData.Length * oversampling)];
 
             switch (Type)
             {
@@ -104,26 +109,27 @@ namespace LibRXFFT.Libraries.SignalProcessing
                 case eOversamplingType.SinX:
                     for (int outPos = 0; outPos < outData.Length; outPos++)
                     {
-                        int windowStart = (int)(outPos / oversampling - 8);
-                        int windowEnd = (int)(outPos / oversampling + 8);
+                        int windowStart = (int)(outPos / oversampling - 4);
+                        int windowEnd = (int)(outPos / oversampling + 4);
 
-                        windowStart = Math.Max(0, windowStart);
-                        windowEnd = Math.Min(outData.Length, windowEnd);
+                        outData[outPos] = 0;
 
                         for (int windowPos = windowStart; windowPos < windowEnd; windowPos++)
                         {
                             double delta = windowPos - outPos / oversampling;
                             double sampleValue;
 
-                            if (windowPos >= 0 && windowPos < srcData.Length)
+                            if (windowPos < 0)
+                                sampleValue = srcData[0];
+                            else if (windowPos >= srcData.Length)
+                                sampleValue = srcData[srcData.Length - 1];
+                            else 
                                 sampleValue = srcData[windowPos];
-                            else
-                                sampleValue = 0;
 
                             delta *= Math.PI;
 
                             if (delta != 0)
-                                outData[outPos] += sampleValue * Math.Sin(delta) / delta;
+                                outData[outPos] += sampleValue * DeltaTable[(int) Math.Abs(delta)];
                             else
                                 outData[outPos] += sampleValue;
                         }

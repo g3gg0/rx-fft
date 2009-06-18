@@ -27,8 +27,8 @@ namespace GSM_Analyzer
                 ReadThread.Join();
             }
 
-            if (ShmemChannel != null)
-                ShmemChannel.Unregister();
+            if (Source != null)
+                Source.Close();
 
             base.Dispose(disposing);
         }

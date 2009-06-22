@@ -85,7 +85,7 @@ namespace GaussGenerator
             waveformDisplay.Clear();
             waveformDisplay.XAxisUnit = Oversampling;
 
-            waveformDisplay.XAxisOffset = 128;
+            waveformDisplay.XAxisGridOffset = 128;
             waveformDisplay.ProcessData(new double[128]);
 
             waveformDisplay.ProcessData(gaussSamples);

@@ -32,8 +32,8 @@ namespace GSM_Analyzer
         private void InitializeComponent()
         {
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.waveformDisplay1 = new DirectXWaveformDisplay();
-            this.waveformDisplay2 = new DirectXWaveformDisplay();
+            this.SampleDisplay = new DirectXWaveformDisplay();
+            this.StrengthDisplay = new DirectXWaveformDisplay();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -48,42 +48,40 @@ namespace GSM_Analyzer
             // 
             // splitContainer1.Panel1
             // 
-            this.splitContainer1.Panel1.Controls.Add(this.waveformDisplay1);
+            this.splitContainer1.Panel1.Controls.Add(this.SampleDisplay);
             // 
             // splitContainer1.Panel2
             // 
-            this.splitContainer1.Panel2.Controls.Add(this.waveformDisplay2);
+            this.splitContainer1.Panel2.Controls.Add(this.StrengthDisplay);
             this.splitContainer1.Size = new System.Drawing.Size(873, 489);
             this.splitContainer1.SplitterDistance = 232;
             this.splitContainer1.TabIndex = 0;
             // 
             // waveformDisplay1
             // 
-            this.waveformDisplay1.DisplayName = null;
-            this.waveformDisplay1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.waveformDisplay1.Location = new System.Drawing.Point(0, 0);
-            this.waveformDisplay1.MaxSamples = 10000;
-            this.waveformDisplay1.Name = "waveformDisplay1";
-            this.waveformDisplay1.ShowFPS = false;
-            this.waveformDisplay1.Size = new System.Drawing.Size(873, 232);
-            this.waveformDisplay1.StartSample = 0;
-            this.waveformDisplay1.TabIndex = 0;
-            this.waveformDisplay1.UseLines = true;
-            this.waveformDisplay1.YZoomFactor = 1;
+            this.SampleDisplay.DisplayName = null;
+            this.SampleDisplay.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.SampleDisplay.Location = new System.Drawing.Point(0, 0);
+            this.SampleDisplay.MaxSamples = 10000;
+            this.SampleDisplay.Name = "SampleDisplay";
+            this.SampleDisplay.ShowFPS = false;
+            this.SampleDisplay.Size = new System.Drawing.Size(873, 232);
+            this.SampleDisplay.TabIndex = 0;
+            this.SampleDisplay.UseLines = true;
+            this.SampleDisplay.YZoomFactor = 1;
             // 
             // waveformDisplay2
             // 
-            this.waveformDisplay2.DisplayName = null;
-            this.waveformDisplay2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.waveformDisplay2.Location = new System.Drawing.Point(0, 0);
-            this.waveformDisplay2.MaxSamples = 10000;
-            this.waveformDisplay2.Name = "waveformDisplay2";
-            this.waveformDisplay2.ShowFPS = false;
-            this.waveformDisplay2.Size = new System.Drawing.Size(873, 253);
-            this.waveformDisplay2.StartSample = 0;
-            this.waveformDisplay2.TabIndex = 0;
-            this.waveformDisplay2.UseLines = true;
-            this.waveformDisplay2.YZoomFactor = 1;
+            this.StrengthDisplay.DisplayName = null;
+            this.StrengthDisplay.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.StrengthDisplay.Location = new System.Drawing.Point(0, 0);
+            this.StrengthDisplay.MaxSamples = 10000;
+            this.StrengthDisplay.Name = "StrengthDisplay";
+            this.StrengthDisplay.ShowFPS = false;
+            this.StrengthDisplay.Size = new System.Drawing.Size(873, 253);
+            this.StrengthDisplay.TabIndex = 0;
+            this.StrengthDisplay.UseLines = true;
+            this.StrengthDisplay.YZoomFactor = 1;
             // 
             // BurstVisualizer
             // 
@@ -103,7 +101,7 @@ namespace GSM_Analyzer
         #endregion
 
         private System.Windows.Forms.SplitContainer splitContainer1;
-        private DirectXWaveformDisplay waveformDisplay1;
-        private DirectXWaveformDisplay waveformDisplay2;
+        public DirectXWaveformDisplay SampleDisplay;
+        private DirectXWaveformDisplay StrengthDisplay;
     }
 }

@@ -180,7 +180,7 @@ namespace LibRXFFT.Components.DirectX
                                 LinePoints[pos].X = posX;
                                 LinePoints[pos].Y = posY;
                             }
-                            CreateVertexBuffer(LinePoints, samples.Length);
+                            CreateVertexBufferForPoints(LinePoints, samples.Length);
                         }
                         else
                         {
@@ -199,7 +199,7 @@ namespace LibRXFFT.Components.DirectX
                                 LinePoints[posX].X = posX;
                                 LinePoints[posX].Y = posY;
                             }
-                            CreateVertexBuffer(LinePoints, DirectXWidth);
+                            CreateVertexBufferForPoints(LinePoints, DirectXWidth);
                         }
 
 

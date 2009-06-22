@@ -183,7 +183,7 @@ namespace LibRXFFT.Components.DirectX
                             SampleValues.RemoveRange(0, removeCount);
                         }
 
-                        CreateVertexBuffer(LinePoints);
+                        CreateVertexBufferForPoints(LinePoints);
                     }
                 }
                 Render();

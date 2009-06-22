@@ -15,35 +15,26 @@ namespace LibRXFFT.Libraries.SampleSources
 
         public USRPSampleSource(string fileName, int oversampling) : base(oversampling)
         {
-            /*
-            ShmemChannel = new SharedMem(0, -1, "grrr");
-            ShmemChannel.ReadTimeout = 10;
-            ShmemChannel.ReadMode = eReadMode.TimeLimited;
-             * */
-
-            Oversampler = new Oversampler();
-            Oversampler.Type = eOversamplingType.SinX;
+            //ShmemChannel = new SharedMem(0, -1, "grrr");
+            //ShmemChannel.ReadTimeout = 10;
+            //ShmemChannel.ReadMode = eReadMode.TimeLimited;
 
             /* USRP has an inverted spectrum */
-            Demodulator = new GMSKDemodulator();
-            Demodulator.DataFormat = eDataFormat.Direct64BitIQFloat64k;
             Demodulator.InvertedSpectrum = true;
+            Demodulator.DataFormat = eDataFormat.Direct64BitIQFloat64k;
 
             InBuffer = new byte[BlockSize * Demodulator.BytesPerSamplePair];
 
-
             InputStream = new FileStream(fileName, FileMode.Open);
 
+            /* calculate sampling rate from USRPs decimation rate */
             CFileDecimationDialog dec = new CFileDecimationDialog();
-
             dec.ShowDialog();
 
             if (dec.Decimation < 1)
                 return;
 
-            /* calculate sampling rate from USRPs decimation rate */
             InputSamplingRate = 64000000f / dec.Decimation;
-            SamplingRateChanged = true;
         }
 
         public override void Close()
@@ -66,7 +57,6 @@ namespace LibRXFFT.Libraries.SampleSources
                 Demodulator.ProcessData(InBuffer, read, TmpSignal, TmpStrength);
                 Oversampler.Oversample(TmpSignal, Signal, InternalOversampling);
                 Oversampler.Oversample(TmpStrength, Strength, InternalOversampling);
-
             }
             else
                 Demodulator.ProcessData(InBuffer, read, Signal, Strength);

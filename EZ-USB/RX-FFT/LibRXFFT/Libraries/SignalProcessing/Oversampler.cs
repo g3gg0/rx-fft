@@ -11,11 +11,14 @@ namespace LibRXFFT.Libraries.SignalProcessing
 
     public class Oversampler
     {
+        public int SinXDepth = 4;
+
         private double HighVal = 1.0;
         private double LowVal = -1.0;
         public eOversamplingType Type = eOversamplingType.SinX;
         private double[] DeltaTable;
         private double Shannon = 0.6;
+
 
 
         public Oversampler()
@@ -109,27 +112,23 @@ namespace LibRXFFT.Libraries.SignalProcessing
                 case eOversamplingType.SinX:
                     for (int outPos = 0; outPos < outData.Length; outPos++)
                     {
-                        int windowStart = (int)(outPos / oversampling - 4);
-                        int windowEnd = (int)(outPos / oversampling + 4);
+                        int windowStart = (int)Math.Max(0, outPos / oversampling - SinXDepth);
+                        int windowEnd = (int)Math.Min(srcData.Length - 1, outPos / oversampling + SinXDepth);
 
                         outData[outPos] = 0;
 
                         for (int windowPos = windowStart; windowPos < windowEnd; windowPos++)
                         {
-                            double delta = windowPos - outPos / oversampling;
+                            double delta = outPos / oversampling - windowPos;
                             double sampleValue;
 
-                            if (windowPos < 0)
-                                sampleValue = srcData[0];
-                            else if (windowPos >= srcData.Length)
-                                sampleValue = srcData[srcData.Length - 1];
-                            else 
-                                sampleValue = srcData[windowPos];
+                            sampleValue = srcData[windowPos];
 
+                            /* implement this as a lookup table? */
                             delta *= Math.PI;
 
                             if (delta != 0)
-                                outData[outPos] += sampleValue * DeltaTable[(int) Math.Abs(delta)];
+                                outData[outPos] += sampleValue * Math.Sin(delta)/delta;
                             else
                                 outData[outPos] += sampleValue;
                         }

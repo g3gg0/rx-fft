@@ -19,13 +19,11 @@ namespace LibRXFFT.Components.DirectX
         readonly ArrayList SampleValues = new ArrayList();
         private DisplayFuncState DisplayTimerState;
         private bool needsUpdate = false;
-        private bool ShiftPressed;
 
 
         public string DisplayName { get; set; }
         public bool ShowFPS { get; set; }
         public bool UseLines { get; set; }
-        public int StartSample { get; set; }
         public int MaxSamples { get; set; }
 
 
@@ -48,66 +46,15 @@ namespace LibRXFFT.Components.DirectX
         }
 
         private void InitFields()
-        {
+        {/*
             lock (SampleValues)
             {
                 LinePoints = new Point[DirectXWidth];
                 for (int pos = 0; pos < LinePoints.Length; pos++)
                     LinePoints[pos] = new Point(0, 0);
-            }
+            }*/
         }
 
-        protected override void OnKeyDown(KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.ShiftKey)
-                ShiftPressed = true;
-        }
-
-        protected override void OnKeyUp(KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.ShiftKey)
-                ShiftPressed = false;
-        }
-
-        protected override void OnMouseWheel(MouseEventArgs e)
-        {
-            if (!ShiftPressed)
-            {
-                if (e.Delta > 0 && YZoomFactor < 20.0f)
-                    YZoomFactor *= 1.1f;
-
-                if (e.Delta < 0 && YZoomFactor > 0.01f)
-                    YZoomFactor /= 1.1f;
-            }
-            else
-            {
-                if (e.Delta > 0 && XZoomFactor < 20.0f)
-                    XZoomFactor *= 1.1f;
-
-                if (e.Delta < 0 && XZoomFactor > 0.01f)
-                    XZoomFactor /= 1.1f;
-            }
-
-            LinePointsUpdated = true;
-        }
-
-        protected override void OnResize(EventArgs e)
-        {
-            InitFields();
-        }
-
-        protected override void OnSizeChanged(EventArgs e)
-        {
-            InitFields();
-        }
-
-        protected override void OnPaintBackground(PaintEventArgs e)
-        {
-        }
-
-        protected override void OnPaint(PaintEventArgs e)
-        {
-        }
 
         public void ClearProcessData(double[] samples)
         {
@@ -183,7 +130,7 @@ namespace LibRXFFT.Components.DirectX
 
                         if (SampleValues.Count > 0)
                         {
-                            int startPos = StartSample;
+                            /*int startPos = StartSample;
                             int samples = DirectXWidth;
 
                             if (startPos + samples > SampleValues.Count)
@@ -193,17 +140,21 @@ namespace LibRXFFT.Components.DirectX
                             {
                                 startPos = 0;
                                 samples = SampleValues.Count;
-                            }
+                            }*/
 
+                            int samples = SampleValues.Count;
+
+                            if (LinePoints == null || LinePoints.Length < samples)
+                                LinePoints = new Point[samples];
 
                             for (int pos = 0; pos < samples; pos++)
                             {
-                                double sampleValue = (double) SampleValues[startPos + pos];
-                                int posX = pos;
-                                int posY = (int)(DirectXHeight - (sampleValue * YZoomFactor * DirectXHeight)) / 2;
+                                double sampleValue = (double) SampleValues[pos];
+                                double posX = pos;
+                                double posY = sampleValue;
 
-                                posY = Math.Min(posY, DirectXHeight - 1);
-                                posY = Math.Max(posY, 0);
+                                posY = Math.Min(posY, 1);
+                                posY = Math.Max(posY, -1);
 
                                 LinePoints[pos].X = posX;
                                 LinePoints[pos].Y = posY;
@@ -216,7 +167,7 @@ namespace LibRXFFT.Components.DirectX
                             }
 
                             LinePointEntries = samples;
-                            LinePointsUpdated = true;
+                            DataUpdated = true;
                         }
                     }
                 }

@@ -24,7 +24,7 @@ namespace GSM_Analyzer
         private Thread ReadThread;
         private bool ThreadActive;
 
-        private double[] BurstLengthCompensation = new[] { -0.75, 0.25, 0.25, 0.25 };
+        public double[] BurstLengthJitter = new[] { 0.75, -0.25, -0.25, -0.25 };
 
         private Semaphore SingleStepSem = new Semaphore(0, 1, "SingleStepSemaphore");
         private bool SingleStep;
@@ -35,18 +35,29 @@ namespace GSM_Analyzer
         private BurstVisualizer BurstWindow;
         private OptionsDialog OptionsWindow;
 
-        internal double DefaultSamplingRate = 2184533;
+        private Object BurstWindowLock = new Object();
+
         public static bool Subsampling = false;
         public int InternalOversampling = 1;
+        public int SubSampleOffset = 0;
+        internal double DefaultSamplingRate = 2184533;
+
+        internal double CurrentSampleRate
+        {
+            get
+            {
+                if (Source != null)
+                    return Source.OutputSamplingRate;
+
+                return DefaultSamplingRate;
+            }
+        }
 
         internal double Oversampling
         {
-            get 
+            get
             {
-                if (Source != null)
-                    return Source.OutputSamplingRate / 270833;
-
-                return DefaultSamplingRate / 270833;
+                return CurrentSampleRate / 270833;
             }
         }
 
@@ -305,7 +316,7 @@ namespace GSM_Analyzer
         private void btnOpen_SharedMemory(object sender, EventArgs e)
         {
             Source = new ShmemSampleSource("GSM Analyzer", InternalOversampling);
-            
+
             txtLog.Clear();
             ThreadActive = true;
             ReadThread = new Thread(FFTReadFunc);
@@ -425,12 +436,12 @@ namespace GSM_Analyzer
                         Handler = new TimeSlotHandler(Oversampling, 0.3, AddMessage);
                         Handler.Parameters = parameters;
 
-                        burstBuffer = new double[(int) ((Handler.SpareBits + Burst.TotalBitCount)*Oversampling)];
-                        burstStrengthBuffer = new double[(int) ((Handler.SpareBits + Burst.TotalBitCount)*Oversampling)];
-                        burstSamples = (long) Math.Ceiling(Burst.TotalBitCount*Oversampling);
-                        burstSamplesAccurate = Burst.TotalBitCount*Oversampling;
+                        burstBuffer = new double[(int)((Handler.SpareBits + Burst.TotalBitCount) * Oversampling)];
+                        burstStrengthBuffer = new double[(int)((Handler.SpareBits + Burst.TotalBitCount) * Oversampling)];
+                        burstSamples = (long)Math.Ceiling(Burst.TotalBitCount * Oversampling);
+                        burstSamplesAccurate = Burst.TotalBitCount * Oversampling;
                         deltaSamplesPerBurst = burstSamples - burstSamplesAccurate;
-                        skipSampleEvery = 1/deltaSamplesPerBurst;
+                        skipSampleEvery = 1 / deltaSamplesPerBurst;
                         burstCount = 0;
                         sampleDelta = 0;
                     }
@@ -504,7 +515,7 @@ namespace GSM_Analyzer
 
                                 /* save the position where the frame started */
                                 frameStartPosition = finder.BurstStartPosition;
-                                frameStartPosition -= (long) (Oversampling*Handler.SpareBits);
+                                frameStartPosition -= (long)(Oversampling * Handler.SpareBits);
 
                                 /* update the burst buffer pointer */
                                 burstBufferPos = currentPosition - frameStartPosition;
@@ -529,7 +540,7 @@ namespace GSM_Analyzer
                                     parameters.FirstSCH = true;
 
                                     /* let the handler process this packet */
-                                    Handler.Decoder.StartOffset = (int) (Oversampling*Handler.SpareBits);
+                                    Handler.Decoder.StartOffset = (int)(Oversampling * Handler.SpareBits);
                                     Handler.Decoder.SubSampleOffset = 0;
                                     Handler.Handle(burstBuffer);
 
@@ -553,11 +564,14 @@ namespace GSM_Analyzer
 
                                 burstBufferPos = 0;
 
-                                /* update the burst visualizer */
-                                if (BurstWindow != null)
+                                lock (BurstWindowLock)
                                 {
-                                    BurstWindow.XAxisOffset = Handler.Decoder.StartOffset;
-                                    BurstWindow.ProcessBurst(burstBuffer, burstStrengthBuffer);
+                                    /* update the burst visualizer */
+                                    if (BurstWindow != null)
+                                    {
+                                        BurstWindow.XAxisGridOffset = Handler.Decoder.StartOffset;
+                                        BurstWindow.ProcessBurst(burstBuffer, burstStrengthBuffer);
+                                    }
                                 }
 
                                 if (SingleStep)
@@ -570,36 +584,57 @@ namespace GSM_Analyzer
                             /* when we are already in frame sync and one burst was sampled */
                             if (burstSampled)
                             {
-                                Handler.Decoder.StartOffset = (int) (Oversampling*Handler.SpareBits);
+                                Handler.Decoder.StartOffset = (int)(Oversampling * Handler.SpareBits);
                                 if (Subsampling)
                                     Handler.Decoder.SubSampleOffset = OffsetEstimator.EstimateOffset(burstBuffer,
                                                                                                      (int)
                                                                                                      (Handler.
                                                                                                           Decoder.
                                                                                                           StartOffset +
-                                                                                                      Oversampling/2 -
-                                                                                                      5*Oversampling),
+                                                                                                      Oversampling / 2 -
+                                                                                                      5 * Oversampling),
                                                                                                      (int)
                                                                                                      ((Burst.
                                                                                                            NetBitCount -
-                                                                                                       5)*
+                                                                                                       5) *
                                                                                                       Oversampling),
                                                                                                      Oversampling);
                                 else
                                     Handler.Decoder.SubSampleOffset = 0;
 
-                                if (BurstWindow != null)
+                                Handler.Decoder.SubSampleOffset += SubSampleOffset;
+
+                                lock (BurstWindowLock)
                                 {
-                                    BurstWindow.XAxisOffset =
-                                        (int)
-                                        (Handler.Decoder.StartOffset + Handler.Decoder.SubSampleOffset +
-                                         Oversampling/2);
-                                    BurstWindow.Oversampling = Oversampling;
-                                    BurstWindow.ProcessBurst(burstBuffer, burstStrengthBuffer);
+                                    if (BurstWindow != null)
+                                    {
+                                        BurstWindow.SampleDisplay.DirectXLock.WaitOne();
+                                        BurstWindow.SampleDisplay.YAxisLines.Clear();
+                                        BurstWindow.XAxisGridOffset = (Handler.Decoder.StartOffset + Oversampling / 2);
+                                        BurstWindow.XAxisSampleOffset = -Handler.Decoder.SubSampleOffset;
+                                        BurstWindow.Oversampling = Oversampling;
+                                        BurstWindow.SampleDisplay.AxisUpdated = true;
+                                        BurstWindow.SampleDisplay.DirectXLock.ReleaseMutex();
+
+                                        BurstWindow.ProcessBurst(burstBuffer, burstStrengthBuffer);
+                                    }
                                 }
 
-
                                 Handler.Handle(burstBuffer);
+
+                                lock (BurstWindowLock)
+                                {
+                                    if (BurstWindow != null)
+                                    {
+                                        BurstWindow.SampleDisplay.DirectXLock.WaitOne();
+                                        BurstWindow.SampleDisplay.YAxisLines.Add(Handler.Decoder.MaxPower);
+                                        BurstWindow.SampleDisplay.YAxisLines.Add(Handler.Decoder.DecisionPower);
+                                        BurstWindow.SampleDisplay.AxisUpdated = true;
+                                        BurstWindow.SampleDisplay.DirectXLock.ReleaseMutex();
+
+                                    }
+                                }
+
                                 if (parameters.Error)
                                 {
                                     parameters.Error = false;
@@ -608,12 +643,12 @@ namespace GSM_Analyzer
                                 }
 
                                 /* 
-                                         * tricky! the BTS sends the bursts with 156 bits instead of 156.25
-                                         * but it delays one bit after 4 bursts. compensate this here.
-                                         * we do that for the next timeslot
-                                         */
-                                long burstNumber = ((parameters.TN + 1)%4);
-                                sampleDelta -= (int) (BurstLengthCompensation[burstNumber]*Oversampling);
+                                 * tricky! the BTS sends the bursts with 156 bits instead of 156.25
+                                 * but it delays one bit after 4 bursts. compensate this here.
+                                 * we do that for the next timeslot
+                                 */
+                                long burstNumber = ((parameters.TN + 1) % 4);
+                                sampleDelta += (int)(BurstLengthJitter[burstNumber] * Oversampling);
 
                                 /* update counters and reset offset correction */
                                 burstCount++;
@@ -621,7 +656,7 @@ namespace GSM_Analyzer
                                 parameters.SampleOffset = 0;
 
                                 /* update UI if necessary */
-                                if (SingleStep || updateLoops++ >= 20*9)
+                                if (SingleStep || updateLoops++ >= 20 * 9)
                                 {
                                     UpdateUIStatus(parameters);
                                     UpdateStats(parameters);
@@ -684,15 +719,18 @@ namespace GSM_Analyzer
 
         private void btnBurst_Click(object sender, EventArgs e)
         {
-            if (BurstWindow == null || !BurstWindow.Visible)
+            lock (BurstWindowLock)
             {
-                BurstWindow = new BurstVisualizer(Oversampling);
-                BurstWindow.Show();
-            }
-            else
-            {
-                BurstWindow.Close();
-                BurstWindow = null;
+                if (BurstWindow == null || !BurstWindow.Visible)
+                {
+                    BurstWindow = new BurstVisualizer(Oversampling);
+                    BurstWindow.Show();
+                }
+                else
+                {
+                    BurstWindow.Close();
+                    BurstWindow = null;
+                }
             }
         }
 

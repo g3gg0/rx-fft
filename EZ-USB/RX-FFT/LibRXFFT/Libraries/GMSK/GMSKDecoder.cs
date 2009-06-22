@@ -19,9 +19,11 @@ namespace LibRXFFT.Libraries.GMSK
 
         public eInterpolation Interpolation = eInterpolation.Automatic;
 
-        private const double MinPowerFact = 0.3;
+        public static double MinPowerFact = 0.1;
         private readonly double Oversampling;
-        double DecisionPower = 0.0f;
+        public double DecisionPower = 0;
+        public double MaxPower = 0;
+        private long BurstsProcessed;
 
 
         public GMSKDecoder(double oversampling, double BT)
@@ -31,6 +33,7 @@ namespace LibRXFFT.Libraries.GMSK
 
         public void Reset()
         {
+            BurstsProcessed = 0;
             DecisionPower = 0.0f;
         }
 
@@ -67,12 +70,19 @@ namespace LibRXFFT.Libraries.GMSK
             /* the first bit gets set to true since we start at bit 1 */
             dstData[0] = true;
 
-            /* do that only once. find the highest amplitude over some bits */
-            if (DecisionPower == 0.0f)
+            /* find the highest amplitude over some bits (start at bit 1 and use 5 bits) */
+            if (DecisionPower == 0 || BurstsProcessed >= 8)
             {
-                int firstBits = (int)(10 * Oversampling);
-                double maxPower = SignalPower.Max(srcData, (int)(StartOffset + SubSampleOffset + 5 * Oversampling), firstBits);
-                DecisionPower = maxPower * MinPowerFact;
+                int firstBits = (int)(5 * Oversampling);
+
+                BurstsProcessed = 0;
+                MaxPower = SignalPower.Max(srcData, (int)(StartOffset + SubSampleOffset), firstBits);
+
+                /* build an average over the last max-levels */
+                if (DecisionPower == 0)
+                    DecisionPower = MaxPower * MinPowerFact;
+                else
+                    DecisionPower = (5*DecisionPower + (MaxPower * MinPowerFact)) / 6;
             }
 
             for (int currentBit = 1; currentBit < Burst.NetBitCount; currentBit++)
@@ -88,8 +98,8 @@ namespace LibRXFFT.Libraries.GMSK
                         case eInterpolation.Linear:
                             {
                                 double delta = samplePos - Math.Floor(samplePos);
-                                int samplePos1 = (int) samplePos;
-                                int samplePos2 = (int) samplePos + 1;
+                                int samplePos1 = (int)samplePos;
+                                int samplePos2 = (int)samplePos + 1;
 
                                 double sampleValue1;
                                 double sampleValue2;
@@ -105,15 +115,15 @@ namespace LibRXFFT.Libraries.GMSK
                                     sampleValue2 = sampleValue1;
 
 
-                                sampleValue = sampleValue1*(1 - delta) + sampleValue2*delta;
+                                sampleValue = sampleValue1 * (1 - delta) + sampleValue2 * delta;
                             }
                             break;
 
                         case eInterpolation.SinX:
                             {
                                 double delta = samplePos - Math.Floor(samplePos);
-                                int samplePos1 = (int) samplePos;
-                                int samplePos2 = (int) samplePos + 1;
+                                int samplePos1 = (int)samplePos;
+                                int samplePos2 = (int)samplePos + 1;
 
                                 double sampleValue1;
                                 double sampleValue2;
@@ -129,7 +139,7 @@ namespace LibRXFFT.Libraries.GMSK
                                     sampleValue2 = sampleValue1;
 
                                 /* is that correct? */
-                                sampleValue = sampleValue1 * Math.Sin(delta) / delta + sampleValue2 * Math.Sin(1-delta) / (1-delta);
+                                sampleValue = sampleValue1 * Math.Sin(delta) / delta + sampleValue2 * Math.Sin(1 - delta) / (1 - delta);
                             }
                             break;
 
@@ -140,9 +150,9 @@ namespace LibRXFFT.Libraries.GMSK
                 }
                 else
                 {
-                    if (samplePos >= 0 && samplePos<srcData.Length)
-                        sampleValue = srcData[(int) samplePos];
-                    else 
+                    if (samplePos >= 0 && samplePos < srcData.Length)
+                        sampleValue = srcData[(int)samplePos];
+                    else
                         sampleValue = 0;
                 }
 
@@ -156,6 +166,7 @@ namespace LibRXFFT.Libraries.GMSK
                     dstData[currentBit] = !dstData[currentBit - 1];
             }
 
+            BurstsProcessed++;
             return dstData;
 
         }

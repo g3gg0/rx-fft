@@ -13,19 +13,15 @@ namespace LibRXFFT.Libraries.SampleSources
 
         public ShmemSampleSource(string name, int oversampling) : base(oversampling)
         {
-            Oversampler = new Oversampler();
-            Oversampler.Type = eOversamplingType.SinX;
-
             ShmemChannel = new SharedMem(0, -1, name);
             ShmemChannel.ReadTimeout = 10;
             ShmemChannel.ReadMode = eReadMode.TimeLimited;
 
-            Demodulator = new GMSKDemodulator();
             Demodulator.DataFormat = eDataFormat.Direct16BitIQFixedPoint;
 
             InBuffer = new byte[BlockSize * Demodulator.BytesPerSamplePair];
+
             InputSamplingRate = 2184533;
-            SamplingRateChanged = true;
         }
 
         public override void Close()

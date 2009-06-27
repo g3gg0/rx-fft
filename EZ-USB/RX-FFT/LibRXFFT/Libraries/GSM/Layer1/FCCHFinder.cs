@@ -8,8 +8,13 @@ namespace LibRXFFT.Libraries.GSM.Layer1
         private int ConsecutiveHighBits = 0;
         private double MaxSampleValue = 0;
 
-        /* relative to the highest sample value here are the */
-        private double SampleHighMark = 0.60; /* to detect logical 0 (hight signal) of the FCH */
+        /* 
+         * relative to the highest sample value.
+         * to detect logical 0 (high signal) of the FCH.
+         * normally, checking for >0 should be enough, but there might be a offset.
+         * for now lets check if the samples are all > 20% of the highest value.
+         */
+        public static double SampleHighMark = 0.20; 
         private double OversampleBitCount = 0;
 
         public long BurstStartPosition { get; set; }
@@ -35,7 +40,8 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
         public bool ProcessData(double sampleValue, double strength)
         {
-            /* if strength gets low, phase is varying due to noise. compensate this. */
+            /* if !->strength<-! gets low, phase is varying due to noise. 
+             * compensate this by multiplying sample value with the strength. */
             sampleValue *= strength;
 
             /* continuously decrease highest bit value */

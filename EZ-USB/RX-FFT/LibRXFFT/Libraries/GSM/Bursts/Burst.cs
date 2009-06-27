@@ -22,6 +22,8 @@ namespace LibRXFFT.Libraries.GSM.Bursts
         public const double TotalBitCount = LeadingTailBits + PayloadBits + TrailingTailBits + GuardBits;
 
         public string Name = "Unknown";
+        public string ShortName = "Unk";
+        
 
 
         protected void DumpBits(bool[] data)

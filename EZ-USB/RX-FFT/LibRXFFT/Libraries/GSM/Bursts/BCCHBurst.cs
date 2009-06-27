@@ -12,6 +12,7 @@ namespace LibRXFFT.Libraries.GSM.Bursts
         {
             L3 = l3;
             Name = "BCCH";
+            ShortName = "BC ";
             InitArrays();
         }
 
@@ -23,7 +24,11 @@ namespace LibRXFFT.Libraries.GSM.Bursts
         public override bool ParseData(GSMParameters param, bool[] decodedBurst, int sequence)
         {
             if (IsDummy(decodedBurst, 3))
+            {
+                if (param.DumpPackets)
+                    StatusMessage = "Dummy Burst";
                 return true;
+            }
 
             Array.Copy(decodedBurst, 3, BurstBuffer[sequence], 0, 57);
             Array.Copy(decodedBurst, 88, BurstBuffer[sequence], 57, 57);
@@ -32,7 +37,7 @@ namespace LibRXFFT.Libraries.GSM.Bursts
             {
                 InterleaveCoder.Deinterleave(BurstBuffer, DataDeinterleaved);
 
-                if (ConvolutionalCoder.Decode(DataDeinterleaved[0], DataDecoded) == null)
+                if (ConvolutionalCoder.DecodeViterbi(DataDeinterleaved[0], DataDecoded) == null)
                 {
                     ErrorMessage = "(Error in ConvolutionalCoder)";
                     return false;
@@ -41,9 +46,19 @@ namespace LibRXFFT.Libraries.GSM.Bursts
                 CRC.Calc(DataDecoded, 0, 224, CRC.PolynomialFIRE, CRCBuffer);
                 if (!CRC.Matches(CRCBuffer))
                 {
-                    ErrorMessage = "(Error in CRC)";
-                    return false;
+                    bool[] DataRepaired = new bool[224];
+
+                    FireCode fc = new FireCode(40, 184);
+                    if (!fc.FC_check_crc(DataDecoded, DataRepaired))
+                    {
+                        ErrorMessage = "(Error in CRC)";
+                        return false;
+                    }
+
+                    StatusMessage = "(CRC Error recovered)";
+                    Array.Copy(DataRepaired, DataDecoded, DataRepaired.Length);
                 }
+
 
                 ByteUtil.BitsToBytesRev(DataDecoded, Data, 0, 184);
 

@@ -13,16 +13,24 @@ namespace LibRXFFT.Libraries.SignalProcessing
     {
         public int SinXDepth = 4;
 
+        public readonly double Oversampling;
         private double HighVal = 1.0;
         private double LowVal = -1.0;
         public eOversamplingType Type = eOversamplingType.SinX;
         private double[] DeltaTable;
-        private double Shannon = 0.6;
+        private double Shannon = 0.9;
+
+        private double[] LastBlockLastSamples = new double[0];
+        private double[] NextLastBlockLastSamples = new double[0];
+
+        private double[] NextBlockFirstSamples = new double[0];
 
 
 
-        public Oversampler()
+
+        public Oversampler(double oversampling)
         {
+            Oversampling = oversampling;
             PrepareDeltaTable();
         }
 
@@ -42,13 +50,13 @@ namespace LibRXFFT.Libraries.SignalProcessing
             }
         }
 
-        public double[] Oversample(byte[] sourceData, double oversampling)
+        public double[] Oversample(byte[] sourceData)
         {
-            double[] outData = new double[(int)(sourceData.Length * 8 * oversampling)];
+            double[] outData = new double[(int)(sourceData.Length * 8 * Oversampling)];
 
             for (int outPos = 0; outPos < outData.Length; outPos++)
             {
-                int bitPos = (int)(outPos / oversampling);
+                int bitPos = (int)(outPos / Oversampling);
                 int bitNum = 7 - (bitPos % 8);
                 int byteNum = bitPos / 8;
 
@@ -65,27 +73,27 @@ namespace LibRXFFT.Libraries.SignalProcessing
             return outData;
         }
 
-        public double[] Oversample(double[] srcData, double oversampling)
+        public double[] Oversample(double[] srcData)
         {
-            return Oversample(srcData, null, oversampling);
+            return Oversample(srcData, null);
         }
 
-        public double[] Oversample(double[] srcData, double[] outData, double oversampling)
+        public double[] Oversample(double[] srcData, double[] outData)
         {
             if (outData == null)
-                outData = new double[(int)(srcData.Length * oversampling)];
+                outData = new double[(int)(srcData.Length * Oversampling)];
 
             switch (Type)
             {
                 case eOversamplingType.None:
                     for (int outPos = 0; outPos < outData.Length; outPos++)
-                        outData[outPos] = srcData[(int)(outPos / oversampling)];
+                        outData[outPos] = srcData[(int)(outPos / Oversampling)];
                     break;
 
                 case eOversamplingType.Linear:
                     for (int outPos = 0; outPos < outData.Length; outPos++)
                     {
-                        double samplePos = outPos / oversampling;
+                        double samplePos = outPos / Oversampling;
 
                         double delta = samplePos - Math.Floor(samplePos);
                         int samplePos1 = (int)samplePos;
@@ -110,19 +118,63 @@ namespace LibRXFFT.Libraries.SignalProcessing
                     break;
 
                 case eOversamplingType.SinX:
+
+                    if (LastBlockLastSamples.Length != SinXDepth)
+                    {
+                        LastBlockLastSamples = new double[SinXDepth];
+                        NextLastBlockLastSamples = new double[SinXDepth];
+                        NextBlockFirstSamples = new double[SinXDepth];
+                    }
+
+                    /* 
+                     * save the last N samples for the next block etc
+                     * 
+                     * datablock:
+                     * DDDDLLLFFF
+                     * 
+                     * |... DDDDD LLL| FFF
+                     * L = NextLastBlockLastSamples
+                     * F = NextBlockFirstSamples
+                     * 
+                     * next block:
+                     * 
+                     * LLL |FFF DDDDD ...|
+                     */
+
+                    /* save FFF into a tmp buffer, else they will get lost */
+                    double[] tmpBuf = new double[SinXDepth];
+                    Array.Copy(srcData, srcData.Length - SinXDepth, tmpBuf, 0, SinXDepth);
+
+                    /* move DDDDD to the right... */
+                    Array.Copy(srcData, 0, srcData, SinXDepth, srcData.Length - SinXDepth);
+                    
+                    /* ... and copy the last firstsamples FFFF into the first place... */
+                    Array.Copy(NextBlockFirstSamples, 0, srcData, 0, SinXDepth);
+
+                    /* now copy the FFF to the place they belong */
+                    Array.Copy(tmpBuf, 0, NextBlockFirstSamples, 0, SinXDepth);
+
+                    /* save LLL, which are now the last samples */
+                    Array.Copy(srcData, srcData.Length - SinXDepth, NextLastBlockLastSamples, 0, SinXDepth);
+
                     for (int outPos = 0; outPos < outData.Length; outPos++)
                     {
-                        int windowStart = (int)Math.Max(0, outPos / oversampling - SinXDepth);
-                        int windowEnd = (int)Math.Min(srcData.Length - 1, outPos / oversampling + SinXDepth);
+                        int windowStart = (int)(outPos / Oversampling - SinXDepth);
+                        int windowEnd = (int)(outPos / Oversampling + SinXDepth);
 
                         outData[outPos] = 0;
 
                         for (int windowPos = windowStart; windowPos < windowEnd; windowPos++)
                         {
-                            double delta = outPos / oversampling - windowPos;
+                            double delta = outPos / Oversampling - windowPos;
                             double sampleValue;
 
-                            sampleValue = srcData[windowPos];
+                            if (windowPos >= srcData.Length)
+                                sampleValue = NextBlockFirstSamples[windowPos - srcData.Length];
+                            else if (windowPos < 0)
+                                sampleValue = LastBlockLastSamples[windowPos + SinXDepth];
+                            else
+                                sampleValue = srcData[windowPos];
 
                             /* implement this as a lookup table? */
                             delta *= Math.PI;
@@ -133,6 +185,8 @@ namespace LibRXFFT.Libraries.SignalProcessing
                                 outData[outPos] += sampleValue;
                         }
                     }
+
+                    Array.Copy(NextLastBlockLastSamples, LastBlockLastSamples, SinXDepth);
                     break;
 
             }
@@ -141,12 +195,12 @@ namespace LibRXFFT.Libraries.SignalProcessing
             return outData;
         }
 
-        public double[] Oversample(bool[] sourceData, double oversampling)
+        public double[] Oversample(bool[] sourceData)
         {
-            double[] outData = new double[(int)(sourceData.Length * oversampling)];
+            double[] outData = new double[(int)(sourceData.Length * Oversampling)];
 
             for (int outPos = 0; outPos < outData.Length; outPos++)
-                outData[outPos] = sourceData[(int)(outPos / oversampling)] ? 1.0f : -1.0f;
+                outData[outPos] = sourceData[(int)(outPos / Oversampling)] ? 1.0f : -1.0f;
 
             return outData;
         }

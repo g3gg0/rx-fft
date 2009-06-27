@@ -54,10 +54,15 @@ namespace LibRXFFT.Libraries.GSM.Layer3
 
         private delegate string[] handlePDUDelegate(byte[] pduData);
 
-        public static readonly Dictionary<string, handleTrigger> PDUDataTriggers = new Dictionary<string, handleTrigger>();
-        public static readonly Dictionary<string, string> PDUDataFields = new Dictionary<string, string>();
 
-        public delegate void handleTrigger();
+        public readonly Dictionary<string, handleTrigger> PDUDataTriggers = new Dictionary<string, handleTrigger>();
+        public readonly Dictionary<string, string> PDUDataFields = new Dictionary<string, string>();
+        public readonly Dictionary<string, long> PDUDataRawFields = new Dictionary<string, long>();
+
+        public readonly Dictionary<string, fieldParser> PDUFieldParsers = new Dictionary<string, fieldParser>();
+
+        public delegate string fieldParser(L3Handler handler, long value);
+        public delegate void handleTrigger(L3Handler handler);
 
         public L3Handler()
         {
@@ -75,6 +80,8 @@ namespace LibRXFFT.Libraries.GSM.Layer3
             PDUParser.Add("10.5.2.1b", HandleCellChannelDescription);
             PDUParser.Add("10.5.2.22", HandleCellChannelDescription);
             PDUParser.Add("10.5.2.5", HandleChannelDescription);
+
+            PDUFieldParsers.Add("ParseRA", ParseRA);
         }
 
         public static void ReloadFiles()
@@ -85,6 +92,101 @@ namespace LibRXFFT.Libraries.GSM.Layer3
             L3PduList = new L3PDUList("pdulist.xml");
             L3Messages = new L3Messages("messagelist.xml");
             MCCTable = new MCCTable("mccentries.xml");
+        }
+
+        private string ParseRA(L3Handler handler, long value)
+        {
+            string retVal = "unknown";
+
+            if (!PDUDataRawFields.ContainsKey("NECI") || PDUDataRawFields["NECI"] == 0)
+            {
+                switch (value >> 5)
+                {
+                    case 0:
+                        retVal = "Other procedures (SDCCH)";
+                        break;
+                    case 1:
+                        retVal = "Answer to paging, Dual rate MS and TCH/F is requested (TCH/F or SDCCH)";
+                        break;
+                    case 2:
+                        retVal = "unknown type 010xxxxx";
+                        break;
+                    case 3:
+                        retVal = "Answer to paging, Dual rate MS and TCH/H or TCH/F is requested (TCH/H, TCH/F or SDCCH)";
+                        break;
+                    case 4:
+                        retVal = "Answer to paging (SDCCH)";
+                        break;
+                    case 5:
+                        retVal = "Emergency call (SDCCH)";
+                        break;
+                    case 6:
+                        retVal = "Call re-establishment (SDCCH)";
+                        break;
+                    case 7:
+                        retVal = "Originating call (SDCCH)";
+                        break;
+                }
+            }
+            else
+            {
+                switch (value >> 5)
+                {
+                    case 0:
+                        switch ((value >> 4) & 1)
+                        {
+                            case 0:
+                                retVal = "Location updating (SDCCH)";
+                                break;
+                            case 1:
+                                retVal = "Other procedures (SDCCH)";
+                                break;
+                        }
+                        break;
+                    case 1:
+                        switch ((value >> 4) & 1)
+                        {
+                            case 0:
+                                retVal = "Answer to paging, Dual rate MS and TCH/F is requested (TCH/F or SDCCH)";
+                                break;
+                            case 1:
+                                retVal = "Answer to paging, Dual rate MS and TCH/H or TCH/F is requested (TCH/H, TCH/F or SDCCH)";
+                                break;
+                        }
+                        break;
+                    case 2:
+                        switch ((value >> 4) & 1)
+                        {
+                            case 0:
+                                retVal = "Originating speech call from dual rate MS when TCH/H is sufficient (TCH/H, TCH/F or SDCCH)";
+                                break;
+                            case 1:
+                                retVal = "Originating data call from dual rate MS when TCH/H is sufficient (TCH/H, TCH/F or SDCCH)";
+                                break;
+                        }
+                        break;
+                    case 3:
+                        if (((value >> 2) & 7) == 2)
+                            retVal = "Call re-establishment; TCH/H was in use. (TCH/H, TCH/F or SDCCH)";
+                        else
+                            retVal = "unknown type";
+                        break;
+                    case 4:
+                        retVal = "Answer to paging (SDCCH)";
+                        break;
+                    case 5:
+                        retVal = "Emergency call (SDCCH)";
+                        break;
+                    case 6:
+                        retVal = "Call re-establishment (SDCCH)";
+                        break;
+                    case 7:
+                        retVal = "Originating call (SDCCH)";
+                        break;
+                }
+            }
+
+            return retVal;
         }
 
         private string[] HandleCellChannelDescription(byte[] pduData)
@@ -171,25 +273,28 @@ namespace LibRXFFT.Libraries.GSM.Layer3
 
             msg[0] = "Channel             ";
 
-            if ((type & 0x1E) == 0)
+            if ((type & 0x1F) == 1)
             {
                 chanType = "TCH/F + ACCHs";
                 subChan = -1;
             }
-            else if ((type & 0x1C) == 0)
+            else if ((type & 0x1E) == 2)
             {
                 chanType = "TCH/H + ACCHs";
                 subChan = (type & 1);
+                type &= 0x1E;
             }
-            else if ((type & 0x18) == 0)
+            else if ((type & 0x1C) == 4)
             {
                 chanType = "SDCCH/4 + SACCH/C4 or CBCH (SDCCH/4)";
                 subChan = (type & 3);
+                type &= 0x1C;
             }
-            else if ((type & 0x10) == 0)
+            else if ((type & 0x18) == 8)
             {
                 chanType = "SDCCH/8 + SACCH/C8 or CBCH (SDCCH/8)";
                 subChan = (type & 7);
+                type &= 0x18;
             }
 
             msg[0] += chanType;
@@ -203,6 +308,7 @@ namespace LibRXFFT.Libraries.GSM.Layer3
 
             lock (PDUDataFields)
             {
+                /* text values */
                 if (PDUDataFields.ContainsKey("ChannelType"))
                     PDUDataFields["ChannelType"] = chanType;
                 else
@@ -217,6 +323,23 @@ namespace LibRXFFT.Libraries.GSM.Layer3
                     PDUDataFields["TimeSlot"] = timeSlot.ToString();
                 else
                     PDUDataFields.Add("TimeSlot", timeSlot.ToString());
+
+                /* raw values */
+                if (PDUDataRawFields.ContainsKey("ChannelType"))
+                    PDUDataRawFields["ChannelType"] = type;
+                else
+                    PDUDataRawFields.Add("ChannelType", type);
+
+                if (PDUDataRawFields.ContainsKey("SubChannel"))
+                    PDUDataRawFields["SubChannel"] = subChan;
+                else
+                    PDUDataRawFields.Add("SubChannel", subChan);
+
+                if (PDUDataRawFields.ContainsKey("TimeSlot"))
+                    PDUDataRawFields["TimeSlot"] = timeSlot;
+                else
+                    PDUDataRawFields.Add("TimeSlot", timeSlot);
+
             }
 
 
@@ -356,7 +479,7 @@ namespace LibRXFFT.Libraries.GSM.Layer3
                 if (!string.IsNullOrEmpty(field.TriggerPre))
                 {
                     if (PDUDataTriggers.ContainsKey(field.TriggerPre))
-                        PDUDataTriggers[field.TriggerPre]();
+                        PDUDataTriggers[field.TriggerPre](this);
                 }
 
                 msg[pos] = String.Format("{0,-20}", field.Name);
@@ -373,6 +496,9 @@ namespace LibRXFFT.Libraries.GSM.Layer3
                 string pduFieldData = "";
                 switch (field.Type)
                 {
+                    case "hide":
+                        break;
+
                     case "integer":
                         pduFieldData += field.Offset + field.Factor * value;
                         break;
@@ -402,6 +528,9 @@ namespace LibRXFFT.Libraries.GSM.Layer3
 
                 msg[pos] += pduFieldData;
 
+                if (!string.IsNullOrEmpty(field.Parser) && PDUFieldParsers.ContainsKey(field.Parser))
+                    msg[pos] += " (" + PDUFieldParsers[field.Parser](this, value) + ")";
+
                 /* update the fields in the field list */
                 if (!string.IsNullOrEmpty(field.SetField))
                 {
@@ -411,6 +540,11 @@ namespace LibRXFFT.Libraries.GSM.Layer3
                             PDUDataFields[field.SetField] = pduFieldData;
                         else
                             PDUDataFields.Add(field.SetField, pduFieldData);
+
+                        if (PDUDataRawFields.ContainsKey(field.SetField))
+                            PDUDataRawFields[field.SetField] = value;
+                        else
+                            PDUDataRawFields.Add(field.SetField, value);
                     }
                 }
 
@@ -418,7 +552,7 @@ namespace LibRXFFT.Libraries.GSM.Layer3
                 if (!string.IsNullOrEmpty(field.TriggerPost))
                 {
                     if (PDUDataTriggers.ContainsKey(field.TriggerPost))
-                        PDUDataTriggers[field.TriggerPost]();
+                        PDUDataTriggers[field.TriggerPost](this);
                 }
 
 
@@ -453,7 +587,7 @@ namespace LibRXFFT.Libraries.GSM.Layer3
             if (!string.IsNullOrEmpty(l3Message.TriggerPre))
             {
                 if (PDUDataTriggers.ContainsKey(l3Message.TriggerPre))
-                    PDUDataTriggers[l3Message.TriggerPre]();
+                    PDUDataTriggers[l3Message.TriggerPre](this);
             }
 
             foreach (L3MessageSlotInfo slotInfo in l3Message.Slots)
@@ -503,14 +637,14 @@ namespace LibRXFFT.Libraries.GSM.Layer3
                         if (!string.IsNullOrEmpty(slotInfo.TriggerPre))
                         {
                             if (PDUDataTriggers.ContainsKey(slotInfo.TriggerPre))
-                                PDUDataTriggers[slotInfo.TriggerPre]();
+                                PDUDataTriggers[slotInfo.TriggerPre](this);
                         }
 
                         /* trigger as requested */
                         if (!string.IsNullOrEmpty(l3PduInfo.TriggerPre))
                         {
                             if (PDUDataTriggers.ContainsKey(l3PduInfo.TriggerPre))
-                                PDUDataTriggers[l3PduInfo.TriggerPre]();
+                                PDUDataTriggers[l3PduInfo.TriggerPre](this);
                         }
 
                         /* this pdu is either present or mandatory */
@@ -607,14 +741,14 @@ namespace LibRXFFT.Libraries.GSM.Layer3
                         if (!string.IsNullOrEmpty(l3PduInfo.TriggerPost))
                         {
                             if (PDUDataTriggers.ContainsKey(l3PduInfo.TriggerPost))
-                                PDUDataTriggers[l3PduInfo.TriggerPost]();
+                                PDUDataTriggers[l3PduInfo.TriggerPost](this);
                         }
 
                         /* trigger as requested */
                         if (!string.IsNullOrEmpty(slotInfo.TriggerPost))
                         {
                             if (PDUDataTriggers.ContainsKey(slotInfo.TriggerPost))
-                                PDUDataTriggers[slotInfo.TriggerPost]();
+                                PDUDataTriggers[slotInfo.TriggerPost](this);
                         }
                     }
                 }
@@ -644,7 +778,7 @@ namespace LibRXFFT.Libraries.GSM.Layer3
             if (!string.IsNullOrEmpty(l3Message.TriggerPost))
             {
                 if (PDUDataTriggers.ContainsKey(l3Message.TriggerPost))
-                    PDUDataTriggers[l3Message.TriggerPost]();
+                    PDUDataTriggers[l3Message.TriggerPost](this);
             }
             return text;
         }

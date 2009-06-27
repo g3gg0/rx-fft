@@ -12,7 +12,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
         public SequenceGenerator(double oversampling, double BT)
         {
             Oversampling = oversampling;
-            Sampler = new Oversampler();
+            Sampler = new Oversampler(Oversampling);
             Filter = new GaussFilter(BT);
         }
 
@@ -25,7 +25,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
         public double[] Generate(bool[] srcBits)
         {
-            double[] samples = Sampler.Oversample(srcBits, Oversampling);
+            double[] samples = Sampler.Oversample(srcBits);
             double[] gaussSamples = Filter.Process(samples, Oversampling);
 
             return gaussSamples;

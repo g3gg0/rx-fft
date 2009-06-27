@@ -76,8 +76,8 @@ namespace GaussGenerator
             //            byte[] srcData = new byte[] {0xB9, 0x62, 0x04, 0x0F, 0x2D, 0x45, 0x76, 0x1B};
             //            srcData = DifferenceCode.Encode(srcData);
 
-            Oversampler sampler = new Oversampler();
-            double[] samples = sampler.Oversample(srcData, Oversampling);
+            Oversampler sampler = new Oversampler(Oversampling);
+            double[] samples = sampler.Oversample(srcData);
 
             GaussFilter filter = new GaussFilter(BT);
             double[] gaussSamples = filter.Process(samples, Oversampling);

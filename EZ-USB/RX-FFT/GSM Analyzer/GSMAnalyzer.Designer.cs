@@ -72,18 +72,20 @@ namespace GSM_Analyzer
             this.lblSucess = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
             this.lblErrors = new System.Windows.Forms.Label();
+            this.label15 = new System.Windows.Forms.Label();
             this.label8 = new System.Windows.Forms.Label();
+            this.lblFreqOffset = new System.Windows.Forms.Label();
             this.lblRate = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.label9 = new System.Windows.Forms.Label();
+            this.lblCellBroadcast = new System.Windows.Forms.Label();
             this.lblCellIdent = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.lblLAC = new System.Windows.Forms.Label();
+            this.label14 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
             this.lblMCCMNC = new System.Windows.Forms.Label();
             this.txtLog = new System.Windows.Forms.TextBox();
-            this.label14 = new System.Windows.Forms.Label();
-            this.lblCellBroadcast = new System.Windows.Forms.Label();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -122,7 +124,7 @@ namespace GSM_Analyzer
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.txtLog);
-            this.splitContainer1.Size = new System.Drawing.Size(840, 477);
+            this.splitContainer1.Size = new System.Drawing.Size(910, 476);
             this.splitContainer1.SplitterDistance = 81;
             this.splitContainer1.SplitterWidth = 1;
             this.splitContainer1.TabIndex = 3;
@@ -151,7 +153,7 @@ namespace GSM_Analyzer
             this.splitContainer5.Panel2.Controls.Add(this.groupBox3);
             this.splitContainer5.Panel2.Controls.Add(this.groupBox2);
             this.splitContainer5.Panel2.Controls.Add(this.groupBox1);
-            this.splitContainer5.Size = new System.Drawing.Size(840, 81);
+            this.splitContainer5.Size = new System.Drawing.Size(910, 81);
             this.splitContainer5.SplitterDistance = 348;
             this.splitContainer5.SplitterWidth = 1;
             this.splitContainer5.TabIndex = 8;
@@ -393,11 +395,13 @@ namespace GSM_Analyzer
             this.groupBox2.Controls.Add(this.lblSucess);
             this.groupBox2.Controls.Add(this.label7);
             this.groupBox2.Controls.Add(this.lblErrors);
+            this.groupBox2.Controls.Add(this.label15);
             this.groupBox2.Controls.Add(this.label8);
+            this.groupBox2.Controls.Add(this.lblFreqOffset);
             this.groupBox2.Controls.Add(this.lblRate);
             this.groupBox2.Location = new System.Drawing.Point(203, 2);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(101, 78);
+            this.groupBox2.Size = new System.Drawing.Size(114, 78);
             this.groupBox2.TabIndex = 17;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Statistics";
@@ -438,6 +442,15 @@ namespace GSM_Analyzer
             this.lblErrors.TabIndex = 6;
             this.lblErrors.Text = "---";
             // 
+            // label15
+            // 
+            this.label15.AutoSize = true;
+            this.label15.Location = new System.Drawing.Point(6, 57);
+            this.label15.Name = "label15";
+            this.label15.Size = new System.Drawing.Size(38, 13);
+            this.label15.TabIndex = 14;
+            this.label15.Text = "Offset:";
+            // 
             // label8
             // 
             this.label8.AutoSize = true;
@@ -446,6 +459,15 @@ namespace GSM_Analyzer
             this.label8.Size = new System.Drawing.Size(33, 13);
             this.label8.TabIndex = 14;
             this.label8.Text = "Rate:";
+            // 
+            // lblFreqOffset
+            // 
+            this.lblFreqOffset.AutoSize = true;
+            this.lblFreqOffset.Location = new System.Drawing.Point(47, 57);
+            this.lblFreqOffset.Name = "lblFreqOffset";
+            this.lblFreqOffset.Size = new System.Drawing.Size(16, 13);
+            this.lblFreqOffset.TabIndex = 10;
+            this.lblFreqOffset.Text = "---";
             // 
             // lblRate
             // 
@@ -466,7 +488,7 @@ namespace GSM_Analyzer
             this.groupBox1.Controls.Add(this.label14);
             this.groupBox1.Controls.Add(this.label5);
             this.groupBox1.Controls.Add(this.lblMCCMNC);
-            this.groupBox1.Location = new System.Drawing.Point(310, 2);
+            this.groupBox1.Location = new System.Drawing.Point(323, 2);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(132, 78);
             this.groupBox1.TabIndex = 16;
@@ -481,6 +503,15 @@ namespace GSM_Analyzer
             this.label9.Size = new System.Drawing.Size(62, 13);
             this.label9.TabIndex = 14;
             this.label9.Text = "MCC/MNC:";
+            // 
+            // lblCellBroadcast
+            // 
+            this.lblCellBroadcast.AutoSize = true;
+            this.lblCellBroadcast.Location = new System.Drawing.Point(77, 57);
+            this.lblCellBroadcast.Name = "lblCellBroadcast";
+            this.lblCellBroadcast.Size = new System.Drawing.Size(16, 13);
+            this.lblCellBroadcast.TabIndex = 15;
+            this.lblCellBroadcast.Text = "---";
             // 
             // lblCellIdent
             // 
@@ -509,6 +540,15 @@ namespace GSM_Analyzer
             this.lblLAC.TabIndex = 15;
             this.lblLAC.Text = "---";
             // 
+            // label14
+            // 
+            this.label14.AutoSize = true;
+            this.label14.Location = new System.Drawing.Point(8, 57);
+            this.label14.Name = "label14";
+            this.label14.Size = new System.Drawing.Size(64, 13);
+            this.label14.TabIndex = 14;
+            this.label14.Text = "CellBroadc.:";
+            // 
             // label5
             // 
             this.label5.AutoSize = true;
@@ -535,32 +575,14 @@ namespace GSM_Analyzer
             this.txtLog.Multiline = true;
             this.txtLog.Name = "txtLog";
             this.txtLog.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtLog.Size = new System.Drawing.Size(840, 395);
+            this.txtLog.Size = new System.Drawing.Size(910, 394);
             this.txtLog.TabIndex = 1;
-            // 
-            // label14
-            // 
-            this.label14.AutoSize = true;
-            this.label14.Location = new System.Drawing.Point(8, 57);
-            this.label14.Name = "label14";
-            this.label14.Size = new System.Drawing.Size(64, 13);
-            this.label14.TabIndex = 14;
-            this.label14.Text = "CellBroadc.:";
-            // 
-            // lblCellBroadcast
-            // 
-            this.lblCellBroadcast.AutoSize = true;
-            this.lblCellBroadcast.Location = new System.Drawing.Point(77, 57);
-            this.lblCellBroadcast.Name = "lblCellBroadcast";
-            this.lblCellBroadcast.Size = new System.Drawing.Size(16, 13);
-            this.lblCellBroadcast.TabIndex = 15;
-            this.lblCellBroadcast.Text = "---";
             // 
             // GSMAnalyzer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(840, 477);
+            this.ClientSize = new System.Drawing.Size(910, 476);
             this.Controls.Add(this.splitContainer1);
             this.Name = "GSMAnalyzer";
             this.Text = "GSMAnalyzer";
@@ -629,6 +651,8 @@ namespace GSM_Analyzer
         private System.Windows.Forms.GroupBox groupBox4;
         private System.Windows.Forms.Label lblCellBroadcast;
         private System.Windows.Forms.Label label14;
+        private System.Windows.Forms.Label label15;
+        private System.Windows.Forms.Label lblFreqOffset;
     }
 }
 

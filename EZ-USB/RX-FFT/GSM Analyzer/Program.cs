@@ -22,11 +22,15 @@ namespace GSM_Analyzer
             }
             catch(SecurityException securityException)
             {
-                MessageBox.Show("There was an unhandled exception. Don't run this software from a network drive!" + Environment.NewLine + Environment.NewLine + securityException);
+                MessageBox.Show("There was an unhandled SecurityException. Don't run this software from a network drive!" + Environment.NewLine + Environment.NewLine + securityException);
+            }
+            catch (SystemException e)
+            {
+                MessageBox.Show("There was an unhandled SystemException." + Environment.NewLine + Environment.NewLine + "Exception:" + Environment.NewLine + e);
             }
             catch (Exception e)
             {
-                MessageBox.Show("There was an unhandled exception." + Environment.NewLine + Environment.NewLine + "Exception:" + Environment.NewLine + e);
+                MessageBox.Show("There was an unhandled Exception." + Environment.NewLine + Environment.NewLine + "Exception:" + Environment.NewLine + e);
             }
         }
     }

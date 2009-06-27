@@ -71,12 +71,16 @@ namespace LibRXFFT.Libraries.GMSK
             dstData[0] = true;
 
             /* find the highest amplitude over some bits (start at bit 1 and use 5 bits) */
-            if (DecisionPower == 0 || BurstsProcessed >= 8)
+            if (DecisionPower <= 0 || BurstsProcessed >= 8)
             {
                 int firstBits = (int)(5 * Oversampling);
 
                 BurstsProcessed = 0;
                 MaxPower = SignalPower.Max(srcData, (int)(StartOffset + SubSampleOffset), firstBits);
+
+                /* difference too high? reset! */
+                if (MaxPower / DecisionPower > 100 || MaxPower / DecisionPower < 0.001)
+                    DecisionPower = 0;
 
                 /* build an average over the last max-levels */
                 if (DecisionPower == 0)

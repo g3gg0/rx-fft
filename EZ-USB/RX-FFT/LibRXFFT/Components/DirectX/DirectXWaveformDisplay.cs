@@ -130,18 +130,6 @@ namespace LibRXFFT.Components.DirectX
 
                         if (SampleValues.Count > 0)
                         {
-                            /*int startPos = StartSample;
-                            int samples = DirectXWidth;
-
-                            if (startPos + samples > SampleValues.Count)
-                                startPos = SampleValues.Count - samples;
-
-                            if (startPos < 0)
-                            {
-                                startPos = 0;
-                                samples = SampleValues.Count;
-                            }*/
-
                             int samples = SampleValues.Count;
 
                             if (LinePoints == null || LinePoints.Length < samples)
@@ -152,9 +140,6 @@ namespace LibRXFFT.Components.DirectX
                                 double sampleValue = (double) SampleValues[pos];
                                 double posX = pos;
                                 double posY = sampleValue;
-
-                                posY = Math.Min(posY, 1);
-                                posY = Math.Max(posY, -1);
 
                                 LinePoints[pos].X = posX;
                                 LinePoints[pos].Y = posY;

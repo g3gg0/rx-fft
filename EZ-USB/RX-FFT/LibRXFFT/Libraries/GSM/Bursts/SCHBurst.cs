@@ -20,6 +20,7 @@ namespace LibRXFFT.Libraries.GSM.Bursts
         public SCHBurst()
         {
             Name = "SCH";
+            ShortName = "SC ";
         }
 
         public override bool ParseData(GSMParameters param, bool[] decodedBurst)

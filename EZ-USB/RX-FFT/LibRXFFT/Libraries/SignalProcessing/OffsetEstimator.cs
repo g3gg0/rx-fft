@@ -32,7 +32,6 @@ namespace LibRXFFT.Libraries.SignalProcessing
                     transition -= oversampling / 2;
 
                     averages.Add(transition);
-
                 }
 
                 lastSampleValue = sampleValue;

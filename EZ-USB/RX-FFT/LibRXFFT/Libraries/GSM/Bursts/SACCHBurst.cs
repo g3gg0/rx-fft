@@ -11,7 +11,9 @@ namespace LibRXFFT.Libraries.GSM.Bursts
 {
     public class SACCHBurst : NormalBurst
     {
-        private readonly bool[][] SACCHBuffer;
+        public static bool ShowEncryptedMessage = false;
+        public bool TchType = false;
+
         private long[] FN;
         private int tchSeq = 0;
         private int SubChannel;
@@ -20,32 +22,44 @@ namespace LibRXFFT.Libraries.GSM.Bursts
         {
             L3 = l3;
             Name = "SACCH";
+            ShortName = "SA ";
             FN = new long[4];
-            SACCHBuffer = new bool[4][];
-            for (int pos = 0; pos < SACCHBuffer.Length; pos++)
-                SACCHBuffer[pos] = new bool[114];
+
+            InitArrays();
         }
 
         public SACCHBurst(L3Handler l3, int subChan)
         {
             L3 = l3;
             Name = "SACCH " + subChan;
+            ShortName = "SA" + subChan;
             SubChannel = subChan;
             FN = new long[4];
-            SACCHBuffer = new bool[4][];
-            for (int pos = 0; pos < SACCHBuffer.Length; pos++)
-                SACCHBuffer[pos] = new bool[114];
+
+            InitArrays();
         }
 
         public SACCHBurst(L3Handler l3, string name, int subChan)
         {
             L3 = l3;
             Name = name;
+            ShortName = "SA" + subChan;
             SubChannel = subChan;
             FN = new long[4];
-            SACCHBuffer = new bool[4][];
-            for (int pos = 0; pos < SACCHBuffer.Length; pos++)
-                SACCHBuffer[pos] = new bool[114];
+
+            InitArrays();
+        }
+
+        public SACCHBurst(L3Handler l3, string name, int subChan, bool tchType)
+        {
+            L3 = l3;
+            Name = name;
+            ShortName = "SA" + subChan;
+            SubChannel = subChan;
+            FN = new long[4];
+            TchType = tchType;
+
+            InitArrays();
         }
 
         public override bool ParseData(GSMParameters param, bool[] decodedBurst)
@@ -57,6 +71,9 @@ namespace LibRXFFT.Libraries.GSM.Bursts
         {
             if (IsDummy(decodedBurst, 3))
             {
+                if (param.DumpPackets)
+                    StatusMessage = "Dummy Burst";
+
                 tchSeq = 0;
                 return true;
             }
@@ -64,53 +81,63 @@ namespace LibRXFFT.Libraries.GSM.Bursts
             bool isComplete;
 
             /* decide between normal SACCH and SACCH/TCH */
-            if (param.TN < 2)
+            if (!TchType)
             {
-                Array.Copy(decodedBurst, 3, SACCHBuffer[sequence], 0, 57);
-                Array.Copy(decodedBurst, 88, SACCHBuffer[sequence], 57, 57);
+                /* thats a normal SACCH */
+                Array.Copy(decodedBurst, 3, BurstBuffer[sequence], 0, 57);
+                Array.Copy(decodedBurst, 88, BurstBuffer[sequence], 57, 57);
 
                 FN[sequence] = param.FN;
 
-                isComplete = FN[0] + 1 == FN[1] && FN[1] + 1 == FN[2] && FN[2] + 1 == FN[3];
+                /* the frame is complete when 4 sequences of four consecutive FN were buffered */
+                isComplete = (FN[0] + 1 == FN[1]) && (FN[1] + 1 == FN[2]) && (FN[2] + 1 == FN[3]);
             }
             else
             {
-                Array.Copy(decodedBurst, 3, SACCHBuffer[tchSeq], 0, 57);
-                Array.Copy(decodedBurst, 88, SACCHBuffer[tchSeq], 57, 57);
+                /* thats a SACCH/TCH */
+                Array.Copy(decodedBurst, 3, BurstBuffer[tchSeq], 0, 57);
+                Array.Copy(decodedBurst, 88, BurstBuffer[tchSeq], 57, 57);
 
+                /* when we caught four bursts, the frame is complete */
                 tchSeq++;
                 isComplete = tchSeq>3;
             }
 
             if (isComplete)
             {
+                /* clean up */
                 tchSeq = 0;
-                bool[][] SACCHData = InterleaveCoder.Deinterleave(SACCHBuffer, null);
-
-
-                bool[] SACCHDataDeinterleaved = ConvolutionalCoder.Decode(SACCHData[0], null);
-                if (SACCHDataDeinterleaved == null)
-                {
-                    ErrorMessage = "(Error in ConvolutionalCoder)";
-                    return true;
-                }
-
-                bool[] crc = CRC.Calc(SACCHDataDeinterleaved, 0, 224, CRC.PolynomialFIRE);
-                if (!CRC.Matches(crc))
-                {
-                    ErrorMessage = "(Error in CRC)";
-                    return true;
-                }
-
-                byte[] data = ByteUtil.BitsToBytesRev(SACCHDataDeinterleaved, 0, 184);
-
-                L2.Handle(this, L3, data);
-
                 Array.Clear(FN, 0, 4);
-                Array.Clear(SACCHBuffer[0], 0, SACCHBuffer[0].Length);
-                Array.Clear(SACCHBuffer[1], 0, SACCHBuffer[1].Length);
-                Array.Clear(SACCHBuffer[2], 0, SACCHBuffer[2].Length);
-                Array.Clear(SACCHBuffer[3], 0, SACCHBuffer[3].Length);
+
+                InterleaveCoder.Deinterleave(BurstBuffer, DataDeinterleaved);
+
+                if (ConvolutionalCoder.DecodeViterbi(DataDeinterleaved[0], DataDecoded) == null)
+                {
+                    if (ShowEncryptedMessage)
+                        StatusMessage = "(Error in ConvolutionalCoder, maybe encrypted)";
+                    return true;
+                }
+
+                CRC.Calc(DataDecoded, 0, 224, CRC.PolynomialFIRE, CRCBuffer);
+                if (!CRC.Matches(CRCBuffer))
+                {
+                    bool[] DataRepaired = new bool[224];
+
+                    FireCode fc = new FireCode(40, 184);
+                    if (!fc.FC_check_crc(DataDecoded, DataRepaired))
+                    {
+                        ErrorMessage = "(Error in CRC)";
+                        return false;
+                    }
+
+                    StatusMessage = "(CRC Error recovered)";
+                    Array.Copy(DataRepaired, DataDecoded, DataRepaired.Length);
+                }
+
+                ByteUtil.BitsToBytesRev(DataDecoded, Data, 0, 184);
+
+                //DumpBytes(Data);
+                L2.Handle(this, L3, Data, 2);
             }
             else
                 StatusMessage = null;

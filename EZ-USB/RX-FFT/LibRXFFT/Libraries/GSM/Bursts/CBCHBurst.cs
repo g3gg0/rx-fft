@@ -1,44 +1,55 @@
 ﻿using System;
-using LibRXFFT.Libraries.GMSK;
-using LibRXFFT.Libraries.GSM.Layer1;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using LibRXFFT.Libraries.GSM.Layer3;
+using LibRXFFT.Libraries.GSM.Layer1;
+using LibRXFFT.Libraries.GMSK;
 
 namespace LibRXFFT.Libraries.GSM.Bursts
 {
-    public class SDCCHBurst : NormalBurst
+    class CBCHBurst : NormalBurst
     {
-        public static bool ShowEncryptedMessage = false;
         private long[] FN;
+        private CBCHandler CBCHandler;
+        public static eTriState CBCHEnabled = eTriState.Unknown;
+        public static int CBCHTimeSlot = 0;
+        public static int CBCHSubChannel;
         private int SubChannel;
 
-        public SDCCHBurst(L3Handler l3)
+        public CBCHBurst(L3Handler l3)
         {
             L3 = l3;
-            Name = "SDCCH";
-            ShortName = "SD ";
+            Name = "CBCH";
+            ShortName = "CB ";
             FN = new long[4];
+
+            CBCHandler = new CBCHandler();
 
             InitArrays();
         }
 
-        public SDCCHBurst(L3Handler l3, int subChannel)
+        public CBCHBurst(L3Handler l3, int subChannel)
         {
             L3 = l3;
-            Name = "SDCCH " + subChannel;
-            ShortName = "SD" + subChannel;
+            Name = "CBCH " + subChannel;
+            ShortName = "CB" + subChannel;
             SubChannel = subChannel;
             FN = new long[4];
 
+            CBCHandler = new CBCHandler();
+
             InitArrays();
         }
 
-        public SDCCHBurst(L3Handler l3, string name, int subChannel)
+        public CBCHBurst(L3Handler l3, string name, int subChannel)
         {
             L3 = l3;
             Name = name;
-            ShortName = "SD" + subChannel;
             SubChannel = subChannel;
             FN = new long[4];
+
+            CBCHandler = new CBCHandler();
 
             InitArrays();
         }
@@ -68,9 +79,8 @@ namespace LibRXFFT.Libraries.GSM.Bursts
 
                 if (ConvolutionalCoder.DecodeViterbi(DataDeinterleaved[0], DataDecoded) == null)
                 {
-                    if (ShowEncryptedMessage)
-                        StatusMessage = "(Error in ConvolutionalCoder, maybe encrypted)";
-                    return true;
+                    ErrorMessage = "(Error in ConvolutionalCoder)";
+                    return false;
                 }
 
                 CRC.Calc(DataDecoded, 0, 224, CRC.PolynomialFIRE, CRCBuffer);
@@ -93,8 +103,9 @@ namespace LibRXFFT.Libraries.GSM.Bursts
                 ByteUtil.BitsToBytesRev(DataDecoded, Data, 0, 184);
 
 
-                //DumpBytes(Data);
-                L2.Handle(this, L3, Data);
+                /* do we have a CBCH channel and thats this subchannel? */
+                if (CBCHandler.Handle(Data))
+                    StatusMessage = CBCHandler.StatusMessage;
 
                 Array.Clear(FN, 0, 4);
             }

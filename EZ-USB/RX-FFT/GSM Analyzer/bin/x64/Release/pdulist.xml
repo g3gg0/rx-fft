@@ -189,15 +189,15 @@
 	<field name="RXLEV-ACCESS-MIN" type="integer">
 		<bits octet="2" start="1" count="6"/>
 	</field>
-	<field name="NECI"  type="stringIndex" strings="2">
+	<field name="NECI"  type="stringIndex" strings="2" set="NECI">
 		<bits octet="2" start="7" count="1"/>
-		<string index="0" text="The SI 4 rest octets, if present, and SI 7 and SI 8 rest octets, if so indicated in the SI 4 rest octets shall be used to derive the value of PI and possibly C2 parameters and/or other parameters"/>
-		<string index="1" text="System information type 16 and 17 are broadcast on the BCCH."/>
+		<string index="0" text="New establishment causes are not supported"/>
+		<string index="1" text="New establishment causes are supported"/>
 	</field>
 	<field name="ACS"  type="stringIndex" strings="2">
 		<bits octet="2" start="8" count="1"/>
-		<string index="0" text="New establishment causes are not supported"/>
-		<string index="1" text="New establishment causes are supported"/>
+		<string index="0" text="The SI 4 rest octets, if present, and SI 7 and SI 8 rest octets, if so indicated in the SI 4 rest octets shall be used to derive the value of PI and possibly C2 parameters and/or other parameters"/>
+		<string index="1" text="System information type 16 and 17 are broadcast on the BCCH."/>
 	</field>
 	<field name="CELL-RESELECT-HYST" type="stringIndex" strings="8">
 		<bits octet="1" start="6" count="3"/>
@@ -270,7 +270,7 @@
 	<field name="T 3212" type="integer">
 		<bits octet="3" start="1" count="8"/>
 	</field>
-	<field name="CCCH-CONF" type="stringIndex" strings="7">
+	<field name="CCCH-CONF" type="stringIndex" strings="7" trigger-post="CCCH-CONF" set="CCCH-CONF">
 		<bits octet="1" start="1" count="3"/>
 		<string index="0" text="1 basic physical channel used for CCCH, not combined with SDCCHs"/>
 		<string index="1" text="1 basic physical channel used for CCCH, combined with SDCCHs"/>
@@ -354,7 +354,7 @@
 		<string index="1" text="Emergency call not allowed in the cell except for the MSs that belong to one of the classes between 11 to 15"/>
 	</field>
    	<field name="Max retrans" type="stringIndex" strings="4">
-		<bits octet="1" start="6" count="2"/>
+		<bits octet="1" start="7" count="2"/>
 		<string index="0" text="Maximum 1 retransmission"/>
 		<string index="1" text="Maximum 2 retransmissions"/>
 		<string index="2" text="Maximum 4 retransmissions"/>
@@ -381,7 +381,7 @@
 	</field>
   </pdudesc>
   <pdudesc ref="10.5.2.30" name="Request Reference" type="3" length="3" fields="true">
-   	<field name="RA" type="hexnumber">
+   	<field name="RA" type="hexnumber" parser="ParseRA">
 		<bits octet="1" start="1" count="8"/>
 	</field>
    	<field name="T1'" type="integer">
@@ -460,7 +460,18 @@
   <pdudesc ref="10.5.3.1" name="Authentication parameter RAND" type="3" length="16"/>
   <pdudesc ref="10.5.3.1.1" name="Authentication parameter AUTN" type="4" length="16"/>
   <pdudesc ref="10.5.3.2" name="Authentication parameter SRES" type="3" length="4"/>
-  <pdudesc ref="10.5.3.3" name="CM service type" type="1"/>
+  <pdudesc ref="10.5.3.3" name="CM service type" type="1" fields="true">
+	<field name="Service Type" type="stringIndex" strings="15">
+		<bits octet="1" start="1" count="4"/>
+		<string index="1" text="Mobile originating call establishment or packet mode connection establishment"/>
+		<string index="2" text="Emergency call establishment"/>
+		<string index="4" text="Short message service"/>
+		<string index="8" text="Supplementary service activation"/>
+		<string index="9" text="Voice group call establishment"/>
+		<string index="10" text="Voice broadcast call establishment"/>
+		<string index="11" text="Location Services"/>
+	</field>
+  </pdudesc>
   <pdudesc ref="10.5.3.4" name="Identity type" type="1" fields="true">
 	<field name="Type of identity" type="stringIndex" strings="7">
 		<bits octet="1" start="1" count="3"/>

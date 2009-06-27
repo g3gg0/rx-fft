@@ -1,13 +1,17 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using LibRXFFT.Libraries.GSM.Layer1;
 
 namespace LibRXFFT.Libraries.GSM.Bursts
 {
-    public class FCHBurst : Burst
+    public class TCHBurst : NormalBurst
     {
-        public FCHBurst()
+        public TCHBurst()
         {
-            Name = "FCH";
-            ShortName = "FC ";
+            Name = "TCH";
+            ShortName = "TC ";
         }
 
         public override bool ParseData(GSMParameters param, bool[] decodedBurst)

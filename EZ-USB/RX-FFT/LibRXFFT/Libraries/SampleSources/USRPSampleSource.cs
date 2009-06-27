@@ -8,22 +8,16 @@ namespace LibRXFFT.Libraries.SampleSources
 {
     public class USRPSampleSource : SampleSource
     {
-        private SharedMem ShmemChannel;
-
         private byte[] InBuffer;
         private FileStream InputStream;
 
         public USRPSampleSource(string fileName, int oversampling) : base(oversampling)
         {
-            //ShmemChannel = new SharedMem(0, -1, "grrr");
-            //ShmemChannel.ReadTimeout = 10;
-            //ShmemChannel.ReadMode = eReadMode.TimeLimited;
-
             /* USRP has an inverted spectrum */
-            Demodulator.InvertedSpectrum = true;
-            Demodulator.DataFormat = eDataFormat.Direct64BitIQFloat64k;
+            InvertedSpectrum = true;
+            DataFormat = eDataFormat.Direct64BitIQFloat64k;
 
-            InBuffer = new byte[BlockSize * Demodulator.BytesPerSamplePair];
+            InBuffer = new byte[BlockSize * BytesPerSamplePair];
 
             InputStream = new FileStream(fileName, FileMode.Open);
 
@@ -52,16 +46,16 @@ namespace LibRXFFT.Libraries.SampleSources
                 return false;
             }
 
+            DecodeFromBinary(InBuffer, SourceSamplesI, SourceSamplesQ);
+
             if (InternalOversampling > 1)
             {
-                Demodulator.ProcessData(InBuffer, read, TmpSignal, TmpStrength);
-                Oversampler.Oversample(TmpSignal, Signal, InternalOversampling);
-                Oversampler.Oversample(TmpStrength, Strength, InternalOversampling);
+                IOversampler.Oversample(SourceSamplesI, OversampledI);
+                QOversampler.Oversample(SourceSamplesQ, OversampledQ);
+                Demodulator.ProcessData(OversampledI, OversampledQ, Signal, Strength);
             }
             else
-                Demodulator.ProcessData(InBuffer, read, Signal, Strength);
-
-            //ShmemChannel.Write(ByteUtil.convertToBytesInterleaved(Signal, Strength));
+                Demodulator.ProcessData(SourceSamplesI, SourceSamplesQ, Signal, Strength);
 
             SamplesRead = Signal.Length;
 

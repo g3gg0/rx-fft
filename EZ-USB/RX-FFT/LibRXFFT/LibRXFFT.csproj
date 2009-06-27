@@ -176,12 +176,15 @@
     <Compile Include="Libraries\GMSK\InterleaveCoder.cs" />
     <Compile Include="Libraries\GSM\Bursts\BCCHBurst.cs" />
     <Compile Include="Libraries\GSM\Bursts\Burst.cs" />
+    <Compile Include="Libraries\GSM\Bursts\CBCHBurst.cs" />
     <Compile Include="Libraries\GSM\Bursts\CCCHBurst.cs" />
     <Compile Include="Libraries\GSM\Bursts\SACCHBurst.cs" />
+    <Compile Include="Libraries\GSM\Bursts\TCHBurst.cs" />
     <Compile Include="Libraries\GSM\CharacterCoding\GSM7Bit.cs" />
     <Compile Include="Libraries\GSM\Layer1\CRC.cs" />
     <Compile Include="Libraries\GSM\Bursts\FCHBurst.cs" />
     <Compile Include="Libraries\GSM\Layer1\FCCHFinder.cs" />
+    <Compile Include="Libraries\GSM\Layer1\FireCode.cs" />
     <Compile Include="Libraries\GSM\Layer1\GSMParameters.cs" />
     <Compile Include="Libraries\GSM\Layer2\L2Handler.cs" />
     <Compile Include="Libraries\GSM\Layer3\CBCHandler.cs" />

@@ -10,10 +10,12 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
     public class TimeSlotHandler
     {
+
         private readonly double BT;
         public readonly double Oversampling;
 
-        private readonly byte[] TrainingCode = new byte[] {0xB9, 0x62, 0x04, 0x0F, 0x2D, 0x45, 0x76, 0x1B};
+
+        private readonly byte[] TrainingCode = new byte[] { 0xB9, 0x62, 0x04, 0x0F, 0x2D, 0x45, 0x76, 0x1B };
         private readonly double[] TrainingSequence;
         public AddMessageDelegate AddMessage { get; set; }
 
@@ -44,6 +46,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             }
         }
 
+
         public TimeSlotHandler(double oversampling, double bt, AddMessageDelegate addMessage)
         {
             Oversampling = oversampling;
@@ -53,6 +56,11 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             Decoder = new GMSKDecoder(Oversampling, BT);
 
             L3 = new L3Handler();
+            L3.PDUDataTriggers.Add("CCCH-CONF", TriggerCCCHCONF);
+            L3.PDUDataTriggers.Add("ChannelAssignment", TriggerChannelAssignment);
+            L3.PDUDataTriggers.Add("CBCHUpdate", TriggerCBCHUpdate);
+            L3.PDUDataTriggers.Add("CBCHReset", TriggerCBCHReset);
+
 
             FCH = new FCHBurst();
             SCH = new SCHBurst();
@@ -60,13 +68,8 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             CCCH = new CCCHBurst(L3);
 
             TimeSlotHandlers = new sTimeSlotParam[8][];
-            for (int timeSlot = 0; timeSlot < 2; timeSlot++)
-                TimeSlotHandlers[timeSlot] = new sTimeSlotParam[51];
 
-            for (int timeSlot = 2; timeSlot < 8; timeSlot++)
-                TimeSlotHandlers[timeSlot] = new sTimeSlotParam[26];
-
-
+            TimeSlotHandlers[0] = new sTimeSlotParam[51];
             TimeSlotHandlers[0][0] = new sTimeSlotParam(FCH, 0);
             TimeSlotHandlers[0][1] = new sTimeSlotParam(SCH, 0);
             TimeSlotHandlers[0][2] = new sTimeSlotParam(BCCH, 0);
@@ -77,90 +80,482 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             TimeSlotHandlers[0][7] = new sTimeSlotParam(CCCH, 1);
             TimeSlotHandlers[0][8] = new sTimeSlotParam(CCCH, 2);
             TimeSlotHandlers[0][9] = new sTimeSlotParam(CCCH, 3);
-            TimeSlotHandlers[0][10] = new sTimeSlotParam(FCH, 0);
-            TimeSlotHandlers[0][11] = new sTimeSlotParam(SCH, 0);
-            TimeSlotHandlers[0][12] = new sTimeSlotParam(CCCH, 0);
-            TimeSlotHandlers[0][13] = new sTimeSlotParam(CCCH, 1);
-            TimeSlotHandlers[0][14] = new sTimeSlotParam(CCCH, 2);
-            TimeSlotHandlers[0][15] = new sTimeSlotParam(CCCH, 3);
-            TimeSlotHandlers[0][16] = new sTimeSlotParam(CCCH, 0);
-            TimeSlotHandlers[0][17] = new sTimeSlotParam(CCCH, 1);
-            TimeSlotHandlers[0][18] = new sTimeSlotParam(CCCH, 2);
-            TimeSlotHandlers[0][19] = new sTimeSlotParam(CCCH, 3);
-            TimeSlotHandlers[0][20] = new sTimeSlotParam(FCH, 0);
-            TimeSlotHandlers[0][21] = new sTimeSlotParam(SCH, 0);
-            TimeSlotHandlers[0][22] = new sTimeSlotParam(CCCH, 0);
-            TimeSlotHandlers[0][23] = new sTimeSlotParam(CCCH, 1);
-            TimeSlotHandlers[0][24] = new sTimeSlotParam(CCCH, 2);
-            TimeSlotHandlers[0][25] = new sTimeSlotParam(CCCH, 3);
-            TimeSlotHandlers[0][26] = new sTimeSlotParam(CCCH, 0);
-            TimeSlotHandlers[0][27] = new sTimeSlotParam(CCCH, 1);
-            TimeSlotHandlers[0][28] = new sTimeSlotParam(CCCH, 2);
-            TimeSlotHandlers[0][29] = new sTimeSlotParam(CCCH, 3);
-            TimeSlotHandlers[0][30] = new sTimeSlotParam(FCH, 0);
-            TimeSlotHandlers[0][31] = new sTimeSlotParam(SCH, 0);
-            TimeSlotHandlers[0][32] = new sTimeSlotParam(CCCH, 0);
-            TimeSlotHandlers[0][33] = new sTimeSlotParam(CCCH, 1);
-            TimeSlotHandlers[0][34] = new sTimeSlotParam(CCCH, 2);
-            TimeSlotHandlers[0][35] = new sTimeSlotParam(CCCH, 3);
-            TimeSlotHandlers[0][36] = new sTimeSlotParam(CCCH, 0);
-            TimeSlotHandlers[0][37] = new sTimeSlotParam(CCCH, 1);
-            TimeSlotHandlers[0][38] = new sTimeSlotParam(CCCH, 2);
-            TimeSlotHandlers[0][39] = new sTimeSlotParam(CCCH, 3);
-            TimeSlotHandlers[0][40] = new sTimeSlotParam(FCH, 0);
-            TimeSlotHandlers[0][41] = new sTimeSlotParam(SCH, 0);
-            TimeSlotHandlers[0][42] = new sTimeSlotParam(CCCH, 0);
-            TimeSlotHandlers[0][43] = new sTimeSlotParam(CCCH, 1);
-            TimeSlotHandlers[0][44] = new sTimeSlotParam(CCCH, 2);
-            TimeSlotHandlers[0][45] = new sTimeSlotParam(CCCH, 3);
-            TimeSlotHandlers[0][46] = new sTimeSlotParam(CCCH, 0);
-            TimeSlotHandlers[0][47] = new sTimeSlotParam(CCCH, 1);
-            TimeSlotHandlers[0][48] = new sTimeSlotParam(CCCH, 2);
-            TimeSlotHandlers[0][49] = new sTimeSlotParam(CCCH, 3);
-            TimeSlotHandlers[0][50] = new sTimeSlotParam(null, 0);
-
-            for (int fn = 0; fn < 32; fn+=4)
-            {
-                SDCCHBurst tmpSDCCH = new SDCCHBurst(L3, fn/4);
-                TimeSlotHandlers[1][fn + 0] = new sTimeSlotParam(tmpSDCCH, 0);
-                TimeSlotHandlers[1][fn + 1] = new sTimeSlotParam(tmpSDCCH, 1);
-                TimeSlotHandlers[1][fn + 2] = new sTimeSlotParam(tmpSDCCH, 2);
-                TimeSlotHandlers[1][fn + 3] = new sTimeSlotParam(tmpSDCCH, 3);
-            }
-            for (int fn = 32; fn < 48; fn += 4)
-            {
-                SACCHBurst tmpSACCH = new SACCHBurst(L3, (fn - 32) / 4);
-                TimeSlotHandlers[1][fn + 0] = new sTimeSlotParam(tmpSACCH, 0);
-                TimeSlotHandlers[1][fn + 1] = new sTimeSlotParam(tmpSACCH, 1);
-                TimeSlotHandlers[1][fn + 2] = new sTimeSlotParam(tmpSACCH, 2);
-                TimeSlotHandlers[1][fn + 3] = new sTimeSlotParam(tmpSACCH, 3);
-            }
-
-            for (int tn = 2; tn < 8; tn += 1)
-            {
-                SACCHBurst tmpSACCH = new SACCHBurst(L3, "SACCH/TCH TN" + tn, tn);
-                TimeSlotHandlers[tn][12] = new sTimeSlotParam(tmpSACCH, 0);
-            }
 
 
             /* create training sequence ... */
             double[] tmpTrainingSequence = new SequenceGenerator(Oversampling, BT).GenerateDiffEncoded(TrainingCode);
 
             /* ... and skip the first and last two samples since these are affected by the bits before */
-            TrainingSequence = new double[(int) (tmpTrainingSequence.Length - 4*Oversampling)];
-            Array.Copy(tmpTrainingSequence, (int) (2*Oversampling), TrainingSequence, 0, TrainingSequence.Length);
+            TrainingSequence = new double[(int)(tmpTrainingSequence.Length - 4 * Oversampling)];
+            Array.Copy(tmpTrainingSequence, (int)(2 * Oversampling), TrainingSequence, 0, TrainingSequence.Length);
         }
 
+        private void TriggerChannelAssignment(L3Handler L3Handler)
+        {
+            eTimeSlotType channelType;
+            long subChannel;
+            long timeSlot;
+
+            lock (L3Handler.PDUDataFields)
+            {
+                if (!L3Handler.PDUDataRawFields.ContainsKey("ChannelType"))
+                    return;
+                if (!L3Handler.PDUDataRawFields.ContainsKey("SubChannel"))
+                    return;
+                if (!L3Handler.PDUDataRawFields.ContainsKey("TimeSlot"))
+                    return;
+
+                channelType = (eTimeSlotType)L3Handler.PDUDataRawFields["ChannelType"];
+                subChannel = L3Handler.PDUDataRawFields["SubChannel"];
+                timeSlot = L3Handler.PDUDataRawFields["TimeSlot"];
+            }
+
+            /* assigned time slot type does not match? */
+            if (TimeSlotHandlers[timeSlot] == null || Parameters.TimeSlotInfo[timeSlot].Type != channelType)
+            {
+                lock (TimeSlotHandlers)
+                {
+                    switch (channelType)
+                    {
+                        case eTimeSlotType.TCHF:
+                            AddMessage("   [L1] TimeSlot " + timeSlot + " now configured as TCH/F (was " + Parameters.TimeSlotInfo[timeSlot].Type + ")" + Environment.NewLine);
+                            TimeSlotHandlers[timeSlot] = new sTimeSlotParam[26];
+
+                            TCHBurst tch = new TCHBurst();
+                            SACCHBurst sacch = new SACCHBurst(L3, "SACCH/TCH", (int)timeSlot, true);
+                            for (int frame = 0; frame < 25; frame++)
+                            {
+                                if (frame == 12)
+                                    TimeSlotHandlers[timeSlot][frame] = new sTimeSlotParam(sacch, 0);
+                                else
+                                    TimeSlotHandlers[timeSlot][frame] = new sTimeSlotParam(tch, 0);
+                            }
+                            break;
+
+                        case eTimeSlotType.TCHH:
+                            AddMessage("   [L1] TimeSlot " + timeSlot + " now configured as TCH/H (was " + Parameters.TimeSlotInfo[timeSlot].Type + ")" + Environment.NewLine);
+                            TimeSlotHandlers[timeSlot] = new sTimeSlotParam[26];
+
+                            TCHBurst tch1 = new TCHBurst();
+                            TCHBurst tch2 = new TCHBurst();
+                            SACCHBurst sacch1 = new SACCHBurst(L3, "SACCH1/TCH", (int)timeSlot, true);
+                            SACCHBurst sacch2 = new SACCHBurst(L3, "SACCH2/TCH", (int)timeSlot, true);
+                            for (int frame = 0; frame < 26; frame++)
+                            {
+                                if (frame == 12)
+                                    TimeSlotHandlers[timeSlot][frame] = new sTimeSlotParam(sacch1, 0);
+                                else if (frame == 25)
+                                    TimeSlotHandlers[timeSlot][frame] = new sTimeSlotParam(sacch2, 0);
+                                else if ((frame & 1) == 0)
+                                    TimeSlotHandlers[timeSlot][frame] = new sTimeSlotParam(tch1, 0);
+                                else
+                                    TimeSlotHandlers[timeSlot][frame] = new sTimeSlotParam(tch2, 0);
+                            }
+                            break;
+
+                        case eTimeSlotType.SDCCH8:
+                            AddMessage("   [L1] TimeSlot " + timeSlot + " now configured as SDCCH/8 (was " + Parameters.TimeSlotInfo[timeSlot].Type + ")" + Environment.NewLine);
+                            TimeSlotHandlers[timeSlot] = new sTimeSlotParam[51];
+
+                            /* 8 SDCCHs */
+                            for (int chan = 0; chan < 8; chan++)
+                            {
+                                SDCCHBurst tmpSDCCH = new SDCCHBurst(L3, chan);
+                                TimeSlotHandlers[timeSlot][chan * 4 + 0] = new sTimeSlotParam(tmpSDCCH, 0);
+                                TimeSlotHandlers[timeSlot][chan * 4 + 1] = new sTimeSlotParam(tmpSDCCH, 1);
+                                TimeSlotHandlers[timeSlot][chan * 4 + 2] = new sTimeSlotParam(tmpSDCCH, 2);
+                                TimeSlotHandlers[timeSlot][chan * 4 + 3] = new sTimeSlotParam(tmpSDCCH, 3);
+                            }
+
+                            /* finally 4 SACCHs */
+                            for (int chan = 0; chan < 4; chan++)
+                            {
+                                SACCHBurst tmpSACCH = new SACCHBurst(L3, "SACCH " + chan + "/" + (chan + 4), chan);
+                                TimeSlotHandlers[timeSlot][(chan + 8) * 4 + 0] = new sTimeSlotParam(tmpSACCH, 0);
+                                TimeSlotHandlers[timeSlot][(chan + 8) * 4 + 1] = new sTimeSlotParam(tmpSACCH, 1);
+                                TimeSlotHandlers[timeSlot][(chan + 8) * 4 + 2] = new sTimeSlotParam(tmpSACCH, 2);
+                                TimeSlotHandlers[timeSlot][(chan + 8) * 4 + 3] = new sTimeSlotParam(tmpSACCH, 3);
+                            }
+                            break;
+
+                        default:
+                            AddMessage("   [L1] TimeSlot " + timeSlot + " cannot get configured. Type: " + (int)channelType + Environment.NewLine);
+                            break;
+                    }
+
+                    Parameters.TimeSlotInfo[timeSlot].Type = channelType;
+                    Parameters.TimeSlotInfo[timeSlot].Configures++;
+                }
+            }
+
+            Parameters.TimeSlotInfo[timeSlot].Assignments++;
+            if (subChannel >= 0)
+                Parameters.TimeSlotInfo[timeSlot].SubChanAssignments[subChannel]++;
+        }
+
+        private void TriggerCBCHReset(L3Handler L3Handler)
+        {
+            lock (L3Handler.PDUDataFields)
+            {
+                if (L3Handler.PDUDataFields.ContainsKey("ChannelType"))
+                    L3Handler.PDUDataFields.Remove("ChannelType");
+                if (L3Handler.PDUDataFields.ContainsKey("SubChannel"))
+                    L3Handler.PDUDataFields.Remove("SubChannel");
+                if (L3Handler.PDUDataFields.ContainsKey("TimeSlot"))
+                    L3Handler.PDUDataFields.Remove("TimeSlot");
+
+                if (L3Handler.PDUDataRawFields.ContainsKey("ChannelType"))
+                    L3Handler.PDUDataRawFields.Remove("ChannelType");
+                if (L3Handler.PDUDataRawFields.ContainsKey("SubChannel"))
+                    L3Handler.PDUDataRawFields.Remove("SubChannel");
+                if (L3Handler.PDUDataRawFields.ContainsKey("TimeSlot"))
+                    L3Handler.PDUDataRawFields.Remove("TimeSlot");
+            }
+
+        }
+
+
+        private void TriggerCBCHUpdate(L3Handler L3Handler)
+        {
+            long channelType;
+            long subChannel;
+            long timeSlot;
+
+            if (Parameters.CBCH != eTriState.Unknown)
+                return;
+
+            lock (L3Handler.PDUDataFields)
+            {
+                if (!L3Handler.PDUDataRawFields.ContainsKey("ChannelType"))
+                {
+                    Parameters.CBCH = eTriState.No;
+                    return;
+                }
+                if (!L3Handler.PDUDataRawFields.ContainsKey("SubChannel"))
+                {
+                    Parameters.CBCH = eTriState.No;
+                    return;
+                }
+                if (!L3Handler.PDUDataRawFields.ContainsKey("TimeSlot"))
+                {
+                    Parameters.CBCH = eTriState.No;
+                    return;
+                }
+
+                channelType = L3Handler.PDUDataRawFields["ChannelType"];
+                subChannel = L3Handler.PDUDataRawFields["SubChannel"];
+                timeSlot = L3Handler.PDUDataRawFields["TimeSlot"];
+            }
+
+            /* channel type 4 = SDCCH/4, channel type 8 = SDCCH/8 */
+            if (subChannel < 0 || timeSlot < 0 || channelType < 4)
+            {
+                Parameters.CBCH = eTriState.No;
+                return;
+            }
+
+            Parameters.CBCH = eTriState.Yes;
+
+            CBCHBurst Burst = new CBCHBurst(L3, (int)subChannel);
+            long frame = 0;
+
+            /* type 4 is in timeslot 0 and shared with BCCH, CCCH and SDCCH */
+            if (channelType == 4)
+                frame = 20 + 2 + (subChannel / 2) * 10 + (subChannel & 1) * 4;
+            else
+                frame = 4 * subChannel;
+
+            /* call generic trigger to set up arrays */
+            TriggerChannelAssignment(L3Handler);
+            AddMessage("   [L1] TimeSlot " + timeSlot + " SubChannel " + subChannel + " now configured as Cell Broadcast channel." + Environment.NewLine);
+
+            lock (TimeSlotHandlers)
+            {
+                TimeSlotHandlers[timeSlot][frame + 0] = new sTimeSlotParam(Burst, 0);
+                TimeSlotHandlers[timeSlot][frame + 1] = new sTimeSlotParam(Burst, 1);
+                TimeSlotHandlers[timeSlot][frame + 2] = new sTimeSlotParam(Burst, 2);
+                TimeSlotHandlers[timeSlot][frame + 3] = new sTimeSlotParam(Burst, 3);
+            }
+
+        }
+
+        private void TriggerCCCHCONF(L3Handler L3Handler)
+        {
+            long ccchConf;
+
+            if (Parameters.TimeSlotInfo[0].Type != eTimeSlotType.Unconfigured)
+                return;
+
+            lock (L3Handler.PDUDataFields)
+            {
+                if (!L3Handler.PDUDataRawFields.ContainsKey("CCCH-CONF"))
+                    return;
+                ccchConf = L3Handler.PDUDataRawFields["CCCH-CONF"];
+            }
+
+            lock (TimeSlotHandlers)
+            {
+                switch (ccchConf)
+                {
+                    /* 1 basic physical channel used for CCCH, not combined with SDCCHs */
+                    case 0:
+
+                        Parameters.TimeSlotInfo[0].Type = eTimeSlotType.BCCH_CCCH;
+                        Parameters.TimeSlotInfo[0].Configures++;
+
+                        for (int block = 1; block < 5; block++)
+                        {
+                            TimeSlotHandlers[0][block * 10 + 0] = new sTimeSlotParam(FCH, 0);
+                            TimeSlotHandlers[0][block * 10 + 1] = new sTimeSlotParam(SCH, 0);
+                            TimeSlotHandlers[0][block * 10 + 2] = new sTimeSlotParam(CCCH, 0);
+                            TimeSlotHandlers[0][block * 10 + 3] = new sTimeSlotParam(CCCH, 1);
+                            TimeSlotHandlers[0][block * 10 + 4] = new sTimeSlotParam(CCCH, 2);
+                            TimeSlotHandlers[0][block * 10 + 5] = new sTimeSlotParam(CCCH, 3);
+                            TimeSlotHandlers[0][block * 10 + 6] = new sTimeSlotParam(CCCH, 0);
+                            TimeSlotHandlers[0][block * 10 + 7] = new sTimeSlotParam(CCCH, 1);
+                            TimeSlotHandlers[0][block * 10 + 8] = new sTimeSlotParam(CCCH, 2);
+                            TimeSlotHandlers[0][block * 10 + 9] = new sTimeSlotParam(CCCH, 3);
+                        }
+                        break;
+
+                    /* 1 basic physical channel used for CCCH, combined with SDCCHs */
+                    case 1:
+
+                        Parameters.TimeSlotInfo[0].Type = eTimeSlotType.BCCH_CCCH_SDCCH4;
+                        Parameters.TimeSlotInfo[0].Configures++;
+
+                        /* setup the first block */
+                        for (int block = 1; block < 2; block++)
+                        {
+                            TimeSlotHandlers[0][block * 10 + 0] = new sTimeSlotParam(FCH, 0);
+                            TimeSlotHandlers[0][block * 10 + 1] = new sTimeSlotParam(SCH, 0);
+                            TimeSlotHandlers[0][block * 10 + 2] = new sTimeSlotParam(CCCH, 0);
+                            TimeSlotHandlers[0][block * 10 + 3] = new sTimeSlotParam(CCCH, 1);
+                            TimeSlotHandlers[0][block * 10 + 4] = new sTimeSlotParam(CCCH, 2);
+                            TimeSlotHandlers[0][block * 10 + 5] = new sTimeSlotParam(CCCH, 3);
+                            TimeSlotHandlers[0][block * 10 + 6] = new sTimeSlotParam(CCCH, 0);
+                            TimeSlotHandlers[0][block * 10 + 7] = new sTimeSlotParam(CCCH, 1);
+                            TimeSlotHandlers[0][block * 10 + 8] = new sTimeSlotParam(CCCH, 2);
+                            TimeSlotHandlers[0][block * 10 + 9] = new sTimeSlotParam(CCCH, 3);
+                        }
+
+                        /* then two SDCCH blocks */
+                        for (int block = 2; block < 4; block++)
+                        {
+                            TimeSlotHandlers[0][block * 10 + 0] = new sTimeSlotParam(FCH, 0);
+                            TimeSlotHandlers[0][block * 10 + 1] = new sTimeSlotParam(SCH, 0);
+
+                            SDCCHBurst tmpSDCCH1 = new SDCCHBurst(L3, (block - 2) * 2);
+                            TimeSlotHandlers[0][block * 10 + 2] = new sTimeSlotParam(tmpSDCCH1, 0);
+                            TimeSlotHandlers[0][block * 10 + 3] = new sTimeSlotParam(tmpSDCCH1, 1);
+                            TimeSlotHandlers[0][block * 10 + 4] = new sTimeSlotParam(tmpSDCCH1, 2);
+                            TimeSlotHandlers[0][block * 10 + 5] = new sTimeSlotParam(tmpSDCCH1, 3);
+
+                            SDCCHBurst tmpSDCCH2 = new SDCCHBurst(L3, (block - 2) * 2 + 1);
+                            TimeSlotHandlers[0][block * 10 + 6] = new sTimeSlotParam(tmpSDCCH2, 0);
+                            TimeSlotHandlers[0][block * 10 + 7] = new sTimeSlotParam(tmpSDCCH2, 1);
+                            TimeSlotHandlers[0][block * 10 + 8] = new sTimeSlotParam(tmpSDCCH2, 2);
+                            TimeSlotHandlers[0][block * 10 + 9] = new sTimeSlotParam(tmpSDCCH2, 3);
+                        }
+
+                        /* finally one SACCH block */
+                        for (int block = 4; block < 5; block++)
+                        {
+                            TimeSlotHandlers[0][block * 10 + 0] = new sTimeSlotParam(FCH, 0);
+                            TimeSlotHandlers[0][block * 10 + 1] = new sTimeSlotParam(SCH, 0);
+
+                            SACCHBurst tmpSACCH1 = new SACCHBurst(L3, "SACCH 0/2", 0);
+                            TimeSlotHandlers[0][block * 10 + 2] = new sTimeSlotParam(tmpSACCH1, 0);
+                            TimeSlotHandlers[0][block * 10 + 3] = new sTimeSlotParam(tmpSACCH1, 1);
+                            TimeSlotHandlers[0][block * 10 + 4] = new sTimeSlotParam(tmpSACCH1, 2);
+                            TimeSlotHandlers[0][block * 10 + 5] = new sTimeSlotParam(tmpSACCH1, 3);
+
+                            SACCHBurst tmpSACCH2 = new SACCHBurst(L3, "SACCH 1/3", 1);
+                            TimeSlotHandlers[0][block * 10 + 6] = new sTimeSlotParam(tmpSACCH2, 0);
+                            TimeSlotHandlers[0][block * 10 + 7] = new sTimeSlotParam(tmpSACCH2, 1);
+                            TimeSlotHandlers[0][block * 10 + 8] = new sTimeSlotParam(tmpSACCH2, 2);
+                            TimeSlotHandlers[0][block * 10 + 9] = new sTimeSlotParam(tmpSACCH2, 3);
+                        }
+                        break;
+
+                    /* 2 basic physical channels used for CCCH, not combined with SDCCHs */
+                    case 2:
+
+                        Parameters.TimeSlotInfo[0].Type = eTimeSlotType.BCCH_CCCH;
+                        Parameters.TimeSlotInfo[1].Type = eTimeSlotType.BCCH_CCCH;
+                        Parameters.TimeSlotInfo[0].Configures++;
+                        Parameters.TimeSlotInfo[1].Configures++;
+
+                        /* timeslot 0 already has BCCH etc, so just fill that one */
+                        for (int block = 1; block < 4; block++)
+                        {
+                            TimeSlotHandlers[0][block * 10 + 0] = new sTimeSlotParam(FCH, 0);
+                            TimeSlotHandlers[0][block * 10 + 1] = new sTimeSlotParam(SCH, 0);
+                            TimeSlotHandlers[0][block * 10 + 2] = new sTimeSlotParam(CCCH, 0);
+                            TimeSlotHandlers[0][block * 10 + 3] = new sTimeSlotParam(CCCH, 1);
+                            TimeSlotHandlers[0][block * 10 + 4] = new sTimeSlotParam(CCCH, 2);
+                            TimeSlotHandlers[0][block * 10 + 5] = new sTimeSlotParam(CCCH, 3);
+                            TimeSlotHandlers[0][block * 10 + 6] = new sTimeSlotParam(CCCH, 0);
+                            TimeSlotHandlers[0][block * 10 + 7] = new sTimeSlotParam(CCCH, 1);
+                            TimeSlotHandlers[0][block * 10 + 8] = new sTimeSlotParam(CCCH, 2);
+                            TimeSlotHandlers[0][block * 10 + 9] = new sTimeSlotParam(CCCH, 3);
+                        }
+
+                        /* now fill with BCCH+CCCH */
+                        for (int slot = 1; slot < 2; slot++)
+                        {
+                            TimeSlotHandlers[slot][0] = new sTimeSlotParam(BCCH, 0);
+                            TimeSlotHandlers[slot][1] = new sTimeSlotParam(BCCH, 1);
+                            TimeSlotHandlers[slot][2] = new sTimeSlotParam(BCCH, 2);
+                            TimeSlotHandlers[slot][3] = new sTimeSlotParam(BCCH, 3);
+
+                            for (int block = 1; block < 12; block++)
+                            {
+                                TimeSlotHandlers[slot][block * 4 + 0] = new sTimeSlotParam(CCCH, 0);
+                                TimeSlotHandlers[slot][block * 4 + 1] = new sTimeSlotParam(CCCH, 1);
+                                TimeSlotHandlers[slot][block * 4 + 2] = new sTimeSlotParam(CCCH, 2);
+                                TimeSlotHandlers[slot][block * 4 + 3] = new sTimeSlotParam(CCCH, 3);
+                            }
+                        }
+
+                        break;
+
+                    /* 3 basic physical channels used for CCCH, not combined with SDCCHs */
+                    case 3:
+
+                        Parameters.TimeSlotInfo[0].Type = eTimeSlotType.BCCH_CCCH;
+                        Parameters.TimeSlotInfo[1].Type = eTimeSlotType.BCCH_CCCH;
+                        Parameters.TimeSlotInfo[2].Type = eTimeSlotType.BCCH_CCCH;
+                        Parameters.TimeSlotInfo[0].Configures++;
+                        Parameters.TimeSlotInfo[1].Configures++;
+                        Parameters.TimeSlotInfo[2].Configures++;
+
+                        /* timeslot 0 already has BCCH etc, so just fill that one */
+                        for (int block = 1; block < 4; block++)
+                        {
+                            TimeSlotHandlers[0][block * 10 + 0] = new sTimeSlotParam(FCH, 0);
+                            TimeSlotHandlers[0][block * 10 + 1] = new sTimeSlotParam(SCH, 0);
+                            TimeSlotHandlers[0][block * 10 + 2] = new sTimeSlotParam(CCCH, 0);
+                            TimeSlotHandlers[0][block * 10 + 3] = new sTimeSlotParam(CCCH, 1);
+                            TimeSlotHandlers[0][block * 10 + 4] = new sTimeSlotParam(CCCH, 2);
+                            TimeSlotHandlers[0][block * 10 + 5] = new sTimeSlotParam(CCCH, 3);
+                            TimeSlotHandlers[0][block * 10 + 6] = new sTimeSlotParam(CCCH, 0);
+                            TimeSlotHandlers[0][block * 10 + 7] = new sTimeSlotParam(CCCH, 1);
+                            TimeSlotHandlers[0][block * 10 + 8] = new sTimeSlotParam(CCCH, 2);
+                            TimeSlotHandlers[0][block * 10 + 9] = new sTimeSlotParam(CCCH, 3);
+                        }
+
+                        /* now fill with BCCH+CCCH */
+                        for (int slot = 1; slot < 3; slot++)
+                        {
+                            TimeSlotHandlers[slot][0] = new sTimeSlotParam(BCCH, 0);
+                            TimeSlotHandlers[slot][1] = new sTimeSlotParam(BCCH, 1);
+                            TimeSlotHandlers[slot][2] = new sTimeSlotParam(BCCH, 2);
+                            TimeSlotHandlers[slot][3] = new sTimeSlotParam(BCCH, 3);
+
+                            for (int block = 1; block < 12; block++)
+                            {
+                                TimeSlotHandlers[slot][block * 4 + 0] = new sTimeSlotParam(CCCH, 0);
+                                TimeSlotHandlers[slot][block * 4 + 1] = new sTimeSlotParam(CCCH, 1);
+                                TimeSlotHandlers[slot][block * 4 + 2] = new sTimeSlotParam(CCCH, 2);
+                                TimeSlotHandlers[slot][block * 4 + 3] = new sTimeSlotParam(CCCH, 3);
+                            }
+                        }
+
+                        break;
+
+                    /* 4 basic physical channels used for CCCH, not combined with SDCCHs */
+                    case 4:
+
+                        Parameters.TimeSlotInfo[0].Type = eTimeSlotType.BCCH_CCCH;
+                        Parameters.TimeSlotInfo[1].Type = eTimeSlotType.BCCH_CCCH;
+                        Parameters.TimeSlotInfo[2].Type = eTimeSlotType.BCCH_CCCH;
+                        Parameters.TimeSlotInfo[3].Type = eTimeSlotType.BCCH_CCCH;
+                        Parameters.TimeSlotInfo[0].Configures++;
+                        Parameters.TimeSlotInfo[1].Configures++;
+                        Parameters.TimeSlotInfo[2].Configures++;
+                        Parameters.TimeSlotInfo[3].Configures++;
+
+
+                        /* timeslot 0 already has BCCH etc, so just fill that one */
+                        for (int block = 1; block < 4; block++)
+                        {
+                            TimeSlotHandlers[0][block * 10 + 0] = new sTimeSlotParam(FCH, 0);
+                            TimeSlotHandlers[0][block * 10 + 1] = new sTimeSlotParam(SCH, 0);
+                            TimeSlotHandlers[0][block * 10 + 2] = new sTimeSlotParam(CCCH, 0);
+                            TimeSlotHandlers[0][block * 10 + 3] = new sTimeSlotParam(CCCH, 1);
+                            TimeSlotHandlers[0][block * 10 + 4] = new sTimeSlotParam(CCCH, 2);
+                            TimeSlotHandlers[0][block * 10 + 5] = new sTimeSlotParam(CCCH, 3);
+                            TimeSlotHandlers[0][block * 10 + 6] = new sTimeSlotParam(CCCH, 0);
+                            TimeSlotHandlers[0][block * 10 + 7] = new sTimeSlotParam(CCCH, 1);
+                            TimeSlotHandlers[0][block * 10 + 8] = new sTimeSlotParam(CCCH, 2);
+                            TimeSlotHandlers[0][block * 10 + 9] = new sTimeSlotParam(CCCH, 3);
+                        }
+
+                        /* now fill with BCCH+CCCH */
+                        for (int slot = 1; slot < 4; slot++)
+                        {
+                            TimeSlotHandlers[slot][0] = new sTimeSlotParam(BCCH, 0);
+                            TimeSlotHandlers[slot][1] = new sTimeSlotParam(BCCH, 1);
+                            TimeSlotHandlers[slot][2] = new sTimeSlotParam(BCCH, 2);
+                            TimeSlotHandlers[slot][3] = new sTimeSlotParam(BCCH, 3);
+
+                            for (int block = 1; block < 12; block++)
+                            {
+                                TimeSlotHandlers[slot][block * 4 + 0] = new sTimeSlotParam(CCCH, 0);
+                                TimeSlotHandlers[slot][block * 4 + 1] = new sTimeSlotParam(CCCH, 1);
+                                TimeSlotHandlers[slot][block * 4 + 2] = new sTimeSlotParam(CCCH, 2);
+                                TimeSlotHandlers[slot][block * 4 + 3] = new sTimeSlotParam(CCCH, 3);
+                            }
+                        }
+
+                        break;
+
+                    default:
+                        AddMessage("   [L1] This particular BCCH/CCCH configuration is not handled yet!" + Environment.NewLine);
+                        break;
+                }
+            }
+        }
+
+        private void HandleFCH(double[] timeSlotSamples)
+        {
+            /* dont use all bits. skip 10 bits at the start and 10 at the end */
+            int bits = (int)FCHBurst.PayloadBits - 20;
+            int startPos = (int)(Oversampling * 10);
+            int samples = (int)(Oversampling * bits);
+            double avg = 0;
+
+            for (int pos = startPos; pos < samples + startPos; pos++)
+                avg -= timeSlotSamples[Decoder.StartOffset + pos];
+
+            avg /= bits;
+            avg += Math.PI / 2;
+            avg *= (1625000.0f / 24.0f) / (Math.PI / 2);
+
+            /* prevent division by zero (1Hz error is really not worth mentioning) */
+            if (avg == 0)
+                avg = 1;
+
+            /* update average if the difference is below 200Hz and it didn't vary by more than 100% */
+            if (Math.Abs(Parameters.FCCHOffset - avg) < 200 || (Math.Abs(Parameters.FCCHOffset / avg) <= 2 && Math.Abs(Parameters.FCCHOffset / avg) >= 0.5))
+            {
+                avg += 49 * Parameters.FCCHOffset;
+                avg /= 50;
+            }
+
+            Parameters.FCCHOffset = avg;
+        }
 
         private bool HandleSCHTrain(double[] timeSlotSamples)
         {
             string message = Parameters + "   [SCH] ";
 
             /* skip the number of data bits defined in SCHBurst plus SpareBits that are "pre"-feeded */
-            int sequencePos = (int) (Oversampling*(SCHBurst.SyncOffset + 2 + SpareBits));
+            int sequencePos = (int)(Oversampling * (SCHBurst.SyncOffset + 2 + SpareBits));
 
             /* locate the training sequence over two bits */
-            int position = SignalPower.Locate(timeSlotSamples, sequencePos, TrainingSequence, (int) (Oversampling*3));
+            int position = SignalPower.Locate(timeSlotSamples, sequencePos, TrainingSequence, (int)(Oversampling * 3));
             if (position == int.MinValue)
             {
                 message += "(Error in SignalPower.Locate)" + Environment.NewLine;
@@ -194,21 +589,41 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             if (Parameters.TN == 0)
                 Parameters.FN++;
 
-
             /* get the burst handler */
             Burst handler = null;
-            int Sequence = 0;
+            int sequence = 0;
+            long frameNum = 0;
 
-            if (TimeSlotHandlers[Parameters.TN].Length == 51)
+            lock (TimeSlotHandlers)
             {
-                handler = TimeSlotHandlers[Parameters.TN][Parameters.T3].Burst; // control frame number
-                Sequence = TimeSlotHandlers[Parameters.TN][Parameters.T3].Sequence;
+                if (TimeSlotHandlers[Parameters.TN] == null)
+                {
+                    handler = null;
+                    sequence = 0;
+                }
+                else if (TimeSlotHandlers[Parameters.TN].Length == 51)
+                {
+                    frameNum = Parameters.T3;
+                    handler = TimeSlotHandlers[Parameters.TN][Parameters.T3].Burst; // control frame number
+                    sequence = TimeSlotHandlers[Parameters.TN][Parameters.T3].Sequence;
+                }
+                else if (TimeSlotHandlers[Parameters.TN].Length == 26)
+                {
+                    frameNum = Parameters.T2;
+                    handler = TimeSlotHandlers[Parameters.TN][Parameters.T2].Burst; // traffic frame number
+                    sequence = TimeSlotHandlers[Parameters.TN][Parameters.T2].Sequence;
+                }
             }
-            else if (TimeSlotHandlers[Parameters.TN].Length == 26)
+
+            if (Parameters.DumpPackets)
             {
-                handler = TimeSlotHandlers[Parameters.TN][Parameters.T2].Burst; // traffic frame number
-                Sequence = TimeSlotHandlers[Parameters.TN][Parameters.T2].Sequence;
+                if (handler != null)
+                    AddMessage("   [L1] Handler: " + handler.Name + "[" + sequence + "]  TN:" + Parameters.TN + "  Frame: " + frameNum + Environment.NewLine);
+                else
+                    AddMessage("   [L1] Handler: (none)  TN:" + Parameters.TN + "  Frame: " + frameNum + Environment.NewLine);
             }
+
+
 
             /* this is a SCH burst */
             if (Parameters.FirstSCH || handler == SCH)
@@ -218,6 +633,11 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                 /* try to detect sequence and update sampling offset */
                 if (!HandleSCHTrain(timeSlotSamples))
                     return;
+            }
+
+            if (handler == FCH)
+            {
+                HandleFCH(timeSlotSamples);
             }
 
             /* continue to decode the packet */
@@ -237,8 +657,8 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                 }
                 */
 
-                /* if everything went ok so far, give the data to the associated handler */
-                if (handler.ParseData(Parameters, burstBitsUndiffed, Sequence))
+                /* if everything went ok so far, pass the data to the associated handler */
+                if (handler.ParseData(Parameters, burstBitsUndiffed, sequence))
                 {
                     if (handler.StatusMessage != null)
                     {
@@ -257,10 +677,11 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
                 /* show L2 messages, if handler wishes */
                 bool showL2 = handler.L2.ShowMessage && !string.IsNullOrEmpty(handler.L2.StatusMessage);
+
                 /* show L3 messages, if there is any */
                 bool showL3 = !string.IsNullOrEmpty(handler.L3.StatusMessage);
 
-                /* only show L1 when one of both apply */
+                /* only show L1 when one of L2/L3 has a message */
                 if (showL2 || showL3)
                     AddMessage("   [L1] [" + handler.Name + "] - [" + Parameters + "]" + Environment.NewLine);
 
@@ -287,6 +708,45 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                     handler.L3.SniffResult = null;
                 }
             }
+        }
+
+        public string GetTimeslotDetails()
+        {
+            string retVal = "";
+
+            lock (TimeSlotHandlers)
+            {
+                for (int slot = 0; slot < 8; slot++)
+                {
+                    retVal += " " + slot + ": ";
+                    if (TimeSlotHandlers[slot] == null)
+                    {
+                        retVal += "| (Unused)";
+                    }
+                    else
+                    {
+                        int lastSeq = -1;
+                        for (int frame = 0; frame < TimeSlotHandlers[slot].Length; frame++)
+                        {
+                            Burst handler = TimeSlotHandlers[slot][frame].Burst;
+                            int seq = TimeSlotHandlers[slot][frame].Sequence;
+
+                            if (seq == lastSeq + 1)
+                                retVal += "|";
+                            else
+                                retVal += " ";
+
+                            if (handler != null)
+                                retVal += handler.ShortName;
+                            else
+                                retVal += "-- ";
+                        }
+                    }
+                    retVal += " |" + Environment.NewLine;
+                }
+            }
+
+            return retVal;
         }
     }
 }

@@ -3,57 +3,20 @@ using LibRXFFT.Libraries.ShmemChain;
 
 namespace LibRXFFT.Libraries.GMSK
 {
-    public enum eDataFormat
-    {
-        Direct16BitIQFixedPoint,
-        Direct64BitIQFloat,
-        Direct64BitIQFloat64k
-    }
 
     public class GMSKDemodulator
     {
         private double LastPhase;
         public bool UseFastAtan2 = true;
         public bool InvertedSpectrum = false;
-        public int BytesPerSamplePair;
-        public int BytesPerSample;
-        private eDataFormat _DataFormat;
 
         private SharedMem ShmemOutChan;
         public static bool UseFastAtan2Default = true;
         public static bool InvertedSpectrumDefault = false;
 
-        public eDataFormat DataFormat
-        {
-            get { return _DataFormat; }
-            set
-            {
-                _DataFormat = value;
-
-                switch (value)
-                {
-                    case eDataFormat.Direct16BitIQFixedPoint:
-                        BytesPerSamplePair = 4;
-                        BytesPerSample = 2;
-                        break;
-
-                    case eDataFormat.Direct64BitIQFloat:
-                    case eDataFormat.Direct64BitIQFloat64k:
-                        BytesPerSamplePair = 8;
-                        BytesPerSample = 4;
-                        break;
-
-                    default:
-                        BytesPerSamplePair = 0;
-                        BytesPerSample = 0;
-                        break;
-                }
-            }
-        }
 
         public GMSKDemodulator()
         {
-            DataFormat = eDataFormat.Direct16BitIQFixedPoint;
             UseFastAtan2 = UseFastAtan2Default;
             InvertedSpectrum = InvertedSpectrumDefault;
 
@@ -85,23 +48,12 @@ namespace LibRXFFT.Libraries.GMSK
             return y < 0.0f ? -angle : angle;
         }
 
-
-        public double[] ProcessData(byte[] dataBuffer, double[] sampleArray, double[] strengthArray)
-        {
-            return ProcessData(dataBuffer, dataBuffer.Length, sampleArray, strengthArray);
-        }
-
-        public double[] ProcessData(byte[] dataBuffer)
-        {
-            return ProcessData(dataBuffer, dataBuffer.Length, null, null);
-        }
-
-        public double[] ProcessData(byte[] dataBuffer, int bytesRead, double[] sampleArray, double[] strengthArray)
+        public double[] ProcessData(double[] samplesI, double[] samplesQ, double[] sampleArray, double[] strengthArray)
         {
             byte[] outBuffer = null;
             int outBufferPos = 0;
             int samplePos = 0;
-            int samplePairs = bytesRead/BytesPerSamplePair;
+            int samplePairs = samplesI.Length;
 
             /* if caller provided no array, create one */
             if (sampleArray == null)
@@ -113,28 +65,8 @@ namespace LibRXFFT.Libraries.GMSK
 
             for (int pos = 0; pos < samplePairs; pos++)
             {
-                double I;
-                double Q;
-                switch (DataFormat)
-                {
-                    case eDataFormat.Direct16BitIQFixedPoint:
-                        I = ByteUtil.getDoubleFromBytes(dataBuffer, BytesPerSamplePair * pos);
-                        Q = ByteUtil.getDoubleFromBytes(dataBuffer, BytesPerSamplePair * pos + BytesPerSample);
-                        break;
-
-                    case eDataFormat.Direct64BitIQFloat64k:
-                        I = BitConverter.ToSingle(dataBuffer, BytesPerSamplePair * pos) / (65536*2);
-                        Q = BitConverter.ToSingle(dataBuffer, BytesPerSamplePair * pos + BytesPerSample) / (65536 * 2);
-                        break;
-
-                    case eDataFormat.Direct64BitIQFloat:
-                        I = BitConverter.ToSingle(dataBuffer, BytesPerSamplePair * pos);
-                        Q = BitConverter.ToSingle(dataBuffer, BytesPerSamplePair * pos + BytesPerSample);
-                        break;
-
-                    default:
-                        return null;
-                }
+                double I = samplesI[pos];
+                double Q = samplesQ[pos];
 
                 if (InvertedSpectrum)
                     I = -I;
@@ -143,7 +75,8 @@ namespace LibRXFFT.Libraries.GMSK
                  * this strength calculation is incorrect!
                  * the Math.Sqrt() is missing, but that would consume
                  * too much CPU power. 
-                 * Thats okay since the strength is just used qualitative
+                 * thats okay since the strength is just used qualitative.
+                 * the *exact* value doesnt matter.
                  */
                 double strength = 100 * (I * I + Q * Q);
                 double phase;
@@ -162,7 +95,10 @@ namespace LibRXFFT.Libraries.GMSK
 
                 double diff = phase - LastPhase;
 
-                strengthArray[samplePos] = strength;
+                /* only provide strength if array is passed to function */
+                if (strengthArray != null)
+                    strengthArray[samplePos] = strength;
+
                 sampleArray[samplePos++] = diff;
 
                 if (outBuffer != null)

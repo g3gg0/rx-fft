@@ -112,13 +112,22 @@ namespace GSM_Analyzer
                     foreach (string reference in container.FilteredMessages)
                     {
                         L3MessageInfo selectedItem = L3Handler.L3Messages.Get(reference);
-                        if (selectedItem != null)
-                            lstFiltered.SelectedItems.Add(selectedItem);
+                        for (int pos = 0; pos < lstFiltered.Items.Count; pos++)
+                        {
+                            if (lstFiltered.Items[pos].ToString() == selectedItem.ToString())
+                                lstFiltered.SelectedItems.Add(lstFiltered.Items[pos]);
+                        }
                     }
 
                     lstExcept.SelectedItems.Clear();
                     foreach (string field in container.ExceptionFields)
-                        lstExcept.SelectedItems.Add(field);
+                    {
+                        for (int pos = 0; pos < lstExcept.Items.Count; pos++)
+                        {
+                            if (lstExcept.Items[pos].ToString() == field)
+                                lstExcept.SelectedItems.Add(lstExcept.Items[pos]);
+                        }
+                    }
                 }
                 finally
                 {

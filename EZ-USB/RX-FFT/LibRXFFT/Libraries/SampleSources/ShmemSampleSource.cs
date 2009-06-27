@@ -11,17 +11,23 @@ namespace LibRXFFT.Libraries.SampleSources
         private int BlockSize = 1024;
         private byte[] InBuffer;
 
-        public ShmemSampleSource(string name, int oversampling) : base(oversampling)
+        public ShmemSampleSource(string name, int oversampling)
+            : this(name, oversampling, 2184533)
         {
-            ShmemChannel = new SharedMem(0, -1, name);
+        }
+
+        public ShmemSampleSource(string name, int oversampling, double samplingRate) : base(oversampling)
+        {
+            ShmemChannel = new SharedMem(0, -1, name, 256 * 1024 * 1024);
             ShmemChannel.ReadTimeout = 10;
             ShmemChannel.ReadMode = eReadMode.TimeLimited;
 
-            Demodulator.DataFormat = eDataFormat.Direct16BitIQFixedPoint;
+            InvertedSpectrum = false;
+            DataFormat = eDataFormat.Direct16BitIQFixedPoint;
 
-            InBuffer = new byte[BlockSize * Demodulator.BytesPerSamplePair];
+            InBuffer = new byte[BlockSize * BytesPerSamplePair];
 
-            InputSamplingRate = 2184533;
+            InputSamplingRate = samplingRate;
         }
 
         public override void Close()
@@ -46,16 +52,16 @@ namespace LibRXFFT.Libraries.SampleSources
                 return false;
             }
 
+            DecodeFromBinary(InBuffer, SourceSamplesI, SourceSamplesQ);
+
             if (InternalOversampling > 1)
             {
-                Demodulator.ProcessData(InBuffer, read, TmpSignal, TmpStrength);
-                Oversampler.Oversample(TmpSignal, Signal, InternalOversampling);
-                Oversampler.Oversample(TmpStrength, Strength, InternalOversampling);
+                IOversampler.Oversample(SourceSamplesI, OversampledI);
+                QOversampler.Oversample(SourceSamplesQ, OversampledQ);
+                Demodulator.ProcessData(OversampledI, OversampledQ, Signal, Strength);
             }
             else
-                Demodulator.ProcessData(InBuffer, read, Signal, Strength);
-
-            //ShmemChannel.Write(ByteUtil.convertToBytesInterleaved(Signal, Strength));
+                Demodulator.ProcessData(SourceSamplesI, SourceSamplesQ, Signal, Strength);
 
             SamplesRead = Signal.Length;
 

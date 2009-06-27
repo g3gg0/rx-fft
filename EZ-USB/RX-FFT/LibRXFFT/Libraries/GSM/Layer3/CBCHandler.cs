@@ -8,6 +8,7 @@ namespace LibRXFFT.Libraries.GSM.Layer3
 {
     public class CBCHandler
     {
+        public static bool ShowCBMessages = false;
         public string StatusMessage;
         private readonly byte[] CBCBuffer;
         private readonly byte[] CBMessage;
@@ -49,20 +50,27 @@ namespace LibRXFFT.Libraries.GSM.Layer3
                 int pageParam = CBCBuffer[5];
 
                 Array.Copy(CBCBuffer, 6, CBMessage, 0, CBMessage.Length);
-                StatusMessage = "Cell Broadcast: ";
 
-                if ( emergency)
-                    StatusMessage += "[Emergency] ";
-                if (popup)
-                    StatusMessage += "[Popup] ";
+                if (ShowCBMessages)
+                {
+                    StatusMessage = "Cell Broadcast: ";
 
-                StatusMessage += "[Channel " + messageIdent + "] ";
-                StatusMessage += "[Update " + updateNr + "] ";
-                StatusMessage += "[Code " + messageCode + "] ";
-                StatusMessage += "[Coding 0x" + String.Format("{0:X2}", dataCoding) + "] ";
-                StatusMessage += "[Page 0x" + String.Format("{0:X2}", pageParam) + "] ";
-                StatusMessage += Environment.NewLine;
-                StatusMessage += "          '" + GSM7Bit.Decode(CBMessage) + "'" + Environment.NewLine;
+                    if (emergency)
+                        StatusMessage += "[Emergency] ";
+                    if (popup)
+                        StatusMessage += "[Popup] ";
+
+                    StatusMessage += "[Channel " + messageIdent + "] ";
+                    StatusMessage += "[Update " + updateNr + "] ";
+                    StatusMessage += "[Code " + messageCode + "] ";
+                    StatusMessage += "[Coding 0x" + String.Format("{0:X2}", dataCoding) + "] ";
+                    StatusMessage += "[Page 0x" + String.Format("{0:X2}", pageParam) + "] ";
+                    StatusMessage += Environment.NewLine;
+                    StatusMessage += "          '" + GSM7Bit.Decode(CBMessage) + "'" + Environment.NewLine;
+                }
+                else
+                    StatusMessage = null;
+
                 Sequence = 0;
             }
 

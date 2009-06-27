@@ -4,6 +4,8 @@ using LibRXFFT.Libraries.GMSK;
 using LibRXFFT.Libraries.GSM.Layer3;
 using LibRXFFT.Libraries.SampleSources;
 using LibRXFFT.Libraries.SignalProcessing;
+using LibRXFFT.Libraries.GSM.Bursts;
+using LibRXFFT.Libraries.GSM.Layer2;
 
 namespace GSM_Analyzer
 {
@@ -20,6 +22,11 @@ namespace GSM_Analyzer
             chkShowUnhandled.Checked = L3Handler.DumpUnhandled;
             chkSniffIMSI.Checked = L3Handler.SniffIMSI;
             chkSubSample.Checked = GSMAnalyzer.Subsampling;
+
+            chkShowEncrypted.Checked = SDCCHBurst.ShowEncryptedMessage;
+            chkCellBroadcast.Checked = CBCHandler.ShowCBMessages;
+            chkShowAllFrames.Checked = L2Handler.ShowAllMessages;
+            chkDumpFrames.Checked = Analyzer.Parameters.DumpPackets;
 
             txtSubSampleOffset.Text = Analyzer.SubSampleOffset.ToString();
             txtDecisionLevel.Text = GMSKDecoder.MinPowerFact.ToString();
@@ -216,16 +223,16 @@ namespace GSM_Analyzer
             double offset3 = 0;
             double offset4 = 0;
 
-            if ( !double.TryParse(txtOffset1.Text, out offset1 ))
+            if (!double.TryParse(txtOffset1.Text, out offset1))
                 return;
-            if ( !double.TryParse(txtOffset2.Text, out offset2 ))
+            if (!double.TryParse(txtOffset2.Text, out offset2))
                 return;
-            if ( !double.TryParse(txtOffset3.Text, out offset3 ))
+            if (!double.TryParse(txtOffset3.Text, out offset3))
                 return;
-            if ( !double.TryParse(txtOffset4.Text, out offset4 ))
+            if (!double.TryParse(txtOffset4.Text, out offset4))
                 return;
 
-            if(offset1 + offset2 + offset3 + offset4 != 0.0f )
+            if (offset1 + offset2 + offset3 + offset4 != 0.0f)
                 return;
 
             Analyzer.BurstLengthJitter[0] = offset1;
@@ -234,6 +241,25 @@ namespace GSM_Analyzer
             Analyzer.BurstLengthJitter[3] = offset4;
         }
 
+        private void chkShowEncrypted_CheckedChanged(object sender, EventArgs e)
+        {
+            SDCCHBurst.ShowEncryptedMessage = chkShowEncrypted.Checked;
+            SACCHBurst.ShowEncryptedMessage = chkShowEncrypted.Checked;
+        }
 
+        private void chkCellBroadcast_CheckedChanged(object sender, EventArgs e)
+        {
+            CBCHandler.ShowCBMessages = chkCellBroadcast.Checked;
+        }
+
+        private void chkShowAllFrames_CheckedChanged(object sender, EventArgs e)
+        {
+            L2Handler.ShowAllMessages = chkShowAllFrames.Checked;
+        }
+
+        private void chkDumpFrames_CheckedChanged(object sender, EventArgs e)
+        {
+            Analyzer.Parameters.DumpPackets = chkDumpFrames.Checked;
+        }
     }
 }

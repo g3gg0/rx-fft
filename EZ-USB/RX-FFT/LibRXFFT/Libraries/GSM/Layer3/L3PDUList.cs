@@ -27,6 +27,7 @@ namespace LibRXFFT.Libraries.GSM.Layer3
         public string SetField;
         public string TriggerPre;
         public string TriggerPost;
+        public string Parser;
     }
 
     public class Bits
@@ -109,6 +110,9 @@ namespace LibRXFFT.Libraries.GSM.Layer3
 
                 if ("name".Equals(reader.Name))
                     field.Name = reader.Value;
+
+                if ("parser".Equals(reader.Name))
+                    field.Parser = reader.Value;
 
                 if ("trigger-pre".Equals(reader.Name))
                     field.TriggerPre = reader.Value;

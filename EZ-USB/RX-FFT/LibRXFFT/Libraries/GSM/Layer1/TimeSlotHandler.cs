@@ -29,29 +29,17 @@ namespace LibRXFFT.Libraries.GSM.Layer1
         private readonly bool[] burstBits = new bool[148];
         private readonly bool[] burstBitsUndiffed = new bool[148];
 
-        public GSMParameters Parameters;
+        private GSMParameters Parameters;
 
-        private readonly sTimeSlotParam[][] TimeSlotHandlers;
         public int SpareBits = 3;
 
-        private struct sTimeSlotParam
-        {
-            public readonly Burst Burst;
-            public readonly int Sequence;
 
-            public sTimeSlotParam(Burst burst, int seq)
-            {
-                Burst = burst;
-                Sequence = seq;
-            }
-        }
-
-
-        public TimeSlotHandler(double oversampling, double bt, AddMessageDelegate addMessage)
+        public TimeSlotHandler(double oversampling, double bt, AddMessageDelegate addMessage, GSMParameters param)
         {
             Oversampling = oversampling;
             BT = bt;
             AddMessage = addMessage;
+            Parameters = param;
 
             Decoder = new GMSKDecoder(Oversampling, BT);
 
@@ -66,19 +54,24 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             L3.PDUDataTriggers.Add("CBCHUpdate", TriggerCBCHUpdate);
             L3.PDUDataTriggers.Add("CBCHReset", TriggerCBCHReset);
 
-            TimeSlotHandlers = new sTimeSlotParam[8][];
+            for (int pos = 0; pos < 8; pos++)
+            {
+                Parameters.TimeSlotInfo[pos].Type = eTimeSlotType.Unconfigured;
+                Parameters.TimeSlotInfo[pos].SubChanAssignments = new int[8];
+            }
 
-            TimeSlotHandlers[0] = new sTimeSlotParam[51];
-            TimeSlotHandlers[0][0] = new sTimeSlotParam(FCH, 0);
-            TimeSlotHandlers[0][1] = new sTimeSlotParam(SCH, 0);
-            TimeSlotHandlers[0][2] = new sTimeSlotParam(BCCH, 0);
-            TimeSlotHandlers[0][3] = new sTimeSlotParam(BCCH, 1);
-            TimeSlotHandlers[0][4] = new sTimeSlotParam(BCCH, 2);
-            TimeSlotHandlers[0][5] = new sTimeSlotParam(BCCH, 3);
-            TimeSlotHandlers[0][6] = new sTimeSlotParam(CCCH, 0);
-            TimeSlotHandlers[0][7] = new sTimeSlotParam(CCCH, 1);
-            TimeSlotHandlers[0][8] = new sTimeSlotParam(CCCH, 2);
-            TimeSlotHandlers[0][9] = new sTimeSlotParam(CCCH, 3);
+
+            Parameters.TimeSlotHandlers[0] = new sTimeSlotParam[51];
+            Parameters.TimeSlotHandlers[0][0] = new sTimeSlotParam(FCH, 0);
+            Parameters.TimeSlotHandlers[0][1] = new sTimeSlotParam(SCH, 0);
+            Parameters.TimeSlotHandlers[0][2] = new sTimeSlotParam(BCCH, 0);
+            Parameters.TimeSlotHandlers[0][3] = new sTimeSlotParam(BCCH, 1);
+            Parameters.TimeSlotHandlers[0][4] = new sTimeSlotParam(BCCH, 2);
+            Parameters.TimeSlotHandlers[0][5] = new sTimeSlotParam(BCCH, 3);
+            Parameters.TimeSlotHandlers[0][6] = new sTimeSlotParam(CCCH, 0);
+            Parameters.TimeSlotHandlers[0][7] = new sTimeSlotParam(CCCH, 1);
+            Parameters.TimeSlotHandlers[0][8] = new sTimeSlotParam(CCCH, 2);
+            Parameters.TimeSlotHandlers[0][9] = new sTimeSlotParam(CCCH, 3);
 
             /* create training sequence ... */
             double[] tmpTrainingSequence = new SequenceGenerator(Oversampling, BT).GenerateDiffEncoded(TrainingCode);
@@ -109,72 +102,72 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             }
 
             /* assigned time slot type does not match? */
-            if (TimeSlotHandlers[timeSlot] == null || Parameters.TimeSlotInfo[timeSlot].Type != channelType)
+            if (Parameters.TimeSlotHandlers[timeSlot] == null || Parameters.TimeSlotInfo[timeSlot].Type != channelType)
             {
-                lock (TimeSlotHandlers)
+                lock (Parameters.TimeSlotHandlers)
                 {
                     switch (channelType)
                     {
                         case eTimeSlotType.TCHF:
                             AddMessage("   [L1] TimeSlot " + timeSlot + " now configured as TCH/F (was " + Parameters.TimeSlotInfo[timeSlot].Type + ")" + Environment.NewLine);
-                            TimeSlotHandlers[timeSlot] = new sTimeSlotParam[26];
+                            Parameters.TimeSlotHandlers[timeSlot] = new sTimeSlotParam[26];
 
                             TCHBurst tch = new TCHBurst();
-                            SACCHBurst sacch = new SACCHBurst(L3, "SACCH/TCH", (int)timeSlot, true);
+                            SACCHBurst sacch = new SACCHBurst(L3, "SACCH/TCH" + timeSlot, (int)timeSlot, true);
 
                             for (int frame = 0; frame < 25; frame++)
                             {
                                 if (frame == 12)
-                                    TimeSlotHandlers[timeSlot][frame] = new sTimeSlotParam(sacch, 0);
+                                    Parameters.TimeSlotHandlers[timeSlot][frame] = new sTimeSlotParam(sacch, 0);
                                 else
-                                    TimeSlotHandlers[timeSlot][frame] = new sTimeSlotParam(tch, 0);
+                                    Parameters.TimeSlotHandlers[timeSlot][frame] = new sTimeSlotParam(tch, 0);
                             }
                             break;
 
                         case eTimeSlotType.TCHH:
                             AddMessage("   [L1] TimeSlot " + timeSlot + " now configured as TCH/H (was " + Parameters.TimeSlotInfo[timeSlot].Type + ")" + Environment.NewLine);
-                            TimeSlotHandlers[timeSlot] = new sTimeSlotParam[26];
+                            Parameters.TimeSlotHandlers[timeSlot] = new sTimeSlotParam[26];
 
                             TCHBurst tch1 = new TCHBurst();
                             TCHBurst tch2 = new TCHBurst();
-                            SACCHBurst sacch1 = new SACCHBurst(L3, "SACCH1/TCH", (int)timeSlot, true);
-                            SACCHBurst sacch2 = new SACCHBurst(L3, "SACCH2/TCH", (int)timeSlot, true);
+                            SACCHBurst sacch1 = new SACCHBurst(L3, "SACCH1/TCH" + timeSlot, (int)timeSlot, true);
+                            SACCHBurst sacch2 = new SACCHBurst(L3, "SACCH2/TCH" + timeSlot, (int)timeSlot, true);
 
                             for (int frame = 0; frame < 26; frame++)
                             {
                                 if (frame == 12)
-                                    TimeSlotHandlers[timeSlot][frame] = new sTimeSlotParam(sacch1, 0);
+                                    Parameters.TimeSlotHandlers[timeSlot][frame] = new sTimeSlotParam(sacch1, 0);
                                 else if (frame == 25)
-                                    TimeSlotHandlers[timeSlot][frame] = new sTimeSlotParam(sacch2, 0);
+                                    Parameters.TimeSlotHandlers[timeSlot][frame] = new sTimeSlotParam(sacch2, 0);
                                 else if ((frame & 1) == 0)
-                                    TimeSlotHandlers[timeSlot][frame] = new sTimeSlotParam(tch1, 0);
+                                    Parameters.TimeSlotHandlers[timeSlot][frame] = new sTimeSlotParam(tch1, 0);
                                 else
-                                    TimeSlotHandlers[timeSlot][frame] = new sTimeSlotParam(tch2, 0);
+                                    Parameters.TimeSlotHandlers[timeSlot][frame] = new sTimeSlotParam(tch2, 0);
                             }
                             break;
 
                         case eTimeSlotType.SDCCH8:
                             AddMessage("   [L1] TimeSlot " + timeSlot + " now configured as SDCCH/8 (was " + Parameters.TimeSlotInfo[timeSlot].Type + ")" + Environment.NewLine);
-                            TimeSlotHandlers[timeSlot] = new sTimeSlotParam[51];
+                            Parameters.TimeSlotHandlers[timeSlot] = new sTimeSlotParam[51];
 
                             /* 8 SDCCHs */
                             for (int chan = 0; chan < 8; chan++)
                             {
                                 SDCCHBurst tmpSDCCH = new SDCCHBurst(L3, chan);
-                                TimeSlotHandlers[timeSlot][chan * 4 + 0] = new sTimeSlotParam(tmpSDCCH, 0);
-                                TimeSlotHandlers[timeSlot][chan * 4 + 1] = new sTimeSlotParam(tmpSDCCH, 1);
-                                TimeSlotHandlers[timeSlot][chan * 4 + 2] = new sTimeSlotParam(tmpSDCCH, 2);
-                                TimeSlotHandlers[timeSlot][chan * 4 + 3] = new sTimeSlotParam(tmpSDCCH, 3);
+                                Parameters.TimeSlotHandlers[timeSlot][chan * 4 + 0] = new sTimeSlotParam(tmpSDCCH, 0);
+                                Parameters.TimeSlotHandlers[timeSlot][chan * 4 + 1] = new sTimeSlotParam(tmpSDCCH, 1);
+                                Parameters.TimeSlotHandlers[timeSlot][chan * 4 + 2] = new sTimeSlotParam(tmpSDCCH, 2);
+                                Parameters.TimeSlotHandlers[timeSlot][chan * 4 + 3] = new sTimeSlotParam(tmpSDCCH, 3);
                             }
 
                             /* finally 4 SACCHs */
                             for (int chan = 0; chan < 4; chan++)
                             {
                                 SACCHBurst tmpSACCH = new SACCHBurst(L3, "SACCH " + chan + "/" + (chan + 4), chan);
-                                TimeSlotHandlers[timeSlot][(chan + 8) * 4 + 0] = new sTimeSlotParam(tmpSACCH, 0);
-                                TimeSlotHandlers[timeSlot][(chan + 8) * 4 + 1] = new sTimeSlotParam(tmpSACCH, 1);
-                                TimeSlotHandlers[timeSlot][(chan + 8) * 4 + 2] = new sTimeSlotParam(tmpSACCH, 2);
-                                TimeSlotHandlers[timeSlot][(chan + 8) * 4 + 3] = new sTimeSlotParam(tmpSACCH, 3);
+                                Parameters.TimeSlotHandlers[timeSlot][(chan + 8) * 4 + 0] = new sTimeSlotParam(tmpSACCH, 0);
+                                Parameters.TimeSlotHandlers[timeSlot][(chan + 8) * 4 + 1] = new sTimeSlotParam(tmpSACCH, 1);
+                                Parameters.TimeSlotHandlers[timeSlot][(chan + 8) * 4 + 2] = new sTimeSlotParam(tmpSACCH, 2);
+                                Parameters.TimeSlotHandlers[timeSlot][(chan + 8) * 4 + 3] = new sTimeSlotParam(tmpSACCH, 3);
                             }
                             break;
 
@@ -269,12 +262,12 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             TriggerChannelAssignment(L3Handler);
             AddMessage("   [L1] TimeSlot " + timeSlot + " SubChannel " + subChannel + " now configured as Cell Broadcast channel." + Environment.NewLine);
 
-            lock (TimeSlotHandlers)
+            lock (Parameters.TimeSlotHandlers)
             {
-                TimeSlotHandlers[timeSlot][frame + 0] = new sTimeSlotParam(Burst, 0);
-                TimeSlotHandlers[timeSlot][frame + 1] = new sTimeSlotParam(Burst, 1);
-                TimeSlotHandlers[timeSlot][frame + 2] = new sTimeSlotParam(Burst, 2);
-                TimeSlotHandlers[timeSlot][frame + 3] = new sTimeSlotParam(Burst, 3);
+                Parameters.TimeSlotHandlers[timeSlot][frame + 0] = new sTimeSlotParam(Burst, 0);
+                Parameters.TimeSlotHandlers[timeSlot][frame + 1] = new sTimeSlotParam(Burst, 1);
+                Parameters.TimeSlotHandlers[timeSlot][frame + 2] = new sTimeSlotParam(Burst, 2);
+                Parameters.TimeSlotHandlers[timeSlot][frame + 3] = new sTimeSlotParam(Burst, 3);
             }
 
         }
@@ -293,7 +286,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                 ccchConf = L3Handler.PDUDataRawFields["CCCH-CONF"];
             }
 
-            lock (TimeSlotHandlers)
+            lock (Parameters.TimeSlotHandlers)
             {
                 switch (ccchConf)
                 {
@@ -305,16 +298,16 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
                         for (int block = 1; block < 5; block++)
                         {
-                            TimeSlotHandlers[0][block * 10 + 0] = new sTimeSlotParam(FCH, 0);
-                            TimeSlotHandlers[0][block * 10 + 1] = new sTimeSlotParam(SCH, 0);
-                            TimeSlotHandlers[0][block * 10 + 2] = new sTimeSlotParam(CCCH, 0);
-                            TimeSlotHandlers[0][block * 10 + 3] = new sTimeSlotParam(CCCH, 1);
-                            TimeSlotHandlers[0][block * 10 + 4] = new sTimeSlotParam(CCCH, 2);
-                            TimeSlotHandlers[0][block * 10 + 5] = new sTimeSlotParam(CCCH, 3);
-                            TimeSlotHandlers[0][block * 10 + 6] = new sTimeSlotParam(CCCH, 0);
-                            TimeSlotHandlers[0][block * 10 + 7] = new sTimeSlotParam(CCCH, 1);
-                            TimeSlotHandlers[0][block * 10 + 8] = new sTimeSlotParam(CCCH, 2);
-                            TimeSlotHandlers[0][block * 10 + 9] = new sTimeSlotParam(CCCH, 3);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 0] = new sTimeSlotParam(FCH, 0);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 1] = new sTimeSlotParam(SCH, 0);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 2] = new sTimeSlotParam(CCCH, 0);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 3] = new sTimeSlotParam(CCCH, 1);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 4] = new sTimeSlotParam(CCCH, 2);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 5] = new sTimeSlotParam(CCCH, 3);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 6] = new sTimeSlotParam(CCCH, 0);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 7] = new sTimeSlotParam(CCCH, 1);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 8] = new sTimeSlotParam(CCCH, 2);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 9] = new sTimeSlotParam(CCCH, 3);
                         }
                         break;
 
@@ -327,54 +320,54 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                         /* setup the first block */
                         for (int block = 1; block < 2; block++)
                         {
-                            TimeSlotHandlers[0][block * 10 + 0] = new sTimeSlotParam(FCH, 0);
-                            TimeSlotHandlers[0][block * 10 + 1] = new sTimeSlotParam(SCH, 0);
-                            TimeSlotHandlers[0][block * 10 + 2] = new sTimeSlotParam(CCCH, 0);
-                            TimeSlotHandlers[0][block * 10 + 3] = new sTimeSlotParam(CCCH, 1);
-                            TimeSlotHandlers[0][block * 10 + 4] = new sTimeSlotParam(CCCH, 2);
-                            TimeSlotHandlers[0][block * 10 + 5] = new sTimeSlotParam(CCCH, 3);
-                            TimeSlotHandlers[0][block * 10 + 6] = new sTimeSlotParam(CCCH, 0);
-                            TimeSlotHandlers[0][block * 10 + 7] = new sTimeSlotParam(CCCH, 1);
-                            TimeSlotHandlers[0][block * 10 + 8] = new sTimeSlotParam(CCCH, 2);
-                            TimeSlotHandlers[0][block * 10 + 9] = new sTimeSlotParam(CCCH, 3);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 0] = new sTimeSlotParam(FCH, 0);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 1] = new sTimeSlotParam(SCH, 0);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 2] = new sTimeSlotParam(CCCH, 0);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 3] = new sTimeSlotParam(CCCH, 1);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 4] = new sTimeSlotParam(CCCH, 2);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 5] = new sTimeSlotParam(CCCH, 3);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 6] = new sTimeSlotParam(CCCH, 0);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 7] = new sTimeSlotParam(CCCH, 1);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 8] = new sTimeSlotParam(CCCH, 2);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 9] = new sTimeSlotParam(CCCH, 3);
                         }
 
                         /* then two SDCCH blocks */
                         for (int block = 2; block < 4; block++)
                         {
-                            TimeSlotHandlers[0][block * 10 + 0] = new sTimeSlotParam(FCH, 0);
-                            TimeSlotHandlers[0][block * 10 + 1] = new sTimeSlotParam(SCH, 0);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 0] = new sTimeSlotParam(FCH, 0);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 1] = new sTimeSlotParam(SCH, 0);
 
                             SDCCHBurst tmpSDCCH1 = new SDCCHBurst(L3, (block - 2) * 2);
-                            TimeSlotHandlers[0][block * 10 + 2] = new sTimeSlotParam(tmpSDCCH1, 0);
-                            TimeSlotHandlers[0][block * 10 + 3] = new sTimeSlotParam(tmpSDCCH1, 1);
-                            TimeSlotHandlers[0][block * 10 + 4] = new sTimeSlotParam(tmpSDCCH1, 2);
-                            TimeSlotHandlers[0][block * 10 + 5] = new sTimeSlotParam(tmpSDCCH1, 3);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 2] = new sTimeSlotParam(tmpSDCCH1, 0);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 3] = new sTimeSlotParam(tmpSDCCH1, 1);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 4] = new sTimeSlotParam(tmpSDCCH1, 2);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 5] = new sTimeSlotParam(tmpSDCCH1, 3);
 
                             SDCCHBurst tmpSDCCH2 = new SDCCHBurst(L3, (block - 2) * 2 + 1);
-                            TimeSlotHandlers[0][block * 10 + 6] = new sTimeSlotParam(tmpSDCCH2, 0);
-                            TimeSlotHandlers[0][block * 10 + 7] = new sTimeSlotParam(tmpSDCCH2, 1);
-                            TimeSlotHandlers[0][block * 10 + 8] = new sTimeSlotParam(tmpSDCCH2, 2);
-                            TimeSlotHandlers[0][block * 10 + 9] = new sTimeSlotParam(tmpSDCCH2, 3);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 6] = new sTimeSlotParam(tmpSDCCH2, 0);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 7] = new sTimeSlotParam(tmpSDCCH2, 1);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 8] = new sTimeSlotParam(tmpSDCCH2, 2);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 9] = new sTimeSlotParam(tmpSDCCH2, 3);
                         }
 
                         /* finally one SACCH block */
                         for (int block = 4; block < 5; block++)
                         {
-                            TimeSlotHandlers[0][block * 10 + 0] = new sTimeSlotParam(FCH, 0);
-                            TimeSlotHandlers[0][block * 10 + 1] = new sTimeSlotParam(SCH, 0);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 0] = new sTimeSlotParam(FCH, 0);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 1] = new sTimeSlotParam(SCH, 0);
 
                             SACCHBurst tmpSACCH1 = new SACCHBurst(L3, "SACCH 0/2", 0);
-                            TimeSlotHandlers[0][block * 10 + 2] = new sTimeSlotParam(tmpSACCH1, 0);
-                            TimeSlotHandlers[0][block * 10 + 3] = new sTimeSlotParam(tmpSACCH1, 1);
-                            TimeSlotHandlers[0][block * 10 + 4] = new sTimeSlotParam(tmpSACCH1, 2);
-                            TimeSlotHandlers[0][block * 10 + 5] = new sTimeSlotParam(tmpSACCH1, 3);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 2] = new sTimeSlotParam(tmpSACCH1, 0);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 3] = new sTimeSlotParam(tmpSACCH1, 1);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 4] = new sTimeSlotParam(tmpSACCH1, 2);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 5] = new sTimeSlotParam(tmpSACCH1, 3);
 
                             SACCHBurst tmpSACCH2 = new SACCHBurst(L3, "SACCH 1/3", 1);
-                            TimeSlotHandlers[0][block * 10 + 6] = new sTimeSlotParam(tmpSACCH2, 0);
-                            TimeSlotHandlers[0][block * 10 + 7] = new sTimeSlotParam(tmpSACCH2, 1);
-                            TimeSlotHandlers[0][block * 10 + 8] = new sTimeSlotParam(tmpSACCH2, 2);
-                            TimeSlotHandlers[0][block * 10 + 9] = new sTimeSlotParam(tmpSACCH2, 3);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 6] = new sTimeSlotParam(tmpSACCH2, 0);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 7] = new sTimeSlotParam(tmpSACCH2, 1);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 8] = new sTimeSlotParam(tmpSACCH2, 2);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 9] = new sTimeSlotParam(tmpSACCH2, 3);
                         }
                         break;
 
@@ -389,32 +382,32 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                         /* timeslot 0 already has BCCH etc, so just fill that one */
                         for (int block = 1; block < 4; block++)
                         {
-                            TimeSlotHandlers[0][block * 10 + 0] = new sTimeSlotParam(FCH, 0);
-                            TimeSlotHandlers[0][block * 10 + 1] = new sTimeSlotParam(SCH, 0);
-                            TimeSlotHandlers[0][block * 10 + 2] = new sTimeSlotParam(CCCH, 0);
-                            TimeSlotHandlers[0][block * 10 + 3] = new sTimeSlotParam(CCCH, 1);
-                            TimeSlotHandlers[0][block * 10 + 4] = new sTimeSlotParam(CCCH, 2);
-                            TimeSlotHandlers[0][block * 10 + 5] = new sTimeSlotParam(CCCH, 3);
-                            TimeSlotHandlers[0][block * 10 + 6] = new sTimeSlotParam(CCCH, 0);
-                            TimeSlotHandlers[0][block * 10 + 7] = new sTimeSlotParam(CCCH, 1);
-                            TimeSlotHandlers[0][block * 10 + 8] = new sTimeSlotParam(CCCH, 2);
-                            TimeSlotHandlers[0][block * 10 + 9] = new sTimeSlotParam(CCCH, 3);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 0] = new sTimeSlotParam(FCH, 0);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 1] = new sTimeSlotParam(SCH, 0);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 2] = new sTimeSlotParam(CCCH, 0);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 3] = new sTimeSlotParam(CCCH, 1);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 4] = new sTimeSlotParam(CCCH, 2);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 5] = new sTimeSlotParam(CCCH, 3);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 6] = new sTimeSlotParam(CCCH, 0);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 7] = new sTimeSlotParam(CCCH, 1);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 8] = new sTimeSlotParam(CCCH, 2);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 9] = new sTimeSlotParam(CCCH, 3);
                         }
 
                         /* now fill with BCCH+CCCH */
                         for (int slot = 1; slot < 2; slot++)
                         {
-                            TimeSlotHandlers[slot][0] = new sTimeSlotParam(BCCH, 0);
-                            TimeSlotHandlers[slot][1] = new sTimeSlotParam(BCCH, 1);
-                            TimeSlotHandlers[slot][2] = new sTimeSlotParam(BCCH, 2);
-                            TimeSlotHandlers[slot][3] = new sTimeSlotParam(BCCH, 3);
+                            Parameters.TimeSlotHandlers[slot][0] = new sTimeSlotParam(BCCH, 0);
+                            Parameters.TimeSlotHandlers[slot][1] = new sTimeSlotParam(BCCH, 1);
+                            Parameters.TimeSlotHandlers[slot][2] = new sTimeSlotParam(BCCH, 2);
+                            Parameters.TimeSlotHandlers[slot][3] = new sTimeSlotParam(BCCH, 3);
 
                             for (int block = 1; block < 12; block++)
                             {
-                                TimeSlotHandlers[slot][block * 4 + 0] = new sTimeSlotParam(CCCH, 0);
-                                TimeSlotHandlers[slot][block * 4 + 1] = new sTimeSlotParam(CCCH, 1);
-                                TimeSlotHandlers[slot][block * 4 + 2] = new sTimeSlotParam(CCCH, 2);
-                                TimeSlotHandlers[slot][block * 4 + 3] = new sTimeSlotParam(CCCH, 3);
+                                Parameters.TimeSlotHandlers[slot][block * 4 + 0] = new sTimeSlotParam(CCCH, 0);
+                                Parameters.TimeSlotHandlers[slot][block * 4 + 1] = new sTimeSlotParam(CCCH, 1);
+                                Parameters.TimeSlotHandlers[slot][block * 4 + 2] = new sTimeSlotParam(CCCH, 2);
+                                Parameters.TimeSlotHandlers[slot][block * 4 + 3] = new sTimeSlotParam(CCCH, 3);
                             }
                         }
 
@@ -433,32 +426,32 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                         /* timeslot 0 already has BCCH etc, so just fill that one */
                         for (int block = 1; block < 4; block++)
                         {
-                            TimeSlotHandlers[0][block * 10 + 0] = new sTimeSlotParam(FCH, 0);
-                            TimeSlotHandlers[0][block * 10 + 1] = new sTimeSlotParam(SCH, 0);
-                            TimeSlotHandlers[0][block * 10 + 2] = new sTimeSlotParam(CCCH, 0);
-                            TimeSlotHandlers[0][block * 10 + 3] = new sTimeSlotParam(CCCH, 1);
-                            TimeSlotHandlers[0][block * 10 + 4] = new sTimeSlotParam(CCCH, 2);
-                            TimeSlotHandlers[0][block * 10 + 5] = new sTimeSlotParam(CCCH, 3);
-                            TimeSlotHandlers[0][block * 10 + 6] = new sTimeSlotParam(CCCH, 0);
-                            TimeSlotHandlers[0][block * 10 + 7] = new sTimeSlotParam(CCCH, 1);
-                            TimeSlotHandlers[0][block * 10 + 8] = new sTimeSlotParam(CCCH, 2);
-                            TimeSlotHandlers[0][block * 10 + 9] = new sTimeSlotParam(CCCH, 3);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 0] = new sTimeSlotParam(FCH, 0);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 1] = new sTimeSlotParam(SCH, 0);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 2] = new sTimeSlotParam(CCCH, 0);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 3] = new sTimeSlotParam(CCCH, 1);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 4] = new sTimeSlotParam(CCCH, 2);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 5] = new sTimeSlotParam(CCCH, 3);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 6] = new sTimeSlotParam(CCCH, 0);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 7] = new sTimeSlotParam(CCCH, 1);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 8] = new sTimeSlotParam(CCCH, 2);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 9] = new sTimeSlotParam(CCCH, 3);
                         }
 
                         /* now fill with BCCH+CCCH */
                         for (int slot = 1; slot < 3; slot++)
                         {
-                            TimeSlotHandlers[slot][0] = new sTimeSlotParam(BCCH, 0);
-                            TimeSlotHandlers[slot][1] = new sTimeSlotParam(BCCH, 1);
-                            TimeSlotHandlers[slot][2] = new sTimeSlotParam(BCCH, 2);
-                            TimeSlotHandlers[slot][3] = new sTimeSlotParam(BCCH, 3);
+                            Parameters.TimeSlotHandlers[slot][0] = new sTimeSlotParam(BCCH, 0);
+                            Parameters.TimeSlotHandlers[slot][1] = new sTimeSlotParam(BCCH, 1);
+                            Parameters.TimeSlotHandlers[slot][2] = new sTimeSlotParam(BCCH, 2);
+                            Parameters.TimeSlotHandlers[slot][3] = new sTimeSlotParam(BCCH, 3);
 
                             for (int block = 1; block < 12; block++)
                             {
-                                TimeSlotHandlers[slot][block * 4 + 0] = new sTimeSlotParam(CCCH, 0);
-                                TimeSlotHandlers[slot][block * 4 + 1] = new sTimeSlotParam(CCCH, 1);
-                                TimeSlotHandlers[slot][block * 4 + 2] = new sTimeSlotParam(CCCH, 2);
-                                TimeSlotHandlers[slot][block * 4 + 3] = new sTimeSlotParam(CCCH, 3);
+                                Parameters.TimeSlotHandlers[slot][block * 4 + 0] = new sTimeSlotParam(CCCH, 0);
+                                Parameters.TimeSlotHandlers[slot][block * 4 + 1] = new sTimeSlotParam(CCCH, 1);
+                                Parameters.TimeSlotHandlers[slot][block * 4 + 2] = new sTimeSlotParam(CCCH, 2);
+                                Parameters.TimeSlotHandlers[slot][block * 4 + 3] = new sTimeSlotParam(CCCH, 3);
                             }
                         }
 
@@ -480,32 +473,32 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                         /* timeslot 0 already has BCCH etc, so just fill that one */
                         for (int block = 1; block < 4; block++)
                         {
-                            TimeSlotHandlers[0][block * 10 + 0] = new sTimeSlotParam(FCH, 0);
-                            TimeSlotHandlers[0][block * 10 + 1] = new sTimeSlotParam(SCH, 0);
-                            TimeSlotHandlers[0][block * 10 + 2] = new sTimeSlotParam(CCCH, 0);
-                            TimeSlotHandlers[0][block * 10 + 3] = new sTimeSlotParam(CCCH, 1);
-                            TimeSlotHandlers[0][block * 10 + 4] = new sTimeSlotParam(CCCH, 2);
-                            TimeSlotHandlers[0][block * 10 + 5] = new sTimeSlotParam(CCCH, 3);
-                            TimeSlotHandlers[0][block * 10 + 6] = new sTimeSlotParam(CCCH, 0);
-                            TimeSlotHandlers[0][block * 10 + 7] = new sTimeSlotParam(CCCH, 1);
-                            TimeSlotHandlers[0][block * 10 + 8] = new sTimeSlotParam(CCCH, 2);
-                            TimeSlotHandlers[0][block * 10 + 9] = new sTimeSlotParam(CCCH, 3);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 0] = new sTimeSlotParam(FCH, 0);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 1] = new sTimeSlotParam(SCH, 0);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 2] = new sTimeSlotParam(CCCH, 0);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 3] = new sTimeSlotParam(CCCH, 1);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 4] = new sTimeSlotParam(CCCH, 2);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 5] = new sTimeSlotParam(CCCH, 3);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 6] = new sTimeSlotParam(CCCH, 0);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 7] = new sTimeSlotParam(CCCH, 1);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 8] = new sTimeSlotParam(CCCH, 2);
+                            Parameters.TimeSlotHandlers[0][block * 10 + 9] = new sTimeSlotParam(CCCH, 3);
                         }
 
                         /* now fill with BCCH+CCCH */
                         for (int slot = 1; slot < 4; slot++)
                         {
-                            TimeSlotHandlers[slot][0] = new sTimeSlotParam(BCCH, 0);
-                            TimeSlotHandlers[slot][1] = new sTimeSlotParam(BCCH, 1);
-                            TimeSlotHandlers[slot][2] = new sTimeSlotParam(BCCH, 2);
-                            TimeSlotHandlers[slot][3] = new sTimeSlotParam(BCCH, 3);
+                            Parameters.TimeSlotHandlers[slot][0] = new sTimeSlotParam(BCCH, 0);
+                            Parameters.TimeSlotHandlers[slot][1] = new sTimeSlotParam(BCCH, 1);
+                            Parameters.TimeSlotHandlers[slot][2] = new sTimeSlotParam(BCCH, 2);
+                            Parameters.TimeSlotHandlers[slot][3] = new sTimeSlotParam(BCCH, 3);
 
                             for (int block = 1; block < 12; block++)
                             {
-                                TimeSlotHandlers[slot][block * 4 + 0] = new sTimeSlotParam(CCCH, 0);
-                                TimeSlotHandlers[slot][block * 4 + 1] = new sTimeSlotParam(CCCH, 1);
-                                TimeSlotHandlers[slot][block * 4 + 2] = new sTimeSlotParam(CCCH, 2);
-                                TimeSlotHandlers[slot][block * 4 + 3] = new sTimeSlotParam(CCCH, 3);
+                                Parameters.TimeSlotHandlers[slot][block * 4 + 0] = new sTimeSlotParam(CCCH, 0);
+                                Parameters.TimeSlotHandlers[slot][block * 4 + 1] = new sTimeSlotParam(CCCH, 1);
+                                Parameters.TimeSlotHandlers[slot][block * 4 + 2] = new sTimeSlotParam(CCCH, 2);
+                                Parameters.TimeSlotHandlers[slot][block * 4 + 3] = new sTimeSlotParam(CCCH, 3);
                             }
                         }
 
@@ -594,24 +587,24 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             int sequence = 0;
             long frameNum = 0;
 
-            lock (TimeSlotHandlers)
+            lock (Parameters.TimeSlotHandlers)
             {
-                if (TimeSlotHandlers[Parameters.TN] == null)
+                if (Parameters.TimeSlotHandlers[Parameters.TN] == null)
                 {
                     handler = null;
                     sequence = 0;
                 }
-                else if (TimeSlotHandlers[Parameters.TN].Length == 51)
+                else if (Parameters.TimeSlotHandlers[Parameters.TN].Length == 51)
                 {
                     frameNum = Parameters.T3;
-                    handler = TimeSlotHandlers[Parameters.TN][Parameters.T3].Burst; // control frame number
-                    sequence = TimeSlotHandlers[Parameters.TN][Parameters.T3].Sequence;
+                    handler = Parameters.TimeSlotHandlers[Parameters.TN][Parameters.T3].Burst; // control frame number
+                    sequence = Parameters.TimeSlotHandlers[Parameters.TN][Parameters.T3].Sequence;
                 }
-                else if (TimeSlotHandlers[Parameters.TN].Length == 26)
+                else if (Parameters.TimeSlotHandlers[Parameters.TN].Length == 26)
                 {
                     frameNum = Parameters.T2;
-                    handler = TimeSlotHandlers[Parameters.TN][Parameters.T2].Burst; // traffic frame number
-                    sequence = TimeSlotHandlers[Parameters.TN][Parameters.T2].Sequence;
+                    handler = Parameters.TimeSlotHandlers[Parameters.TN][Parameters.T2].Burst; // traffic frame number
+                    sequence = Parameters.TimeSlotHandlers[Parameters.TN][Parameters.T2].Sequence;
                 }
             }
 
@@ -708,43 +701,5 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             }
         }
 
-        public string GetTimeslotDetails()
-        {
-            string retVal = "";
-
-            lock (TimeSlotHandlers)
-            {
-                for (int slot = 0; slot < 8; slot++)
-                {
-                    retVal += " " + slot + ": ";
-                    if (TimeSlotHandlers[slot] == null)
-                    {
-                        retVal += "| (Unused)";
-                    }
-                    else
-                    {
-                        int lastSeq = -1;
-                        for (int frame = 0; frame < TimeSlotHandlers[slot].Length; frame++)
-                        {
-                            Burst handler = TimeSlotHandlers[slot][frame].Burst;
-                            int seq = TimeSlotHandlers[slot][frame].Sequence;
-
-                            if (seq == lastSeq + 1)
-                                retVal += "|";
-                            else
-                                retVal += " ";
-
-                            if (handler != null)
-                                retVal += handler.ShortName;
-                            else
-                                retVal += "-- ";
-                        }
-                    }
-                    retVal += " |" + Environment.NewLine;
-                }
-            }
-
-            return retVal;
-        }
     }
 }

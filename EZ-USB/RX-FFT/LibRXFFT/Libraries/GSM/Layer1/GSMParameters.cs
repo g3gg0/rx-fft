@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using LibRXFFT.Libraries.GSM.Bursts;
 
 namespace LibRXFFT.Libraries.GSM.Layer1
 {
@@ -34,8 +35,22 @@ namespace LibRXFFT.Libraries.GSM.Layer1
     }
 
 
+    public struct sTimeSlotParam
+    {
+        public readonly Burst Burst;
+        public readonly int Sequence;
+
+        public sTimeSlotParam(Burst burst, int seq)
+        {
+            Burst = burst;
+            Sequence = seq;
+        }
+    }
+
+
     public class GSMParameters
     {
+        public sTimeSlotParam[][] TimeSlotHandlers;
         public sTimeSlotInfo[] TimeSlotInfo;
         public eTriState CBCH = eTriState.Unknown;
         public double FCCHOffset = 0;
@@ -51,11 +66,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
         public GSMParameters()
         {
             TimeSlotInfo = new sTimeSlotInfo[8];
-            for (int pos = 0; pos < 8; pos++)
-            {
-                TimeSlotInfo[pos].Type = eTimeSlotType.Unconfigured;
-                TimeSlotInfo[pos].SubChanAssignments = new int[8];
-            }
+            TimeSlotHandlers = new sTimeSlotParam[8][];
         }
 
         public long T1
@@ -110,6 +121,54 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             return "T1: " + String.Format("{0,5}", T1) + " T2: " + String.Format("{0,2}", T2) + " T3: " + String.Format("{0,2}", T3) + " TN: " + String.Format("{0,1}", TN) + " FN: " + String.Format("{0,8}", FN);
         }
 
+
+        public string GetTimeslotDetails()
+        {
+            string retVal = "";
+
+            retVal += "  ------------------------------------------------------------------------------------ - -  -  -" + Environment.NewLine;
+            retVal += " | TS || Handlers (FC=FCCH, SC=SCH, BC=BCCH, CC=CCCH, SD=SDCCH, SA=SACCH, TC=TCH" + Environment.NewLine;
+            retVal += " |----||------------------------------------------------------------------------------ - -  -  -" + Environment.NewLine;
+
+
+            lock (TimeSlotHandlers)
+            {
+                for (int slot = 0; slot < 8; slot++)
+                {
+                    retVal += " | " + slot + "  || ";
+                    if (TimeSlotHandlers[slot] == null)
+                    {
+                        retVal += "(Unused)";
+                    }
+                    else
+                    {
+                        for (int frame = 0; frame < TimeSlotHandlers[slot].Length; frame++)
+                        {
+                            Burst handler = TimeSlotHandlers[slot][frame].Burst;
+                            int seq = TimeSlotHandlers[slot][frame].Sequence;
+
+                            if (seq == 0)
+                            {
+                                if (frame != 0)
+                                    retVal += "|";
+                            }
+                            else
+                                retVal += " ";
+
+                            if (handler != null)
+                                retVal += handler.ShortName;
+                            else
+                                retVal += "-- ";
+                        }
+                    }
+                    retVal += " |" + Environment.NewLine;
+                }
+            }
+
+            retVal += "  ------------------------------------------------------------------------------------ - -  -  -" + Environment.NewLine;
+
+            return retVal;
+        }
         public string GetSlotUsage()
         {
             string retVal = "";

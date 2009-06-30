@@ -66,7 +66,7 @@ namespace GSM_Analyzer
         {
             InitializeComponent();
             Parameters = new GSMParameters();
-            Handler = new TimeSlotHandler(Oversampling, 0.3, AddMessage);
+            Handler = new TimeSlotHandler(Oversampling, 0.3, AddMessage, Parameters);
             RegisterTriggers(Handler.L3);
 
             if (Handler.L3.StatusMessage != null)
@@ -111,7 +111,7 @@ namespace GSM_Analyzer
             int.TryParse(lacString, out lac);
             int.TryParse(cellIdentString, out cellIdent);
 
-            UpdateCellInfo(mcc, mnc, lac, cellIdent, Handler.Parameters.CBCH);
+            UpdateCellInfo(mcc, mnc, lac, cellIdent, Parameters.CBCH);
         }
 
 
@@ -376,8 +376,6 @@ namespace GSM_Analyzer
 
             FCCHFinder finder = new FCCHFinder(Oversampling);
 
-            Handler.Parameters = Parameters;
-
             Parameters.State = eGSMState.Reset;
             UpdateUIStatus(Parameters);
 
@@ -401,8 +399,7 @@ namespace GSM_Analyzer
                                 AddMessage("[GSM] Sampling Rate changed from " + oldSamplingRate + " to " + Source.OutputSamplingRate + ", Oversampling factor: " + Oversampling + Environment.NewLine);
                                 oldSamplingRate = Source.OutputSamplingRate;
                                 finder = new FCCHFinder(Oversampling);
-                                Handler = new TimeSlotHandler(Oversampling, 0.3, AddMessage);
-                                Handler.Parameters = Parameters;
+                                Handler = new TimeSlotHandler(Oversampling, 0.3, AddMessage, Parameters);
                                 RegisterTriggers(Handler.L3);
 
                                 burstBuffer = new double[(int)((Handler.SpareBits + Burst.TotalBitCount) * Oversampling)];
@@ -685,7 +682,7 @@ namespace GSM_Analyzer
 
             AddMessage(Parameters.GetSlotUsage());
             AddMessage(Environment.NewLine);
-            AddMessage(Handler.GetTimeslotDetails());
+            AddMessage(Parameters.GetTimeslotDetails());
             AddMessage(Environment.NewLine);
         }
 

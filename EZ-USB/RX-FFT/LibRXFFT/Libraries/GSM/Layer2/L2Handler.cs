@@ -59,14 +59,15 @@ namespace LibRXFFT.Libraries.GSM.Layer2
                     l3.Handle(buf);
                 return;
             }
-
+/*
             if (source.GetType() == typeof(SACCHBurst) && ((SACCHBurst)source).TchType)
             {
                 StatusMessage = "Dumping whole SACCH/TCH - Length = " + (packetBufferOffset + data.Length) + Environment.NewLine;
-                StatusMessage += "  " + DumpBytes(data);
+                StatusMessage += "          " + DumpBytes(data) + Environment.NewLine;
                 ShowMessage = true;
                 return;
             }
+*/
 
             /* always show empty/multiframe messages if requested */
             ShowMessage = ShowAllMessages;

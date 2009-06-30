@@ -89,9 +89,7 @@ namespace LibRXFFT.Libraries.GSM.Bursts
                     Array.Copy(DataRepaired, DataDecoded, DataRepaired.Length);
                 }
 
-
                 ByteUtil.BitsToBytesRev(DataDecoded, Data, 0, 184);
-
 
                 //DumpBytes(Data);
                 L2.Handle(this, L3, Data);

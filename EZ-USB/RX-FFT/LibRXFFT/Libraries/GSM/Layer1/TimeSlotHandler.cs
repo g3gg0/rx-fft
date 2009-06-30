@@ -56,16 +56,15 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             Decoder = new GMSKDecoder(Oversampling, BT);
 
             L3 = new L3Handler();
-            L3.PDUDataTriggers.Add("CCCH-CONF", TriggerCCCHCONF);
-            L3.PDUDataTriggers.Add("ChannelAssignment", TriggerChannelAssignment);
-            L3.PDUDataTriggers.Add("CBCHUpdate", TriggerCBCHUpdate);
-            L3.PDUDataTriggers.Add("CBCHReset", TriggerCBCHReset);
-
-
             FCH = new FCHBurst();
             SCH = new SCHBurst();
             BCCH = new BCCHBurst(L3);
             CCCH = new CCCHBurst(L3);
+
+            L3.PDUDataTriggers.Add("CCCH-CONF", TriggerCCCHCONF);
+            L3.PDUDataTriggers.Add("ChannelAssignment", TriggerChannelAssignment);
+            L3.PDUDataTriggers.Add("CBCHUpdate", TriggerCBCHUpdate);
+            L3.PDUDataTriggers.Add("CBCHReset", TriggerCBCHReset);
 
             TimeSlotHandlers = new sTimeSlotParam[8][];
 
@@ -80,7 +79,6 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             TimeSlotHandlers[0][7] = new sTimeSlotParam(CCCH, 1);
             TimeSlotHandlers[0][8] = new sTimeSlotParam(CCCH, 2);
             TimeSlotHandlers[0][9] = new sTimeSlotParam(CCCH, 3);
-
 
             /* create training sequence ... */
             double[] tmpTrainingSequence = new SequenceGenerator(Oversampling, BT).GenerateDiffEncoded(TrainingCode);
@@ -123,6 +121,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
                             TCHBurst tch = new TCHBurst();
                             SACCHBurst sacch = new SACCHBurst(L3, "SACCH/TCH", (int)timeSlot, true);
+
                             for (int frame = 0; frame < 25; frame++)
                             {
                                 if (frame == 12)
@@ -140,6 +139,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                             TCHBurst tch2 = new TCHBurst();
                             SACCHBurst sacch1 = new SACCHBurst(L3, "SACCH1/TCH", (int)timeSlot, true);
                             SACCHBurst sacch2 = new SACCHBurst(L3, "SACCH2/TCH", (int)timeSlot, true);
+
                             for (int frame = 0; frame < 26; frame++)
                             {
                                 if (frame == 12)
@@ -622,8 +622,6 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                 else
                     AddMessage("   [L1] Handler: (none)  TN:" + Parameters.TN + "  Frame: " + frameNum + Environment.NewLine);
             }
-
-
 
             /* this is a SCH burst */
             if (Parameters.FirstSCH || handler == SCH)

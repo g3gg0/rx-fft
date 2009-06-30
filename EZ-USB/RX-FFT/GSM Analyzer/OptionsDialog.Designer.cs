@@ -66,10 +66,11 @@
             this.label6 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.chkDumpFrames = new System.Windows.Forms.CheckBox();
             this.chkShowEncrypted = new System.Windows.Forms.CheckBox();
             this.groupBox5 = new System.Windows.Forms.GroupBox();
             this.chkShowAllFrames = new System.Windows.Forms.CheckBox();
-            this.chkDumpFrames = new System.Windows.Forms.CheckBox();
+            this.chkDumpEncrypted = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -205,7 +206,7 @@
             this.groupBox2.Controls.Add(this.chkSniffIMSI);
             this.groupBox2.Controls.Add(this.chkShowUnhandled);
             this.groupBox2.Controls.Add(this.chkDumpRaw);
-            this.groupBox2.Location = new System.Drawing.Point(224, 142);
+            this.groupBox2.Location = new System.Drawing.Point(224, 161);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Size = new System.Drawing.Size(206, 118);
             this.groupBox2.TabIndex = 16;
@@ -458,14 +459,26 @@
             // 
             // groupBox4
             // 
+            this.groupBox4.Controls.Add(this.chkDumpEncrypted);
             this.groupBox4.Controls.Add(this.chkDumpFrames);
             this.groupBox4.Controls.Add(this.chkShowEncrypted);
             this.groupBox4.Location = new System.Drawing.Point(224, 12);
             this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(206, 72);
+            this.groupBox4.Size = new System.Drawing.Size(206, 91);
             this.groupBox4.TabIndex = 18;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "L1 Options";
+            // 
+            // chkDumpFrames
+            // 
+            this.chkDumpFrames.AutoSize = true;
+            this.chkDumpFrames.Location = new System.Drawing.Point(10, 66);
+            this.chkDumpFrames.Name = "chkDumpFrames";
+            this.chkDumpFrames.Size = new System.Drawing.Size(121, 17);
+            this.chkDumpFrames.TabIndex = 16;
+            this.chkDumpFrames.Text = "Dump all frame infos";
+            this.chkDumpFrames.UseVisualStyleBackColor = true;
+            this.chkDumpFrames.CheckedChanged += new System.EventHandler(this.chkDumpFrames_CheckedChanged);
             // 
             // chkShowEncrypted
             // 
@@ -481,7 +494,7 @@
             // groupBox5
             // 
             this.groupBox5.Controls.Add(this.chkShowAllFrames);
-            this.groupBox5.Location = new System.Drawing.Point(224, 90);
+            this.groupBox5.Location = new System.Drawing.Point(224, 109);
             this.groupBox5.Name = "groupBox5";
             this.groupBox5.Size = new System.Drawing.Size(206, 46);
             this.groupBox5.TabIndex = 19;
@@ -499,16 +512,16 @@
             this.chkShowAllFrames.UseVisualStyleBackColor = true;
             this.chkShowAllFrames.CheckedChanged += new System.EventHandler(this.chkShowAllFrames_CheckedChanged);
             // 
-            // chkDumpFrames
+            // chkDumpEncrypted
             // 
-            this.chkDumpFrames.AutoSize = true;
-            this.chkDumpFrames.Location = new System.Drawing.Point(10, 42);
-            this.chkDumpFrames.Name = "chkDumpFrames";
-            this.chkDumpFrames.Size = new System.Drawing.Size(121, 17);
-            this.chkDumpFrames.TabIndex = 16;
-            this.chkDumpFrames.Text = "Dump all frame infos";
-            this.chkDumpFrames.UseVisualStyleBackColor = true;
-            this.chkDumpFrames.CheckedChanged += new System.EventHandler(this.chkDumpFrames_CheckedChanged);
+            this.chkDumpEncrypted.AutoSize = true;
+            this.chkDumpEncrypted.Location = new System.Drawing.Point(10, 43);
+            this.chkDumpEncrypted.Name = "chkDumpEncrypted";
+            this.chkDumpEncrypted.Size = new System.Drawing.Size(136, 17);
+            this.chkDumpEncrypted.TabIndex = 17;
+            this.chkDumpEncrypted.Text = "Encrypted DCCH dump";
+            this.chkDumpEncrypted.UseVisualStyleBackColor = true;
+            this.chkDumpEncrypted.CheckedChanged += new System.EventHandler(this.chkDumpEncrypted_CheckedChanged);
             // 
             // OptionsDialog
             // 
@@ -584,5 +597,6 @@
         private System.Windows.Forms.GroupBox groupBox5;
         private System.Windows.Forms.CheckBox chkShowAllFrames;
         private System.Windows.Forms.CheckBox chkDumpFrames;
+        private System.Windows.Forms.CheckBox chkDumpEncrypted;
     }
 }

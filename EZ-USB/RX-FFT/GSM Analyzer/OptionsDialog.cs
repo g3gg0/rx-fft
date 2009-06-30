@@ -24,6 +24,7 @@ namespace GSM_Analyzer
             chkSubSample.Checked = GSMAnalyzer.Subsampling;
 
             chkShowEncrypted.Checked = SDCCHBurst.ShowEncryptedMessage;
+            chkDumpEncrypted.Checked = SDCCHBurst.DumpEncryptedMessage;
             chkCellBroadcast.Checked = CBCHandler.ShowCBMessages;
             chkShowAllFrames.Checked = L2Handler.ShowAllMessages;
             chkDumpFrames.Checked = Analyzer.Parameters.DumpPackets;
@@ -247,6 +248,12 @@ namespace GSM_Analyzer
             SACCHBurst.ShowEncryptedMessage = chkShowEncrypted.Checked;
         }
 
+        private void chkDumpEncrypted_CheckedChanged(object sender, EventArgs e)
+        {
+            SDCCHBurst.DumpEncryptedMessage = chkDumpEncrypted.Checked;
+            SACCHBurst.DumpEncryptedMessage = chkDumpEncrypted.Checked;
+        }
+
         private void chkCellBroadcast_CheckedChanged(object sender, EventArgs e)
         {
             CBCHandler.ShowCBMessages = chkCellBroadcast.Checked;
@@ -261,5 +268,6 @@ namespace GSM_Analyzer
         {
             Analyzer.Parameters.DumpPackets = chkDumpFrames.Checked;
         }
+
     }
 }

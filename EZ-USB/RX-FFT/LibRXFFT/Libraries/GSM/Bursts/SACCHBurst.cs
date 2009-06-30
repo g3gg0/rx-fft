@@ -12,6 +12,8 @@ namespace LibRXFFT.Libraries.GSM.Bursts
     public class SACCHBurst : NormalBurst
     {
         public static bool ShowEncryptedMessage = false;
+        public static bool DumpEncryptedMessage = false;
+
         public bool TchType = false;
 
         private long[] FN;
@@ -113,8 +115,16 @@ namespace LibRXFFT.Libraries.GSM.Bursts
 
                 if (ConvolutionalCoder.DecodeViterbi(DataDeinterleaved[0], DataDecoded) == null)
                 {
-                    if (ShowEncryptedMessage)
-                        StatusMessage = "(Error in ConvolutionalCoder, maybe encrypted)";
+                    if (ShowEncryptedMessage || DumpEncryptedMessage)
+                    {
+                        if (DumpEncryptedMessage)
+                        {
+                            StatusMessage = "(Encrypted) De-Interleaved bits: ";
+                            DumpBits(DataDeinterleaved[0]);
+                        }
+                        else
+                            StatusMessage = "(Error in ConvolutionalCoder, maybe encrypted)";
+                    }
                     return true;
                 }
 

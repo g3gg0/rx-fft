@@ -14,10 +14,10 @@ namespace LibRXFFT.Libraries.GSM.Bursts
         public static bool ShowEncryptedMessage = false;
         public static bool DumpEncryptedMessage = false;
 
-        public bool TchType = false;
+        public bool TCHType = false;
 
         private long[] FN;
-        private int tchSeq = 0;
+        private int TCHSeq = 0;
         private int SubChannel;
 
         public SACCHBurst(L3Handler l3)
@@ -59,7 +59,7 @@ namespace LibRXFFT.Libraries.GSM.Bursts
             ShortName = "SA" + subChan;
             SubChannel = subChan;
             FN = new long[4];
-            TchType = tchType;
+            TCHType = tchType;
 
             InitArrays();
         }
@@ -76,14 +76,14 @@ namespace LibRXFFT.Libraries.GSM.Bursts
                 if (param.DumpPackets)
                     StatusMessage = "Dummy Burst";
 
-                tchSeq = 0;
+                TCHSeq = 0;
                 return true;
             }
 
             bool isComplete;
 
             /* decide between normal SACCH and SACCH/TCH */
-            if (!TchType)
+            if (!TCHType)
             {
                 /* thats a normal SACCH */
                 Array.Copy(decodedBurst, 3, BurstBuffer[sequence], 0, 57);
@@ -91,24 +91,24 @@ namespace LibRXFFT.Libraries.GSM.Bursts
 
                 FN[sequence] = param.FN;
 
-                /* the frame is complete when 4 sequences of four consecutive FN were buffered */
+                /* the block is complete when 4 bursts of 4 consecutive FN were buffered */
                 isComplete = (FN[0] + 1 == FN[1]) && (FN[1] + 1 == FN[2]) && (FN[2] + 1 == FN[3]);
             }
             else
             {
                 /* thats a SACCH/TCH */
-                Array.Copy(decodedBurst, 3, BurstBuffer[tchSeq], 0, 57);
-                Array.Copy(decodedBurst, 88, BurstBuffer[tchSeq], 57, 57);
+                Array.Copy(decodedBurst, 3, BurstBuffer[TCHSeq], 0, 57);
+                Array.Copy(decodedBurst, 88, BurstBuffer[TCHSeq], 57, 57);
 
-                /* when we caught four bursts, the frame is complete */
-                tchSeq++;
-                isComplete = tchSeq>3;
+                /* when we caught four bursts, the block is complete */
+                TCHSeq++;
+                isComplete = TCHSeq>3;
             }
 
             if (isComplete)
             {
                 /* clean up */
-                tchSeq = 0;
+                TCHSeq = 0;
                 Array.Clear(FN, 0, 4);
 
                 InterleaveCoder.Deinterleave(BurstBuffer, DataDeinterleaved);

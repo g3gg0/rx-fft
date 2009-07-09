@@ -18,16 +18,19 @@ namespace GSM_Analyzer
             Analyzer = analyzer;
             InitializeComponent();
 
-            chkDumpRaw.Checked = L3Handler.DumpRawData;
-            chkShowUnhandled.Checked = L3Handler.DumpUnhandled;
-            chkSniffIMSI.Checked = L3Handler.SniffIMSI;
             chkSubSample.Checked = GSMAnalyzer.Subsampling;
 
-            chkShowEncrypted.Checked = SDCCHBurst.ShowEncryptedMessage;
-            chkDumpEncrypted.Checked = SDCCHBurst.DumpEncryptedMessage;
-            chkCellBroadcast.Checked = CBCHandler.ShowCBMessages;
-            chkShowAllFrames.Checked = L2Handler.ShowAllMessages;
-            chkDumpFrames.Checked = Analyzer.Parameters.DumpPackets;
+            chkL1ShowEncrypted.Checked = SDCCHBurst.ShowEncryptedMessage;
+            chkL1DumpEncrypted.Checked = SDCCHBurst.DumpEncryptedMessage;
+            chkL1DumpFrames.Checked = Analyzer.Parameters.DumpPackets;
+
+            chkL2ShowAllFrames.Checked = L2Handler.ShowAllMessages;
+            chkL2DumpRaw.Checked = L2Handler.DumpRawData;
+
+            chkL3CellBroadcast.Checked = CBCHandler.ShowCBMessages;
+            chkL3DumpRaw.Checked = L3Handler.DumpRawData;
+            chkL3ShowUnhandled.Checked = L3Handler.DumpUnhandled;
+            chkL3SniffIMSI.Checked = L3Handler.SniffIMSI;
 
             txtSubSampleOffset.Text = Analyzer.SubSampleOffset.ToString();
             txtDecisionLevel.Text = GMSKDecoder.MinPowerFact.ToString();
@@ -80,19 +83,19 @@ namespace GSM_Analyzer
             GMSKDemodulator.InvertedSpectrumDefault = chkInvert.Checked;
         }
 
-        private void chkDumpRaw_CheckedChanged(object sender, EventArgs e)
+        private void chkL3DumpRaw_CheckedChanged(object sender, EventArgs e)
         {
-            L3Handler.DumpRawData = chkDumpRaw.Checked;
+            L3Handler.DumpRawData = chkL3DumpRaw.Checked;
         }
 
-        private void chkShowUnhandled_CheckedChanged(object sender, EventArgs e)
+        private void chkL3ShowUnhandled_CheckedChanged(object sender, EventArgs e)
         {
-            L3Handler.DumpUnhandled = chkShowUnhandled.Checked;
+            L3Handler.DumpUnhandled = chkL3ShowUnhandled.Checked;
         }
 
-        private void chkSniffIMSI_CheckedChanged(object sender, EventArgs e)
+        private void chkL3SniffIMSI_CheckedChanged(object sender, EventArgs e)
         {
-            L3Handler.SniffIMSI = chkSniffIMSI.Checked;
+            L3Handler.SniffIMSI = chkL3SniffIMSI.Checked;
         }
 
         private void chkSubSample_CheckedChanged(object sender, EventArgs e)
@@ -242,31 +245,36 @@ namespace GSM_Analyzer
             Analyzer.BurstLengthJitter[3] = offset4;
         }
 
-        private void chkShowEncrypted_CheckedChanged(object sender, EventArgs e)
+        private void chkL1ShowEncrypted_CheckedChanged(object sender, EventArgs e)
         {
-            SDCCHBurst.ShowEncryptedMessage = chkShowEncrypted.Checked;
-            SACCHBurst.ShowEncryptedMessage = chkShowEncrypted.Checked;
+            SDCCHBurst.ShowEncryptedMessage = chkL1ShowEncrypted.Checked;
+            SACCHBurst.ShowEncryptedMessage = chkL1ShowEncrypted.Checked;
         }
 
-        private void chkDumpEncrypted_CheckedChanged(object sender, EventArgs e)
+        private void chkL1DumpEncrypted_CheckedChanged(object sender, EventArgs e)
         {
-            SDCCHBurst.DumpEncryptedMessage = chkDumpEncrypted.Checked;
-            SACCHBurst.DumpEncryptedMessage = chkDumpEncrypted.Checked;
+            SDCCHBurst.DumpEncryptedMessage = chkL1DumpEncrypted.Checked;
+            SACCHBurst.DumpEncryptedMessage = chkL1DumpEncrypted.Checked;
         }
 
-        private void chkCellBroadcast_CheckedChanged(object sender, EventArgs e)
+        private void chkL3CellBroadcast_CheckedChanged(object sender, EventArgs e)
         {
-            CBCHandler.ShowCBMessages = chkCellBroadcast.Checked;
+            CBCHandler.ShowCBMessages = chkL3CellBroadcast.Checked;
         }
 
-        private void chkShowAllFrames_CheckedChanged(object sender, EventArgs e)
+        private void chkL2DumpRaw_CheckedChanged(object sender, EventArgs e)
         {
-            L2Handler.ShowAllMessages = chkShowAllFrames.Checked;
+            L2Handler.DumpRawData = chkL2DumpRaw.Checked;
         }
 
-        private void chkDumpFrames_CheckedChanged(object sender, EventArgs e)
+        private void chkL2ShowAllFrames_CheckedChanged(object sender, EventArgs e)
         {
-            Analyzer.Parameters.DumpPackets = chkDumpFrames.Checked;
+            L2Handler.ShowAllMessages = chkL2ShowAllFrames.Checked;
+        }
+
+        private void chkL1DumpFrames_CheckedChanged(object sender, EventArgs e)
+        {
+            Analyzer.Parameters.DumpPackets = chkL1DumpFrames.Checked;
         }
 
     }

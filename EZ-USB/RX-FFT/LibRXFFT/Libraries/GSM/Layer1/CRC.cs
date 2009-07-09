@@ -7,6 +7,11 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 {
     public class CRC
     {
+        public static readonly bool[] PolynomialTCHFR = new bool[]
+                                                          {
+                                                              true, false, true, true
+                                                          };
+
         public static readonly bool[] PolynomialSCH = new bool[]
                                                           {
                                                               true, false, true, false, true, true, true, false, true,
@@ -15,8 +20,8 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
         public static readonly bool[] PolynomialFIRE = new bool[]
                                                            {
-                                                               true, false, false, false, false, false, false, false, false
-                                                               , false, false, false, false, false, true, false, false,
+                                                               true, false, false, false, false, false, false, false, false,
+                                                               false, false, false, false, false, true, false, false,
                                                                true, false, false, false, false, false, true, false, false,
                                                                false, false, false, false, false, false, false, false,
                                                                false, false, false, true, false, false, true

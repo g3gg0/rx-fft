@@ -26,7 +26,7 @@ namespace LibRXFFT.Libraries.GSM.Bursts
 
             CBCHandler = new CBCHandler();
 
-            InitArrays();
+            InitBuffers(4);
         }
 
         public CBCHBurst(L3Handler l3, int subChannel)
@@ -39,7 +39,7 @@ namespace LibRXFFT.Libraries.GSM.Bursts
 
             CBCHandler = new CBCHandler();
 
-            InitArrays();
+            InitBuffers(4);
         }
 
         public CBCHBurst(L3Handler l3, string name, int subChannel)
@@ -51,7 +51,7 @@ namespace LibRXFFT.Libraries.GSM.Bursts
 
             CBCHandler = new CBCHandler();
 
-            InitArrays();
+            InitBuffers(4);
         }
 
         public override bool ParseData(GSMParameters param, bool[] decodedBurst)
@@ -61,53 +61,48 @@ namespace LibRXFFT.Libraries.GSM.Bursts
 
         public override bool ParseData(GSMParameters param, bool[] decodedBurst, int sequence)
         {
-            if (IsDummy(decodedBurst, 3))
+            if (IsDummy(decodedBurst))
             {
                 if (param.DumpPackets)
                     StatusMessage = "Dummy Burst";
                 return true;
             }
 
-            Array.Copy(decodedBurst, 3, BurstBuffer[sequence], 0, 57);
-            Array.Copy(decodedBurst, 88, BurstBuffer[sequence], 57, 57);
+            UnmapToI(decodedBurst, sequence);
 
             FN[sequence] = param.FN;
 
             if (FN[0] + 1 == FN[1] && FN[1] + 1 == FN[2] && FN[2] + 1 == FN[3])
             {
-                InterleaveCoder.Deinterleave(BurstBuffer, DataDeinterleaved);
+                Array.Clear(FN, 0, 4);
 
-                if (ConvolutionalCoder.DecodeViterbi(DataDeinterleaved[0], DataDecoded) == null)
+                /* deinterleave the 4 bursts. the result is a 456 bit block. i[] to c[] */
+                Deinterleave();
+
+                if (!Deconvolution())
                 {
                     ErrorMessage = "(Error in ConvolutionalCoder)";
                     return false;
                 }
 
-                CRC.Calc(DataDecoded, 0, 224, CRC.PolynomialFIRE, CRCBuffer);
-                if (!CRC.Matches(CRCBuffer))
+                /* CRC check/fix */
+                switch (CRCCheck())
                 {
-                    bool[] DataRepaired = new bool[224];
+                    case eCRCState.Fixed:
+                        StatusMessage = "(CRC Error recovered)";
+                        break;
 
-                    FireCode fc = new FireCode(40, 184);
-                    if (!fc.FC_check_crc(DataDecoded, DataRepaired))
-                    {
-                        ErrorMessage = "(Error in CRC)";
+                    case eCRCState.Failed:
+                        ErrorMessage = "(CRC Error)";
                         return false;
-                    }
-
-                    StatusMessage = "(CRC Error recovered)";
-                    Array.Copy(DataRepaired, DataDecoded, DataRepaired.Length);
                 }
 
-
-                ByteUtil.BitsToBytesRev(DataDecoded, Data, 0, 184);
-
+                /* convert u[] to d[] bytes */
+                PackBytes();
 
                 /* do we have a CBCH channel and thats this subchannel? */
-                if (CBCHandler.Handle(Data))
+                if (CBCHandler.Handle(BurstBufferD))
                     StatusMessage = CBCHandler.StatusMessage;
-
-                Array.Clear(FN, 0, 4);
             }
             else
                 StatusMessage = null;

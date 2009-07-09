@@ -213,8 +213,20 @@
   </pdudesc>
   <pdudesc ref="10.5.2.4a" name="MAC Mode and Channel Coding Requested" type="1"/>
   <pdudesc ref="10.5.2.5" name="Channel Description" type="3" length="3"/> <!-- handled in software -->
-  <pdudesc ref="10.5.2.5a" name="Channel Description 2" type="3" length="3"/>
-  <pdudesc ref="10.5.2.6" name="Channel Mode" type="3" length="1"/>
+  <pdudesc ref="10.5.2.5a" name="Channel Description 2" type="3" length="3"/> <!-- handled in software -->
+  <pdudesc ref="10.5.2.6" name="Channel Mode" type="3" length="1" fields="true">
+	<field name="Mode" type="stringIndex" strings="256">
+		<bits octet="1" start="1" count="8"/>
+		<string index="0" text="signalling only"/>
+		<string index="1" text="speech full rate or half rate version 1"/>
+		<string index="2" text="speech full rate or half rate version 2"/>
+		<string index="33" text="speech full rate or half rate version 3"/>
+		<string index="65" text="data, 14.5 kbit/s radio interface rate"/>
+		<string index="15" text="data, 12.0 kbit/s radio interface rate"/>
+		<string index="11" text="data, 6.0 kbit/s radio interface rate"/>
+		<string index="19" text="data, 3.6 kbit/s radio interface rate"/>
+	</field>	
+  </pdudesc>
   <pdudesc ref="10.5.2.7" name="Channel Mode 2" type="3" length="1"/>
   <pdudesc ref="10.5.2.8" name="Channel Needed" type="1" fields="true">
 	<field name="Channel (first)" type="stringIndex" strings="4">
@@ -539,10 +551,10 @@
   <pdudesc ref="10.5.4.6" name="Call state" type="3" length="1" fields="true">
 	<field name="Standard" type="stringIndex" strings="4">
 		<bits octet="1" start="7" count="2"/>
-		<string index="0" text="standardized coding as described in CCITT Rec. Q.931"/>
-		<string index="1" text="reserved for other international standards"/>
-		<string index="2" text="national standard"/>
-		<string index="3" text="standard defined for the GSM-PLMNS as described below"/>
+		<string index="0" text="Standardized coding as described in CCITT Rec. Q.931"/>
+		<string index="1" text="Reserved for other international standards"/>
+		<string index="2" text="National standard"/>
+		<string index="3" text="Standard defined for the GSM-PLMNS as described below"/>
 	</field>
 	<field name="Call state" type="stringIndex" strings="64">
 		<bits octet="1" start="1" count="6"/>
@@ -585,7 +597,34 @@
   <pdudesc ref="10.5.4.18" name="Low layer compatibility" type="4" length="0"/>
   <pdudesc ref="10.5.4.19" name="More data" type="2"/>
   <pdudesc ref="10.5.4.20" name="Notification indicator" type="3" length="1"/>
-  <pdudesc ref="10.5.4.21" name="Progress indicator" type="4" length="2"/>
+  <pdudesc ref="10.5.4.21" name="Progress indicator" type="4" length="2" fields="true">
+	<field name="Coding" type="stringIndex" strings="4">
+		<bits octet="1" start="6" count="2"/>
+		<string index="0" text="Standardized coding as described in CCITT Rec. Q.931"/>
+		<string index="1" text="Reserved for other international standards"/>
+		<string index="2" text="National standard"/>
+		<string index="3" text="Standard defined for the GSM-PLMNS as described below"/>
+	</field>
+	<field name="Location" type="stringIndex" strings="16">
+		<bits octet="1" start="1" count="4"/>
+		<string index="0" text="User"/>
+		<string index="1" text="Private network serving the local user"/>
+		<string index="2" text="Public network serving the local user"/>
+		<string index="4" text="Public network serving the remote user"/>
+		<string index="5" text="Private network serving the remote user"/>
+		<string index="10" text="Network beyond interworking point"/>
+	</field>
+	<field name="Description" type="stringIndex" strings="128">
+		<bits octet="2" start="1" count="7"/>
+		<string index="1" text="Call is not end-to-end PLMN/ISDN, further call progress information may be available in-band"/>
+		<string index="2" text="Destination address in non-PLMN/ISDN"/>
+		<string index="3" text="Origination address in non-PLMN/ISDN"/>
+		<string index="4" text="Call has returned to the PLMN/ISDN"/>
+		<string index="8" text="In-band information or appropriate pattern now available"/>
+		<string index="32" text="Call is end-to-end PLMN/ISDN"/>
+		<string index="64" text="Queueing"/>
+	</field>
+  </pdudesc>
   <pdudesc ref="10.5.4.21a" name="Recall type $(CCBS)$" type="3" length="1"/>
   <pdudesc ref="10.5.4.21b" name="Redirecting party BCD number" type="4"/>
   <pdudesc ref="10.5.4.21c" name="Redirecting party subaddress" type="4" length="0"/>

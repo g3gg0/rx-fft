@@ -13,7 +13,7 @@ namespace LibRXFFT.Libraries.GSM.Bursts
             L3 = l3;
             Name = "BCCH";
             ShortName = "BC ";
-            InitArrays();
+            InitBuffers(4);
         }
 
         public override bool ParseData(GSMParameters param, bool[] decodedBurst)
@@ -23,52 +23,49 @@ namespace LibRXFFT.Libraries.GSM.Bursts
 
         public override bool ParseData(GSMParameters param, bool[] decodedBurst, int sequence)
         {
-            if (IsDummy(decodedBurst, 3))
+            if (IsDummy(decodedBurst))
             {
                 if (param.DumpPackets)
                     StatusMessage = "Dummy Burst";
                 return true;
             }
 
-            Array.Copy(decodedBurst, 3, BurstBuffer[sequence], 0, 57);
-            Array.Copy(decodedBurst, 88, BurstBuffer[sequence], 57, 57);
+            UnmapToI(decodedBurst, sequence);
 
             if (sequence == 3)
             {
-                InterleaveCoder.Deinterleave(BurstBuffer, DataDeinterleaved);
+                /* deinterleave the 4 bursts. the result is a 456 bit block. i[] to c[] */
+                Deinterleave();
 
-                if (ConvolutionalCoder.DecodeViterbi(DataDeinterleaved[0], DataDecoded) == null)
+                if (!Deconvolution())
                 {
                     ErrorMessage = "(Error in ConvolutionalCoder)";
                     return false;
                 }
 
-                CRC.Calc(DataDecoded, 0, 224, CRC.PolynomialFIRE, CRCBuffer);
-                if (!CRC.Matches(CRCBuffer))
-                {
-                    bool[] DataRepaired = new bool[224];
+                /* CRC check/fix */
+                switch (CRCCheck())
+                { 
+                    case eCRCState.Fixed:
+                        StatusMessage = "(CRC Error recovered)";
+                        break;
 
-                    FireCode fc = new FireCode(40, 184);
-                    if (!fc.FC_check_crc(DataDecoded, DataRepaired))
-                    {
-                        ErrorMessage = "(Error in CRC)";
+                    case eCRCState.Failed:
+                        ErrorMessage = "(CRC Error)";
                         return false;
-                    }
-
-                    StatusMessage = "(CRC Error recovered)";
-                    Array.Copy(DataRepaired, DataDecoded, DataRepaired.Length);
                 }
 
+                /* convert u[] to d[] bytes */
+                PackBytes();
 
-                ByteUtil.BitsToBytesRev(DataDecoded, Data, 0, 184);
-
-                if ((Data[0] & 3) != 1)
+                /* BCCH and CCCH have L2 Pseudo Length */
+                if ((BurstBufferD[0] & 3) != 1)
                 {
                     ErrorMessage = "(Error in L2 Pseudo Length)";
                     return false;
                 }
 
-                L2.Handle(this, L3, Data);
+                L2.Handle(this, L3, BurstBufferD);
             }
             else
                 StatusMessage = null;

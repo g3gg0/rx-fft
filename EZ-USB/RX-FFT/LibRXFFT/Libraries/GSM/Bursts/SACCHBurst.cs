@@ -27,7 +27,7 @@ namespace LibRXFFT.Libraries.GSM.Bursts
             ShortName = "SA ";
             FN = new long[4];
 
-            InitArrays();
+            InitBuffers(4);
         }
 
         public SACCHBurst(L3Handler l3, int subChan)
@@ -38,7 +38,7 @@ namespace LibRXFFT.Libraries.GSM.Bursts
             SubChannel = subChan;
             FN = new long[4];
 
-            InitArrays();
+            InitBuffers(4);
         }
 
         public SACCHBurst(L3Handler l3, string name, int subChan)
@@ -49,7 +49,7 @@ namespace LibRXFFT.Libraries.GSM.Bursts
             SubChannel = subChan;
             FN = new long[4];
 
-            InitArrays();
+            InitBuffers(4);
         }
 
         public SACCHBurst(L3Handler l3, string name, int subChan, bool tchType)
@@ -61,7 +61,7 @@ namespace LibRXFFT.Libraries.GSM.Bursts
             FN = new long[4];
             TCHType = tchType;
 
-            InitArrays();
+            InitBuffers(4);
         }
 
         public override bool ParseData(GSMParameters param, bool[] decodedBurst)
@@ -71,7 +71,7 @@ namespace LibRXFFT.Libraries.GSM.Bursts
 
         public override bool ParseData(GSMParameters param, bool[] decodedBurst, int sequence)
         {
-            if (IsDummy(decodedBurst, 3))
+            if (IsDummy(decodedBurst))
             {
                 if (param.DumpPackets)
                     StatusMessage = "Dummy Burst";
@@ -86,8 +86,7 @@ namespace LibRXFFT.Libraries.GSM.Bursts
             if (!TCHType)
             {
                 /* thats a normal SACCH */
-                Array.Copy(decodedBurst, 3, BurstBuffer[sequence], 0, 57);
-                Array.Copy(decodedBurst, 88, BurstBuffer[sequence], 57, 57);
+                UnmapToI(decodedBurst, sequence);
 
                 FN[sequence] = param.FN;
 
@@ -97,12 +96,12 @@ namespace LibRXFFT.Libraries.GSM.Bursts
             else
             {
                 /* thats a SACCH/TCH */
-                Array.Copy(decodedBurst, 3, BurstBuffer[TCHSeq], 0, 57);
-                Array.Copy(decodedBurst, 88, BurstBuffer[TCHSeq], 57, 57);
+                Array.Copy(decodedBurst, 3, BurstBufferI[TCHSeq], 0, 57);
+                Array.Copy(decodedBurst, 88, BurstBufferI[TCHSeq], 57, 57);
 
                 /* when we caught four bursts, the block is complete */
                 TCHSeq++;
-                isComplete = TCHSeq>3;
+                isComplete = TCHSeq > 3;
             }
 
             if (isComplete)
@@ -111,16 +110,17 @@ namespace LibRXFFT.Libraries.GSM.Bursts
                 TCHSeq = 0;
                 Array.Clear(FN, 0, 4);
 
-                InterleaveCoder.Deinterleave(BurstBuffer, DataDeinterleaved);
+                /* deinterleave the 4 bursts. the result is a 456 bit block. i[] to c[] */
+                Deinterleave();
 
-                if (ConvolutionalCoder.DecodeViterbi(DataDeinterleaved[0], DataDecoded) == null)
+                if (!Deconvolution())
                 {
                     if (ShowEncryptedMessage || DumpEncryptedMessage)
                     {
                         if (DumpEncryptedMessage)
                         {
                             StatusMessage = "(Encrypted) De-Interleaved bits: ";
-                            DumpBits(DataDeinterleaved[0]);
+                            DumpBits(BurstBufferC);
                         }
                         else
                             StatusMessage = "(Error in ConvolutionalCoder, maybe encrypted)";
@@ -128,26 +128,22 @@ namespace LibRXFFT.Libraries.GSM.Bursts
                     return true;
                 }
 
-                CRC.Calc(DataDecoded, 0, 224, CRC.PolynomialFIRE, CRCBuffer);
-                if (!CRC.Matches(CRCBuffer))
+                /* CRC check/fix */
+                switch (CRCCheck())
                 {
-                    bool[] DataRepaired = new bool[224];
+                    case eCRCState.Fixed:
+                        StatusMessage = "(CRC Error recovered)";
+                        break;
 
-                    FireCode fc = new FireCode(40, 184);
-                    if (!fc.FC_check_crc(DataDecoded, DataRepaired))
-                    {
-                        ErrorMessage = "(Error in CRC)";
+                    case eCRCState.Failed:
+                        ErrorMessage = "(CRC Error)";
                         return false;
-                    }
-
-                    StatusMessage = "(CRC Error recovered)";
-                    Array.Copy(DataRepaired, DataDecoded, DataRepaired.Length);
                 }
 
-                ByteUtil.BitsToBytesRev(DataDecoded, Data, 0, 184);
+                /* convert u[] to d[] bytes */
+                PackBytes();
 
-                //DumpBytes(Data);
-                L2.Handle(this, L3, Data, 2);
+                L2.Handle(this, L3, BurstBufferD, 2);
             }
             else
                 StatusMessage = null;

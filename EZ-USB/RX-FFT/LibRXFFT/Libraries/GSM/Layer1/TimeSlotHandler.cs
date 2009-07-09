@@ -112,7 +112,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                             AddMessage("   [L1] TimeSlot " + timeSlot + " now configured as TCH/F (was " + Parameters.TimeSlotInfo[timeSlot].Type + ")" + Environment.NewLine);
                             Parameters.TimeSlotHandlers[timeSlot] = new sTimeSlotParam[26];
 
-                            TCHBurst tch = new TCHBurst();
+                            TCHBurst tch = new TCHBurst(L3, "TCH" + timeSlot + "/F", (int)timeSlot);
                             SACCHBurst sacch = new SACCHBurst(L3, "SACCH/TCH" + timeSlot, (int)timeSlot, true);
 
                             for (int frame = 0; frame < 25; frame++)
@@ -128,8 +128,8 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                             AddMessage("   [L1] TimeSlot " + timeSlot + " now configured as TCH/H (was " + Parameters.TimeSlotInfo[timeSlot].Type + ")" + Environment.NewLine);
                             Parameters.TimeSlotHandlers[timeSlot] = new sTimeSlotParam[26];
 
-                            TCHBurst tch1 = new TCHBurst();
-                            TCHBurst tch2 = new TCHBurst();
+                            TCHBurst tch1 = new TCHBurst(L3, "TCH" + timeSlot + "/H 1", (int)timeSlot);
+                            TCHBurst tch2 = new TCHBurst(L3, "TCH" + timeSlot + "/H 2", (int)timeSlot);
                             SACCHBurst sacch1 = new SACCHBurst(L3, "SACCH1/TCH" + timeSlot, (int)timeSlot, true);
                             SACCHBurst sacch2 = new SACCHBurst(L3, "SACCH2/TCH" + timeSlot, (int)timeSlot, true);
 
@@ -649,46 +649,46 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                 */
 
                 /* if everything went ok so far, pass the data to the associated handler */
-                if (handler.ParseData(Parameters, burstBitsUndiffed, sequence))
-                {
-                    if (handler.StatusMessage != null)
-                    {
-                        AddMessage("   [L1] [" + handler.Name + "] - [" + Parameters + "]" + Environment.NewLine);
-                        AddMessage("        " + handler.StatusMessage + Environment.NewLine);
-                        AddMessage(Environment.NewLine);
-                    }
-                    handler.StatusMessage = null;
-                }
-                else
+                if (!handler.ParseData(Parameters, burstBitsUndiffed, sequence))
                 {
                     AddMessage("   [L1] [" + handler.Name + "] - [" + Parameters + "]" + Environment.NewLine);
                     AddMessage("        ERROR: " + handler.ErrorMessage + Environment.NewLine);
                     AddMessage(Environment.NewLine);
                 }
+                else
+                {
+                    /* show L2 messages, if handler wishes */
+                    bool showL2 = handler.L2.ShowMessage && !string.IsNullOrEmpty(handler.L2.StatusMessage);
 
-                /* show L2 messages, if handler wishes */
-                bool showL2 = handler.L2.ShowMessage && !string.IsNullOrEmpty(handler.L2.StatusMessage);
+                    /* show L3 messages, if there is any */
+                    bool showL3 = !string.IsNullOrEmpty(handler.L3.StatusMessage);
 
-                /* show L3 messages, if there is any */
-                bool showL3 = !string.IsNullOrEmpty(handler.L3.StatusMessage);
+                    /* only show L1 when one of L2/L3 has a message */
+                    if (showL2 || showL3 || handler.StatusMessage != null)
+                        AddMessage("   [L1] [" + handler.Name + "] - [" + Parameters + "]" + Environment.NewLine);
 
-                /* only show L1 when one of L2/L3 has a message */
-                if (showL2 || showL3)
-                    AddMessage("   [L1] [" + handler.Name + "] - [" + Parameters + "]" + Environment.NewLine);
+                    if (handler.StatusMessage != null)
+                    {
+                        AddMessage("        " + handler.StatusMessage + Environment.NewLine);
+                        AddMessage(Environment.NewLine);
+                    }
 
-                /* show L2 if L2 wants to, or if L3 has some message */
-                if (showL3 || showL2)
-                    AddMessage("   [L2] " + handler.L2.StatusMessage);
+                    /* show L2 if L2 wants to, or if L3 has some message */
+                    if (showL3 || showL2)
+                        AddMessage("   [L2] " + handler.L2.StatusMessage);
 
-                /* L3 handler has a message to show */
-                if (showL3)
-                    AddMessage("   [L3] " + handler.L3.StatusMessage);
+                    /* L3 handler has a message to show */
+                    if (showL3)
+                        AddMessage("   [L3] " + handler.L3.StatusMessage);
 
-                /* if something shown, add newline */
-                if (showL2 || showL3)
-                    AddMessage(Environment.NewLine);
+                    /* if something shown, add newline */
+                    if (showL2 || showL3)
+                        AddMessage(Environment.NewLine);
+                }
 
                 /* and reset these "flags" */
+                handler.StatusMessage = null;
+                handler.ErrorMessage = null;
                 handler.L2.ShowMessage = false;
                 handler.L3.StatusMessage = null;
 

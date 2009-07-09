@@ -11,7 +11,7 @@ namespace LibRXFFT.Libraries.GMSK
         public static bool[][] Deinterleave(bool[][] srcData, bool[][] dstData)
         {
             int numBits = 456;
-            int numBlocks = srcData.Length/4;
+            int numBlocks = srcData.Length/8;
 
             if (dstData == null)
             {
@@ -19,15 +19,17 @@ namespace LibRXFFT.Libraries.GMSK
                 for (int pos = 0; pos < dstData.Length; pos++)
                     dstData[pos] = new bool[456];
             }
+            else
+                numBlocks = dstData.Length;
 
-            for (int inBlock = 0; inBlock < numBlocks; inBlock++)
+            for (int outBlock = 0; outBlock < numBlocks; outBlock++)
             {
-                for (int bitPos = 0; bitPos < numBits; bitPos++)
+                for (int outBit = 0; outBit < numBits; outBit++)
                 {
-                    int outBlock = inBlock * 4 + bitPos % 4;
-                    int dstPos = 2 * ((49 * bitPos) % 57) + ((bitPos % 8) / 4);
+                    int inBlock = outBlock * 4 + outBit % srcData.Length;
+                    int inBit = 2 * ((49 * outBit) % 57) + ((outBit % 8) / 4);
 
-                    dstData[inBlock][bitPos] = srcData[outBlock][dstPos];
+                    dstData[outBlock][outBit] = srcData[inBlock][inBit];
                 }
             }
 
@@ -41,19 +43,19 @@ namespace LibRXFFT.Libraries.GMSK
 
             if (dstData == null)
             {
-                dstData = new bool[4 * numBlocks][];
+                dstData = new bool[8 * numBlocks][];
                 for (int pos = 0; pos < dstData.Length; pos++)
                     dstData[pos] = new bool[114];
             }
 
             for (int inBlock = 0; inBlock < numBlocks; inBlock++)
             {
-                for (int bitPos = 0; bitPos < numBits; bitPos++)
+                for (int inBit = 0; inBit < numBits; inBit++)
                 {
-                    int outBlock = inBlock * 4 + bitPos % 4;
-                    int dstPos = 2 * ((49 * bitPos) % 57) + ((bitPos % 8) / 4);
+                    int outBlock = inBlock * 4 + inBit % dstData.Length;
+                    int outBit = 2 * ((49 * inBit) % 57) + ((inBit % 8) / 4);
 
-                    dstData[outBlock][dstPos] = srcData[inBlock][bitPos];
+                    dstData[outBlock][outBit] = srcData[inBlock][inBit];
                 }
             }
 

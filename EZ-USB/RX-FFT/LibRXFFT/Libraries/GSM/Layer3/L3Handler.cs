@@ -80,6 +80,7 @@ namespace LibRXFFT.Libraries.GSM.Layer3
             PDUParser.Add("10.5.2.1b", HandleCellChannelDescription);
             PDUParser.Add("10.5.2.22", HandleCellChannelDescription);
             PDUParser.Add("10.5.2.5", HandleChannelDescription);
+            PDUParser.Add("10.5.2.5a", HandleChannelDescription);
 
             PDUFieldParsers.Add("ParseRA", ParseRA);
         }

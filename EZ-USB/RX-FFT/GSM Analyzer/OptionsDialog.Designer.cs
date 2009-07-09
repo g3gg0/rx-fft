@@ -41,10 +41,10 @@
             this.label4 = new System.Windows.Forms.Label();
             this.btnOk = new System.Windows.Forms.Button();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.chkCellBroadcast = new System.Windows.Forms.CheckBox();
-            this.chkSniffIMSI = new System.Windows.Forms.CheckBox();
-            this.chkShowUnhandled = new System.Windows.Forms.CheckBox();
-            this.chkDumpRaw = new System.Windows.Forms.CheckBox();
+            this.chkL3CellBroadcast = new System.Windows.Forms.CheckBox();
+            this.chkL3SniffIMSI = new System.Windows.Forms.CheckBox();
+            this.chkL3ShowUnhandled = new System.Windows.Forms.CheckBox();
+            this.chkL3DumpRaw = new System.Windows.Forms.CheckBox();
             this.txtSubSampleOffset = new System.Windows.Forms.TextBox();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.label12 = new System.Windows.Forms.Label();
@@ -66,11 +66,12 @@
             this.label6 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
-            this.chkDumpFrames = new System.Windows.Forms.CheckBox();
-            this.chkShowEncrypted = new System.Windows.Forms.CheckBox();
+            this.chkL1DumpEncrypted = new System.Windows.Forms.CheckBox();
+            this.chkL1DumpFrames = new System.Windows.Forms.CheckBox();
+            this.chkL1ShowEncrypted = new System.Windows.Forms.CheckBox();
             this.groupBox5 = new System.Windows.Forms.GroupBox();
-            this.chkShowAllFrames = new System.Windows.Forms.CheckBox();
-            this.chkDumpEncrypted = new System.Windows.Forms.CheckBox();
+            this.chkL2ShowAllFrames = new System.Windows.Forms.CheckBox();
+            this.chkL2DumpRaw = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -202,60 +203,60 @@
             // 
             // groupBox2
             // 
-            this.groupBox2.Controls.Add(this.chkCellBroadcast);
-            this.groupBox2.Controls.Add(this.chkSniffIMSI);
-            this.groupBox2.Controls.Add(this.chkShowUnhandled);
-            this.groupBox2.Controls.Add(this.chkDumpRaw);
-            this.groupBox2.Location = new System.Drawing.Point(224, 161);
+            this.groupBox2.Controls.Add(this.chkL3CellBroadcast);
+            this.groupBox2.Controls.Add(this.chkL3SniffIMSI);
+            this.groupBox2.Controls.Add(this.chkL3ShowUnhandled);
+            this.groupBox2.Controls.Add(this.chkL3DumpRaw);
+            this.groupBox2.Location = new System.Drawing.Point(224, 178);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Size = new System.Drawing.Size(206, 118);
             this.groupBox2.TabIndex = 16;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "L3 Options";
             // 
-            // chkCellBroadcast
+            // chkL3CellBroadcast
             // 
-            this.chkCellBroadcast.AutoSize = true;
-            this.chkCellBroadcast.Location = new System.Drawing.Point(10, 88);
-            this.chkCellBroadcast.Name = "chkCellBroadcast";
-            this.chkCellBroadcast.Size = new System.Drawing.Size(175, 17);
-            this.chkCellBroadcast.TabIndex = 20;
-            this.chkCellBroadcast.Text = "Show Cell Broadcast Messages";
-            this.chkCellBroadcast.UseVisualStyleBackColor = true;
-            this.chkCellBroadcast.CheckedChanged += new System.EventHandler(this.chkCellBroadcast_CheckedChanged);
+            this.chkL3CellBroadcast.AutoSize = true;
+            this.chkL3CellBroadcast.Location = new System.Drawing.Point(10, 88);
+            this.chkL3CellBroadcast.Name = "chkL3CellBroadcast";
+            this.chkL3CellBroadcast.Size = new System.Drawing.Size(175, 17);
+            this.chkL3CellBroadcast.TabIndex = 20;
+            this.chkL3CellBroadcast.Text = "Show Cell Broadcast Messages";
+            this.chkL3CellBroadcast.UseVisualStyleBackColor = true;
+            this.chkL3CellBroadcast.CheckedChanged += new System.EventHandler(this.chkL3CellBroadcast_CheckedChanged);
             // 
-            // chkSniffIMSI
+            // chkL3SniffIMSI
             // 
-            this.chkSniffIMSI.AutoSize = true;
-            this.chkSniffIMSI.Location = new System.Drawing.Point(10, 19);
-            this.chkSniffIMSI.Name = "chkSniffIMSI";
-            this.chkSniffIMSI.Size = new System.Drawing.Size(77, 17);
-            this.chkSniffIMSI.TabIndex = 17;
-            this.chkSniffIMSI.Text = "Sniff IMSIs";
-            this.chkSniffIMSI.UseVisualStyleBackColor = true;
-            this.chkSniffIMSI.CheckedChanged += new System.EventHandler(this.chkSniffIMSI_CheckedChanged);
+            this.chkL3SniffIMSI.AutoSize = true;
+            this.chkL3SniffIMSI.Location = new System.Drawing.Point(10, 19);
+            this.chkL3SniffIMSI.Name = "chkL3SniffIMSI";
+            this.chkL3SniffIMSI.Size = new System.Drawing.Size(77, 17);
+            this.chkL3SniffIMSI.TabIndex = 17;
+            this.chkL3SniffIMSI.Text = "Sniff IMSIs";
+            this.chkL3SniffIMSI.UseVisualStyleBackColor = true;
+            this.chkL3SniffIMSI.CheckedChanged += new System.EventHandler(this.chkL3SniffIMSI_CheckedChanged);
             // 
-            // chkShowUnhandled
+            // chkL3ShowUnhandled
             // 
-            this.chkShowUnhandled.AutoSize = true;
-            this.chkShowUnhandled.Location = new System.Drawing.Point(10, 65);
-            this.chkShowUnhandled.Name = "chkShowUnhandled";
-            this.chkShowUnhandled.Size = new System.Drawing.Size(151, 17);
-            this.chkShowUnhandled.TabIndex = 19;
-            this.chkShowUnhandled.Text = "Show unknown Messages";
-            this.chkShowUnhandled.UseVisualStyleBackColor = true;
-            this.chkShowUnhandled.CheckedChanged += new System.EventHandler(this.chkShowUnhandled_CheckedChanged);
+            this.chkL3ShowUnhandled.AutoSize = true;
+            this.chkL3ShowUnhandled.Location = new System.Drawing.Point(10, 65);
+            this.chkL3ShowUnhandled.Name = "chkL3ShowUnhandled";
+            this.chkL3ShowUnhandled.Size = new System.Drawing.Size(151, 17);
+            this.chkL3ShowUnhandled.TabIndex = 19;
+            this.chkL3ShowUnhandled.Text = "Show unknown Messages";
+            this.chkL3ShowUnhandled.UseVisualStyleBackColor = true;
+            this.chkL3ShowUnhandled.CheckedChanged += new System.EventHandler(this.chkL3ShowUnhandled_CheckedChanged);
             // 
-            // chkDumpRaw
+            // chkL3DumpRaw
             // 
-            this.chkDumpRaw.AutoSize = true;
-            this.chkDumpRaw.Location = new System.Drawing.Point(10, 42);
-            this.chkDumpRaw.Name = "chkDumpRaw";
-            this.chkDumpRaw.Size = new System.Drawing.Size(121, 17);
-            this.chkDumpRaw.TabIndex = 18;
-            this.chkDumpRaw.Text = "Dump Raw Packets";
-            this.chkDumpRaw.UseVisualStyleBackColor = true;
-            this.chkDumpRaw.CheckedChanged += new System.EventHandler(this.chkDumpRaw_CheckedChanged);
+            this.chkL3DumpRaw.AutoSize = true;
+            this.chkL3DumpRaw.Location = new System.Drawing.Point(10, 42);
+            this.chkL3DumpRaw.Name = "chkL3DumpRaw";
+            this.chkL3DumpRaw.Size = new System.Drawing.Size(121, 17);
+            this.chkL3DumpRaw.TabIndex = 18;
+            this.chkL3DumpRaw.Text = "Dump Raw Packets";
+            this.chkL3DumpRaw.UseVisualStyleBackColor = true;
+            this.chkL3DumpRaw.CheckedChanged += new System.EventHandler(this.chkL3DumpRaw_CheckedChanged);
             // 
             // txtSubSampleOffset
             // 
@@ -459,9 +460,9 @@
             // 
             // groupBox4
             // 
-            this.groupBox4.Controls.Add(this.chkDumpEncrypted);
-            this.groupBox4.Controls.Add(this.chkDumpFrames);
-            this.groupBox4.Controls.Add(this.chkShowEncrypted);
+            this.groupBox4.Controls.Add(this.chkL1DumpEncrypted);
+            this.groupBox4.Controls.Add(this.chkL1DumpFrames);
+            this.groupBox4.Controls.Add(this.chkL1ShowEncrypted);
             this.groupBox4.Location = new System.Drawing.Point(224, 12);
             this.groupBox4.Name = "groupBox4";
             this.groupBox4.Size = new System.Drawing.Size(206, 91);
@@ -469,59 +470,71 @@
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "L1 Options";
             // 
-            // chkDumpFrames
+            // chkL1DumpEncrypted
             // 
-            this.chkDumpFrames.AutoSize = true;
-            this.chkDumpFrames.Location = new System.Drawing.Point(10, 66);
-            this.chkDumpFrames.Name = "chkDumpFrames";
-            this.chkDumpFrames.Size = new System.Drawing.Size(121, 17);
-            this.chkDumpFrames.TabIndex = 16;
-            this.chkDumpFrames.Text = "Dump all frame infos";
-            this.chkDumpFrames.UseVisualStyleBackColor = true;
-            this.chkDumpFrames.CheckedChanged += new System.EventHandler(this.chkDumpFrames_CheckedChanged);
+            this.chkL1DumpEncrypted.AutoSize = true;
+            this.chkL1DumpEncrypted.Location = new System.Drawing.Point(10, 43);
+            this.chkL1DumpEncrypted.Name = "chkL1DumpEncrypted";
+            this.chkL1DumpEncrypted.Size = new System.Drawing.Size(136, 17);
+            this.chkL1DumpEncrypted.TabIndex = 17;
+            this.chkL1DumpEncrypted.Text = "Encrypted DCCH dump";
+            this.chkL1DumpEncrypted.UseVisualStyleBackColor = true;
+            this.chkL1DumpEncrypted.CheckedChanged += new System.EventHandler(this.chkL1DumpEncrypted_CheckedChanged);
             // 
-            // chkShowEncrypted
+            // chkL1DumpFrames
             // 
-            this.chkShowEncrypted.AutoSize = true;
-            this.chkShowEncrypted.Location = new System.Drawing.Point(10, 19);
-            this.chkShowEncrypted.Name = "chkShowEncrypted";
-            this.chkShowEncrypted.Size = new System.Drawing.Size(161, 17);
-            this.chkShowEncrypted.TabIndex = 15;
-            this.chkShowEncrypted.Text = "Encrypted DCCH notification";
-            this.chkShowEncrypted.UseVisualStyleBackColor = true;
-            this.chkShowEncrypted.CheckedChanged += new System.EventHandler(this.chkShowEncrypted_CheckedChanged);
+            this.chkL1DumpFrames.AutoSize = true;
+            this.chkL1DumpFrames.Location = new System.Drawing.Point(10, 66);
+            this.chkL1DumpFrames.Name = "chkL1DumpFrames";
+            this.chkL1DumpFrames.Size = new System.Drawing.Size(121, 17);
+            this.chkL1DumpFrames.TabIndex = 16;
+            this.chkL1DumpFrames.Text = "Dump all frame infos";
+            this.chkL1DumpFrames.UseVisualStyleBackColor = true;
+            this.chkL1DumpFrames.CheckedChanged += new System.EventHandler(this.chkL1DumpFrames_CheckedChanged);
+            // 
+            // chkL1ShowEncrypted
+            // 
+            this.chkL1ShowEncrypted.AutoSize = true;
+            this.chkL1ShowEncrypted.Location = new System.Drawing.Point(10, 19);
+            this.chkL1ShowEncrypted.Name = "chkL1ShowEncrypted";
+            this.chkL1ShowEncrypted.Size = new System.Drawing.Size(161, 17);
+            this.chkL1ShowEncrypted.TabIndex = 15;
+            this.chkL1ShowEncrypted.Text = "Encrypted DCCH notification";
+            this.chkL1ShowEncrypted.UseVisualStyleBackColor = true;
+            this.chkL1ShowEncrypted.CheckedChanged += new System.EventHandler(this.chkL1ShowEncrypted_CheckedChanged);
             // 
             // groupBox5
             // 
-            this.groupBox5.Controls.Add(this.chkShowAllFrames);
+            this.groupBox5.Controls.Add(this.chkL2ShowAllFrames);
+            this.groupBox5.Controls.Add(this.chkL2DumpRaw);
             this.groupBox5.Location = new System.Drawing.Point(224, 109);
             this.groupBox5.Name = "groupBox5";
-            this.groupBox5.Size = new System.Drawing.Size(206, 46);
+            this.groupBox5.Size = new System.Drawing.Size(206, 63);
             this.groupBox5.TabIndex = 19;
             this.groupBox5.TabStop = false;
             this.groupBox5.Text = "L2 Options";
             // 
-            // chkShowAllFrames
+            // chkL2ShowAllFrames
             // 
-            this.chkShowAllFrames.AutoSize = true;
-            this.chkShowAllFrames.Location = new System.Drawing.Point(10, 17);
-            this.chkShowAllFrames.Name = "chkShowAllFrames";
-            this.chkShowAllFrames.Size = new System.Drawing.Size(169, 17);
-            this.chkShowAllFrames.TabIndex = 16;
-            this.chkShowAllFrames.Text = "Show all Frames (Empty+Multi)";
-            this.chkShowAllFrames.UseVisualStyleBackColor = true;
-            this.chkShowAllFrames.CheckedChanged += new System.EventHandler(this.chkShowAllFrames_CheckedChanged);
+            this.chkL2ShowAllFrames.AutoSize = true;
+            this.chkL2ShowAllFrames.Location = new System.Drawing.Point(10, 17);
+            this.chkL2ShowAllFrames.Name = "chkL2ShowAllFrames";
+            this.chkL2ShowAllFrames.Size = new System.Drawing.Size(169, 17);
+            this.chkL2ShowAllFrames.TabIndex = 16;
+            this.chkL2ShowAllFrames.Text = "Show all Frames (Empty+Multi)";
+            this.chkL2ShowAllFrames.UseVisualStyleBackColor = true;
+            this.chkL2ShowAllFrames.CheckedChanged += new System.EventHandler(this.chkL2ShowAllFrames_CheckedChanged);
             // 
-            // chkDumpEncrypted
+            // chkL2DumpRaw
             // 
-            this.chkDumpEncrypted.AutoSize = true;
-            this.chkDumpEncrypted.Location = new System.Drawing.Point(10, 43);
-            this.chkDumpEncrypted.Name = "chkDumpEncrypted";
-            this.chkDumpEncrypted.Size = new System.Drawing.Size(136, 17);
-            this.chkDumpEncrypted.TabIndex = 17;
-            this.chkDumpEncrypted.Text = "Encrypted DCCH dump";
-            this.chkDumpEncrypted.UseVisualStyleBackColor = true;
-            this.chkDumpEncrypted.CheckedChanged += new System.EventHandler(this.chkDumpEncrypted_CheckedChanged);
+            this.chkL2DumpRaw.AutoSize = true;
+            this.chkL2DumpRaw.Location = new System.Drawing.Point(10, 40);
+            this.chkL2DumpRaw.Name = "chkL2DumpRaw";
+            this.chkL2DumpRaw.Size = new System.Drawing.Size(121, 17);
+            this.chkL2DumpRaw.TabIndex = 18;
+            this.chkL2DumpRaw.Text = "Dump Raw Packets";
+            this.chkL2DumpRaw.UseVisualStyleBackColor = true;
+            this.chkL2DumpRaw.CheckedChanged += new System.EventHandler(this.chkL2DumpRaw_CheckedChanged);
             // 
             // OptionsDialog
             // 
@@ -565,9 +578,9 @@
         private System.Windows.Forms.Label lblOversampling;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.GroupBox groupBox2;
-        private System.Windows.Forms.CheckBox chkDumpRaw;
-        private System.Windows.Forms.CheckBox chkSniffIMSI;
-        private System.Windows.Forms.CheckBox chkShowUnhandled;
+        private System.Windows.Forms.CheckBox chkL3DumpRaw;
+        private System.Windows.Forms.CheckBox chkL3SniffIMSI;
+        private System.Windows.Forms.CheckBox chkL3ShowUnhandled;
         private System.Windows.Forms.CheckBox chkSubSample;
         private System.Windows.Forms.TextBox txtInternalOvers;
         private System.Windows.Forms.Label label4;
@@ -592,11 +605,12 @@
         private System.Windows.Forms.Label label14;
         private System.Windows.Forms.Label label13;
         private System.Windows.Forms.GroupBox groupBox4;
-        private System.Windows.Forms.CheckBox chkShowEncrypted;
-        private System.Windows.Forms.CheckBox chkCellBroadcast;
+        private System.Windows.Forms.CheckBox chkL1ShowEncrypted;
+        private System.Windows.Forms.CheckBox chkL3CellBroadcast;
         private System.Windows.Forms.GroupBox groupBox5;
-        private System.Windows.Forms.CheckBox chkShowAllFrames;
-        private System.Windows.Forms.CheckBox chkDumpFrames;
-        private System.Windows.Forms.CheckBox chkDumpEncrypted;
+        private System.Windows.Forms.CheckBox chkL2ShowAllFrames;
+        private System.Windows.Forms.CheckBox chkL1DumpFrames;
+        private System.Windows.Forms.CheckBox chkL1DumpEncrypted;
+        private System.Windows.Forms.CheckBox chkL2DumpRaw;
     }
 }

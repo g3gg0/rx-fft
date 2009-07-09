@@ -24,7 +24,8 @@ namespace GSM_Analyzer
         private Thread ReadThread;
         private bool ThreadActive;
 
-        public double[] BurstLengthJitter = new[] { 0.75, -0.25, -0.25, -0.25 };
+//        public double[] BurstLengthJitter = new[] { 0.75, -0.25, -0.25, -0.25 };
+        public double[] BurstLengthJitter = new[] { 0.0d, 0.0d, 0.0d, 0.0d };
 
         private Semaphore SingleStepSem = new Semaphore(0, 1, "SingleStepSemaphore");
         private bool SingleStep;
@@ -377,6 +378,8 @@ namespace GSM_Analyzer
             FCCHFinder finder = new FCCHFinder(Oversampling);
 
             Parameters.State = eGSMState.Reset;
+
+            Parameters.Reset();
             UpdateUIStatus(Parameters);
 
             try

@@ -65,6 +65,12 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
         public GSMParameters()
         {
+            Reset();
+        }
+
+
+        public void Reset()
+        {
             TimeSlotInfo = new sTimeSlotInfo[8];
             TimeSlotHandlers = new sTimeSlotParam[8][];
         }
@@ -247,6 +253,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
             return retVal;
         }
+
 
     }
 }

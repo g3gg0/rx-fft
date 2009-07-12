@@ -25,7 +25,7 @@ namespace LibRXFFT.Libraries.SampleSources
             set { IOversampler.Type = value; }
         }
 
-        public static int DefaultSinXDepth = 4;
+        public static int DefaultSinXDepth = 8;
         public int SinXDepth
         {
             get { return IOversampler.SinXDepth; }

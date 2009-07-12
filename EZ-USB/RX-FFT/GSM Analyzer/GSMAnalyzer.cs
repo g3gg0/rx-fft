@@ -14,6 +14,7 @@ using LibRXFFT.Libraries.GSM.Layer3;
 using LibRXFFT.Libraries.SampleSources;
 using LibRXFFT.Libraries.ShmemChain;
 using LibRXFFT.Libraries.SignalProcessing;
+using System.Text;
 
 namespace GSM_Analyzer
 {
@@ -24,7 +25,6 @@ namespace GSM_Analyzer
         private Thread ReadThread;
         private bool ThreadActive;
 
-//        public double[] BurstLengthJitter = new[] { 0.75, -0.25, -0.25, -0.25 };
         public double[] BurstLengthJitter = new[] { 0.0d, 0.0d, 0.0d, 0.0d };
 
         private Semaphore SingleStepSem = new Semaphore(0, 1, "SingleStepSemaphore");
@@ -38,9 +38,22 @@ namespace GSM_Analyzer
 
         private Object BurstWindowLock = new Object();
 
-        public static bool Subsampling = false;
+        private DateTime LastTextBoxUpdate = DateTime.Now;
+        private StringBuilder TextBoxBuffer = new StringBuilder(32768);
+        private System.Windows.Forms.Timer TextBoxCommitTimer = new System.Windows.Forms.Timer();
+
+        public bool Subsampling = true;
+        public bool PhaseAutoOffset = true;
         public int InternalOversampling = 1;
         public int SubSampleOffset = 0;
+        private double PhaseOffsetValue = 0;
+        public double PhaseOffset
+        {
+            get { return PhaseOffsetValue * 362756d; }
+            set { PhaseOffsetValue = value / 362756d; }
+        }
+
+
         internal double DefaultSamplingRate = 2184533;
 
         internal double CurrentSampleRate
@@ -67,12 +80,18 @@ namespace GSM_Analyzer
         {
             InitializeComponent();
             Parameters = new GSMParameters();
-            Handler = new TimeSlotHandler(Oversampling, 0.3, AddMessage, Parameters);
-            RegisterTriggers(Handler.L3);
 
-            if (Handler.L3.StatusMessage != null)
-                MessageBox.Show("   [L3] " + Handler.L3.StatusMessage);
+            /* already init here to load XML files */
+            InitTimeSlotHandler();
 
+            TextBoxCommitTimer.Tick += new EventHandler(TextBoxCommitTimer_Tick);
+            TextBoxCommitTimer.Interval = 100;
+        }
+
+        void TextBoxCommitTimer_Tick(object sender, EventArgs e)
+        {
+            /* just call the AddMessage routine to commit the text in buffers */
+            AddMessage("");
         }
 
         public void RegisterTriggers(L3Handler L3Handler)
@@ -120,7 +139,7 @@ namespace GSM_Analyzer
         {
             try
             {
-                this.BeginInvoke(new addMessageDelegate(addMessageFunc), new object[] { msg });
+                this.BeginInvoke(new addMessageDelegate(AddMessageFunc), new object[] { msg });
             }
             catch (Exception)
             {
@@ -168,17 +187,40 @@ namespace GSM_Analyzer
         delegate void updateFreqOffsetDelegate(double offset);
         delegate void updateCellInfoDelegate(int mcc, int mnc, long lac, long cellIdent, eTriState hasCBCH);
 
-        public void addMessageFunc(String msg)
+        public void AddMessageFunc(String msg)
         {
-            if (msg != null)
-                txtLog.AppendText(msg);
-            else
+            if (msg == null)
+            {
                 txtLog.Clear();
+                TextBoxBuffer.Length = 0;
+                return;
+            }
+
+            if (DateTime.Now.Subtract(LastTextBoxUpdate).TotalMilliseconds < 100)
+            {
+                TextBoxBuffer.Append(msg);
+                TextBoxCommitTimer.Start();
+            }
+            else
+            {
+                TextBoxCommitTimer.Stop();
+                if (TextBoxBuffer.Length > 0)
+                {
+                    txtLog.AppendText(TextBoxBuffer.ToString());
+                    TextBoxBuffer.Length = 0;
+                }
+                txtLog.AppendText(msg);
+                LastTextBoxUpdate = DateTime.Now;
+            }
         }
 
 
         void UpdateFreqOffset(double offset)
         {
+            if (!double.IsNaN(offset) && Math.Abs(offset) < 50000)
+                PhaseOffset += offset / 2;
+
+
             string[] scale = { "", "k", "G", "T" };
             int fact = 0;
 
@@ -188,6 +230,7 @@ namespace GSM_Analyzer
                 fact++;
             }
             lblFreqOffset.Text = String.Format("{0:0.00}", offset) + " " + scale[fact] + "Hz";
+
         }
 
         void UpdateUIStatus(GSMParameters param)
@@ -356,6 +399,11 @@ namespace GSM_Analyzer
 
         void FFTReadFunc()
         {
+            FCCHFinder finder = new FCCHFinder(Oversampling);
+            Parameters.Reset();
+            InitTimeSlotHandler();
+            UpdateUIStatus(Parameters);
+
             long frameStartPosition = 0;
             long currentPosition = 0;
             long updateLoops = 0;
@@ -375,12 +423,7 @@ namespace GSM_Analyzer
             double burstCount = 0;
             long burstBufferPos = 0;
 
-            FCCHFinder finder = new FCCHFinder(Oversampling);
 
-            Parameters.State = eGSMState.Reset;
-
-            Parameters.Reset();
-            UpdateUIStatus(Parameters);
 
             try
             {
@@ -402,8 +445,8 @@ namespace GSM_Analyzer
                                 AddMessage("[GSM] Sampling Rate changed from " + oldSamplingRate + " to " + Source.OutputSamplingRate + ", Oversampling factor: " + Oversampling + Environment.NewLine);
                                 oldSamplingRate = Source.OutputSamplingRate;
                                 finder = new FCCHFinder(Oversampling);
-                                Handler = new TimeSlotHandler(Oversampling, 0.3, AddMessage, Parameters);
-                                RegisterTriggers(Handler.L3);
+
+                                InitTimeSlotHandler();
 
                                 burstBuffer = new double[(int)((Handler.SpareBits + Burst.TotalBitCount) * Oversampling)];
                                 burstStrengthBuffer = new double[(int)((Handler.SpareBits + Burst.TotalBitCount) * Oversampling)];
@@ -420,7 +463,7 @@ namespace GSM_Analyzer
 
                         for (int pos = 0; pos < samplesRead; pos++)
                         {
-                            double signal = Source.Signal[pos];
+                            double signal = Source.Signal[pos] + PhaseOffsetValue;
                             double strength = Source.Strength[pos];
 
                             bool burstSampled = false;
@@ -687,6 +730,14 @@ namespace GSM_Analyzer
             AddMessage(Environment.NewLine);
             AddMessage(Parameters.GetTimeslotDetails());
             AddMessage(Environment.NewLine);
+        }
+
+        private void InitTimeSlotHandler()
+        {
+            Handler = new TimeSlotHandler(Oversampling, 0.3, AddMessage, Parameters);
+            RegisterTriggers(Handler.L3);
+            if (Handler.L3.StatusMessage != null)
+                MessageBox.Show("   [L3] " + Handler.L3.StatusMessage);
         }
 
         private void btnOptions_Click(object sender, EventArgs e)

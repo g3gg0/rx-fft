@@ -47,6 +47,7 @@
             this.chkL3DumpRaw = new System.Windows.Forms.CheckBox();
             this.txtSubSampleOffset = new System.Windows.Forms.TextBox();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.txtPhaseOffset = new System.Windows.Forms.TextBox();
             this.label12 = new System.Windows.Forms.Label();
             this.label11 = new System.Windows.Forms.Label();
             this.label10 = new System.Windows.Forms.Label();
@@ -64,6 +65,7 @@
             this.label7 = new System.Windows.Forms.Label();
             this.txtDecisionLevel = new System.Windows.Forms.TextBox();
             this.label6 = new System.Windows.Forms.Label();
+            this.label15 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
             this.chkL1DumpEncrypted = new System.Windows.Forms.CheckBox();
@@ -72,17 +74,23 @@
             this.groupBox5 = new System.Windows.Forms.GroupBox();
             this.chkL2ShowAllFrames = new System.Windows.Forms.CheckBox();
             this.chkL2DumpRaw = new System.Windows.Forms.CheckBox();
+            this.chkPhaseAutoOffset = new System.Windows.Forms.CheckBox();
+            this.chkL1PreallocateTCH = new System.Windows.Forms.CheckBox();
+            this.groupBox6 = new System.Windows.Forms.GroupBox();
+            this.btnBurstLengthA = new System.Windows.Forms.Button();
+            this.btnBurstLengthB = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
             this.groupBox4.SuspendLayout();
             this.groupBox5.SuspendLayout();
+            this.groupBox6.SuspendLayout();
             this.SuspendLayout();
             // 
             // chkFastAtan2
             // 
             this.chkFastAtan2.AutoSize = true;
-            this.chkFastAtan2.Location = new System.Drawing.Point(11, 78);
+            this.chkFastAtan2.Location = new System.Drawing.Point(11, 64);
             this.chkFastAtan2.Name = "chkFastAtan2";
             this.chkFastAtan2.Size = new System.Drawing.Size(133, 17);
             this.chkFastAtan2.TabIndex = 2;
@@ -102,7 +110,7 @@
             this.groupBox1.Controls.Add(this.chkFastAtan2);
             this.groupBox1.Location = new System.Drawing.Point(12, 12);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(206, 153);
+            this.groupBox1.Size = new System.Drawing.Size(206, 137);
             this.groupBox1.TabIndex = 14;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "GMSK Processing";
@@ -110,7 +118,7 @@
             // chkSubSample
             // 
             this.chkSubSample.AutoSize = true;
-            this.chkSubSample.Location = new System.Drawing.Point(11, 126);
+            this.chkSubSample.Location = new System.Drawing.Point(11, 112);
             this.chkSubSample.Name = "chkSubSample";
             this.chkSubSample.Size = new System.Drawing.Size(157, 17);
             this.chkSubSample.TabIndex = 4;
@@ -121,7 +129,7 @@
             // lblOversampling
             // 
             this.lblOversampling.AutoSize = true;
-            this.lblOversampling.Location = new System.Drawing.Point(91, 50);
+            this.lblOversampling.Location = new System.Drawing.Point(91, 44);
             this.lblOversampling.Name = "lblOversampling";
             this.lblOversampling.Size = new System.Drawing.Size(13, 13);
             this.lblOversampling.TabIndex = 18;
@@ -139,7 +147,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(9, 50);
+            this.label3.Location = new System.Drawing.Point(9, 44);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(74, 13);
             this.label3.TabIndex = 16;
@@ -165,7 +173,7 @@
             // chkInvert
             // 
             this.chkInvert.AutoSize = true;
-            this.chkInvert.Location = new System.Drawing.Point(11, 102);
+            this.chkInvert.Location = new System.Drawing.Point(11, 88);
             this.chkInvert.Name = "chkInvert";
             this.chkInvert.Size = new System.Drawing.Size(113, 17);
             this.chkInvert.TabIndex = 3;
@@ -175,16 +183,16 @@
             // 
             // txtInternalOvers
             // 
-            this.txtInternalOvers.Location = new System.Drawing.Point(157, 72);
+            this.txtInternalOvers.Location = new System.Drawing.Point(137, 20);
             this.txtInternalOvers.Name = "txtInternalOvers";
-            this.txtInternalOvers.Size = new System.Drawing.Size(38, 20);
+            this.txtInternalOvers.Size = new System.Drawing.Size(61, 20);
             this.txtInternalOvers.TabIndex = 7;
             this.txtInternalOvers.TextChanged += new System.EventHandler(this.txtInternalOvers_TextChanged);
             // 
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(7, 75);
+            this.label4.Location = new System.Drawing.Point(11, 23);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(112, 13);
             this.label4.TabIndex = 16;
@@ -193,7 +201,7 @@
             // btnOk
             // 
             this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOk.Location = new System.Drawing.Point(368, 384);
+            this.btnOk.Location = new System.Drawing.Point(368, 412);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(75, 23);
             this.btnOk.TabIndex = 99;
@@ -207,7 +215,7 @@
             this.groupBox2.Controls.Add(this.chkL3SniffIMSI);
             this.groupBox2.Controls.Add(this.chkL3ShowUnhandled);
             this.groupBox2.Controls.Add(this.chkL3DumpRaw);
-            this.groupBox2.Location = new System.Drawing.Point(224, 178);
+            this.groupBox2.Location = new System.Drawing.Point(224, 206);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Size = new System.Drawing.Size(206, 118);
             this.groupBox2.TabIndex = 16;
@@ -260,14 +268,18 @@
             // 
             // txtSubSampleOffset
             // 
-            this.txtSubSampleOffset.Location = new System.Drawing.Point(157, 23);
+            this.txtSubSampleOffset.Location = new System.Drawing.Point(134, 23);
             this.txtSubSampleOffset.Name = "txtSubSampleOffset";
-            this.txtSubSampleOffset.Size = new System.Drawing.Size(38, 20);
+            this.txtSubSampleOffset.Size = new System.Drawing.Size(61, 20);
             this.txtSubSampleOffset.TabIndex = 5;
             this.txtSubSampleOffset.TextChanged += new System.EventHandler(this.txtSubSampleOffset_TextChanged);
             // 
             // groupBox3
             // 
+            this.groupBox3.Controls.Add(this.btnBurstLengthB);
+            this.groupBox3.Controls.Add(this.btnBurstLengthA);
+            this.groupBox3.Controls.Add(this.chkPhaseAutoOffset);
+            this.groupBox3.Controls.Add(this.txtPhaseOffset);
             this.groupBox3.Controls.Add(this.label12);
             this.groupBox3.Controls.Add(this.label11);
             this.groupBox3.Controls.Add(this.label10);
@@ -276,30 +288,32 @@
             this.groupBox3.Controls.Add(this.txtOffset3);
             this.groupBox3.Controls.Add(this.txtOffset2);
             this.groupBox3.Controls.Add(this.txtOffset1);
-            this.groupBox3.Controls.Add(this.txtSinxDepth);
             this.groupBox3.Controls.Add(this.label14);
             this.groupBox3.Controls.Add(this.label13);
-            this.groupBox3.Controls.Add(this.label8);
-            this.groupBox3.Controls.Add(this.radioOvsLinear);
-            this.groupBox3.Controls.Add(this.radioOvsSinx);
-            this.groupBox3.Controls.Add(this.label7);
-            this.groupBox3.Controls.Add(this.txtInternalOvers);
             this.groupBox3.Controls.Add(this.txtDecisionLevel);
             this.groupBox3.Controls.Add(this.txtSubSampleOffset);
             this.groupBox3.Controls.Add(this.label6);
+            this.groupBox3.Controls.Add(this.label15);
             this.groupBox3.Controls.Add(this.label5);
-            this.groupBox3.Controls.Add(this.label4);
-            this.groupBox3.Location = new System.Drawing.Point(12, 171);
+            this.groupBox3.Location = new System.Drawing.Point(12, 264);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(206, 237);
+            this.groupBox3.Size = new System.Drawing.Size(206, 172);
             this.groupBox3.TabIndex = 17;
             this.groupBox3.TabStop = false;
-            this.groupBox3.Text = "Signal Processing";
+            this.groupBox3.Text = "Signal Processing (Advanced)";
+            // 
+            // txtPhaseOffset
+            // 
+            this.txtPhaseOffset.Location = new System.Drawing.Point(134, 46);
+            this.txtPhaseOffset.Name = "txtPhaseOffset";
+            this.txtPhaseOffset.Size = new System.Drawing.Size(61, 20);
+            this.txtPhaseOffset.TabIndex = 30;
+            this.txtPhaseOffset.TextChanged += new System.EventHandler(this.txtPhaseOffset_TextChanged);
             // 
             // label12
             // 
             this.label12.AutoSize = true;
-            this.label12.Location = new System.Drawing.Point(154, 186);
+            this.label12.Location = new System.Drawing.Point(155, 127);
             this.label12.Name = "label12";
             this.label12.Size = new System.Drawing.Size(24, 13);
             this.label12.TabIndex = 29;
@@ -308,7 +322,7 @@
             // label11
             // 
             this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(105, 186);
+            this.label11.Location = new System.Drawing.Point(106, 127);
             this.label11.Name = "label11";
             this.label11.Size = new System.Drawing.Size(24, 13);
             this.label11.TabIndex = 29;
@@ -317,7 +331,7 @@
             // label10
             // 
             this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(59, 186);
+            this.label10.Location = new System.Drawing.Point(60, 127);
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(24, 13);
             this.label10.TabIndex = 29;
@@ -326,7 +340,7 @@
             // label9
             // 
             this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(13, 186);
+            this.label9.Location = new System.Drawing.Point(14, 127);
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(24, 13);
             this.label9.TabIndex = 29;
@@ -334,7 +348,7 @@
             // 
             // txtOffset4
             // 
-            this.txtOffset4.Location = new System.Drawing.Point(151, 202);
+            this.txtOffset4.Location = new System.Drawing.Point(152, 143);
             this.txtOffset4.Name = "txtOffset4";
             this.txtOffset4.Size = new System.Drawing.Size(33, 20);
             this.txtOffset4.TabIndex = 14;
@@ -342,7 +356,7 @@
             // 
             // txtOffset3
             // 
-            this.txtOffset3.Location = new System.Drawing.Point(102, 202);
+            this.txtOffset3.Location = new System.Drawing.Point(103, 143);
             this.txtOffset3.Name = "txtOffset3";
             this.txtOffset3.Size = new System.Drawing.Size(33, 20);
             this.txtOffset3.TabIndex = 13;
@@ -350,7 +364,7 @@
             // 
             // txtOffset2
             // 
-            this.txtOffset2.Location = new System.Drawing.Point(56, 202);
+            this.txtOffset2.Location = new System.Drawing.Point(57, 143);
             this.txtOffset2.Name = "txtOffset2";
             this.txtOffset2.Size = new System.Drawing.Size(33, 20);
             this.txtOffset2.TabIndex = 12;
@@ -358,7 +372,7 @@
             // 
             // txtOffset1
             // 
-            this.txtOffset1.Location = new System.Drawing.Point(10, 202);
+            this.txtOffset1.Location = new System.Drawing.Point(11, 143);
             this.txtOffset1.Name = "txtOffset1";
             this.txtOffset1.Size = new System.Drawing.Size(33, 20);
             this.txtOffset1.TabIndex = 11;
@@ -366,16 +380,16 @@
             // 
             // txtSinxDepth
             // 
-            this.txtSinxDepth.Location = new System.Drawing.Point(157, 124);
+            this.txtSinxDepth.Location = new System.Drawing.Point(137, 72);
             this.txtSinxDepth.Name = "txtSinxDepth";
-            this.txtSinxDepth.Size = new System.Drawing.Size(38, 20);
+            this.txtSinxDepth.Size = new System.Drawing.Size(61, 20);
             this.txtSinxDepth.TabIndex = 10;
             this.txtSinxDepth.TextChanged += new System.EventHandler(this.textSinxDepth_TextChanged);
             // 
             // label14
             // 
             this.label14.AutoSize = true;
-            this.label14.Location = new System.Drawing.Point(7, 166);
+            this.label14.Location = new System.Drawing.Point(8, 107);
             this.label14.Name = "label14";
             this.label14.Size = new System.Drawing.Size(93, 13);
             this.label14.TabIndex = 26;
@@ -384,7 +398,7 @@
             // label13
             // 
             this.label13.AutoSize = true;
-            this.label13.Location = new System.Drawing.Point(7, 152);
+            this.label13.Location = new System.Drawing.Point(8, 93);
             this.label13.Name = "label13";
             this.label13.Size = new System.Drawing.Size(146, 13);
             this.label13.TabIndex = 26;
@@ -393,7 +407,7 @@
             // label8
             // 
             this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(7, 125);
+            this.label8.Location = new System.Drawing.Point(11, 73);
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(76, 13);
             this.label8.TabIndex = 26;
@@ -402,7 +416,7 @@
             // radioOvsLinear
             // 
             this.radioOvsLinear.AutoSize = true;
-            this.radioOvsLinear.Location = new System.Drawing.Point(59, 98);
+            this.radioOvsLinear.Location = new System.Drawing.Point(63, 46);
             this.radioOvsLinear.Name = "radioOvsLinear";
             this.radioOvsLinear.Size = new System.Drawing.Size(54, 17);
             this.radioOvsLinear.TabIndex = 8;
@@ -414,7 +428,7 @@
             // radioOvsSinx
             // 
             this.radioOvsSinx.AutoSize = true;
-            this.radioOvsSinx.Location = new System.Drawing.Point(119, 98);
+            this.radioOvsSinx.Location = new System.Drawing.Point(123, 46);
             this.radioOvsSinx.Name = "radioOvsSinx";
             this.radioOvsSinx.Size = new System.Drawing.Size(61, 17);
             this.radioOvsSinx.TabIndex = 9;
@@ -426,7 +440,7 @@
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(7, 100);
+            this.label7.Location = new System.Drawing.Point(11, 48);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(46, 13);
             this.label7.TabIndex = 23;
@@ -434,20 +448,29 @@
             // 
             // txtDecisionLevel
             // 
-            this.txtDecisionLevel.Location = new System.Drawing.Point(157, 47);
+            this.txtDecisionLevel.Location = new System.Drawing.Point(134, 69);
             this.txtDecisionLevel.Name = "txtDecisionLevel";
-            this.txtDecisionLevel.Size = new System.Drawing.Size(38, 20);
+            this.txtDecisionLevel.Size = new System.Drawing.Size(61, 20);
             this.txtDecisionLevel.TabIndex = 6;
             this.txtDecisionLevel.TextChanged += new System.EventHandler(this.txtDecisionLevel_TextChanged);
             // 
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(7, 50);
+            this.label6.Location = new System.Drawing.Point(8, 72);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(76, 13);
             this.label6.TabIndex = 0;
             this.label6.Text = "Decision level:";
+            // 
+            // label15
+            // 
+            this.label15.AutoSize = true;
+            this.label15.Location = new System.Drawing.Point(7, 49);
+            this.label15.Name = "label15";
+            this.label15.Size = new System.Drawing.Size(71, 13);
+            this.label15.TabIndex = 0;
+            this.label15.Text = "Phase Offset:";
             // 
             // label5
             // 
@@ -460,12 +483,13 @@
             // 
             // groupBox4
             // 
+            this.groupBox4.Controls.Add(this.chkL1PreallocateTCH);
             this.groupBox4.Controls.Add(this.chkL1DumpEncrypted);
             this.groupBox4.Controls.Add(this.chkL1DumpFrames);
             this.groupBox4.Controls.Add(this.chkL1ShowEncrypted);
             this.groupBox4.Location = new System.Drawing.Point(224, 12);
             this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(206, 91);
+            this.groupBox4.Size = new System.Drawing.Size(206, 119);
             this.groupBox4.TabIndex = 18;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "L1 Options";
@@ -507,7 +531,7 @@
             // 
             this.groupBox5.Controls.Add(this.chkL2ShowAllFrames);
             this.groupBox5.Controls.Add(this.chkL2DumpRaw);
-            this.groupBox5.Location = new System.Drawing.Point(224, 109);
+            this.groupBox5.Location = new System.Drawing.Point(224, 137);
             this.groupBox5.Name = "groupBox5";
             this.groupBox5.Size = new System.Drawing.Size(206, 63);
             this.groupBox5.TabIndex = 19;
@@ -536,11 +560,70 @@
             this.chkL2DumpRaw.UseVisualStyleBackColor = true;
             this.chkL2DumpRaw.CheckedChanged += new System.EventHandler(this.chkL2DumpRaw_CheckedChanged);
             // 
+            // chkPhaseAutoOffset
+            // 
+            this.chkPhaseAutoOffset.AutoSize = true;
+            this.chkPhaseAutoOffset.Location = new System.Drawing.Point(82, 48);
+            this.chkPhaseAutoOffset.Name = "chkPhaseAutoOffset";
+            this.chkPhaseAutoOffset.Size = new System.Drawing.Size(48, 17);
+            this.chkPhaseAutoOffset.TabIndex = 31;
+            this.chkPhaseAutoOffset.Text = "Auto";
+            this.chkPhaseAutoOffset.UseVisualStyleBackColor = true;
+            this.chkPhaseAutoOffset.CheckedChanged += new System.EventHandler(this.chkPhaseAutoOffset_CheckedChanged);
+            // 
+            // chkL1PreallocateTCH
+            // 
+            this.chkL1PreallocateTCH.AutoSize = true;
+            this.chkL1PreallocateTCH.Location = new System.Drawing.Point(10, 90);
+            this.chkL1PreallocateTCH.Name = "chkL1PreallocateTCH";
+            this.chkL1PreallocateTCH.Size = new System.Drawing.Size(109, 17);
+            this.chkL1PreallocateTCH.TabIndex = 18;
+            this.chkL1PreallocateTCH.Text = "Preallocate TCHs";
+            this.chkL1PreallocateTCH.UseVisualStyleBackColor = true;
+            this.chkL1PreallocateTCH.CheckedChanged += new System.EventHandler(this.chkL1PreallocateTCH_CheckedChanged);
+            // 
+            // groupBox6
+            // 
+            this.groupBox6.Controls.Add(this.radioOvsLinear);
+            this.groupBox6.Controls.Add(this.label4);
+            this.groupBox6.Controls.Add(this.txtInternalOvers);
+            this.groupBox6.Controls.Add(this.label7);
+            this.groupBox6.Controls.Add(this.radioOvsSinx);
+            this.groupBox6.Controls.Add(this.label8);
+            this.groupBox6.Controls.Add(this.txtSinxDepth);
+            this.groupBox6.Location = new System.Drawing.Point(12, 155);
+            this.groupBox6.Name = "groupBox6";
+            this.groupBox6.Size = new System.Drawing.Size(206, 103);
+            this.groupBox6.TabIndex = 100;
+            this.groupBox6.TabStop = false;
+            this.groupBox6.Text = "Signal Processing";
+            // 
+            // btnBurstLengthA
+            // 
+            this.btnBurstLengthA.Location = new System.Drawing.Point(152, 101);
+            this.btnBurstLengthA.Name = "btnBurstLengthA";
+            this.btnBurstLengthA.Size = new System.Drawing.Size(21, 23);
+            this.btnBurstLengthA.TabIndex = 32;
+            this.btnBurstLengthA.Text = "A";
+            this.btnBurstLengthA.UseVisualStyleBackColor = true;
+            this.btnBurstLengthA.Click += new System.EventHandler(this.btnBurstLengthA_Click);
+            // 
+            // btnBurstLengthB
+            // 
+            this.btnBurstLengthB.Location = new System.Drawing.Point(174, 101);
+            this.btnBurstLengthB.Name = "btnBurstLengthB";
+            this.btnBurstLengthB.Size = new System.Drawing.Size(21, 23);
+            this.btnBurstLengthB.TabIndex = 32;
+            this.btnBurstLengthB.Text = "B";
+            this.btnBurstLengthB.UseVisualStyleBackColor = true;
+            this.btnBurstLengthB.Click += new System.EventHandler(this.btnBurstLengthB_Click);
+            // 
             // OptionsDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(455, 419);
+            this.ClientSize = new System.Drawing.Size(455, 447);
+            this.Controls.Add(this.groupBox6);
             this.Controls.Add(this.groupBox5);
             this.Controls.Add(this.groupBox4);
             this.Controls.Add(this.groupBox3);
@@ -562,6 +645,8 @@
             this.groupBox4.PerformLayout();
             this.groupBox5.ResumeLayout(false);
             this.groupBox5.PerformLayout();
+            this.groupBox6.ResumeLayout(false);
+            this.groupBox6.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -612,5 +697,12 @@
         private System.Windows.Forms.CheckBox chkL1DumpFrames;
         private System.Windows.Forms.CheckBox chkL1DumpEncrypted;
         private System.Windows.Forms.CheckBox chkL2DumpRaw;
+        private System.Windows.Forms.TextBox txtPhaseOffset;
+        private System.Windows.Forms.Label label15;
+        private System.Windows.Forms.CheckBox chkPhaseAutoOffset;
+        private System.Windows.Forms.Button btnBurstLengthB;
+        private System.Windows.Forms.Button btnBurstLengthA;
+        private System.Windows.Forms.CheckBox chkL1PreallocateTCH;
+        private System.Windows.Forms.GroupBox groupBox6;
     }
 }

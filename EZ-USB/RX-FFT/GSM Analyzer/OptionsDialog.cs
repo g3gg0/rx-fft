@@ -6,6 +6,7 @@ using LibRXFFT.Libraries.SampleSources;
 using LibRXFFT.Libraries.SignalProcessing;
 using LibRXFFT.Libraries.GSM.Bursts;
 using LibRXFFT.Libraries.GSM.Layer2;
+using LibRXFFT.Libraries.GSM.Layer1;
 
 namespace GSM_Analyzer
 {
@@ -18,11 +19,15 @@ namespace GSM_Analyzer
             Analyzer = analyzer;
             InitializeComponent();
 
-            chkSubSample.Checked = GSMAnalyzer.Subsampling;
+            Refresh();
+        }
 
+        private void Refresh()
+        {
+            chkL1DumpFrames.Checked = Analyzer.Parameters.DumpPackets;
             chkL1ShowEncrypted.Checked = SDCCHBurst.ShowEncryptedMessage;
             chkL1DumpEncrypted.Checked = SDCCHBurst.DumpEncryptedMessage;
-            chkL1DumpFrames.Checked = Analyzer.Parameters.DumpPackets;
+            chkL1PreallocateTCH.Checked = TimeSlotHandler.PreallocateTCHs;
 
             chkL2ShowAllFrames.Checked = L2Handler.ShowAllMessages;
             chkL2DumpRaw.Checked = L2Handler.DumpRawData;
@@ -32,7 +37,12 @@ namespace GSM_Analyzer
             chkL3ShowUnhandled.Checked = L3Handler.DumpUnhandled;
             chkL3SniffIMSI.Checked = L3Handler.SniffIMSI;
 
+            chkSubSample.Checked = Analyzer.Subsampling;
+            chkPhaseAutoOffset.Checked = Analyzer.PhaseAutoOffset;
+
             txtSubSampleOffset.Text = Analyzer.SubSampleOffset.ToString();
+            txtPhaseOffset.Enabled = !Analyzer.PhaseAutoOffset;
+            txtPhaseOffset.Text = Analyzer.PhaseOffset.ToString();
             txtDecisionLevel.Text = GMSKDecoder.MinPowerFact.ToString();
 
             txtOffset1.Text = Analyzer.BurstLengthJitter[0].ToString();
@@ -100,7 +110,7 @@ namespace GSM_Analyzer
 
         private void chkSubSample_CheckedChanged(object sender, EventArgs e)
         {
-            GSMAnalyzer.Subsampling = chkSubSample.Checked;
+            Analyzer.Subsampling = chkSubSample.Checked;
         }
 
         private void txtRate_TextChanged(object sender, EventArgs e)
@@ -153,6 +163,16 @@ namespace GSM_Analyzer
                 return;
 
             Analyzer.SubSampleOffset = offset;
+        }
+
+        private void txtPhaseOffset_TextChanged(object sender, EventArgs e)
+        {
+            double offset;
+
+            if (!double.TryParse(txtPhaseOffset.Text, out offset))
+                return;
+
+            Analyzer.PhaseOffset = offset;
         }
 
         private void txtDecisionLevel_TextChanged(object sender, EventArgs e)
@@ -276,6 +296,30 @@ namespace GSM_Analyzer
         {
             Analyzer.Parameters.DumpPackets = chkL1DumpFrames.Checked;
         }
+
+        private void chkPhaseAutoOffset_CheckedChanged(object sender, EventArgs e)
+        {
+            Analyzer.PhaseAutoOffset = chkPhaseAutoOffset.Checked;
+            txtPhaseOffset.Enabled = !Analyzer.PhaseAutoOffset;
+        }
+
+        private void btnBurstLengthA_Click(object sender, EventArgs e)
+        {
+            Analyzer.BurstLengthJitter = new[] { 0.0d, 0.0d, 0.0d, 0.0d };
+            Refresh();
+        }
+
+        private void btnBurstLengthB_Click(object sender, EventArgs e)
+        {
+            Analyzer.BurstLengthJitter = new[] { 0.75, -0.25, -0.25, -0.25 };
+            Refresh();
+        }
+
+        private void chkL1PreallocateTCH_CheckedChanged(object sender, EventArgs e)
+        {
+            TimeSlotHandler.PreallocateTCHs = chkL1PreallocateTCH.Checked;
+        }
+
 
     }
 }

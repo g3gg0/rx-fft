@@ -147,7 +147,7 @@ namespace LibRXFFT.Libraries.GSM.Bursts
 
                             if (OutFile == null)
                             {
-                                string name = ("GSM_" + Name + ".gsm").Replace("/", "_");
+                                string name = ("GSM_" + Name + "_" + param.FN + ".gsm").Replace("/", "_");
                                 OutFile = new FileStream(name, FileMode.Create);
                             }
 

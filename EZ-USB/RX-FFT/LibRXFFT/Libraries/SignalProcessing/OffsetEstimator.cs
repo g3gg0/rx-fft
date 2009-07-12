@@ -8,6 +8,7 @@ namespace LibRXFFT.Libraries.SignalProcessing
 {
     public class OffsetEstimator
     {
+        /* estimate offset by checking the zero-line crossings */
         public static double EstimateOffset ( double[] srcData, int startPos, int samples, double oversampling )
         {
             double lastSampleValue = 0;
@@ -42,9 +43,14 @@ namespace LibRXFFT.Libraries.SignalProcessing
             foreach (double value in averages)
                 average += value;
 
-            average /= averages.Count;
+            /* division by zero is checked later */
+            unchecked
+            {
+                average /= averages.Count;
+            }
 
-            if (Math.Abs(average) > oversampling/4)
+            /* offset too high or we didnt have any zero-line crossings */
+            if (Math.Abs(average) > oversampling / 4 || averages.Count == 0)
                 return 0;
 
             return average;

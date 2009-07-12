@@ -7,11 +7,11 @@ namespace LibRXFFT.Libraries.GMSK
     public class GMSKDemodulator
     {
         private double LastPhase;
-        public bool UseFastAtan2 = true;
+        public bool UseFastAtan2 = false;
         public bool InvertedSpectrum = false;
 
         private SharedMem ShmemOutChan;
-        public static bool UseFastAtan2Default = true;
+        public static bool UseFastAtan2Default = false;
         public static bool InvertedSpectrumDefault = false;
 
 

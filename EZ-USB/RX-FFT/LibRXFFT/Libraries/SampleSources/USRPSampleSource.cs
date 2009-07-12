@@ -23,12 +23,13 @@ namespace LibRXFFT.Libraries.SampleSources
 
             /* calculate sampling rate from USRPs decimation rate */
             CFileDecimationDialog dec = new CFileDecimationDialog();
+            dec.EstimateDecimation(fileName);
             dec.ShowDialog();
 
             if (dec.Decimation < 1)
                 return;
 
-            InputSamplingRate = 64000000f / dec.Decimation;
+            InputSamplingRate = 64000000d / dec.Decimation;
         }
 
         public override void Close()

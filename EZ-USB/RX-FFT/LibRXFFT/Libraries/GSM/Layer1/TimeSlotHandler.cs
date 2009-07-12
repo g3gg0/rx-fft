@@ -10,6 +10,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
     public class TimeSlotHandler
     {
+        public static bool PreallocateTCHs = false;
 
         private readonly double BT;
         public readonly double Oversampling;
@@ -72,6 +73,25 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             Parameters.TimeSlotHandlers[0][7] = new sTimeSlotParam(CCCH, 1);
             Parameters.TimeSlotHandlers[0][8] = new sTimeSlotParam(CCCH, 2);
             Parameters.TimeSlotHandlers[0][9] = new sTimeSlotParam(CCCH, 3);
+
+            if (PreallocateTCHs)
+            {
+                for (int timeSlot = 1; timeSlot < 8; timeSlot++)
+                {
+                    Parameters.TimeSlotHandlers[timeSlot] = new sTimeSlotParam[26];
+
+                    TCHBurst tch = new TCHBurst(L3, "TCH" + timeSlot + "/F", (int)timeSlot);
+                    SACCHBurst sacch = new SACCHBurst(L3, "SACCH/TCH" + timeSlot, (int)timeSlot, true);
+
+                    for (int frame = 0; frame < 25; frame++)
+                    {
+                        if (frame == 12)
+                            Parameters.TimeSlotHandlers[timeSlot][frame] = new sTimeSlotParam(sacch, 0);
+                        else
+                            Parameters.TimeSlotHandlers[timeSlot][frame] = new sTimeSlotParam(tch, 0);
+                    }
+                }
+            }
 
             /* create training sequence ... */
             double[] tmpTrainingSequence = new SequenceGenerator(Oversampling, BT).GenerateDiffEncoded(TrainingCode);
@@ -147,27 +167,34 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                             break;
 
                         case eTimeSlotType.SDCCH8:
-                            AddMessage("   [L1] TimeSlot " + timeSlot + " now configured as SDCCH/8 (was " + Parameters.TimeSlotInfo[timeSlot].Type + ")" + Environment.NewLine);
-                            Parameters.TimeSlotHandlers[timeSlot] = new sTimeSlotParam[51];
-
-                            /* 8 SDCCHs */
-                            for (int chan = 0; chan < 8; chan++)
+                            if (timeSlot != 0)
                             {
-                                SDCCHBurst tmpSDCCH = new SDCCHBurst(L3, chan);
-                                Parameters.TimeSlotHandlers[timeSlot][chan * 4 + 0] = new sTimeSlotParam(tmpSDCCH, 0);
-                                Parameters.TimeSlotHandlers[timeSlot][chan * 4 + 1] = new sTimeSlotParam(tmpSDCCH, 1);
-                                Parameters.TimeSlotHandlers[timeSlot][chan * 4 + 2] = new sTimeSlotParam(tmpSDCCH, 2);
-                                Parameters.TimeSlotHandlers[timeSlot][chan * 4 + 3] = new sTimeSlotParam(tmpSDCCH, 3);
+                                AddMessage("   [L1] TimeSlot " + timeSlot + " now configured as SDCCH/8 (was " + Parameters.TimeSlotInfo[timeSlot].Type + ")" + Environment.NewLine);
+                                Parameters.TimeSlotHandlers[timeSlot] = new sTimeSlotParam[51];
+
+                                /* 8 SDCCHs */
+                                for (int chan = 0; chan < 8; chan++)
+                                {
+                                    SDCCHBurst tmpSDCCH = new SDCCHBurst(L3, chan);
+                                    Parameters.TimeSlotHandlers[timeSlot][chan * 4 + 0] = new sTimeSlotParam(tmpSDCCH, 0);
+                                    Parameters.TimeSlotHandlers[timeSlot][chan * 4 + 1] = new sTimeSlotParam(tmpSDCCH, 1);
+                                    Parameters.TimeSlotHandlers[timeSlot][chan * 4 + 2] = new sTimeSlotParam(tmpSDCCH, 2);
+                                    Parameters.TimeSlotHandlers[timeSlot][chan * 4 + 3] = new sTimeSlotParam(tmpSDCCH, 3);
+                                }
+
+                                /* finally 4 SACCHs */
+                                for (int chan = 0; chan < 4; chan++)
+                                {
+                                    SACCHBurst tmpSACCH = new SACCHBurst(L3, "SACCH " + chan + "/" + (chan + 4), chan);
+                                    Parameters.TimeSlotHandlers[timeSlot][(chan + 8) * 4 + 0] = new sTimeSlotParam(tmpSACCH, 0);
+                                    Parameters.TimeSlotHandlers[timeSlot][(chan + 8) * 4 + 1] = new sTimeSlotParam(tmpSACCH, 1);
+                                    Parameters.TimeSlotHandlers[timeSlot][(chan + 8) * 4 + 2] = new sTimeSlotParam(tmpSACCH, 2);
+                                    Parameters.TimeSlotHandlers[timeSlot][(chan + 8) * 4 + 3] = new sTimeSlotParam(tmpSACCH, 3);
+                                }
                             }
-
-                            /* finally 4 SACCHs */
-                            for (int chan = 0; chan < 4; chan++)
+                            else
                             {
-                                SACCHBurst tmpSACCH = new SACCHBurst(L3, "SACCH " + chan + "/" + (chan + 4), chan);
-                                Parameters.TimeSlotHandlers[timeSlot][(chan + 8) * 4 + 0] = new sTimeSlotParam(tmpSACCH, 0);
-                                Parameters.TimeSlotHandlers[timeSlot][(chan + 8) * 4 + 1] = new sTimeSlotParam(tmpSACCH, 1);
-                                Parameters.TimeSlotHandlers[timeSlot][(chan + 8) * 4 + 2] = new sTimeSlotParam(tmpSACCH, 2);
-                                Parameters.TimeSlotHandlers[timeSlot][(chan + 8) * 4 + 3] = new sTimeSlotParam(tmpSACCH, 3);
+                                AddMessage("   [L1] TimeSlot " + timeSlot + " NOT configured for SDCCH/8 as requested. Stays " + Parameters.TimeSlotInfo[timeSlot].Type + Environment.NewLine);
                             }
                             break;
 

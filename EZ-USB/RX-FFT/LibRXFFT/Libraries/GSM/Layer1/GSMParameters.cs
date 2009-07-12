@@ -71,8 +71,37 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
         public void Reset()
         {
+            State = eGSMState.Reset;
             TimeSlotInfo = new sTimeSlotInfo[8];
             TimeSlotHandlers = new sTimeSlotParam[8][];
+        }
+
+        /* 
+         * SYSTEM INFORMATION TYPE mapping
+         * 
+         *  Message    TC       Allocation
+            Type_1      0       BCCH Norm
+            Type_2      1       BCCH Norm
+            Type_2bis   5       BCCH Norm
+            Type_2ter   5 or 4  BCCH Norm
+            Type_3      2 and 6 BCCH Norm
+            Type_4      3 and 7 BCCH Norm
+            Type_7      7       BCCH Ext
+            Type_8      3       BCCH Ext
+            Type_9      4       BCCH Norm
+            Type_13     4       BCCH norm
+            Type_13     0       BCCH Ext
+            Type 16     6       BCCH Ext
+            Type 17     2       BCCH Ext
+            Type 18  Not fixed  Not fixed
+            Type 19  Not Fixed  Not Fixed
+            Type 20  Not fixed  Not fixed
+         * 
+         */
+
+        public long TC
+        {
+            get { return (FN / 51) % 8; }
         }
 
         public long T1
@@ -124,7 +153,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
         public override string ToString()
         {
-            return "T1: " + String.Format("{0,5}", T1) + " T2: " + String.Format("{0,2}", T2) + " T3: " + String.Format("{0,2}", T3) + " TN: " + String.Format("{0,1}", TN) + " FN: " + String.Format("{0,8}", FN);
+            return "T1: " + String.Format("{0,5}", T1) + " T2: " + String.Format("{0,2}", T2) + " T3: " + String.Format("{0,2}", T3) + " TN: " + String.Format("{0,1}", TN) + " TC: " + String.Format("{0,1}", TC) + " FN: " + String.Format("{0,8}", FN);
         }
 
 

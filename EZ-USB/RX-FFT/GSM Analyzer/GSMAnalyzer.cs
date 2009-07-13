@@ -756,6 +756,14 @@ namespace GSM_Analyzer
 
         private void btnStats_Click(object sender, EventArgs e)
         {
+            AddMessage(Environment.NewLine);
+            AddMessage(Parameters.GetSlotUsage());
+
+            AddMessage(Environment.NewLine);
+            AddMessage(Parameters.GetTimeslotDetails());
+
+            AddMessage(Environment.NewLine);
+
             /*
             if (FilterWindow == null || !FilterWindow.Visible)
             {

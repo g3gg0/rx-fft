@@ -27,6 +27,23 @@ namespace LibRXFFT.Components.DirectX
             UserCallback
         }
 
+        public enum eUserEvent
+        {
+            None,
+            MouseDragX,
+            MouseDragXShift,
+            MouseDragXAlt,
+            MouseDragXControl,
+            MouseDragY,
+            MouseDragYShift,
+            MouseDragYAlt,
+            MouseDragYControl,
+            MouseWheel,
+            MouseWheelShift,
+            MouseWheelAlt,
+            MouseWheelControl,
+        }
+
         public struct Point
         {
             public double X;
@@ -45,6 +62,9 @@ namespace LibRXFFT.Components.DirectX
             public Vector4 PositionRhw;
             public int Color;
         }
+
+        public delegate void UserEventCallbackDelegate(eUserEvent evt, double delta);
+        public UserEventCallbackDelegate UserEventCallback;
 
         protected int DirectXWidth = 1280;
         protected int DirectXHeight = 1024;
@@ -81,17 +101,17 @@ namespace LibRXFFT.Components.DirectX
 
         public eUserAction ActionMouseWheel = eUserAction.YZoom;
         public eUserAction ActionMouseWheelShift = eUserAction.XZoom;
-        public eUserAction ActionMouseWheelCtrl = eUserAction.None;
+        public eUserAction ActionMouseWheelControl = eUserAction.None;
         public eUserAction ActionMouseWheelAlt = eUserAction.None;
 
         public eUserAction ActionMouseDragX = eUserAction.XOffset;
         public eUserAction ActionMouseDragXShift = eUserAction.None;
-        public eUserAction ActionMouseDragXCtrl = eUserAction.None;
+        public eUserAction ActionMouseDragXControl = eUserAction.None;
         public eUserAction ActionMouseDragXAlt = eUserAction.None;
 
         public eUserAction ActionMouseDragY = eUserAction.YOffset;
         public eUserAction ActionMouseDragYShift = eUserAction.None;
-        public eUserAction ActionMouseDragYCtrl = eUserAction.None;
+        public eUserAction ActionMouseDragYControl = eUserAction.None;
         public eUserAction ActionMouseDragYAlt = eUserAction.None;
 
 
@@ -451,44 +471,60 @@ namespace LibRXFFT.Components.DirectX
                 ControlPressed = false;
         }
 
-        protected override void OnMouseMove(MouseEventArgs e)
+        public void ProcessUserEvent(eUserEvent evt, double delta)
         {
-            if (e.Button == MouseButtons.Left)
+            eUserAction action = eUserAction.None;
+
+            switch (evt)
             {
-                double xDelta = LastMousePos.X - e.X;
-                double yDelta = LastMousePos.Y - e.Y;
+                case eUserEvent.MouseWheel:
+                    action = ActionMouseWheel;
+                    break;
+                case eUserEvent.MouseWheelShift:
+                    action = ActionMouseWheelShift;
+                    break;
+                case eUserEvent.MouseWheelControl:
+                    action = ActionMouseWheelControl;
+                    break;
+                case eUserEvent.MouseWheelAlt:
+                    action = ActionMouseWheelAlt;
+                    break;
 
-                if (AltPressed)
-                {
-                    ProcessUserAction(ActionMouseDragXAlt, xDelta);
-                    ProcessUserAction(ActionMouseDragYAlt, yDelta);
-                }
-                else if (ControlPressed)
-                {
-                    ProcessUserAction(ActionMouseDragXCtrl, xDelta);
-                    ProcessUserAction(ActionMouseDragYCtrl, yDelta);
-                }
-                else if (ShiftPressed)
-                {
-                    ProcessUserAction(ActionMouseDragXShift, xDelta);
-                    ProcessUserAction(ActionMouseDragYShift, yDelta);
-                }
-                else
-                {
-                    ProcessUserAction(ActionMouseDragX, xDelta);
-                    ProcessUserAction(ActionMouseDragY, yDelta);
-                }
+                case eUserEvent.MouseDragX:
+                    action = ActionMouseDragX;
+                    break;
+                case eUserEvent.MouseDragXShift:
+                    action = ActionMouseDragXShift;
+                    break;
+                case eUserEvent.MouseDragXControl:
+                    action = ActionMouseDragXControl;
+                    break;
+                case eUserEvent.MouseDragXAlt:
+                    action = ActionMouseDragXAlt;
+                    break;
 
-
-                DataUpdated = true;
-                AxisUpdated = true;
+                case eUserEvent.MouseDragY:
+                    action = ActionMouseDragY;
+                    break;
+                case eUserEvent.MouseDragYShift:
+                    action = ActionMouseDragYShift;
+                    break;
+                case eUserEvent.MouseDragYControl:
+                    action = ActionMouseDragYControl;
+                    break;
+                case eUserEvent.MouseDragYAlt:
+                    action = ActionMouseDragYAlt;
+                    break;
             }
 
-            LastMousePos.X = e.X;
-            LastMousePos.Y = e.Y;
+            if (action == eUserAction.UserCallback)
+                UserEventCallback(evt, delta);
+            else
+                ProcessUserAction(action, delta);
+
         }
 
-        protected void ProcessUserAction(eUserAction action, double delta)
+        public void ProcessUserAction(eUserAction action, double delta)
         {
             switch (action)
             {
@@ -497,6 +533,9 @@ namespace LibRXFFT.Components.DirectX
 
                     delta = Math.Min(DirectXWidth * XZoomFactor - DirectXWidth, delta);
                     DisplayXOffset = Math.Max(0, delta);
+
+                    DataUpdated = true;
+                    AxisUpdated = true;
                     break;
 
                 case eUserAction.YOffset:
@@ -504,6 +543,10 @@ namespace LibRXFFT.Components.DirectX
 
                     delta = Math.Min(DirectXHeight * YZoomFactor, delta);
                     DisplayYOffset = Math.Max(-DirectXHeight * YZoomFactor, delta);
+
+                    DataUpdated = true;
+                    AxisUpdated = true;
+
                     break;
 
                 case eUserAction.XZoom:
@@ -515,6 +558,10 @@ namespace LibRXFFT.Components.DirectX
 
                     /* call ourselves again for min/max fitting */
                     ProcessUserAction(eUserAction.XOffset, 0);
+
+                    DataUpdated = true;
+                    AxisUpdated = true;
+
                     break;
 
                 case eUserAction.YZoom:
@@ -526,23 +573,59 @@ namespace LibRXFFT.Components.DirectX
 
                     /* call ourselves again for min/max fitting */
                     ProcessUserAction(eUserAction.YOffset, 0);
+
+                    DataUpdated = true;
+                    AxisUpdated = true;
+
                     break;
             }
+        }
+
+
+        protected override void OnMouseMove(MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                double xDelta = LastMousePos.X - e.X;
+                double yDelta = LastMousePos.Y - e.Y;
+
+                if (AltPressed)
+                {
+                    ProcessUserEvent(eUserEvent.MouseDragXAlt, xDelta);
+                    ProcessUserEvent(eUserEvent.MouseDragYAlt, yDelta);
+                }
+                else if (ControlPressed)
+                {
+                    ProcessUserEvent(eUserEvent.MouseDragXControl, xDelta);
+                    ProcessUserEvent(eUserEvent.MouseDragYControl, yDelta);
+                }
+                else if (ShiftPressed)
+                {
+                    ProcessUserEvent(eUserEvent.MouseDragXShift, xDelta);
+                    ProcessUserEvent(eUserEvent.MouseDragYShift, yDelta);
+                }
+                else
+                {
+                    ProcessUserEvent(eUserEvent.MouseDragX, xDelta);
+                    ProcessUserEvent(eUserEvent.MouseDragY, yDelta);
+                }
+            }
+
+            LastMousePos.X = e.X;
+            LastMousePos.Y = e.Y;
         }
 
         protected override void OnMouseWheel(MouseEventArgs e)
         {
             if (AltPressed)
-                ProcessUserAction(ActionMouseWheelAlt, e.Delta);
+                ProcessUserEvent(eUserEvent.MouseWheelAlt, e.Delta);
             else if (ControlPressed)
-                ProcessUserAction(ActionMouseWheelCtrl, e.Delta);
+                ProcessUserEvent(eUserEvent.MouseWheelControl, e.Delta);
             else if (ShiftPressed)
-                ProcessUserAction(ActionMouseWheelShift, e.Delta);
+                ProcessUserEvent(eUserEvent.MouseWheelShift, e.Delta);
             else
-                ProcessUserAction(ActionMouseWheel, e.Delta);
+                ProcessUserEvent(eUserEvent.MouseWheel, e.Delta);
 
-            DataUpdated = true;
-            AxisUpdated = true;
         }
 
         protected override void OnSizeChanged(EventArgs e)

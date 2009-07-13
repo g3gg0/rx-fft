@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 using LibRXFFT.Libraries.GSM.Bursts;
+using LibRXFFT.Components.DirectX;
 
 namespace GSM_Analyzer
 {
@@ -59,12 +60,37 @@ namespace GSM_Analyzer
             SampleDisplay.Name = "Sample Value";
             StrengthDisplay.XAxisLines = (int)Burst.NetBitCount;
             StrengthDisplay.Name = "Strength";
+
+            SampleDisplay.UserEventCallback = UserEventCallback;
+            StrengthDisplay.UserEventCallback = UserEventCallback;
+
+            SampleDisplay.ActionMouseDragX = DirectXPlot.eUserAction.UserCallback;
+            SampleDisplay.ActionMouseWheelShift = DirectXPlot.eUserAction.UserCallback;
+            StrengthDisplay.ActionMouseDragX = DirectXPlot.eUserAction.UserCallback;
+            StrengthDisplay.ActionMouseWheelShift = DirectXPlot.eUserAction.UserCallback;
+
         }
 
         public void ProcessBurst ( double[] signal, double[] strength )
         {
             SampleDisplay.ClearProcessData(signal);
             StrengthDisplay.ClearProcessData(strength);
+        }
+
+        public void UserEventCallback(DirectXPlot.eUserEvent evt, double delta)
+        {
+            switch (evt)
+            {
+                case DirectXPlot.eUserEvent.MouseDragX:
+                    SampleDisplay.ProcessUserAction(DirectXPlot.eUserAction.XOffset, delta);
+                    StrengthDisplay.ProcessUserAction(DirectXPlot.eUserAction.XOffset, delta);
+                    break;
+
+                case DirectXPlot.eUserEvent.MouseWheelShift:
+                    SampleDisplay.ProcessUserAction(DirectXPlot.eUserAction.XZoom, delta);
+                    StrengthDisplay.ProcessUserAction(DirectXPlot.eUserAction.XZoom, delta);
+                    break;
+            }
         }
     }
 }

@@ -19,7 +19,7 @@ namespace RX_FFT
         {
             InitializeComponent();
 
-            waterfallFFTDisplay.FFTSize = 2048;
+            FFTDisplay.FFTSize = 2048;
         }
 
 
@@ -34,7 +34,8 @@ namespace RX_FFT
 
                 if (!processPaused)
                 {
-                    waterfallFFTDisplay.ProcessData(inBuffer);
+                    
+                    FFTDisplay.ProcessRawData(inBuffer);
                 }
             }
         }
@@ -49,6 +50,7 @@ namespace RX_FFT
                 //dev.Close();
                 //dev = null;
                 ShmemChannel.Unregister();
+                ShmemChannel = null;
 
                 btnOpen.Text = "Open";
             }

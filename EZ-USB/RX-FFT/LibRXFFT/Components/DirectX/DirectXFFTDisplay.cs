@@ -12,20 +12,17 @@ namespace LibRXFFT.Components.DirectX
 {
     public partial class DirectXFFTDisplay : DirectXPlot
     {
-        Point[] LinePoints;
-
         private readonly Thread DisplayThread;
-        readonly ArrayList SampleValues = new ArrayList();
+        private bool NeedsUpdate = false;
 
-        private DisplayFuncState DisplayState = new DisplayFuncState();
+        readonly ArrayList SampleValues = new ArrayList();
+        private DisplayFuncState DisplayTimerState;
+
         private Mutex FFTLock = new Mutex();
         private FFTTransformer FFT;
 
-        public double ZoomFactor { get; set; }
         public bool ShowFPS { get; set; }
         public bool UseLines { get; set; }
-        public int StartSample { get; set; }
-        public int MaxSamples { get; set; }
 
         private int _FFTSize = 512;
         private double FFTPrescaler = 0.05f;
@@ -42,26 +39,22 @@ namespace LibRXFFT.Components.DirectX
 
             ShowFPS = true;
             UseLines = true;
-            MaxSamples = 10000;
+            YAxisCentered = false;
+            YZoomFactor = 1.0f;
+            XZoomFactor = 1.0f;
+
+            ActionMouseDragX = eUserAction.None;
+            ActionMouseWheelShift = eUserAction.None;
 
             InitializeComponent();
             InitializeDirectX();
-            InitFields();
 
+            DisplayTimerState = new DisplayFuncState();
             DisplayThread = new Thread(DisplayFunc);
             DisplayThread.Start();
         }
 
-        private void InitFields()
-        {
-            lock (SampleValues)
-            {
-                LinePoints = new Point[DirectXWidth];
-                for (int pos = 0; pos < LinePoints.Length; pos++)
-                    LinePoints[pos] = new Point(0, 0);
-            }
-        }
-        
+
         public int FFTSize
         {
             get { return _FFTSize; }
@@ -74,49 +67,22 @@ namespace LibRXFFT.Components.DirectX
                         _FFTSize = value;
                         SampleValues.Clear();
                         FFT = new FFTTransformer(value);
-                        InitFields();
                     }
                 }
             }
         }
 
-        protected override void OnMouseWheel(MouseEventArgs e)
-        {
-            if (e.Delta > 0 && FFTPrescaler < 10.0f)
-                FFTPrescaler += 0.05f;
-
-            if (e.Delta < 0 && FFTPrescaler > 0.05f)
-                FFTPrescaler -= 0.05f;
-        }
-
-        protected override void OnResize(EventArgs e)
-        {
-            InitFields();
-        }
-
-        protected override void OnSizeChanged(EventArgs e)
-        {
-            InitFields();
-        }
-
-        protected override void OnPaintBackground(PaintEventArgs e)
-        {
-        }
-
-        protected override void OnPaint(PaintEventArgs e)
-        {
-        }
-
-        public void ProcessData(double[] amplitudes)
+        public void ProcessFFTData(double[] amplitudes)
         {
             lock (SampleValues)
             {
                 SampleValues.Add(amplitudes);
+
+                NeedsUpdate = true;
             }
         }
 
-
-        public void ProcessData(byte[] dataBuffer)
+        public void ProcessRawData(byte[] dataBuffer)
         {
             const int bytePerSample = 2;
             const int channels = 2;
@@ -137,7 +103,7 @@ namespace LibRXFFT.Components.DirectX
                     {
                         double[] amplitudes = FFT.GetResult();
 
-                        ProcessData(amplitudes);
+                        ProcessFFTData(amplitudes);
                     }
                 }
             }
@@ -153,58 +119,47 @@ namespace LibRXFFT.Components.DirectX
 
         private void DisplayFunc()
         {
-            DisplayFuncState s = DisplayState;
+            DisplayFuncState s = DisplayTimerState;
+
 
             while (true)
             {
                 lock (SampleValues)
                 {
-                    if (SampleValues.Count > 0)
+                    if (NeedsUpdate)
                     {
-                        double[] samples = (double[])SampleValues[0];
-                        double ratioX = (double)DirectXWidth / samples.Length;
+                        NeedsUpdate = false;
 
-                        if (ratioX >= 1.0f)
+                        if (SampleValues.Count > 0)
                         {
-                            for (int pos = 0; pos < samples.Length; pos++)
+                            foreach (double[] sampleArray in SampleValues)
                             {
-                                double sampleValue = sampleToDBScale(samples[pos]);
-                                int posX = (int)(pos * ratioX);
-                                int posY = (int)(DirectXHeight - sampleValue * DirectXHeight) / 2;
+                                int samples = sampleArray.Length;
 
-                                posX = Math.Min(posX, DirectXWidth - 1);
-                                posX = Math.Max(posX, 0);
-                                posY = Math.Min(posY, DirectXHeight - 1);
-                                posY = Math.Max(posY, 0);
+                                if (LinePoints == null || LinePoints.Length < samples)
+                                    LinePoints = new Point[samples];
 
-                                LinePoints[pos].X = posX;
-                                LinePoints[pos].Y = posY;
+                                for (int pos = 0; pos < samples; pos++)
+                                {
+                                    double sampleValue = (double)sampleArray[pos];
+                                    double posX = ((double)pos / (double)samples) * DirectXWidth;
+                                    double posY = sampleToDBScale(sampleValue) * DirectXHeight;
+
+                                    LinePoints[pos].X = posX;
+
+                                    /* some simple averaging */
+                                    LinePoints[pos].Y *= 5 / 6;
+                                    LinePoints[pos].Y += posY / 6;
+                                }
+
+
+
+                                LinePointEntries = samples;
+                                DataUpdated = true;
                             }
-                            CreateVertexBufferForPoints(LinePoints, samples.Length);
                         }
-                        else
-                        {
-                            for (int posX = 0; posX < DirectXWidth; posX++)
-                            {
-                                int pos = (int)(posX / ratioX);
-                                pos = Math.Min(pos, samples.Length - 1);
-                                pos = Math.Max(pos, 0);
-
-                                double sampleValue = sampleToDBScale(samples[pos]);
-                                int posY = (int)(DirectXHeight - sampleValue * DirectXHeight) / 2;
-
-                                posY = Math.Min(posY, DirectXHeight - 1);
-                                posY = Math.Max(posY, 0);
-
-                                LinePoints[posX].X = posX;
-                                LinePoints[posX].Y = posY;
-                            }
-                            CreateVertexBufferForPoints(LinePoints, DirectXWidth);
-                        }
-
-
-                        SampleValues.Clear();
                     }
+                    SampleValues.Clear();
                 }
                 Render();
                 Thread.Sleep(10);

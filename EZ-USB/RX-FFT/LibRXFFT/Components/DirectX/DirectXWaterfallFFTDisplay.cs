@@ -54,7 +54,7 @@ namespace LibRXFFT.Components.DirectX
                     {
                         double[] amplitudes = FFT.GetResult();
 
-                        fftDisplay.ProcessData(amplitudes);
+                        fftDisplay.ProcessFFTData(amplitudes);
                         //waterfallDisplay.ProcessData(amplitudes);
                     }
                 }

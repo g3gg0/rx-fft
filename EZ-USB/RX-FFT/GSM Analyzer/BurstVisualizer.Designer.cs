@@ -67,7 +67,6 @@ namespace GSM_Analyzer
             this.SampleDisplay.ShowFPS = false;
             this.SampleDisplay.Size = new System.Drawing.Size(873, 232);
             this.SampleDisplay.TabIndex = 0;
-            this.SampleDisplay.UseLines = true;
             this.SampleDisplay.YZoomFactor = 1;
             // 
             // waveformDisplay2
@@ -80,7 +79,6 @@ namespace GSM_Analyzer
             this.StrengthDisplay.ShowFPS = false;
             this.StrengthDisplay.Size = new System.Drawing.Size(873, 253);
             this.StrengthDisplay.TabIndex = 0;
-            this.StrengthDisplay.UseLines = true;
             this.StrengthDisplay.YZoomFactor = 1;
             // 
             // BurstVisualizer

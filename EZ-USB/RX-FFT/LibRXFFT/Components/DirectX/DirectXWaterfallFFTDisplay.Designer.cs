@@ -61,20 +61,16 @@ namespace LibRXFFT.Components.DirectX
             // 
             this.fftDisplay.Dock = System.Windows.Forms.DockStyle.Fill;
             this.fftDisplay.Location = new System.Drawing.Point(0, 0);
-            this.fftDisplay.MaxSamples = 10000;
             this.fftDisplay.Name = "fftDisplay";
             this.fftDisplay.ShowFPS = true;
             this.fftDisplay.Size = new System.Drawing.Size(537, 179);
-            this.fftDisplay.StartSample = 0;
             this.fftDisplay.TabIndex = 0;
             this.fftDisplay.UseLines = true;
-            this.fftDisplay.ZoomFactor = 0F;
             // 
             // waterfallDisplay
             // 
             this.waterfallDisplay.Dock = System.Windows.Forms.DockStyle.Fill;
             this.waterfallDisplay.Location = new System.Drawing.Point(0, 0);
-            this.waterfallDisplay.MaxSamples = 10000;
             this.waterfallDisplay.Name = "waterfallDisplay";
             this.waterfallDisplay.ShowFPS = true;
             this.waterfallDisplay.Size = new System.Drawing.Size(537, 196);

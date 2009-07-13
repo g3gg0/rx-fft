@@ -44,7 +44,7 @@ namespace RX_FFT
             this.btnOpen = new System.Windows.Forms.Button();
             this.button1 = new System.Windows.Forms.Button();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.waterfallFFTDisplay = new LibRXFFT.Components.DirectX.DirectXWaterfallFFTDisplay();
+            this.FFTDisplay = new LibRXFFT.Components.DirectX.DirectXFFTDisplay();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -86,20 +86,24 @@ namespace RX_FFT
             // 
             // splitContainer1.Panel2
             // 
-            this.splitContainer1.Panel2.Controls.Add(this.waterfallFFTDisplay);
+            this.splitContainer1.Panel2.Controls.Add(this.FFTDisplay);
             this.splitContainer1.Size = new System.Drawing.Size(851, 596);
             this.splitContainer1.SplitterDistance = 31;
             this.splitContainer1.SplitterWidth = 1;
             this.splitContainer1.TabIndex = 4;
             // 
-            // directXWaterfallFFTDisplay1
+            // FFTDisplay
             // 
-            this.waterfallFFTDisplay.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.waterfallFFTDisplay.FFTSize = 512;
-            this.waterfallFFTDisplay.Location = new System.Drawing.Point(0, 0);
-            this.waterfallFFTDisplay.Name = "waterfallFFTDisplay";
-            this.waterfallFFTDisplay.Size = new System.Drawing.Size(851, 564);
-            this.waterfallFFTDisplay.TabIndex = 0;
+            this.FFTDisplay.ColorBG = System.Drawing.Color.Black;
+            this.FFTDisplay.ColorFG = System.Drawing.Color.Cyan;
+            this.FFTDisplay.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.FFTDisplay.FFTSize = 512;
+            this.FFTDisplay.Location = new System.Drawing.Point(0, 0);
+            this.FFTDisplay.Name = "FFTDisplay";
+            this.FFTDisplay.ShowFPS = true;
+            this.FFTDisplay.Size = new System.Drawing.Size(851, 564);
+            this.FFTDisplay.TabIndex = 0;
+            this.FFTDisplay.UseLines = true;
             // 
             // MainScreen
             // 
@@ -121,7 +125,7 @@ namespace RX_FFT
         private System.Windows.Forms.Button btnOpen;
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.SplitContainer splitContainer1;
-        private LibRXFFT.Components.DirectX.DirectXWaterfallFFTDisplay waterfallFFTDisplay;
+        private LibRXFFT.Components.DirectX.DirectXFFTDisplay FFTDisplay;
     }
 }
 

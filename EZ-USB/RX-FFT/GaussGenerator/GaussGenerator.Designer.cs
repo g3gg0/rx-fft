@@ -143,7 +143,6 @@ namespace GaussGenerator
             this.waveformDisplay.ShowFPS = false;
             this.waveformDisplay.Size = new System.Drawing.Size(867, 443);
             this.waveformDisplay.TabIndex = 0;
-            this.waveformDisplay.UseLines = true;
             this.waveformDisplay.YZoomFactor = 1;
             // 
             // label3

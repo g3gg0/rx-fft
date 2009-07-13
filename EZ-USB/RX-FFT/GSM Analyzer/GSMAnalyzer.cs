@@ -292,7 +292,7 @@ namespace GSM_Analyzer
             }
         }
 
-
+        /* intentionally dont pass GSMParameters due to thread safeness */
         void UpdateErrorSuccess(long err, long succ, long TN, long T1, long T2, long T3)
         {
             if (err >= 0)
@@ -378,7 +378,7 @@ namespace GSM_Analyzer
 
                 txtLog.Clear();
                 ThreadActive = true;
-                ReadThread = new Thread(FFTReadFunc);
+                ReadThread = new Thread(SampleReadFunc);
                 ReadThread.Start();
 
                 btnOpen.Text = "Close";
@@ -391,13 +391,13 @@ namespace GSM_Analyzer
 
             txtLog.Clear();
             ThreadActive = true;
-            ReadThread = new Thread(FFTReadFunc);
+            ReadThread = new Thread(SampleReadFunc);
             ReadThread.Start();
 
             btnOpen.Text = "Close";
         }
 
-        void FFTReadFunc()
+        void SampleReadFunc()
         {
             FCCHFinder finder = new FCCHFinder(Oversampling);
             Parameters.Reset();

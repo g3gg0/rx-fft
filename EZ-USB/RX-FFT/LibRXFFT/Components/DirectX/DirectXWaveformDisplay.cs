@@ -13,46 +13,33 @@ namespace LibRXFFT.Components.DirectX
 {
     public partial class DirectXWaveformDisplay : DirectXPlot
     {
-        public bool fullScreen = false;
-
         readonly Thread DisplayThread;
         readonly ArrayList SampleValues = new ArrayList();
         private DisplayFuncState DisplayTimerState;
-        private bool needsUpdate = false;
+        private bool NeedsUpdate = false;
 
 
         public string DisplayName { get; set; }
         public bool ShowFPS { get; set; }
-        public bool UseLines { get; set; }
         public int MaxSamples { get; set; }
 
 
         public DirectXWaveformDisplay()
         {
-            UseLines = true;
             MaxSamples = 10000;
             YZoomFactor = 1.0f;
             XZoomFactor = 2.0f;
             ColorFG = Color.Cyan;
             ColorBG = Color.Black;
 
+            ActionMouseDragY = eUserAction.None;
+
             InitializeComponent();
             InitializeDirectX();
-            InitFields();
 
             DisplayTimerState = new DisplayFuncState();
             DisplayThread = new Thread(DisplayFunc);
             DisplayThread.Start();
-        }
-
-        private void InitFields()
-        {/*
-            lock (SampleValues)
-            {
-                LinePoints = new Point[DirectXWidth];
-                for (int pos = 0; pos < LinePoints.Length; pos++)
-                    LinePoints[pos] = new Point(0, 0);
-            }*/
         }
 
 
@@ -64,7 +51,7 @@ namespace LibRXFFT.Components.DirectX
                 for (int pos = 0; pos < samples.Length; pos++)
                     SampleValues.Add(samples[pos]);
 
-                needsUpdate = true;
+                NeedsUpdate = true;
             }
         }
 
@@ -75,7 +62,7 @@ namespace LibRXFFT.Components.DirectX
                 for (int pos = 0; pos < samples.Length; pos++)
                     SampleValues.Add(samples[pos]);
 
-                needsUpdate = true;
+                NeedsUpdate = true;
             }
         }
 
@@ -93,7 +80,7 @@ namespace LibRXFFT.Components.DirectX
                 {
                     SampleValues.Add(ByteUtil.getDoubleFromBytes(dataBuffer, byteOffset + bytePerSample * pos));
                 }
-                needsUpdate = true;
+                NeedsUpdate = true;
             }
         }
 
@@ -124,9 +111,9 @@ namespace LibRXFFT.Components.DirectX
             {
                 lock (SampleValues)
                 {
-                    if (needsUpdate)
+                    if (NeedsUpdate)
                     {
-                        needsUpdate = false;
+                        NeedsUpdate = false;
 
                         if (SampleValues.Count > 0)
                         {
@@ -139,7 +126,7 @@ namespace LibRXFFT.Components.DirectX
                             {
                                 double sampleValue = (double) SampleValues[pos];
                                 double posX = pos;
-                                double posY = sampleValue;
+                                double posY = sampleValue * DirectXHeight;
 
                                 LinePoints[pos].X = posX;
                                 LinePoints[pos].Y = posY;
@@ -166,10 +153,8 @@ namespace LibRXFFT.Components.DirectX
             lock (SampleValues)
             {
                 SampleValues.Clear();
-                needsUpdate = true;
+                NeedsUpdate = true;
             }
         }
-
-
     }
 }

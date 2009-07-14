@@ -27,8 +27,8 @@ namespace LibRXFFT.Libraries.GSM.Layer1
         private readonly SCHBurst SCH;
         private readonly FCHBurst FCH;
 
-        private readonly bool[] burstBits = new bool[148];
-        private readonly bool[] burstBitsUndiffed = new bool[148];
+        public readonly bool[] BurstBits = new bool[148];
+        public readonly bool[] BurstBitsUndiffed = new bool[148];
 
         private GSMParameters Parameters;
 
@@ -540,19 +540,25 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
         private void HandleFCH(double[] timeSlotSamples)
         {
-            /* dont use all bits. skip 10 bits at the start and 10 at the end */
-            int bits = (int)FCHBurst.PayloadBits - 20;
-            int startPos = (int)(Oversampling * 10);
+            /* dont use all bits. skip 4 bits at the start and 4 at the end */
+            int bits = (int)FCHBurst.PayloadBits - 8;
+            int startPos = (int)(Oversampling * 4);
             int samples = (int)(Oversampling * bits);
+
             double avg = 0;
-
             for (int pos = startPos; pos < samples + startPos; pos++)
-                avg -= timeSlotSamples[Decoder.StartOffset + pos];
-
+                avg += timeSlotSamples[Decoder.StartOffset + pos];
             avg /= bits;
-            avg += Math.PI / 2;
-            avg *= (1625000.0f / 24.0f) / (Math.PI / 2);
 
+            /* should have +PI/2 per high bit. calculate phase correction value per sample */
+            double phaseOffset = (Math.PI / 2 - avg) / Oversampling;
+
+            /* set offset */
+            if (Parameters.PhaseAutoOffset)
+                Parameters.PhaseOffsetValue += phaseOffset;
+
+
+#if false
             /* prevent division by zero (1Hz error is really not worth mentioning) */
             if (avg == 0)
                 avg = 1;
@@ -563,19 +569,22 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                 avg += 49 * Parameters.FCCHOffset;
                 avg /= 50;
             }
-
-            Parameters.FCCHOffset = avg;
+#endif
         }
 
         private bool HandleSCHTrain(double[] timeSlotSamples)
         {
             string message = Parameters + "   [SCH] ";
+            int bitTolerance = 3;
+
+            if (Parameters.FirstSCH)
+                bitTolerance = 8;
 
             /* skip the number of data bits defined in SCHBurst plus SpareBits that are "pre"-feeded */
             int sequencePos = (int)(Oversampling * (SCHBurst.SyncOffset + 2 + SpareBits));
 
             /* locate the training sequence over two bits */
-            int position = SignalPower.Locate(timeSlotSamples, sequencePos, TrainingSequence, (int)(Oversampling * 3));
+            int position = SignalPower.Locate(timeSlotSamples, sequencePos, TrainingSequence, (int)(Oversampling * bitTolerance));
             if (position == int.MinValue)
             {
                 message += "(Error in SignalPower.Locate)" + Environment.NewLine;
@@ -659,11 +668,11 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             }
 
             /* continue to decode the packet */
-            Decoder.Decode(timeSlotSamples, burstBits);
+            Decoder.Decode(timeSlotSamples, BurstBits);
 
             if (handler != null)
             {
-                DifferenceCode.Decode(burstBits, burstBitsUndiffed);
+                DifferenceCode.Decode(BurstBits, BurstBitsUndiffed);
 
                 /* check the first and last three bits to be low. thats required for all bursts from the BTS. */
                 /*
@@ -676,7 +685,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                 */
 
                 /* if everything went ok so far, pass the data to the associated handler */
-                if (!handler.ParseData(Parameters, burstBitsUndiffed, sequence))
+                if (!handler.ParseData(Parameters, BurstBitsUndiffed, sequence))
                 {
                     AddMessage("   [L1] [" + handler.Name + "] - [" + Parameters + "]" + Environment.NewLine);
                     AddMessage("        ERROR: " + handler.ErrorMessage + Environment.NewLine);

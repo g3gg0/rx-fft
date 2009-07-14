@@ -52,8 +52,25 @@ namespace LibRXFFT.Libraries.GSM.Layer1
     {
         public sTimeSlotParam[][] TimeSlotHandlers;
         public sTimeSlotInfo[] TimeSlotInfo;
+
+        public eGSMState State = eGSMState.Idle;
         public eTriState CBCH = eTriState.Unknown;
-        public double FCCHOffset = 0;
+
+        public double PhaseOffsetFrequency
+        {
+            set 
+            {
+                PhaseOffsetValue = value / (Oversampling * (1625000.0f / 24.0f) / (Math.PI / 2));
+            }
+            get
+            {
+                return PhaseOffsetValue * Oversampling * (1625000.0f / 24.0f) / (Math.PI / 2);
+            }
+        }
+
+        public double PhaseOffsetValue = 0;
+        public bool PhaseAutoOffset = true;
+        public double Oversampling = 1;
 
         public bool DumpPackets = false;
         private const long MaxErrors = 3;
@@ -63,6 +80,8 @@ namespace LibRXFFT.Libraries.GSM.Layer1
         public long FN;
         public long TN;
 
+        public bool FirstSCH;
+
         public GSMParameters()
         {
             Reset();
@@ -71,6 +90,8 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
         public void Reset()
         {
+            TotalErrors = 0;
+            TotalSuccess = 0;
             State = eGSMState.Reset;
             TimeSlotInfo = new sTimeSlotInfo[8];
             TimeSlotHandlers = new sTimeSlotParam[8][];
@@ -148,8 +169,6 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             }
         }
 
-        public eGSMState State = eGSMState.Idle;
-        public bool FirstSCH;
 
         public override string ToString()
         {
@@ -170,7 +189,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             {
                 for (int slot = 0; slot < 8; slot++)
                 {
-                    retVal += " | " + slot + "  || ";
+                    retVal += " |  " + slot + " || ";
                     if (TimeSlotHandlers[slot] == null)
                     {
                         retVal += "(Unused)";

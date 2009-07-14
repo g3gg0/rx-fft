@@ -38,11 +38,11 @@ namespace GSM_Analyzer
             chkL3SniffIMSI.Checked = L3Handler.SniffIMSI;
 
             chkSubSample.Checked = Analyzer.Subsampling;
-            chkPhaseAutoOffset.Checked = Analyzer.PhaseAutoOffset;
+            chkPhaseAutoOffset.Checked = Analyzer.Parameters.PhaseAutoOffset;
 
             txtSubSampleOffset.Text = Analyzer.SubSampleOffset.ToString();
-            txtPhaseOffset.Enabled = !Analyzer.PhaseAutoOffset;
-            txtPhaseOffset.Text = Analyzer.PhaseOffset.ToString();
+            txtPhaseOffset.Enabled = !Analyzer.Parameters.PhaseAutoOffset;
+            txtPhaseOffset.Text = Analyzer.Parameters.PhaseOffsetValue.ToString();
             txtDecisionLevel.Text = GMSKDecoder.MinPowerFact.ToString();
 
             txtOffset1.Text = Analyzer.BurstLengthJitter[0].ToString();
@@ -172,7 +172,7 @@ namespace GSM_Analyzer
             if (!double.TryParse(txtPhaseOffset.Text, out offset))
                 return;
 
-            Analyzer.PhaseOffset = offset;
+            Analyzer.Parameters.PhaseOffsetValue = offset;
         }
 
         private void txtDecisionLevel_TextChanged(object sender, EventArgs e)
@@ -299,8 +299,8 @@ namespace GSM_Analyzer
 
         private void chkPhaseAutoOffset_CheckedChanged(object sender, EventArgs e)
         {
-            Analyzer.PhaseAutoOffset = chkPhaseAutoOffset.Checked;
-            txtPhaseOffset.Enabled = !Analyzer.PhaseAutoOffset;
+            Analyzer.Parameters.PhaseAutoOffset = chkPhaseAutoOffset.Checked;
+            txtPhaseOffset.Enabled = !Analyzer.Parameters.PhaseAutoOffset;
         }
 
         private void btnBurstLengthA_Click(object sender, EventArgs e)

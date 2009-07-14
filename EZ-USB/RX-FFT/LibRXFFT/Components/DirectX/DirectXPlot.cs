@@ -42,6 +42,7 @@ namespace LibRXFFT.Components.DirectX
             MouseWheelShift,
             MouseWheelAlt,
             MouseWheelControl,
+            RenderOverlay
         }
 
         public struct Point
@@ -57,25 +58,28 @@ namespace LibRXFFT.Components.DirectX
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        struct Vertex
+        internal struct Vertex
         {
             public Vector4 PositionRhw;
-            public int Color;
+            public long Color;
         }
 
         public delegate void UserEventCallbackDelegate(eUserEvent evt, double delta);
         public UserEventCallbackDelegate UserEventCallback;
 
-        protected int DirectXWidth = 1280;
-        protected int DirectXHeight = 1024;
+        internal int DirectXWidth = 1280;
+        internal int DirectXHeight = 1024;
 
-        protected bool YAxisCentered = true;
+        internal bool YAxisCentered = true;
 
         private bool DirectXAvailable = false;
+
         private Direct3D Direct3D;
-        private Device Device;
-        private Font DisplayFont;
         private PresentParameters PresentParameters;
+
+        internal Device Device;
+        internal Font DisplayFont;
+
         /* add some interface to set the YAxisLines - for now external code is locking and modifying member variables */
         public readonly Mutex DirectXLock = new Mutex();
 
@@ -95,9 +99,9 @@ namespace LibRXFFT.Components.DirectX
         protected int LinePointEntries;
         private bool SizeHasChanged;
 
-        private bool ShiftPressed;
-        private bool AltPressed;
-        private bool ControlPressed;
+        internal bool ShiftPressed;
+        internal bool AltPressed;
+        internal bool ControlPressed;
 
         public eUserAction ActionMouseWheel = eUserAction.YZoom;
         public eUserAction ActionMouseWheelShift = eUserAction.XZoom;
@@ -105,9 +109,9 @@ namespace LibRXFFT.Components.DirectX
         public eUserAction ActionMouseWheelAlt = eUserAction.None;
 
         public eUserAction ActionMouseDragX = eUserAction.XOffset;
-        public eUserAction ActionMouseDragXShift = eUserAction.None;
-        public eUserAction ActionMouseDragXControl = eUserAction.None;
-        public eUserAction ActionMouseDragXAlt = eUserAction.None;
+        public eUserAction ActionMouseDragXShift = eUserAction.XOffset;
+        public eUserAction ActionMouseDragXControl = eUserAction.XOffset;
+        public eUserAction ActionMouseDragXAlt = eUserAction.XOffset;
 
         public eUserAction ActionMouseDragY = eUserAction.YOffset;
         public eUserAction ActionMouseDragYShift = eUserAction.None;
@@ -116,15 +120,16 @@ namespace LibRXFFT.Components.DirectX
 
 
         /* values are in pixels and set by the DragX/Y functions */
-        private double DisplayXOffset = 0;
-        private double DisplayYOffset = 0;
+        internal double DisplayXOffset = 0;
+        internal double DisplayYOffset = 0;
 
-        private Point LastMousePos = new Point();
+        internal Point LastMousePos = new Point();
 
         /* distance of X Axis lines */
         public double XAxisUnit = 100;
         public double XAxisGridOffset = 0;
         public double XAxisSampleOffset = 0;
+        public double XMaximum = 0;
         public int XAxisLines = 0;
 
         public double YZoomFactor { get; set; }
@@ -167,6 +172,7 @@ namespace LibRXFFT.Components.DirectX
 
                         PlotVertsEntries = numPoints - 1;
 
+                        double maximum = 0;
                         if (YAxisCentered)
                         {
                             for (int pos = 0; pos < numPoints; pos++)
@@ -176,6 +182,8 @@ namespace LibRXFFT.Components.DirectX
                                 PlotVerts[pos].PositionRhw.Z = 0.5f;
                                 PlotVerts[pos].PositionRhw.W = 1;
                                 PlotVerts[pos].Color = color;
+
+                                maximum = (int)Math.Max(points[pos].X, maximum);
                             }
                         }
                         else
@@ -187,8 +195,12 @@ namespace LibRXFFT.Components.DirectX
                                 PlotVerts[pos].PositionRhw.Z = 0.5f;
                                 PlotVerts[pos].PositionRhw.W = 1;
                                 PlotVerts[pos].Color = color;
+
+                                maximum = (int)Math.Max(points[pos].X, maximum);
                             }
                         }
+
+                        XMaximum = maximum;
                     }
 
                 }
@@ -294,7 +306,6 @@ namespace LibRXFFT.Components.DirectX
                         XAxisVerts[pos * 4 + 3].PositionRhw.W = 1;
                         XAxisVerts[pos * 4 + 3].Color = color1;
                     }
-
                 }
             }
             catch (Exception e)
@@ -347,10 +358,12 @@ namespace LibRXFFT.Components.DirectX
                 DirectXHeight = Height;
                 DirectXWidth = Width;
 
+                /* deciding between soft and hard initialization */
                 if (Direct3D == null)
                 {
                     Direct3D = new Direct3D();
 
+                    /* we dont need to allocate that all the time. once is enough */
                     if (PresentParameters == null)
                     {
                         PresentParameters = new PresentParameters();
@@ -359,12 +372,17 @@ namespace LibRXFFT.Components.DirectX
                         PresentParameters.DeviceWindowHandle = Handle;
                     }
 
-                    PlotVerts = new Vertex[0];
-                    XAxisVerts = new Vertex[0];
-                    YAxisVerts = new Vertex[0];
+                    if (PlotVerts == null)
+                        PlotVerts = new Vertex[0];
+                    if (XAxisVerts == null)
+                        XAxisVerts = new Vertex[0];
+                    if (YAxisVerts == null)
+                        YAxisVerts = new Vertex[0];
 
                     Device = new Device(Direct3D, 0, DeviceType.Hardware, Handle, CreateFlags.HardwareVertexProcessing, PresentParameters);
                     DisplayFont = new Font(Device, new System.Drawing.Font("Arial", 20));
+
+                    AllocateResources();
                 }
                 else
                 {
@@ -372,15 +390,17 @@ namespace LibRXFFT.Components.DirectX
                     PresentParameters.BackBufferWidth = DirectXWidth;
 
                     DisplayFont.Dispose();
+                    ReleaseResources();
                     Device.Reset(PresentParameters);
                     DisplayFont = new Font(Device, new System.Drawing.Font("Arial", 20));
+                    AllocateResources();
                 }
 
                 DirectXAvailable = true;
             }
             catch (Exception e)
             {
-                return;
+                throw new Exception("Failed to initialize DirectX", e);
             }
             finally
             {
@@ -388,6 +408,14 @@ namespace LibRXFFT.Components.DirectX
             }
 
             return;
+        }
+
+        internal virtual void AllocateResources()
+        {
+        }
+
+        internal virtual void ReleaseResources()
+        {
         }
 
 
@@ -425,6 +453,8 @@ namespace LibRXFFT.Components.DirectX
 
                 DisplayFont.DrawString(null, Name, 20, 30, 0x7F00FFFF);
 
+                RenderOverlay();
+
                 Device.EndScene();
                 Device.Present();
                 DirectXLock.ReleaseMutex();
@@ -451,24 +481,34 @@ namespace LibRXFFT.Components.DirectX
             }
         }
 
+        internal virtual void RenderOverlay()
+        {
+        }
+
         protected override void OnKeyDown(KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.ShiftKey)
+            if ((e.KeyData & System.Windows.Forms.Keys.Shift) != 0)
                 ShiftPressed = true;
-            if (e.KeyCode == Keys.Alt)
+            if ((e.KeyData & System.Windows.Forms.Keys.Alt) != 0)
                 AltPressed = true;
-            if (e.KeyCode == Keys.ControlKey)
+            if ((e.KeyData & System.Windows.Forms.Keys.Control) != 0)
                 ControlPressed = true;
+
+            DataUpdated = true;
+            AxisUpdated = true;
         }
 
         protected override void OnKeyUp(KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.ShiftKey)
+            if ((e.KeyData & System.Windows.Forms.Keys.Shift) == 0)
                 ShiftPressed = false;
-            if (e.KeyCode == Keys.Alt)
+            if ((e.KeyData & System.Windows.Forms.Keys.Alt) == 0)
                 AltPressed = false;
-            if (e.KeyCode == Keys.ControlKey)
+            if ((e.KeyData & System.Windows.Forms.Keys.Control) == 0)
                 ControlPressed = false;
+
+            DataUpdated = true;
+            AxisUpdated = true;
         }
 
         public void ProcessUserEvent(eUserEvent evt, double delta)
@@ -521,21 +561,23 @@ namespace LibRXFFT.Components.DirectX
                 UserEventCallback(evt, delta);
             else
                 ProcessUserAction(action, delta);
-
         }
 
         public void ProcessUserAction(eUserAction action, double delta)
         {
+            if (delta == 0)
+                return;
+
             switch (action)
             {
                 case eUserAction.XOffset:
-                    delta += DisplayXOffset;
-
-                    delta = Math.Min(DirectXWidth * XZoomFactor - DirectXWidth, delta);
-                    DisplayXOffset = Math.Max(0, delta);
+                    double delta1 = delta + DisplayXOffset;
+                    double delta2 = Math.Min(XMaximum * XZoomFactor - DirectXWidth, delta1);
+                    DisplayXOffset = Math.Max(0, delta2);
 
                     DataUpdated = true;
                     AxisUpdated = true;
+
                     break;
 
                 case eUserAction.YOffset:
@@ -637,6 +679,8 @@ namespace LibRXFFT.Components.DirectX
 
         protected override void OnResize(EventArgs e)
         {
+            DataUpdated = true;
+            AxisUpdated = true;
         }
 
         protected override void OnPaintBackground(PaintEventArgs e)

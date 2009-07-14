@@ -15,6 +15,7 @@ using LibRXFFT.Libraries.SampleSources;
 using LibRXFFT.Libraries.ShmemChain;
 using LibRXFFT.Libraries.SignalProcessing;
 using System.Text;
+using LibRXFFT.Components.DirectX;
 
 namespace GSM_Analyzer
 {
@@ -43,18 +44,12 @@ namespace GSM_Analyzer
         private System.Windows.Forms.Timer TextBoxCommitTimer = new System.Windows.Forms.Timer();
 
         public bool Subsampling = true;
-        public bool PhaseAutoOffset = true;
         public int InternalOversampling = 1;
         public int SubSampleOffset = 0;
-        private double PhaseOffsetValue = 0;
-        public double PhaseOffset
-        {
-            get { return PhaseOffsetValue * 362756d; }
-            set { PhaseOffsetValue = value / 362756d; }
-        }
-
 
         internal double DefaultSamplingRate = 2184533;
+
+
 
         internal double CurrentSampleRate
         {
@@ -217,10 +212,6 @@ namespace GSM_Analyzer
 
         void UpdateFreqOffset(double offset)
         {
-            if (!double.IsNaN(offset) && Math.Abs(offset) < 50000)
-                PhaseOffset += offset / 2;
-
-
             string[] scale = { "", "k", "G", "T" };
             int fact = 0;
 
@@ -334,7 +325,7 @@ namespace GSM_Analyzer
         void UpdateStats(GSMParameters param)
         {
             BeginInvoke(new updateErrorSuccessDelegate(UpdateErrorSuccess), new object[] { param.TotalErrors, param.TotalSuccess, param.TN, param.T1, param.T2, param.T3 });
-            BeginInvoke(new updateFreqOffsetDelegate(UpdateFreqOffset), new object[] { param.FCCHOffset });
+            BeginInvoke(new updateFreqOffsetDelegate(UpdateFreqOffset), new object[] { param.PhaseOffsetFrequency });
         }
 
         void ResetStats()
@@ -400,9 +391,6 @@ namespace GSM_Analyzer
         void SampleReadFunc()
         {
             FCCHFinder finder = new FCCHFinder(Oversampling);
-            Parameters.Reset();
-            InitTimeSlotHandler();
-            UpdateUIStatus(Parameters);
 
             long frameStartPosition = 0;
             long currentPosition = 0;
@@ -457,13 +445,17 @@ namespace GSM_Analyzer
                                 burstCount = 0;
                                 sampleDelta = 0;
 
+                                Parameters.Reset();
+                                Parameters.Oversampling = Oversampling;
+                                InitTimeSlotHandler();
+                                UpdateUIStatus(Parameters);
                             }
                         }
 
 
                         for (int pos = 0; pos < samplesRead; pos++)
                         {
-                            double signal = Source.Signal[pos] + PhaseOffsetValue;
+                            double signal = Source.Signal[pos] + Parameters.PhaseOffsetValue;
                             double strength = Source.Strength[pos];
 
                             bool burstSampled = false;
@@ -659,9 +651,9 @@ namespace GSM_Analyzer
                                                 BurstWindow.SampleDisplay.DirectXLock.WaitOne();
                                                 BurstWindow.SampleDisplay.YAxisLines.Add(Handler.Decoder.MaxPower);
                                                 BurstWindow.SampleDisplay.YAxisLines.Add(Handler.Decoder.DecisionPower);
+                                                BurstWindow.BurstBits = Handler.BurstBits;
                                                 BurstWindow.SampleDisplay.AxisUpdated = true;
                                                 BurstWindow.SampleDisplay.DirectXLock.ReleaseMutex();
-
                                             }
                                         }
 
@@ -798,8 +790,15 @@ namespace GSM_Analyzer
             {
                 if (BurstWindow == null || !BurstWindow.Visible)
                 {
-                    BurstWindow = new BurstVisualizer(Oversampling);
-                    BurstWindow.Show();
+                    try
+                    {
+                        BurstWindow = new BurstVisualizer(Oversampling);
+                        BurstWindow.Show();
+                    }
+                    catch (Exception ex)
+                    {
+                        AddMessage("Exception while initializing Burst Window:" + Environment.NewLine + ex.ToString());
+                    }
                 }
                 else
                 {

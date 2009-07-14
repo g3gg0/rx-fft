@@ -32,7 +32,7 @@ namespace GSM_Analyzer
         private void InitializeComponent()
         {
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.SampleDisplay = new DirectXWaveformDisplay();
+            this.SampleDisplay = new DirectXBurstDisplay();
             this.StrengthDisplay = new DirectXWaveformDisplay();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -99,7 +99,7 @@ namespace GSM_Analyzer
         #endregion
 
         private System.Windows.Forms.SplitContainer splitContainer1;
-        public DirectXWaveformDisplay SampleDisplay;
+        public DirectXBurstDisplay SampleDisplay;
         private DirectXWaveformDisplay StrengthDisplay;
     }
 }

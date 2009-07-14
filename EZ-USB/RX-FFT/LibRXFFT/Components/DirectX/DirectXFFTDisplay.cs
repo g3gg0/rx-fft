@@ -7,6 +7,7 @@ using System.Windows.Forms;
 using LibRXFFT.Libraries;
 using LibRXFFT.Libraries.FFTW;
 using Timer = System.Timers.Timer;
+using SlimDX.Direct3D9;
 
 namespace LibRXFFT.Components.DirectX
 {
@@ -115,7 +116,51 @@ namespace LibRXFFT.Components.DirectX
             return FFTPrescaler * dbValue + FFTOffset;
         }
 
+        internal override void RenderOverlay ()
+        {
+            Vertex[] guideLines = new Vertex[6];
 
+            float stubLength = (float)DirectXHeight / 10.0f;
+
+            guideLines[0].PositionRhw.X = (float)LastMousePos.X;
+            guideLines[0].PositionRhw.Y = 0;
+            guideLines[0].PositionRhw.Z = 0.5f;
+            guideLines[0].PositionRhw.W = 1;
+            guideLines[0].Color = 0x7F000000;
+
+            guideLines[1].PositionRhw.X = (float)LastMousePos.X;
+            guideLines[1].PositionRhw.Y = stubLength;
+            guideLines[1].PositionRhw.Z = 0.5f;
+            guideLines[1].PositionRhw.W = 1;
+            guideLines[1].Color = 0x7FFF3030;
+
+            guideLines[2].PositionRhw.X = (float)LastMousePos.X;
+            guideLines[2].PositionRhw.Y = stubLength;
+            guideLines[2].PositionRhw.Z = 0.5f;
+            guideLines[2].PositionRhw.W = 1;
+            guideLines[2].Color = 0x7FFF3030;
+
+            guideLines[3].PositionRhw.X = (float)LastMousePos.X;
+            guideLines[3].PositionRhw.Y = DirectXHeight - stubLength;
+            guideLines[3].PositionRhw.Z = 0.5f;
+            guideLines[3].PositionRhw.W = 1;
+            guideLines[3].Color = 0x7FFF3030;
+
+            guideLines[4].PositionRhw.X = (float)LastMousePos.X;
+            guideLines[4].PositionRhw.Y = DirectXHeight - stubLength;
+            guideLines[4].PositionRhw.Z = 0.5f;
+            guideLines[4].PositionRhw.W = 1;
+            guideLines[4].Color = 0x7FFF3030;
+
+            guideLines[5].PositionRhw.X = (float)LastMousePos.X;
+            guideLines[5].PositionRhw.Y = DirectXHeight;
+            guideLines[5].PositionRhw.Z = 0.5f;
+            guideLines[5].PositionRhw.W = 1;
+            guideLines[5].Color = 0x7F000000;
+
+            Device.DrawUserPrimitives(PrimitiveType.LineList, 3, guideLines);
+
+        }
 
         private void DisplayFunc()
         {
@@ -168,7 +213,6 @@ namespace LibRXFFT.Components.DirectX
 
         class DisplayFuncState
         {
-            protected internal Font TextFont;
             protected internal DateTime StartTime;
             protected internal long FrameNumber;
             protected internal double FPS;
@@ -177,7 +221,6 @@ namespace LibRXFFT.Components.DirectX
             {
                 FPS = 0;
                 FrameNumber = 0;
-                TextFont = new Font("Arial", 16);
                 StartTime = DateTime.Now;
             }
         }

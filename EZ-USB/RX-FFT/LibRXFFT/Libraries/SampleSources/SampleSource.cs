@@ -165,6 +165,5 @@ namespace LibRXFFT.Libraries.SampleSources
 
             return;
         }
-
     }
 }

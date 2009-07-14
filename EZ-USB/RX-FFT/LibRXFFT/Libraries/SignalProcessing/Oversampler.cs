@@ -20,9 +20,9 @@ namespace LibRXFFT.Libraries.SignalProcessing
         private double[] DeltaTable;
         private double Shannon = 0.9;
 
+        private double LastSampleValue = 0;
         private double[] LastBlockLastSamples = new double[0];
         private double[] NextLastBlockLastSamples = new double[0];
-
         private double[] NextBlockFirstSamples = new double[0];
 
 
@@ -91,30 +91,30 @@ namespace LibRXFFT.Libraries.SignalProcessing
                     break;
 
                 case eOversamplingType.Linear:
+
+                    double sampleValue1 = 0;
+                    double sampleValue2 = 0;
+
                     for (int outPos = 0; outPos < outData.Length; outPos++)
                     {
                         double samplePos = outPos / Oversampling;
-
                         double delta = samplePos - Math.Floor(samplePos);
-                        int samplePos1 = (int)samplePos;
-                        int samplePos2 = (int)samplePos + 1;
 
-                        double sampleValue1;
-                        double sampleValue2;
+                        int samplePos2 = (int)Math.Max(0, Math.Min(srcData.Length - 1, samplePos));
+                        int samplePos1 = samplePos2 - 1;
 
-                        if (samplePos1 >= 0 && samplePos1 < srcData.Length)
+                        sampleValue2 = srcData[samplePos2];
+
+                        if (samplePos1 < 0)
+                            sampleValue1 = LastSampleValue;
+                        else 
                             sampleValue1 = srcData[samplePos1];
-                        else
-                            sampleValue1 = 0;
-
-                        if (samplePos2 >= 0 && samplePos2 < srcData.Length)
-                            sampleValue2 = srcData[samplePos2];
-                        else
-                            sampleValue2 = sampleValue1;
-
 
                         outData[outPos] = sampleValue1 * (1 - delta) + sampleValue2 * delta;
                     }
+
+                    LastSampleValue = sampleValue2;
+
                     break;
 
                 case eOversamplingType.SinX:

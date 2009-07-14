@@ -100,7 +100,11 @@ namespace LibRXFFT.Components.DirectX
             }
         }
 
-
+        internal override void RenderOverlay()
+        {
+            if (UserEventCallback != null)
+                UserEventCallback(eUserEvent.RenderOverlay, 0);
+        }
 
         private void DisplayFunc()
         {

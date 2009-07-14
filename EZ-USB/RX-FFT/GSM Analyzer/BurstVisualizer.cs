@@ -7,9 +7,15 @@ namespace GSM_Analyzer
 {
     public partial class BurstVisualizer : Form
     {
+
         private double _Oversampling;
         private double _XAxisGridOffset;
         private double _XAxisSampleOffset;
+
+        public bool[] BurstBits
+        {
+            set { SampleDisplay.BurstBits = value; }
+        }
 
         public double Oversampling
         {
@@ -52,7 +58,7 @@ namespace GSM_Analyzer
             }
         }
 
-        public BurstVisualizer( double Oversampling )
+        public BurstVisualizer(double Oversampling)
         {
             InitializeComponent();
             this.Oversampling = Oversampling;
@@ -61,6 +67,7 @@ namespace GSM_Analyzer
             StrengthDisplay.XAxisLines = (int)Burst.NetBitCount;
             StrengthDisplay.Name = "Strength";
 
+            /* handle X Zoom and X Offset ourselves */
             SampleDisplay.UserEventCallback = UserEventCallback;
             StrengthDisplay.UserEventCallback = UserEventCallback;
 
@@ -71,7 +78,7 @@ namespace GSM_Analyzer
 
         }
 
-        public void ProcessBurst ( double[] signal, double[] strength )
+        public void ProcessBurst(double[] signal, double[] strength)
         {
             SampleDisplay.ClearProcessData(signal);
             StrengthDisplay.ClearProcessData(strength);
@@ -92,5 +99,7 @@ namespace GSM_Analyzer
                     break;
             }
         }
+
+
     }
 }

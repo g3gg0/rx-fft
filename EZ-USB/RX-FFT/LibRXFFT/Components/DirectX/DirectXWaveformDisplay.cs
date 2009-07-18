@@ -31,6 +31,7 @@ namespace LibRXFFT.Components.DirectX
             XZoomFactor = 2.0f;
             ColorFG = Color.Cyan;
             ColorBG = Color.Black;
+            ColorFont = Color.DarkCyan;
 
             ActionMouseDragY = eUserAction.None;
 
@@ -143,7 +144,7 @@ namespace LibRXFFT.Components.DirectX
                             }
 
                             LinePointEntries = samples;
-                            DataUpdated = true;
+                            LinePointsUpdated = true;
                         }
                     }
                 }

@@ -14,8 +14,7 @@ namespace LibRXFFT.Libraries.GMSK
 
     public class GMSKDecoder
     {
-        public int StartOffset = 0;
-        public double SubSampleOffset;
+        public double SampleOffset = 0;
 
         public eInterpolation Interpolation = eInterpolation.Automatic;
 
@@ -76,7 +75,7 @@ namespace LibRXFFT.Libraries.GMSK
                 int firstBits = (int)(5 * Oversampling);
 
                 BurstsProcessed = 0;
-                MaxPower = SignalPower.Max(srcData, (int)(StartOffset + SubSampleOffset), firstBits);
+                MaxPower = SignalPower.Max(srcData, (int)SampleOffset, firstBits);
 
                 /* difference too high? reset! */
                 if (MaxPower / DecisionPower > 100 || MaxPower / DecisionPower < 0.001)
@@ -91,7 +90,7 @@ namespace LibRXFFT.Libraries.GMSK
 
             for (int currentBit = 1; currentBit < Burst.NetBitCount; currentBit++)
             {
-                double samplePos = StartOffset + SubSampleOffset + (currentBit + 0.5f) * Oversampling;
+                double samplePos = SampleOffset + (currentBit + 0.5f) * Oversampling;
                 double sampleValue;
 
                 if (interpolate)

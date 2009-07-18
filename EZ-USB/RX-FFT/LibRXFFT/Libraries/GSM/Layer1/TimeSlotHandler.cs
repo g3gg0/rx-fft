@@ -16,8 +16,6 @@ namespace LibRXFFT.Libraries.GSM.Layer1
         public readonly double Oversampling;
 
 
-        private readonly byte[] TrainingCode = new byte[] { 0xB9, 0x62, 0x04, 0x0F, 0x2D, 0x45, 0x76, 0x1B };
-        private readonly double[] TrainingSequence;
         public AddMessageDelegate AddMessage { get; set; }
 
         public readonly GMSKDecoder Decoder;
@@ -35,18 +33,18 @@ namespace LibRXFFT.Libraries.GSM.Layer1
         public int SpareBits = 3;
 
 
-        public TimeSlotHandler(double oversampling, double bt, AddMessageDelegate addMessage, GSMParameters param)
+        public TimeSlotHandler(GSMParameters param, AddMessageDelegate addMessage)
         {
-            Oversampling = oversampling;
-            BT = bt;
+            Oversampling = param.Oversampling;
+            BT = param.BT;
             AddMessage = addMessage;
             Parameters = param;
 
             Decoder = new GMSKDecoder(Oversampling, BT);
 
             L3 = new L3Handler();
-            FCH = new FCHBurst();
-            SCH = new SCHBurst();
+            FCH = new FCHBurst(param);
+            SCH = new SCHBurst(param);
             BCCH = new BCCHBurst(L3);
             CCCH = new CCCHBurst(L3);
 
@@ -93,12 +91,6 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                 }
             }
 
-            /* create training sequence ... */
-            double[] tmpTrainingSequence = new SequenceGenerator(Oversampling, BT).GenerateDiffEncoded(TrainingCode);
-
-            /* ... and skip the first and last two samples since these are affected by the bits before */
-            TrainingSequence = new double[(int)(tmpTrainingSequence.Length - 4 * Oversampling)];
-            Array.Copy(tmpTrainingSequence, (int)(2 * Oversampling), TrainingSequence, 0, TrainingSequence.Length);
         }
 
         private void TriggerChannelAssignment(L3Handler L3Handler)
@@ -538,75 +530,6 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             }
         }
 
-        private void HandleFCH(double[] timeSlotSamples)
-        {
-            /* dont use all bits. skip 4 bits at the start and 4 at the end */
-            int bits = (int)FCHBurst.PayloadBits - 8;
-            int startPos = (int)(Oversampling * 4);
-            int samples = (int)(Oversampling * bits);
-
-            double avg = 0;
-            for (int pos = startPos; pos < samples + startPos; pos++)
-                avg += timeSlotSamples[Decoder.StartOffset + pos];
-            avg /= bits;
-
-            /* should have +PI/2 per high bit. calculate phase correction value per sample */
-            double phaseOffset = (Math.PI / 2 - avg) / Oversampling;
-
-            /* set offset */
-            if (Parameters.PhaseAutoOffset)
-                Parameters.PhaseOffsetValue += phaseOffset;
-
-
-#if false
-            /* prevent division by zero (1Hz error is really not worth mentioning) */
-            if (avg == 0)
-                avg = 1;
-
-            /* update average if the difference is below 200Hz and it didn't vary by more than 100% */
-            if (Math.Abs(Parameters.FCCHOffset - avg) < 200 || (Math.Abs(Parameters.FCCHOffset / avg) <= 2 && Math.Abs(Parameters.FCCHOffset / avg) >= 0.5))
-            {
-                avg += 49 * Parameters.FCCHOffset;
-                avg /= 50;
-            }
-#endif
-        }
-
-        private bool HandleSCHTrain(double[] timeSlotSamples)
-        {
-            string message = Parameters + "   [SCH] ";
-            int bitTolerance = 3;
-
-            if (Parameters.FirstSCH)
-                bitTolerance = 8;
-
-            /* skip the number of data bits defined in SCHBurst plus SpareBits that are "pre"-feeded */
-            int sequencePos = (int)(Oversampling * (SCHBurst.SyncOffset + 2 + SpareBits));
-
-            /* locate the training sequence over two bits */
-            int position = SignalPower.Locate(timeSlotSamples, sequencePos, TrainingSequence, (int)(Oversampling * bitTolerance));
-            if (position == int.MinValue)
-            {
-                message += "(Error in SignalPower.Locate)" + Environment.NewLine;
-                AddMessage(message);
-                Parameters.SampleOffset = int.MinValue;
-                Parameters.Errors++;
-                return false;
-            }
-
-            /* calculate the offset between guessed position and real */
-            Parameters.SampleOffset = position - sequencePos;
-
-            Decoder.StartOffset += (int)Parameters.SampleOffset;
-            Decoder.SubSampleOffset = 0;/* OffsetEstimator.EstimateOffset(timeSlotSamples,
-                                (int)(Decoder.StartOffset + Oversampling / 2 + 5 * Oversampling),
-                                (int)((Burst.NetBitCount - 5) * Oversampling),
-                                Oversampling);*/
-
-
-            return true;
-        }
-
 
         public void Handle(double[] timeSlotSamples)
         {
@@ -622,6 +545,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             Burst handler = null;
             int sequence = 0;
             long frameNum = 0;
+            bool handlerFailed = false;
 
             lock (Parameters.TimeSlotHandlers)
             {
@@ -644,7 +568,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                 }
             }
 
-            if (Parameters.DumpPackets)
+            if (Burst.DumpRawData)
             {
                 if (handler != null)
                     AddMessage("   [L1] Handler: " + handler.Name + "[" + sequence + "]  TN:" + Parameters.TN + "  Frame: " + frameNum + Environment.NewLine);
@@ -652,47 +576,41 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                     AddMessage("   [L1] Handler: (none)  TN:" + Parameters.TN + "  Frame: " + frameNum + Environment.NewLine);
             }
 
-            /* this is a SCH burst */
-            if (Parameters.FirstSCH || handler == SCH)
-            {
-                Parameters.FirstSCH = false;
+            Burst.eSuccessState rawHandlerState = Burst.eSuccessState.Unknown;
+            Burst.eSuccessState dataHandlerState = Burst.eSuccessState.Unknown;
 
-                /* try to detect sequence and update sampling offset */
-                if (!HandleSCHTrain(timeSlotSamples))
-                    return;
-            }
+            /* let the raw handler work with the data */
+            if (handler != null)
+                rawHandlerState = handler.ParseRawBurst(Parameters, timeSlotSamples);
 
-            if (handler == FCH)
-            {
-                HandleFCH(timeSlotSamples);
-            }
+            /* apply offset, if any */
+            Decoder.SampleOffset = Parameters.SampleStartPosition + Parameters.SampleOffset + Parameters.SubSampleOffset;
 
             /* continue to decode the packet */
             Decoder.Decode(timeSlotSamples, BurstBits);
+            DifferenceCode.Decode(BurstBits, BurstBitsUndiffed);
 
             if (handler != null)
             {
-                DifferenceCode.Decode(BurstBits, BurstBitsUndiffed);
 
-                /* check the first and last three bits to be low. thats required for all bursts from the BTS. */
-                /*
-                if (burstBitsUndiffed[0] || burstBitsUndiffed[1] || burstBitsUndiffed[2] || burstBitsUndiffed[145] || burstBitsUndiffed[146] || burstBitsUndiffed[147])
-                {
-                    AddMessage("   [GMSK] Delimiter bits are not low (" + Parameters + ")" + Environment.NewLine);
-                    Parameters.Error = true;
-                    return;
-                }
-                */
+                /* only run data handler if raw handler didnt fail */
+                if (rawHandlerState != Burst.eSuccessState.Failed)
+                    dataHandlerState = handler.ParseData(Parameters, BurstBitsUndiffed, sequence);
 
                 /* if everything went ok so far, pass the data to the associated handler */
-                if (!handler.ParseData(Parameters, BurstBitsUndiffed, sequence))
+                if (rawHandlerState == Burst.eSuccessState.Failed || dataHandlerState == Burst.eSuccessState.Failed)
                 {
+                    Parameters.Error();
                     AddMessage("   [L1] [" + handler.Name + "] - [" + Parameters + "]" + Environment.NewLine);
                     AddMessage("        ERROR: " + handler.ErrorMessage + Environment.NewLine);
                     AddMessage(Environment.NewLine);
                 }
                 else
                 {
+                    /* only update success counters when this burst was processed successfully */
+                    if (dataHandlerState == Burst.eSuccessState.Succeeded)
+                        Parameters.Success();
+
                     /* show L2 messages, if handler wishes */
                     bool showL2 = handler.L2.ShowMessage && !string.IsNullOrEmpty(handler.L2.StatusMessage);
 
@@ -736,6 +654,5 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                 }
             }
         }
-
     }
 }

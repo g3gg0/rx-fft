@@ -71,11 +71,10 @@ namespace GSM_Analyzer
             SampleDisplay.UserEventCallback = UserEventCallback;
             StrengthDisplay.UserEventCallback = UserEventCallback;
 
-            SampleDisplay.ActionMouseDragX = DirectXPlot.eUserAction.UserCallback;
-            SampleDisplay.ActionMouseWheelShift = DirectXPlot.eUserAction.UserCallback;
-            StrengthDisplay.ActionMouseDragX = DirectXPlot.eUserAction.UserCallback;
-            StrengthDisplay.ActionMouseWheelShift = DirectXPlot.eUserAction.UserCallback;
-
+            SampleDisplay.ActionMouseDragX = eUserAction.UserCallback;
+            SampleDisplay.ActionMouseWheelShift = eUserAction.UserCallback;
+            StrengthDisplay.ActionMouseDragX = eUserAction.UserCallback;
+            StrengthDisplay.ActionMouseWheelShift = eUserAction.UserCallback;
         }
 
         public void ProcessBurst(double[] signal, double[] strength)
@@ -84,18 +83,18 @@ namespace GSM_Analyzer
             StrengthDisplay.ClearProcessData(strength);
         }
 
-        public void UserEventCallback(DirectXPlot.eUserEvent evt, double delta)
+        public void UserEventCallback(eUserEvent evt, double delta)
         {
             switch (evt)
             {
-                case DirectXPlot.eUserEvent.MouseDragX:
-                    SampleDisplay.ProcessUserAction(DirectXPlot.eUserAction.XOffset, delta);
-                    StrengthDisplay.ProcessUserAction(DirectXPlot.eUserAction.XOffset, delta);
+                case eUserEvent.MouseDragX:
+                    SampleDisplay.ProcessUserAction(eUserAction.XOffset, delta);
+                    StrengthDisplay.ProcessUserAction(eUserAction.XOffset, delta);
                     break;
 
-                case DirectXPlot.eUserEvent.MouseWheelShift:
-                    SampleDisplay.ProcessUserAction(DirectXPlot.eUserAction.XZoom, delta);
-                    StrengthDisplay.ProcessUserAction(DirectXPlot.eUserAction.XZoom, delta);
+                case eUserEvent.MouseWheelShift:
+                    SampleDisplay.ProcessUserAction(eUserAction.XZoom, delta);
+                    StrengthDisplay.ProcessUserAction(eUserAction.XZoom, delta);
                     break;
             }
         }

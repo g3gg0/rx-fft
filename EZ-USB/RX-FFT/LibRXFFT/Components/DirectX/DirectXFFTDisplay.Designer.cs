@@ -18,7 +18,7 @@
                 components.Dispose();
             }
 
-            if ( DisplayThread != null )
+            if (DisplayThread != null)
                 DisplayThread.Abort();
 
             base.Dispose(disposing);

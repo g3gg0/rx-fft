@@ -54,18 +54,18 @@ namespace LibRXFFT.Libraries.GSM.Bursts
             InitBuffers(4);
         }
 
-        public override bool ParseData(GSMParameters param, bool[] decodedBurst)
+        public override eSuccessState ParseData(GSMParameters param, bool[] decodedBurst)
         {
             return ParseData(param, decodedBurst, 0);
         }
 
-        public override bool ParseData(GSMParameters param, bool[] decodedBurst, int sequence)
+        public override eSuccessState ParseData(GSMParameters param, bool[] decodedBurst, int sequence)
         {
             if (IsDummy(decodedBurst))
             {
-                if (param.DumpPackets)
+                if (DumpRawData)
                     StatusMessage = "Dummy Burst";
-                return true;
+                return eSuccessState.Succeeded;
             }
 
             UnmapToI(decodedBurst, sequence);
@@ -82,7 +82,7 @@ namespace LibRXFFT.Libraries.GSM.Bursts
                 if (!Deconvolution())
                 {
                     ErrorMessage = "(Error in ConvolutionalCoder)";
-                    return false;
+                    return eSuccessState.Failed;
                 }
 
                 /* CRC check/fix */
@@ -94,7 +94,7 @@ namespace LibRXFFT.Libraries.GSM.Bursts
 
                     case eCRCState.Failed:
                         ErrorMessage = "(CRC Error)";
-                        return false;
+                        return eSuccessState.Failed;
                 }
 
                 /* convert u[] to d[] bytes */
@@ -103,11 +103,13 @@ namespace LibRXFFT.Libraries.GSM.Bursts
                 /* do we have a CBCH channel and thats this subchannel? */
                 if (CBCHandler.Handle(BurstBufferD))
                     StatusMessage = CBCHandler.StatusMessage;
+
+                return eSuccessState.Succeeded;
             }
             else
                 StatusMessage = null;
 
-            return true;
+            return eSuccessState.Unknown;
         }
     }
 }

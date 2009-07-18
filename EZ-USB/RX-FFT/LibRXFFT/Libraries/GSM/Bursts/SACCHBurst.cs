@@ -64,20 +64,20 @@ namespace LibRXFFT.Libraries.GSM.Bursts
             InitBuffers(4);
         }
 
-        public override bool ParseData(GSMParameters param, bool[] decodedBurst)
+        public override eSuccessState ParseData(GSMParameters param, bool[] decodedBurst)
         {
             return ParseData(param, decodedBurst, 0);
         }
 
-        public override bool ParseData(GSMParameters param, bool[] decodedBurst, int sequence)
+        public override eSuccessState ParseData(GSMParameters param, bool[] decodedBurst, int sequence)
         {
             if (IsDummy(decodedBurst))
             {
-                if (param.DumpPackets)
+                if (DumpRawData)
                     StatusMessage = "Dummy Burst";
 
                 TCHSeq = 0;
-                return true;
+                return eSuccessState.Succeeded;
             }
 
             bool isComplete;
@@ -125,7 +125,7 @@ namespace LibRXFFT.Libraries.GSM.Bursts
                         else
                             StatusMessage = "(Error in ConvolutionalCoder, maybe encrypted)";
                     }
-                    return true;
+                    return eSuccessState.Unknown;
                 }
 
                 /* CRC check/fix */
@@ -137,18 +137,20 @@ namespace LibRXFFT.Libraries.GSM.Bursts
 
                     case eCRCState.Failed:
                         ErrorMessage = "(CRC Error)";
-                        return false;
+                        return eSuccessState.Failed;
                 }
 
                 /* convert u[] to d[] bytes */
                 PackBytes();
 
                 L2.Handle(this, L3, BurstBufferD, 2);
+
+                return eSuccessState.Succeeded;
             }
             else
                 StatusMessage = null;
 
-            return true;
+            return eSuccessState.Unknown;
         }
     }
 }

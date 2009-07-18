@@ -48,7 +48,7 @@ namespace GSM_Analyzer
         public int SubSampleOffset = 0;
 
         internal double DefaultSamplingRate = 2184533;
-
+        private double BT = 0.3d;
 
 
         internal double CurrentSampleRate
@@ -354,7 +354,7 @@ namespace GSM_Analyzer
                 menu.MenuItems.Add(new MenuItem("Shared Memory", new EventHandler(btnOpen_SharedMemory)));
                 menu.MenuItems.Add(new MenuItem("USRP CFile", new EventHandler(btnOpen_CFile)));
                 btnOpen.ContextMenu = menu;
-                btnOpen.ContextMenu.Show(btnOpen, new Point(10, 10));
+                btnOpen.ContextMenu.Show(btnOpen, new System.Drawing.Point(10, 10));
             }
         }
 
@@ -410,6 +410,7 @@ namespace GSM_Analyzer
 
             double burstCount = 0;
             long burstBufferPos = 0;
+            long lastSampleOffset = 0;
 
 
 
@@ -447,6 +448,9 @@ namespace GSM_Analyzer
 
                                 Parameters.Reset();
                                 Parameters.Oversampling = Oversampling;
+                                Parameters.BT = BT;
+                                Parameters.SampleStartPosition = Oversampling * Handler.SpareBits;
+
                                 InitTimeSlotHandler();
                                 UpdateUIStatus(Parameters);
                             }
@@ -562,16 +566,16 @@ namespace GSM_Analyzer
                                             Parameters.FirstSCH = true;
 
                                             /* let the handler process this packet */
-                                            Handler.Decoder.StartOffset = (int)(Oversampling * Handler.SpareBits);
-                                            Handler.Decoder.SubSampleOffset = 0;
+                                            Parameters.SampleOffset = 0;
+                                            Parameters.SubSampleOffset = 0;
                                             Handler.Handle(burstBuffer);
 
-                                            if (Parameters.Error)
+                                            if (Parameters.ErrorLimit)
                                             {
                                                 AddMessage("[GSM] SCH failed -> Reset" + Environment.NewLine);
                                                 Parameters.State = eGSMState.Reset;
+                                                Parameters.ResetError();
                                                 UpdateUIStatus(Parameters);
-                                                Parameters.Error = false;
                                             }
                                             else
                                             {
@@ -591,7 +595,7 @@ namespace GSM_Analyzer
                                             /* update the burst visualizer */
                                             if (BurstWindow != null)
                                             {
-                                                BurstWindow.XAxisGridOffset = Handler.Decoder.StartOffset;
+                                                BurstWindow.XAxisGridOffset = Parameters.SampleOffset;
                                                 BurstWindow.ProcessBurst(burstBuffer, burstStrengthBuffer);
                                             }
                                         }
@@ -606,13 +610,12 @@ namespace GSM_Analyzer
                                     /* when we are already in frame sync and one burst was sampled */
                                     if (burstSampled)
                                     {
-                                        Handler.Decoder.StartOffset = (int)(Oversampling * Handler.SpareBits);
+                                        //Parameters.SampleOffset = (int)(Oversampling * Handler.SpareBits);
                                         if (Subsampling)
-                                            Handler.Decoder.SubSampleOffset = OffsetEstimator.EstimateOffset(burstBuffer,
+                                            Parameters.SubSampleOffset = OffsetEstimator.EstimateOffset(burstBuffer,
                                                                                                              (int)
-                                                                                                             (Handler.
-                                                                                                                  Decoder.
-                                                                                                                  StartOffset +
+                                                                                                             (Parameters.
+                                                                                                                  SampleOffset +
                                                                                                               Oversampling / 2 -
                                                                                                               5 * Oversampling),
                                                                                                              (int)
@@ -622,9 +625,9 @@ namespace GSM_Analyzer
                                                                                                               Oversampling),
                                                                                                              Oversampling);
                                         else
-                                            Handler.Decoder.SubSampleOffset = 0;
+                                            Parameters.SubSampleOffset = 0;
 
-                                        Handler.Decoder.SubSampleOffset += SubSampleOffset;
+                                        Parameters.SubSampleOffset += SubSampleOffset;
 
                                         lock (BurstWindowLock)
                                         {
@@ -632,8 +635,8 @@ namespace GSM_Analyzer
                                             {
                                                 BurstWindow.SampleDisplay.DirectXLock.WaitOne();
                                                 BurstWindow.SampleDisplay.YAxisLines.Clear();
-                                                BurstWindow.XAxisGridOffset = (Handler.Decoder.StartOffset + Oversampling / 2);
-                                                BurstWindow.XAxisSampleOffset = -Handler.Decoder.SubSampleOffset;
+                                                BurstWindow.XAxisGridOffset = ((int)(Oversampling * Handler.SpareBits) + Oversampling / 2);
+                                                BurstWindow.XAxisSampleOffset = -Parameters.SubSampleOffset;
                                                 BurstWindow.Oversampling = Oversampling;
                                                 BurstWindow.SampleDisplay.AxisUpdated = true;
                                                 BurstWindow.SampleDisplay.DirectXLock.ReleaseMutex();
@@ -657,11 +660,12 @@ namespace GSM_Analyzer
                                             }
                                         }
 
-                                        if (Parameters.Error)
+                                        if (Parameters.ErrorLimit)
                                         {
-                                            Parameters.Error = false;
                                             AddMessage("[GSM] Packet handling failed -> Reset" + Environment.NewLine);
                                             Parameters.State = eGSMState.Reset;
+                                            Parameters.ResetError();
+                                            UpdateUIStatus(Parameters);
                                         }
 
                                         /* 
@@ -672,10 +676,12 @@ namespace GSM_Analyzer
                                         long burstNumber = ((Parameters.TN + 1) % 4);
                                         sampleDelta += (int)(BurstLengthJitter[burstNumber] * Oversampling);
 
-                                        /* update counters and reset offset correction */
+                                        /* update counters and apply offset correction */
                                         burstCount++;
-                                        burstBufferPos = -Parameters.SampleOffset;
+
+                                        burstBufferPos = (long)-(Parameters.SampleOffset + Parameters.SubSampleOffset);
                                         Parameters.SampleOffset = 0;
+                                        Parameters.SubSampleOffset = 0;
 
                                         /* update UI if necessary */
                                         if (SingleStep || updateLoops++ >= 50 * 9)
@@ -726,7 +732,7 @@ namespace GSM_Analyzer
 
         private void InitTimeSlotHandler()
         {
-            Handler = new TimeSlotHandler(Oversampling, 0.3, AddMessage, Parameters);
+            Handler = new TimeSlotHandler(Parameters, AddMessage);
             RegisterTriggers(Handler.L3);
             if (Handler.L3.StatusMessage != null)
                 MessageBox.Show("   [L3] " + Handler.L3.StatusMessage);

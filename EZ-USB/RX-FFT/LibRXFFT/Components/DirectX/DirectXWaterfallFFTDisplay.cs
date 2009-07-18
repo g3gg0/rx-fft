@@ -2,19 +2,78 @@
 using System.Windows.Forms;
 using LibRXFFT.Libraries;
 using LibRXFFT.Libraries.FFTW;
+using System;
 
 namespace LibRXFFT.Components.DirectX
 {
     public partial class DirectXWaterfallFFTDisplay : UserControl
     {
         Mutex FFTLock = new Mutex();
-        private FFTTransformer FFT;
-        private int _FFTSize = 512;
+        private FFTTransformer FFT = new FFTTransformer(256);
+        private int _FFTSize = 256;
+        private double[] FFTResult = new double[256];
 
+        double IMax = -100;
+        double IMin = 100;
 
         public DirectXWaterfallFFTDisplay()
         {
             InitializeComponent();
+
+            /* we work with already squared FFT values for performance reasons */
+            fftDisplay.SquaredFFTData = true;
+            waterfallDisplay.SquaredFFTData = true;
+
+            /* handle X Zoom and X Offset ourselves */
+            fftDisplay.UserEventCallback = UserEventCallback;
+            waterfallDisplay.UserEventCallback = UserEventCallback;
+
+            fftDisplay.ActionMousePosX = eUserAction.UserCallback;
+            fftDisplay.ActionMouseDragY = eUserAction.UserCallback;
+            fftDisplay.ActionMouseWheel = eUserAction.UserCallback;
+
+            waterfallDisplay.ActionMousePosX = eUserAction.UserCallback;
+        }
+
+
+        public double Averaging
+        {
+            get { return fftDisplay.Averaging; }
+            set { fftDisplay.Averaging = value; }
+        }
+
+        public FFTTransformer.eWindowingFunction WindowingFunction
+        {
+            get { return FFT.WindowingFunction; }
+            set { FFT.WindowingFunction = value; }
+        }
+
+        public void UserEventCallback(eUserEvent evt, double delta)
+        {
+            switch (evt)
+            {
+                    
+                case eUserEvent.MouseWheel:
+                    if (delta > 0)
+                        fftDisplay.FFTPrescaler *= 1.1f;
+                    else
+                        fftDisplay.FFTPrescaler /= 1.1f;
+                    fftDisplay.AxisUpdated = true;
+                    break;
+
+                case eUserEvent.MouseDragY:
+                    if (Math.Abs(delta) < 5)
+                    {
+                        fftDisplay.FFTOffset += delta;
+                        fftDisplay.AxisUpdated = true;
+                    }
+                    break;
+
+                case eUserEvent.MousePosX:
+                    fftDisplay.ProcessUserAction(eUserAction.XPos, delta);
+                    waterfallDisplay.ProcessUserAction(eUserAction.XPos, delta);
+                    break;
+            }
         }
 
         public int FFTSize
@@ -25,6 +84,7 @@ namespace LibRXFFT.Components.DirectX
                 lock (FFTLock)
                 {
                     _FFTSize = value;
+                    FFTResult = new double[_FFTSize];
                     FFT = new FFTTransformer(value);
 
                     fftDisplay.FFTSize = value;
@@ -33,7 +93,7 @@ namespace LibRXFFT.Components.DirectX
             }
         }
 
-        public void ProcessData(byte[] dataBuffer)
+        public void ProcessRawData(byte[] dataBuffer)
         {
             const int bytePerSample = 2;
             const int channels = 2;
@@ -48,18 +108,18 @@ namespace LibRXFFT.Components.DirectX
                     double I = ByteUtil.getDoubleFromBytes(dataBuffer, samplePairPos);
                     double Q = ByteUtil.getDoubleFromBytes(dataBuffer, samplePairPos + bytePerSample);
 
+
                     FFT.AddSample(I, Q);
 
                     if (FFT.ResultAvailable)
                     {
-                        double[] amplitudes = FFT.GetResult();
+                        FFT.GetResultSquared(FFTResult);
 
-                        fftDisplay.ProcessFFTData(amplitudes);
-                        //waterfallDisplay.ProcessData(amplitudes);
+                        fftDisplay.ProcessFFTData(FFTResult);
+                        waterfallDisplay.ProcessFFTData(FFTResult);
                     }
                 }
             }
         }
-
     }
 }

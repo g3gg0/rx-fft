@@ -67,20 +67,20 @@ namespace LibRXFFT.Libraries.GSM.Bursts
             InitBuffers(8);
         }
 
-        public override bool ParseData(GSMParameters param, bool[] decodedBurst)
+        public override eSuccessState ParseData(GSMParameters param, bool[] decodedBurst)
         {
             return ParseData(param, decodedBurst, 0);
         }
 
-        public override bool ParseData(GSMParameters param, bool[] decodedBurst, int sequence)
+        public override eSuccessState ParseData(GSMParameters param, bool[] decodedBurst, int sequence)
         {
-            bool success = false;
+            eSuccessState success = eSuccessState.Unknown;
 
             if (IsDummy(decodedBurst))
             {
-                if (param.DumpPackets)
+                if (DumpRawData)
                     StatusMessage = "Dummy Burst";
-                return true;
+                return eSuccessState.Succeeded;
             }
 
             /* decode e[] to i[] and save into our burstbuffer */
@@ -131,7 +131,7 @@ namespace LibRXFFT.Libraries.GSM.Bursts
                         bool[] crc = CRC.Calc(parityBits, 0, 53, CRC.PolynomialTCHFR);
                         if (CRC.Matches(crc))
                         {
-                            success = true;
+                            success = eSuccessState.Succeeded;
 
                             /* GSM frame magic */
                             RTPFrameBool[0] = true;
@@ -170,8 +170,8 @@ namespace LibRXFFT.Libraries.GSM.Bursts
                  * then use the last 4 bursts as we normally would do.
                  * this will help in finding the correct alignment within the 4 frames.
                  */
-                
-                if (success)
+
+                if (success == eSuccessState.Succeeded)
                     BurstShiftCount = 4;
                 
                 /* save the last n bursts for the next block */
@@ -185,8 +185,8 @@ namespace LibRXFFT.Libraries.GSM.Bursts
                 if (BurstShiftCount == 4)
                     return success;
             }
-            
-            return true;
+
+            return eSuccessState.Unknown;
         }
 
 

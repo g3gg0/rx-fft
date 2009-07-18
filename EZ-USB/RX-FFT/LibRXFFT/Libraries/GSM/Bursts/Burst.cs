@@ -7,6 +7,8 @@ namespace LibRXFFT.Libraries.GSM.Bursts
 {
     public class Burst
     {
+        public static bool DumpRawData = false;
+
         public string ErrorMessage = "";
         public string StatusMessage = null;
 
@@ -23,8 +25,13 @@ namespace LibRXFFT.Libraries.GSM.Bursts
 
         public string Name = "Unknown";
         public string ShortName = "Unk";
-        
 
+        public enum eSuccessState
+        {
+            Failed,
+            Succeeded,
+            Unknown
+        }
 
         protected void DumpBits(bool[] data)
         {
@@ -57,14 +64,22 @@ namespace LibRXFFT.Libraries.GSM.Bursts
                 StatusMessage += msg;
         }
 
-        public virtual bool ParseData(GSMParameters param, bool[] decodedBurst)
+
+        public virtual eSuccessState ParseData(GSMParameters param, bool[] decodedBurst)
         {
             return ParseData(param, decodedBurst, 0);
         }
 
-        public virtual bool ParseData(GSMParameters param, bool[] decodedBurst, int sequence)
+        /* parse the e[] bits */
+        public virtual eSuccessState ParseData(GSMParameters param, bool[] decodedBurst, int sequence)
         {
-            return false;
+            return eSuccessState.Unknown;
+        }
+
+        /* parse the raw samples */
+        public virtual eSuccessState ParseRawBurst(GSMParameters Parameters, double[] rawBurst)
+        {
+            return eSuccessState.Unknown;
         }
     }
 }

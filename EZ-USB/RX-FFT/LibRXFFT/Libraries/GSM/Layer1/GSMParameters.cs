@@ -71,11 +71,24 @@ namespace LibRXFFT.Libraries.GSM.Layer1
         public double PhaseOffsetValue = 0;
         public bool PhaseAutoOffset = true;
         public double Oversampling = 1;
+        public double BT = 0.3d;
 
-        public bool DumpPackets = false;
-        private const long MaxErrors = 3;
+        private const long MaxErrors = 8*3;
 
-        public long SampleOffset = 0;
+        /* where in the double[] burst buffer the first bit starts */
+        public double SampleStartPosition = 0;
+
+        /* 
+         * a temporary offset to apply. this is determined by the ParseSampleData method 
+         * and reset after the burst was parsed
+         */
+        public double SampleOffset = 0;
+
+        /* 
+         * the fractional part of sample offset determined by zero crossing analysis.
+         * has to get merged with SampleOffset
+         * */
+        public double SubSampleOffset = 0;
 
         public long FN;
         public long TN;
@@ -149,26 +162,27 @@ namespace LibRXFFT.Libraries.GSM.Layer1
         public long TotalSuccess;
         public long Errors;
 
-        public bool Error
+        public bool ErrorLimit
         {
             get { return Errors >= MaxErrors; }
-
-            set
-            {
-                /* when resetting error bit, reset error counter. if setting, just increase counter */
-                if (value)
-                {
-                    Errors++;
-                    TotalErrors++;
-                }
-                else
-                {
-                    Errors = 0;
-                    TotalSuccess++;
-                }
-            }
         }
 
+        public void ResetError()
+        {
+            Errors = 0;
+        }
+
+        public void Error()
+        {
+            Errors++;
+            TotalErrors++;
+        }
+
+        internal void Success()
+        {
+            Errors = 0;
+            TotalSuccess++;
+        }
 
         public override string ToString()
         {
@@ -301,6 +315,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
             return retVal;
         }
+
 
 
     }

@@ -24,7 +24,7 @@ namespace GSM_Analyzer
 
         private void Refresh()
         {
-            chkL1DumpFrames.Checked = Analyzer.Parameters.DumpPackets;
+            chkL1DumpFrames.Checked = Burst.DumpRawData;
             chkL1ShowEncrypted.Checked = SDCCHBurst.ShowEncryptedMessage;
             chkL1DumpEncrypted.Checked = SDCCHBurst.DumpEncryptedMessage;
             chkL1PreallocateTCH.Checked = TimeSlotHandler.PreallocateTCHs;
@@ -294,7 +294,7 @@ namespace GSM_Analyzer
 
         private void chkL1DumpFrames_CheckedChanged(object sender, EventArgs e)
         {
-            Analyzer.Parameters.DumpPackets = chkL1DumpFrames.Checked;
+            Burst.DumpRawData = chkL1DumpFrames.Checked;
         }
 
         private void chkPhaseAutoOffset_CheckedChanged(object sender, EventArgs e)

@@ -60,18 +60,18 @@ namespace LibRXFFT.Libraries.GSM.Bursts
             InitBuffers(4);
         }
 
-        public override bool ParseData(GSMParameters param, bool[] decodedBurst)
+        public override eSuccessState ParseData(GSMParameters param, bool[] decodedBurst)
         {
             return ParseData(param, decodedBurst, 0);
         }
 
-        public override bool ParseData(GSMParameters param, bool[] burstBufferC, int sequence)
+        public override eSuccessState ParseData(GSMParameters param, bool[] burstBufferC, int sequence)
         {
             /* decode */
             if (ConvolutionalCoder.DecodeViterbi(burstBufferC, BurstBufferU) == null)
             {
                 ErrorMessage = "(FACCH: Error in ConvolutionalCoder, maybe encrypted)";
-                return false;
+                return eSuccessState.Unknown;
             }
 
             /* CRC check/fix */
@@ -83,7 +83,7 @@ namespace LibRXFFT.Libraries.GSM.Bursts
 
                 case eCRCState.Failed:
                     ErrorMessage = "(FACCH: CRC Error)";
-                    return false;
+                    return eSuccessState.Failed;
             }
 
             /* convert u[] to d[] bytes */
@@ -91,7 +91,7 @@ namespace LibRXFFT.Libraries.GSM.Bursts
 
             L2.Handle(this, L3, BurstBufferD);
 
-            return true;
+            return eSuccessState.Succeeded;
         }
     }
 }

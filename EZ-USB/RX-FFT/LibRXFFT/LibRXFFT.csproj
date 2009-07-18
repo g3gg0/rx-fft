@@ -93,6 +93,7 @@
     <Compile Include="Components\DirectX\DirectXPhaseDisplay.Designer.cs">
       <DependentUpon>DirectXPhaseDisplay.cs</DependentUpon>
     </Compile>
+    <Compile Include="Components\DirectX\DirectXTypes.cs" />
     <Compile Include="Components\GDI\CFileDecimationDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -210,6 +211,7 @@
     <Compile Include="Libraries\SampleSources\USRPSampleSource.cs" />
     <Compile Include="Libraries\ShmemChain\SharedMem.cs" />
     <Compile Include="Libraries\ShmemChain\SharedMemNative.cs" />
+    <Compile Include="Libraries\SignalProcessing\DBTools.cs" />
     <Compile Include="Libraries\SignalProcessing\Differenciator.cs" />
     <Compile Include="Libraries\SignalProcessing\OffsetEstimator.cs" />
     <Compile Include="Libraries\SignalProcessing\Oversampler.cs" />

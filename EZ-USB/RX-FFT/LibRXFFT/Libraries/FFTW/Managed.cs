@@ -148,7 +148,7 @@ namespace LibRXFFT.Libraries.FFTW
     /// <summary>
     /// So FFTW can manage its own memory nicely
     /// </summary>
-    public class fftw_complexarray
+    public class fftwf_complexarray
     {
         private IntPtr handle;
         public IntPtr Handle
@@ -162,26 +162,26 @@ namespace LibRXFFT.Libraries.FFTW
         /// Creates a new array of complex numbers
         /// </summary>
         /// <param name="length">Logical length of the array</param>
-        public fftw_complexarray(int length)
+        public fftwf_complexarray(int length)
         {
             this.length = length;
-            this.handle = fftw.malloc(this.length * 16);
+            this.handle = fftwf.malloc(this.length * 16);
         }
 
         /// <summary>
         /// Creates an FFTW-compatible array from array of floats, initializes to single precision only
         /// </summary>
         /// <param name="data">Array of floats, alternating real and imaginary</param>
-        public fftw_complexarray(double[] data)
+        public fftwf_complexarray(double[] data)
         {
             this.length = data.Length / 2;
-            this.handle = fftw.malloc(this.length * 16);
+            this.handle = fftwf.malloc(this.length * 16);
             Marshal.Copy(data, 0, handle, this.length * 2);
         }
 
-        ~fftw_complexarray()
+        ~fftwf_complexarray()
         {
-            fftw.free(handle);
+            fftwf.free(handle);
         }
     }
 

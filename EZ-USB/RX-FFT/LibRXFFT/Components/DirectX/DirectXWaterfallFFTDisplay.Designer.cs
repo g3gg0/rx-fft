@@ -74,10 +74,8 @@ namespace LibRXFFT.Components.DirectX
             this.waterfallDisplay.Name = "waterfallDisplay";
             this.waterfallDisplay.ShowFPS = true;
             this.waterfallDisplay.Size = new System.Drawing.Size(537, 196);
-            this.waterfallDisplay.StartSample = 0;
             this.waterfallDisplay.TabIndex = 0;
             this.waterfallDisplay.UseLines = true;
-            this.waterfallDisplay.ZoomFactor = 0F;
             // 
             // WaterfallFFTDisplay
             // 

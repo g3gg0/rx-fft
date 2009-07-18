@@ -16,6 +16,7 @@ using LibRXFFT.Libraries.ShmemChain;
 using LibRXFFT.Libraries.SignalProcessing;
 using System.Text;
 using LibRXFFT.Components.DirectX;
+using LibRXFFT.Libraries.GSM.Misc;
 
 namespace GSM_Analyzer
 {
@@ -33,11 +34,14 @@ namespace GSM_Analyzer
 
         internal TimeSlotHandler Handler;
         internal GSMParameters Parameters;
+        internal GMSKDemodulator Demodulator;
         private FilterDialog FilterWindow;
         private BurstVisualizer BurstWindow;
+        private SpectrumVisualizer SpectrumWindow;
         private OptionsDialog OptionsWindow;
 
         private Object BurstWindowLock = new Object();
+        private Object SpectrumWindowLock = new Object();
 
         private DateTime LastTextBoxUpdate = DateTime.Now;
         private StringBuilder TextBoxBuffer = new StringBuilder(32768);
@@ -75,6 +79,8 @@ namespace GSM_Analyzer
         {
             InitializeComponent();
             Parameters = new GSMParameters();
+            Demodulator = new GMSKDemodulator();
+
 
             /* already init here to load XML files */
             InitTimeSlotHandler();
@@ -212,16 +218,7 @@ namespace GSM_Analyzer
 
         void UpdateFreqOffset(double offset)
         {
-            string[] scale = { "", "k", "G", "T" };
-            int fact = 0;
-
-            while (Math.Abs(offset) > 1000)
-            {
-                offset /= 1000;
-                fact++;
-            }
-            lblFreqOffset.Text = String.Format("{0:0.00}", offset) + " " + scale[fact] + "Hz";
-
+            lblFreqOffset.Text = FrequencyFormatter.FreqToString(offset);
         }
 
         void UpdateUIStatus(GSMParameters param)
@@ -412,7 +409,15 @@ namespace GSM_Analyzer
             long burstBufferPos = 0;
             long lastSampleOffset = 0;
 
+            double[] sourceSignal = new double[Source.OutputBlockSize];
+            double[] sourceStrength = new double[Source.OutputBlockSize];
 
+            /* update sampling rate in spectrum window */
+            lock (SpectrumWindowLock)
+            {
+                if (SpectrumWindow != null)
+                    SpectrumWindow.SamplingRate = Source.OutputSamplingRate;
+            }
 
             try
             {
@@ -422,7 +427,7 @@ namespace GSM_Analyzer
                         Thread.Sleep(100);
                     else
                     {
-                        int samplesRead = Source.SamplesRead;
+                        Demodulator.ProcessData(Source.SourceSamplesI, Source.SourceSamplesQ, sourceSignal, sourceStrength);
 
                         /* to allow external rate change */
                         if (Source.SamplingRateChanged)
@@ -446,6 +451,9 @@ namespace GSM_Analyzer
                                 burstCount = 0;
                                 sampleDelta = 0;
 
+                                sourceSignal = new double[Source.OutputBlockSize];
+                                sourceStrength = new double[Source.OutputBlockSize];
+
                                 Parameters.Reset();
                                 Parameters.Oversampling = Oversampling;
                                 Parameters.BT = BT;
@@ -453,14 +461,21 @@ namespace GSM_Analyzer
 
                                 InitTimeSlotHandler();
                                 UpdateUIStatus(Parameters);
+
+                                lock (SpectrumWindowLock)
+                                {
+                                    if (SpectrumWindow != null)
+                                        SpectrumWindow.SamplingRate = Source.OutputSamplingRate;
+                                }
+
                             }
                         }
 
 
-                        for (int pos = 0; pos < samplesRead; pos++)
+                        for (int pos = 0; pos < Source.OutputBlockSize; pos++)
                         {
-                            double signal = Source.Signal[pos] + Parameters.PhaseOffsetValue;
-                            double strength = Source.Strength[pos];
+                            double signal = sourceSignal[pos] + Parameters.PhaseOffsetValue;
+                            double strength = sourceStrength[pos];
 
                             bool burstSampled = false;
 
@@ -485,6 +500,13 @@ namespace GSM_Analyzer
                                 burstSampled = true;
                                 /* reset the delta. it will get set later again */
                                 sampleDelta = 0;
+                            }
+
+                            /* feed each sample to FFT window */
+                            lock (SpectrumWindowLock)
+                            {
+                                if (SpectrumWindow != null)
+                                    SpectrumWindow.ProcessIQSample(Source.SourceSamplesI[pos], Source.SourceSamplesQ[pos]);
                             }
 
                             switch (Parameters.State)
@@ -790,6 +812,32 @@ namespace GSM_Analyzer
             }
         }
 
+        private void btnSpectrum_Click(object sender, EventArgs e)
+        {       
+            lock (SpectrumWindowLock)
+            {
+                if (SpectrumWindow == null || !SpectrumWindow.Visible)
+                {
+                    try
+                    {
+                        SpectrumWindow = new SpectrumVisualizer();
+                        SpectrumWindow.Show();
+                        if (Source != null)
+                            SpectrumWindow.SamplingRate = Source.OutputSamplingRate;
+                    }
+                    catch (Exception ex)
+                    {
+                        AddMessage("Exception while initializing Spectrum Window:" + Environment.NewLine + ex.ToString());
+                    }
+                }
+                else
+                {
+                    SpectrumWindow.Close();
+                    SpectrumWindow = null;
+                }
+            }
+        }
+
         private void btnBurst_Click(object sender, EventArgs e)
         {
             lock (BurstWindowLock)
@@ -836,6 +884,7 @@ namespace GSM_Analyzer
         {
             txtLog.Clear();
         }
+
     }
 
 }

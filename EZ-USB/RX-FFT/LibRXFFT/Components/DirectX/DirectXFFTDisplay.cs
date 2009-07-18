@@ -10,6 +10,7 @@ using Timer = System.Timers.Timer;
 using Font = SlimDX.Direct3D9.Font;
 using SlimDX.Direct3D9;
 using LibRXFFT.Libraries.SignalProcessing;
+using LibRXFFT.Libraries.GSM.Misc;
 
 namespace LibRXFFT.Components.DirectX
 {
@@ -36,6 +37,8 @@ namespace LibRXFFT.Components.DirectX
         public double FFTOffset = 0.0f;
         private double fftPrescalerDefault = 1.0f;
         private double fftOffsetDefault = 0.0f;
+
+        public double SamplingRate = 100;
 
         public double Averaging = 1;
 
@@ -349,10 +352,13 @@ namespace LibRXFFT.Components.DirectX
             Device.DrawUserPrimitives(PrimitiveType.LineStrip, 2, CursorVertexesHor);
 
             /* draw the horizontal position (preliminary) */
+            double offset = (xPos / DirectXWidth) - 0.5f;
+            double offsetFreq = offset * SamplingRate;
+
             if (xPos > DirectXWidth / 2)
-                SmallFont.DrawString(null, ((xPos * 100) / DirectXWidth).ToString(), (int)xPos - 40, 20, ColorFG.ToArgb());
+                SmallFont.DrawString(null, FrequencyFormatter.FreqToString(offsetFreq), (int)xPos - 40, 20, ColorFG.ToArgb());
             else
-                SmallFont.DrawString(null, ((xPos * 100) / DirectXWidth).ToString(), (int)xPos + 20, 20, ColorFG.ToArgb());
+                SmallFont.DrawString(null, FrequencyFormatter.FreqToString(offsetFreq), (int)xPos + 20, 20, ColorFG.ToArgb());
 
             /* and the strength at the current position */
             SmallFont.DrawString(null, dB + " dB", (int)xPos + 20, (int)yPos, ColorFG.ToArgb());

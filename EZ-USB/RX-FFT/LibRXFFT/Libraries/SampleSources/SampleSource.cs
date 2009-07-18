@@ -16,7 +16,6 @@ namespace LibRXFFT.Libraries.SampleSources
         protected bool InvertedSpectrum = false;
         protected Oversampler IOversampler;
         protected Oversampler QOversampler;
-        public GMSKDemodulator Demodulator;
 
         public static eOversamplingType DefaultOversamplingType = eOversamplingType.SinX;
         public eOversamplingType OversamplingType
@@ -67,12 +66,17 @@ namespace LibRXFFT.Libraries.SampleSources
         public readonly int InternalOversampling;
         public double[] SourceSamplesI;
         public double[] SourceSamplesQ;
-        public double[] OversampledI;
-        public double[] OversampledQ;
-        public double[] Signal;
-        public double[] Strength;
+        public double[] OversampleI;
+        public double[] OversampleQ;
         public int SamplesRead;
-        protected int BlockSize = 1024;
+        public int BlockSize = 1024;
+        public int OutputBlockSize
+        {
+            get
+            {
+                return BlockSize * InternalOversampling;
+            }
+        }
 
         public double InputSamplingRate;
         public double OutputSamplingRate
@@ -97,15 +101,10 @@ namespace LibRXFFT.Libraries.SampleSources
             QOversampler.Type = DefaultOversamplingType;
             QOversampler.SinXDepth = DefaultSinXDepth;
 
-            Demodulator = new GMSKDemodulator();
-
-            SourceSamplesI = new double[BlockSize];
-            SourceSamplesQ = new double[BlockSize];
-            OversampledI = new double[BlockSize * InternalOversampling];
-            OversampledQ = new double[BlockSize * InternalOversampling];
-
-            Signal = new double[BlockSize * InternalOversampling];
-            Strength = new double[BlockSize * InternalOversampling];
+            SourceSamplesI = new double[BlockSize * InternalOversampling];
+            SourceSamplesQ = new double[BlockSize * InternalOversampling];
+            OversampleI = new double[BlockSize];
+            OversampleQ = new double[BlockSize];
 
             SamplingRateChanged = true;
         }

@@ -41,9 +41,11 @@ namespace GSM_Analyzer
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(GSMAnalyzer));
             this.btnOpen = new System.Windows.Forms.Button();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.splitContainer5 = new System.Windows.Forms.SplitContainer();
+            this.btnSpectrum = new System.Windows.Forms.Button();
             this.btnClear = new System.Windows.Forms.Button();
             this.btnOptions = new System.Windows.Forms.Button();
             this.btnStats = new System.Windows.Forms.Button();
@@ -138,6 +140,7 @@ namespace GSM_Analyzer
             // 
             // splitContainer5.Panel1
             // 
+            this.splitContainer5.Panel1.Controls.Add(this.btnSpectrum);
             this.splitContainer5.Panel1.Controls.Add(this.btnClear);
             this.splitContainer5.Panel1.Controls.Add(this.btnOptions);
             this.splitContainer5.Panel1.Controls.Add(this.btnStats);
@@ -158,6 +161,16 @@ namespace GSM_Analyzer
             this.splitContainer5.SplitterWidth = 1;
             this.splitContainer5.TabIndex = 8;
             // 
+            // btnSpectrum
+            // 
+            this.btnSpectrum.Location = new System.Drawing.Point(186, 29);
+            this.btnSpectrum.Name = "btnSpectrum";
+            this.btnSpectrum.Size = new System.Drawing.Size(75, 23);
+            this.btnSpectrum.TabIndex = 17;
+            this.btnSpectrum.Text = "Show Spect";
+            this.btnSpectrum.UseVisualStyleBackColor = true;
+            this.btnSpectrum.Click += new System.EventHandler(this.btnSpectrum_Click);
+            // 
             // btnClear
             // 
             this.btnClear.Location = new System.Drawing.Point(105, 29);
@@ -170,7 +183,7 @@ namespace GSM_Analyzer
             // 
             // btnOptions
             // 
-            this.btnOptions.Location = new System.Drawing.Point(186, 29);
+            this.btnOptions.Location = new System.Drawing.Point(3, 29);
             this.btnOptions.Name = "btnOptions";
             this.btnOptions.Size = new System.Drawing.Size(75, 23);
             this.btnOptions.TabIndex = 15;
@@ -584,6 +597,7 @@ namespace GSM_Analyzer
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(910, 476);
             this.Controls.Add(this.splitContainer1);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "GSMAnalyzer";
             this.Text = "GSMAnalyzer";
             this.splitContainer1.Panel1.ResumeLayout(false);
@@ -653,6 +667,7 @@ namespace GSM_Analyzer
         private System.Windows.Forms.Label label14;
         private System.Windows.Forms.Label label15;
         private System.Windows.Forms.Label lblFreqOffset;
+        private System.Windows.Forms.Button btnSpectrum;
     }
 }
 

@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(OptionsDialog));
             this.chkFastAtan2 = new System.Windows.Forms.CheckBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.chkSubSample = new System.Windows.Forms.CheckBox();
@@ -47,6 +48,9 @@
             this.chkL3DumpRaw = new System.Windows.Forms.CheckBox();
             this.txtSubSampleOffset = new System.Windows.Forms.TextBox();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.btnBurstLengthB = new System.Windows.Forms.Button();
+            this.btnBurstLengthA = new System.Windows.Forms.Button();
+            this.chkPhaseAutoOffset = new System.Windows.Forms.CheckBox();
             this.txtPhaseOffset = new System.Windows.Forms.TextBox();
             this.label12 = new System.Windows.Forms.Label();
             this.label11 = new System.Windows.Forms.Label();
@@ -56,29 +60,26 @@
             this.txtOffset3 = new System.Windows.Forms.TextBox();
             this.txtOffset2 = new System.Windows.Forms.TextBox();
             this.txtOffset1 = new System.Windows.Forms.TextBox();
-            this.txtSinxDepth = new System.Windows.Forms.TextBox();
             this.label14 = new System.Windows.Forms.Label();
             this.label13 = new System.Windows.Forms.Label();
-            this.label8 = new System.Windows.Forms.Label();
-            this.radioOvsLinear = new System.Windows.Forms.RadioButton();
-            this.radioOvsSinx = new System.Windows.Forms.RadioButton();
-            this.label7 = new System.Windows.Forms.Label();
             this.txtDecisionLevel = new System.Windows.Forms.TextBox();
             this.label6 = new System.Windows.Forms.Label();
             this.label15 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
+            this.txtSinxDepth = new System.Windows.Forms.TextBox();
+            this.label8 = new System.Windows.Forms.Label();
+            this.radioOvsLinear = new System.Windows.Forms.RadioButton();
+            this.radioOvsSinx = new System.Windows.Forms.RadioButton();
+            this.label7 = new System.Windows.Forms.Label();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.chkL1PreallocateTCH = new System.Windows.Forms.CheckBox();
             this.chkL1DumpEncrypted = new System.Windows.Forms.CheckBox();
             this.chkL1DumpFrames = new System.Windows.Forms.CheckBox();
             this.chkL1ShowEncrypted = new System.Windows.Forms.CheckBox();
             this.groupBox5 = new System.Windows.Forms.GroupBox();
             this.chkL2ShowAllFrames = new System.Windows.Forms.CheckBox();
             this.chkL2DumpRaw = new System.Windows.Forms.CheckBox();
-            this.chkPhaseAutoOffset = new System.Windows.Forms.CheckBox();
-            this.chkL1PreallocateTCH = new System.Windows.Forms.CheckBox();
             this.groupBox6 = new System.Windows.Forms.GroupBox();
-            this.btnBurstLengthA = new System.Windows.Forms.Button();
-            this.btnBurstLengthB = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -302,6 +303,37 @@
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Signal Processing (Advanced)";
             // 
+            // btnBurstLengthB
+            // 
+            this.btnBurstLengthB.Location = new System.Drawing.Point(174, 101);
+            this.btnBurstLengthB.Name = "btnBurstLengthB";
+            this.btnBurstLengthB.Size = new System.Drawing.Size(21, 23);
+            this.btnBurstLengthB.TabIndex = 32;
+            this.btnBurstLengthB.Text = "B";
+            this.btnBurstLengthB.UseVisualStyleBackColor = true;
+            this.btnBurstLengthB.Click += new System.EventHandler(this.btnBurstLengthB_Click);
+            // 
+            // btnBurstLengthA
+            // 
+            this.btnBurstLengthA.Location = new System.Drawing.Point(152, 101);
+            this.btnBurstLengthA.Name = "btnBurstLengthA";
+            this.btnBurstLengthA.Size = new System.Drawing.Size(21, 23);
+            this.btnBurstLengthA.TabIndex = 32;
+            this.btnBurstLengthA.Text = "A";
+            this.btnBurstLengthA.UseVisualStyleBackColor = true;
+            this.btnBurstLengthA.Click += new System.EventHandler(this.btnBurstLengthA_Click);
+            // 
+            // chkPhaseAutoOffset
+            // 
+            this.chkPhaseAutoOffset.AutoSize = true;
+            this.chkPhaseAutoOffset.Location = new System.Drawing.Point(82, 48);
+            this.chkPhaseAutoOffset.Name = "chkPhaseAutoOffset";
+            this.chkPhaseAutoOffset.Size = new System.Drawing.Size(48, 17);
+            this.chkPhaseAutoOffset.TabIndex = 31;
+            this.chkPhaseAutoOffset.Text = "Auto";
+            this.chkPhaseAutoOffset.UseVisualStyleBackColor = true;
+            this.chkPhaseAutoOffset.CheckedChanged += new System.EventHandler(this.chkPhaseAutoOffset_CheckedChanged);
+            // 
             // txtPhaseOffset
             // 
             this.txtPhaseOffset.Location = new System.Drawing.Point(134, 46);
@@ -378,14 +410,6 @@
             this.txtOffset1.TabIndex = 11;
             this.txtOffset1.TextChanged += new System.EventHandler(this.txtOffset1_TextChanged);
             // 
-            // txtSinxDepth
-            // 
-            this.txtSinxDepth.Location = new System.Drawing.Point(137, 72);
-            this.txtSinxDepth.Name = "txtSinxDepth";
-            this.txtSinxDepth.Size = new System.Drawing.Size(61, 20);
-            this.txtSinxDepth.TabIndex = 10;
-            this.txtSinxDepth.TextChanged += new System.EventHandler(this.textSinxDepth_TextChanged);
-            // 
             // label14
             // 
             this.label14.AutoSize = true;
@@ -403,6 +427,49 @@
             this.label13.Size = new System.Drawing.Size(146, 13);
             this.label13.TabIndex = 26;
             this.label13.Text = "Burst length correction in bits:";
+            // 
+            // txtDecisionLevel
+            // 
+            this.txtDecisionLevel.Location = new System.Drawing.Point(134, 69);
+            this.txtDecisionLevel.Name = "txtDecisionLevel";
+            this.txtDecisionLevel.Size = new System.Drawing.Size(61, 20);
+            this.txtDecisionLevel.TabIndex = 6;
+            this.txtDecisionLevel.TextChanged += new System.EventHandler(this.txtDecisionLevel_TextChanged);
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(8, 72);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(76, 13);
+            this.label6.TabIndex = 0;
+            this.label6.Text = "Decision level:";
+            // 
+            // label15
+            // 
+            this.label15.AutoSize = true;
+            this.label15.Location = new System.Drawing.Point(7, 49);
+            this.label15.Name = "label15";
+            this.label15.Size = new System.Drawing.Size(71, 13);
+            this.label15.TabIndex = 0;
+            this.label15.Text = "Phase Offset:";
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(7, 25);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(95, 13);
+            this.label5.TabIndex = 0;
+            this.label5.Text = "SubSample Offset:";
+            // 
+            // txtSinxDepth
+            // 
+            this.txtSinxDepth.Location = new System.Drawing.Point(137, 72);
+            this.txtSinxDepth.Name = "txtSinxDepth";
+            this.txtSinxDepth.Size = new System.Drawing.Size(61, 20);
+            this.txtSinxDepth.TabIndex = 10;
+            this.txtSinxDepth.TextChanged += new System.EventHandler(this.textSinxDepth_TextChanged);
             // 
             // label8
             // 
@@ -446,41 +513,6 @@
             this.label7.TabIndex = 23;
             this.label7.Text = "Method:";
             // 
-            // txtDecisionLevel
-            // 
-            this.txtDecisionLevel.Location = new System.Drawing.Point(134, 69);
-            this.txtDecisionLevel.Name = "txtDecisionLevel";
-            this.txtDecisionLevel.Size = new System.Drawing.Size(61, 20);
-            this.txtDecisionLevel.TabIndex = 6;
-            this.txtDecisionLevel.TextChanged += new System.EventHandler(this.txtDecisionLevel_TextChanged);
-            // 
-            // label6
-            // 
-            this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(8, 72);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(76, 13);
-            this.label6.TabIndex = 0;
-            this.label6.Text = "Decision level:";
-            // 
-            // label15
-            // 
-            this.label15.AutoSize = true;
-            this.label15.Location = new System.Drawing.Point(7, 49);
-            this.label15.Name = "label15";
-            this.label15.Size = new System.Drawing.Size(71, 13);
-            this.label15.TabIndex = 0;
-            this.label15.Text = "Phase Offset:";
-            // 
-            // label5
-            // 
-            this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(7, 25);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(95, 13);
-            this.label5.TabIndex = 0;
-            this.label5.Text = "SubSample Offset:";
-            // 
             // groupBox4
             // 
             this.groupBox4.Controls.Add(this.chkL1PreallocateTCH);
@@ -493,6 +525,17 @@
             this.groupBox4.TabIndex = 18;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "L1 Options";
+            // 
+            // chkL1PreallocateTCH
+            // 
+            this.chkL1PreallocateTCH.AutoSize = true;
+            this.chkL1PreallocateTCH.Location = new System.Drawing.Point(10, 90);
+            this.chkL1PreallocateTCH.Name = "chkL1PreallocateTCH";
+            this.chkL1PreallocateTCH.Size = new System.Drawing.Size(109, 17);
+            this.chkL1PreallocateTCH.TabIndex = 18;
+            this.chkL1PreallocateTCH.Text = "Preallocate TCHs";
+            this.chkL1PreallocateTCH.UseVisualStyleBackColor = true;
+            this.chkL1PreallocateTCH.CheckedChanged += new System.EventHandler(this.chkL1PreallocateTCH_CheckedChanged);
             // 
             // chkL1DumpEncrypted
             // 
@@ -560,28 +603,6 @@
             this.chkL2DumpRaw.UseVisualStyleBackColor = true;
             this.chkL2DumpRaw.CheckedChanged += new System.EventHandler(this.chkL2DumpRaw_CheckedChanged);
             // 
-            // chkPhaseAutoOffset
-            // 
-            this.chkPhaseAutoOffset.AutoSize = true;
-            this.chkPhaseAutoOffset.Location = new System.Drawing.Point(82, 48);
-            this.chkPhaseAutoOffset.Name = "chkPhaseAutoOffset";
-            this.chkPhaseAutoOffset.Size = new System.Drawing.Size(48, 17);
-            this.chkPhaseAutoOffset.TabIndex = 31;
-            this.chkPhaseAutoOffset.Text = "Auto";
-            this.chkPhaseAutoOffset.UseVisualStyleBackColor = true;
-            this.chkPhaseAutoOffset.CheckedChanged += new System.EventHandler(this.chkPhaseAutoOffset_CheckedChanged);
-            // 
-            // chkL1PreallocateTCH
-            // 
-            this.chkL1PreallocateTCH.AutoSize = true;
-            this.chkL1PreallocateTCH.Location = new System.Drawing.Point(10, 90);
-            this.chkL1PreallocateTCH.Name = "chkL1PreallocateTCH";
-            this.chkL1PreallocateTCH.Size = new System.Drawing.Size(109, 17);
-            this.chkL1PreallocateTCH.TabIndex = 18;
-            this.chkL1PreallocateTCH.Text = "Preallocate TCHs";
-            this.chkL1PreallocateTCH.UseVisualStyleBackColor = true;
-            this.chkL1PreallocateTCH.CheckedChanged += new System.EventHandler(this.chkL1PreallocateTCH_CheckedChanged);
-            // 
             // groupBox6
             // 
             this.groupBox6.Controls.Add(this.radioOvsLinear);
@@ -598,26 +619,6 @@
             this.groupBox6.TabStop = false;
             this.groupBox6.Text = "Signal Processing";
             // 
-            // btnBurstLengthA
-            // 
-            this.btnBurstLengthA.Location = new System.Drawing.Point(152, 101);
-            this.btnBurstLengthA.Name = "btnBurstLengthA";
-            this.btnBurstLengthA.Size = new System.Drawing.Size(21, 23);
-            this.btnBurstLengthA.TabIndex = 32;
-            this.btnBurstLengthA.Text = "A";
-            this.btnBurstLengthA.UseVisualStyleBackColor = true;
-            this.btnBurstLengthA.Click += new System.EventHandler(this.btnBurstLengthA_Click);
-            // 
-            // btnBurstLengthB
-            // 
-            this.btnBurstLengthB.Location = new System.Drawing.Point(174, 101);
-            this.btnBurstLengthB.Name = "btnBurstLengthB";
-            this.btnBurstLengthB.Size = new System.Drawing.Size(21, 23);
-            this.btnBurstLengthB.TabIndex = 32;
-            this.btnBurstLengthB.Text = "B";
-            this.btnBurstLengthB.UseVisualStyleBackColor = true;
-            this.btnBurstLengthB.Click += new System.EventHandler(this.btnBurstLengthB_Click);
-            // 
             // OptionsDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -631,6 +632,7 @@
             this.Controls.Add(this.btnOk);
             this.Controls.Add(this.groupBox1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "OptionsDialog";

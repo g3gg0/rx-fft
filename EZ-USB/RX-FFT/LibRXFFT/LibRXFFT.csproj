@@ -196,6 +196,7 @@
     <Compile Include="Libraries\GSM\Layer2\L2Handler.cs" />
     <Compile Include="Libraries\GSM\Layer3\CBCHandler.cs" />
     <Compile Include="Libraries\GSM\Misc\BitMapping.cs" />
+    <Compile Include="Libraries\GSM\Misc\FrequencyFormatter.cs" />
     <Compile Include="Libraries\GSM\Misc\MCCTable.cs" />
     <Compile Include="Libraries\GSM\Bursts\NormalBurst.cs" />
     <Compile Include="Libraries\GSM\Bursts\SCHBurst.cs" />

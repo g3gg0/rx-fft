@@ -8,9 +8,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("GSM Analyzer")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Microsoft")]
+[assembly: AssemblyCompany("LX networking GbR")]
 [assembly: AssemblyProduct("GSM Analyzer")]
-[assembly: AssemblyCopyright("Copyright © Microsoft 2009")]
+[assembly: AssemblyCopyright("Copyright © LX networking GbR")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

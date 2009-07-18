@@ -31,9 +31,10 @@ namespace GSM_Analyzer
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(BurstVisualizer));
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.SampleDisplay = new DirectXBurstDisplay();
-            this.StrengthDisplay = new DirectXWaveformDisplay();
+            this.SampleDisplay = new LibRXFFT.Components.DirectX.DirectXBurstDisplay();
+            this.StrengthDisplay = new LibRXFFT.Components.DirectX.DirectXWaveformDisplay();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -57,8 +58,11 @@ namespace GSM_Analyzer
             this.splitContainer1.SplitterDistance = 232;
             this.splitContainer1.TabIndex = 0;
             // 
-            // waveformDisplay1
+            // SampleDisplay
             // 
+            this.SampleDisplay.ColorBG = System.Drawing.Color.Black;
+            this.SampleDisplay.ColorFG = System.Drawing.Color.Cyan;
+            this.SampleDisplay.ColorFont = System.Drawing.Color.DarkCyan;
             this.SampleDisplay.DisplayName = null;
             this.SampleDisplay.Dock = System.Windows.Forms.DockStyle.Fill;
             this.SampleDisplay.Location = new System.Drawing.Point(0, 0);
@@ -67,10 +71,14 @@ namespace GSM_Analyzer
             this.SampleDisplay.ShowFPS = false;
             this.SampleDisplay.Size = new System.Drawing.Size(873, 232);
             this.SampleDisplay.TabIndex = 0;
+            this.SampleDisplay.XZoomFactor = 2;
             this.SampleDisplay.YZoomFactor = 1;
             // 
-            // waveformDisplay2
+            // StrengthDisplay
             // 
+            this.StrengthDisplay.ColorBG = System.Drawing.Color.Black;
+            this.StrengthDisplay.ColorFG = System.Drawing.Color.Cyan;
+            this.StrengthDisplay.ColorFont = System.Drawing.Color.DarkCyan;
             this.StrengthDisplay.DisplayName = null;
             this.StrengthDisplay.Dock = System.Windows.Forms.DockStyle.Fill;
             this.StrengthDisplay.Location = new System.Drawing.Point(0, 0);
@@ -79,6 +87,7 @@ namespace GSM_Analyzer
             this.StrengthDisplay.ShowFPS = false;
             this.StrengthDisplay.Size = new System.Drawing.Size(873, 253);
             this.StrengthDisplay.TabIndex = 0;
+            this.StrengthDisplay.XZoomFactor = 2;
             this.StrengthDisplay.YZoomFactor = 1;
             // 
             // BurstVisualizer
@@ -87,6 +96,7 @@ namespace GSM_Analyzer
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(873, 489);
             this.Controls.Add(this.splitContainer1);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "BurstVisualizer";
             this.Text = "BurstVisualizer";
             this.splitContainer1.Panel1.ResumeLayout(false);

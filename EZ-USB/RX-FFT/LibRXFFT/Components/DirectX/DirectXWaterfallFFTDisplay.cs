@@ -36,6 +36,11 @@ namespace LibRXFFT.Components.DirectX
         }
 
 
+        public double SamplingRate
+        {
+            set { fftDisplay.SamplingRate = value; }
+        }
+
         public double Averaging
         {
             get { return fftDisplay.Averaging; }
@@ -118,6 +123,47 @@ namespace LibRXFFT.Components.DirectX
                         fftDisplay.ProcessFFTData(FFTResult);
                         waterfallDisplay.ProcessFFTData(FFTResult);
                     }
+                }
+            }
+        }
+
+        public void ProcessIQData(double[] iSamples, double[] qSamples)
+        {
+            lock (FFTLock)
+            {
+                int samplePairs = iSamples.Length;
+
+                for (int samplePair = 0; samplePair < samplePairs; samplePair++)
+                {
+                    double I = iSamples[samplePair];
+                    double Q = iSamples[samplePair];
+
+                    FFT.AddSample(I, Q);
+
+                    if (FFT.ResultAvailable)
+                    {
+                        FFT.GetResultSquared(FFTResult);
+
+                        fftDisplay.ProcessFFTData(FFTResult);
+                        waterfallDisplay.ProcessFFTData(FFTResult);
+                    }
+                }
+            }
+        }
+
+
+        public void ProcessIQSample(double I, double Q)
+        {
+            lock (FFTLock)
+            {
+                FFT.AddSample(I, Q);
+
+                if (FFT.ResultAvailable)
+                {
+                    FFT.GetResultSquared(FFTResult);
+
+                    fftDisplay.ProcessFFTData(FFTResult);
+                    waterfallDisplay.ProcessFFTData(FFTResult);
                 }
             }
         }

@@ -52,18 +52,19 @@ namespace LibRXFFT.Libraries.SampleSources
                 return false;
             }
 
-            DecodeFromBinary(InBuffer, SourceSamplesI, SourceSamplesQ);
 
             if (InternalOversampling > 1)
             {
-                IOversampler.Oversample(SourceSamplesI, OversampledI);
-                QOversampler.Oversample(SourceSamplesQ, OversampledQ);
-                Demodulator.ProcessData(OversampledI, OversampledQ, Signal, Strength);
+                DecodeFromBinary(InBuffer, OversampleI, OversampleQ);
+                IOversampler.Oversample(OversampleI, SourceSamplesI);
+                QOversampler.Oversample(OversampleQ, SourceSamplesQ);
             }
             else
-                Demodulator.ProcessData(SourceSamplesI, SourceSamplesQ, Signal, Strength);
+            {
+                DecodeFromBinary(InBuffer, SourceSamplesI, SourceSamplesQ);
+            }
 
-            SamplesRead = Signal.Length;
+            SamplesRead = SourceSamplesI.Length;
 
             return true;
         }

@@ -87,6 +87,15 @@ namespace GSM_Analyzer
 
             TextBoxCommitTimer.Tick += new EventHandler(TextBoxCommitTimer_Tick);
             TextBoxCommitTimer.Interval = 100;
+
+            /*
+            double lg;
+            double bg;
+            GaussKrueger.ConvertToLatLong(3634110, 5391840, out lg, out bg);
+            txtLog.Text += (" " + bg + ", " + lg + Environment.NewLine);
+            GaussKrueger.HelmertTransformation(lg, bg, out lg, out bg);
+            txtLog.Text += (" " + bg + ", " + lg + Environment.NewLine);
+            */
         }
 
         void TextBoxCommitTimer_Tick(object sender, EventArgs e)

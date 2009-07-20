@@ -1,0 +1,1078 @@
+<mncentries>
+	<entry mcc="412" mnc="01" network="Afghan Wireless Communication Company"/>
+	<entry mcc="412" mnc="20" network="Roshan (Telecom) - Roshan"/>
+	<entry mcc="412" mnc="40" network="Areeba"/>
+	<entry mcc="276" mnc="01" network="Albanian Mobile Communications"/>
+	<entry mcc="276" mnc="02" network="Vodafone"/>
+	<entry mcc="603" mnc="01" network="ATM Mobilis"/>
+	<entry mcc="603" mnc="02" network="Djezzy"/>
+	<entry mcc="603" mnc="03" network="Nedjma"/>
+	<entry mcc="213" mnc="03" network="Mobiland"/>
+	<entry mcc="631" mnc="02" network="UNITEL" />
+	<entry mcc="365" mnc="10" network="Weblinks Limited"/>
+	<entry mcc="344" mnc="030" network="APUA"/>
+	<entry mcc="344" mnc="920" network="bmobile"/>
+	<entry mcc="344" mnc="930" network="Digicel"/>
+	<entry mcc="722" mnc="010" network="Compañía de Radiocomunicaciones Moviles S.A. (Movicom)" />
+	<entry mcc="722" mnc="020" network="Nextel Argentina srl" />
+	<entry mcc="722" mnc="070" network="Movistar"/>
+	<entry mcc="722" mnc="310" network="CTI PCS S.A."/>
+	<entry mcc="722" mnc="320" network="CTI Movil"/>
+	<entry mcc="722" mnc="330" network="CTI Movil"/>
+	<entry mcc="722" mnc="340" network="Telecom Personal"/>
+	<entry mcc="722" mnc="350" network="Hutchinson (PORT HABLE)"/>
+	<entry mcc="283" mnc="01" network="ArmenTel"/>
+	<entry mcc="283" mnc="05" network="Vivacell"/>
+	<entry mcc="363" mnc="01" network="Setar"/>
+	<entry mcc="363" mnc="20" network="Digicell"/>
+	<entry mcc="505" mnc="01" network="Telstra"/>
+	<entry mcc="505" mnc="02" network="Optus"/>
+	<entry mcc="505" mnc="03" network="Vodafone"/>
+	<entry mcc="505" mnc="04" network="Department of Defence"/>
+	<entry mcc="505" mnc="05" network="Ozitel"/>
+	<entry mcc="505" mnc="06" network="Hutchison 3G (3)"/>
+	<entry mcc="505" mnc="07" network="Vodafone"/>
+	<entry mcc="505" mnc="08" network="One.Tel" />
+	<entry mcc="505" mnc="09" network="Airnet"/>
+	<entry mcc="505" mnc="11" network="Telstra"/>
+	<entry mcc="505" mnc="12" network="Hutchison 3G (3)"/>
+	<entry mcc="505" mnc="14" network="AAPT"/>
+	<entry mcc="505" mnc="15" network="3GIS"/>
+	<entry mcc="505" mnc="24" network="Advanced Communications Technologies"/>
+	<entry mcc="505" mnc="71" network="Telstra"/>
+	<entry mcc="505" mnc="72" network="Telstra"/>
+	<entry mcc="505" mnc="88" network="Localstar"/>
+	<entry mcc="505" mnc="90" network="Optus"/>
+	<entry mcc="505" mnc="99" network="One.Tel" />
+	<entry mcc="232" mnc="01" network="Mobilkom Austria / A1"/>
+	<entry mcc="232" mnc="03" network="T-Mobile"/>
+	<entry mcc="232" mnc="05" network="One / Orange Oesterreich" />
+	<entry mcc="232" mnc="07" network="T-Mobile Austria"/>
+	<entry mcc="232" mnc="09" network="Tele2"/>
+	<entry mcc="232" mnc="10" network="Hutchison 3G - '3'"/>
+	<entry mcc="400" mnc="01" network="Azercell"/>
+	<entry mcc="400" mnc="02" network="Bakcell"/>
+	<entry mcc="400" mnc="04" network="Nar Mobile"/>
+	<entry mcc="426" mnc="01" network="Batelco"/>
+	<entry mcc="426" mnc="02" network="MTC-VFBH"/>
+	<entry mcc="470" mnc="01" network="GrameenPhone"/>
+	<entry mcc="470" mnc="02" network="TM International (Aktel)"/>
+	<entry mcc="470" mnc="03" network="Sheeba Telecom (Banglalink)"/>
+	<entry mcc="342" mnc="600" network="bmobile - Cable &ampl; Wireless (Barbados) Ltd."/>
+	<entry mcc="342" mnc="820" network="Sunbeach Communications"/>
+	<entry mcc="257" mnc="01" network="Velcom"/>
+	<entry mcc="257" mnc="02" network="MTS BY"/>
+	<entry mcc="257" mnc="04" network="BeST"/>
+	<entry mcc="206" mnc="01" network="Belgacom Mobile Proximus"/>
+	<entry mcc="206" mnc="10" network="Mobistar"/>
+	<entry mcc="206" mnc="20" network="Base"/>
+	<entry mcc="702" mnc="67" network="Belize Telecommunications Ltd."/>
+	<entry mcc="702" mnc="68" network="International Telecommunications Ltd."/>
+	<entry mcc="616" mnc="01" network="Libercom"/>
+	<entry mcc="616" mnc="02" network="Telecel / Moov"/>
+	<entry mcc="616" mnc="03" network="Spacetel Benin"/>
+	<entry mcc="402" mnc="17" network="B-Mobile"/>
+	<entry mcc="218" mnc="01" network="Cronet"/>
+	<entry mcc="218" mnc="03" network="Eronet Mobile Communications Ltd."/>
+	<entry mcc="218" mnc="05" network="MOBI's (Mobilina Srpske)"/>
+	<entry mcc="218" mnc="19" network="PTT Bosnia"/>
+	<entry mcc="218" mnc="90" network="PE PTT BIH"/>
+	<entry mcc="652" mnc="01" network="Mascom Wireless"/>
+	<entry mcc="652" mnc="02" network="Orange Botswana"/>
+	<entry mcc="724" mnc="00" network="Telet"/>
+	<entry mcc="724" mnc="01" network="CRT Celular"/>
+	<entry mcc="724" mnc="02" network="TIM"/>
+	<entry mcc="724" mnc="03" network="TIM"/>
+	<entry mcc="724" mnc="04" network="TIM"/>
+	<entry mcc="724" mnc="05" network="Claro"/>
+	<entry mcc="724" mnc="06" network="Claro (former Tess)"/>
+	<entry mcc="724" mnc="07" network="Sercontel Celular"/>
+	<entry mcc="724" mnc="08" network="Maxitel"/>
+	<entry mcc="724" mnc="09" network="Telepar Celular"/>
+	<entry mcc="724" mnc="10" network="ATL Algar"/>
+	<entry mcc="724" mnc="11" network="Telems Celular"/>
+	<entry mcc="724" mnc="12" network="Claro (Former Americel)"/>
+	<entry mcc="724" mnc="13" network="Vivo (Former Telesp Celular)"/>
+	<entry mcc="724" mnc="14" network="Maxitel BA"/>
+	<entry mcc="724" mnc="15" network="CTBC Celular"/>
+	<entry mcc="724" mnc="16" network="BSE"/>
+	<entry mcc="724" mnc="17" network="Ceterp Celular"/>
+	<entry mcc="724" mnc="18" network="Oi (also known as Telemar / Norte Brasil Telecom)"/>
+	<entry mcc="724" mnc="19" network="Telemig Celular"/>
+	<entry mcc="724" mnc="21" network="Telerj Celular"/>
+	<entry mcc="724" mnc="23" network="Telest Celular"/>
+	<entry mcc="724" mnc="25" network="Telebrasilia Celular"/>
+	<entry mcc="724" mnc="27" network="Telegoias Celular"/>
+	<entry mcc="724" mnc="29" network="Telemat Celular"/>
+	<entry mcc="724" mnc="31" network="Oi"/>
+	<entry mcc="724" mnc="33" network="Teleron Celular"/>
+	<entry mcc="724" mnc="35" network="Telebahia Celular"/>
+	<entry mcc="724" mnc="37" network="Telergipe Celular"/>
+	<entry mcc="724" mnc="39" network="Telasa Celular"/>
+	<entry mcc="724" mnc="41" network="Telpe Celular"/>
+	<entry mcc="724" mnc="43" network="Telepisa Celular"/>
+	<entry mcc="724" mnc="45" network="Telpa Celular"/>
+	<entry mcc="724" mnc="47" network="Telem Celular"/>
+	<entry mcc="724" mnc="48" network="Teleceara Celular"/>
+	<entry mcc="724" mnc="51" network="Telma Celular"/>
+	<entry mcc="724" mnc="53" network="Telepara Celular"/>
+	<entry mcc="724" mnc="55" network="Teleamazon Celular"/>
+	<entry mcc="724" mnc="57" network="Teleamapa Celular"/>
+	<entry mcc="724" mnc="59" network="Telaima Celular"/>
+	<entry mcc="348" mnc="?" network="Cable &ampl; Wireless (West Indies)"/>
+	<entry mcc="348" mnc="570" network="Caribbean Cellular Telephone"/>
+	<entry mcc="528" mnc="01" network="Jabatan Telekom"/>
+	<entry mcc="528" mnc="02" network="BRU-bmobile"/>
+	<entry mcc="528" mnc="11" network="DST Communications"/>
+	<entry mcc="284" mnc="01" network="Mobiltel - M-Tel"/>
+	<entry mcc="284" mnc="03" network="Vivatel"/>
+	<entry mcc="284" mnc="05" network="GLOBUL"/>
+	<entry mcc="613" mnc="01" network="Onatel"/>
+	<entry mcc="613" mnc="02" network="Celtel"/>
+	<entry mcc="613" mnc="03" network="Telecel / Moov"/>
+	<entry mcc="642" mnc="01" network="Spacetel Burundi"/>
+	<entry mcc="642" mnc="02" network="Safaris"/>
+	<entry mcc="642" mnc="03" network="Telecel Burundi Company"/>
+	<entry mcc="456" mnc="01" network="Mobitel / Cam GSM"/>
+	<entry mcc="456" mnc="02" network="Samart / Casacom"/>
+	<entry mcc="456" mnc="03" network="S Telecom"/>
+	<entry mcc="456" mnc="18" network="Camshin / Shinawatra"/>
+	<entry mcc="624" mnc="01" network="Mobile Telephone Network"/>
+	<entry mcc="624" mnc="02" network="Orange"/>
+	<entry mcc="302" mnc="360" network="Telus Mobility"/>
+	<entry mcc="302" mnc="361" network="Telus Mobility"/>
+	<entry mcc="302" mnc="370" network="Fido brand Rogers wireless"/>
+	<entry mcc="302" mnc="651" network="Bell Mobility"/>
+	<entry mcc="302" mnc="652" network="BC Tel Mobility"/>
+	<entry mcc="302" mnc="653" network="Telus Mobility"/>
+	<entry mcc="302" mnc="654" network="Sask Tel Mobility"/>
+	<entry mcc="302" mnc="655" network="MTS Mobility"/>
+	<entry mcc="302" mnc="656" network="Tbay Mobility"/>
+	<entry mcc="302" mnc="657" network="Telus (Quebec) Mobility"/>
+	<entry mcc="302" mnc="701" network="MB Tel Mobility"/>
+	<entry mcc="302" mnc="702" network="MT&ampl;T Mobility"/>
+	<entry mcc="302" mnc="703" network="New Tel Mobility"/>
+	<entry mcc="302" mnc="710" network="Globalstar"/>
+	<entry mcc="302" mnc="720" network="Rogers Wireless"/>
+	<entry mcc="625" mnc="01" network="Cabo Verde Telecom"/>
+	<entry mcc="346" mnc="140" network="bmobile - Cable &ampl; Wireless (Cayman)"/>
+	<entry mcc="623" mnc="01" network="Centrafrique Telecom Plus (CTP)"/>
+	<entry mcc="623" mnc="02" network="Telecel Centrafrique (TC)"/>
+	<entry mcc="623" mnc="03" network="Celca (Socatel)"/>
+	<entry mcc="622" mnc="01" network="Celtel"/>
+	<entry mcc="622" mnc="02" network="Tchad Mobile"/>
+	<entry mcc="730" mnc="01" network="Entel PCS Telecomunicaciones S.A."/>
+	<entry mcc="730" mnc="02" network="Telefónica Móviles Chile S.A."/>
+	<entry mcc="730" mnc="03" network="América Móvil Chile (Claro)"/>
+	<entry mcc="730" mnc="04" network="Nextel Chile S.A."/>
+	<entry mcc="730" mnc="06" network="Blue Two Chile S.A. (Telsur)"/>
+	<entry mcc="730" mnc="10" network="Entel Telefonía Móvil S.A."/>
+	<entry mcc="730" mnc="99" network="Will Telefonía"/>
+	<entry mcc="460" mnc="00" network="China Mobile / Guangdong MCC / CMCC / NVyR / China Telecom GSM"/>
+	<entry mcc="460" mnc="01" network="China Unicom GSM"/>
+	<entry mcc="460" mnc="02" network="Liaoning PPTA"/>
+	<entry mcc="460" mnc="03" network="China Unicom CDMA"/>
+	<entry mcc="460" mnc="04" network="China Satellite Global Star Network"/>
+	<entry mcc="460" mnc="?" network="Beijing Wireless"/>
+	<entry mcc="460" mnc="?" network="Zhuhai Comms"/>
+	<entry mcc="460" mnc="?" network="DGT MPT"/>
+	<entry mcc="460" mnc="?" network="Jiaxing PTT"/>
+	<entry mcc="460" mnc="?" network="Tjianjin Toll"/>
+	<entry mcc="732" mnc="001" network="Colombia Telecomunicaciones S.A. - Telecom"/>
+	<entry mcc="732" mnc="002" network="Edatel S.A."/>
+	<entry mcc="732" mnc="101" network="Comcel S.A. Occel S.A. / Celcaribe"/>
+	<entry mcc="732" mnc="102" network="Bellsouth Colombia S.A."/>
+	<entry mcc="732" mnc="103" network="Colombia Móvil S.A."/>
+	<entry mcc="732" mnc="111" network="Colombia Móvil S.A."/>
+	<entry mcc="732" mnc="123" network="Telefónica Móviles Colombia S.A."/>
+	<entry mcc="654" mnc="01" network="HURI - SNPT"/>
+	<entry mcc="629" mnc="01" network="Celtel"/>
+	<entry mcc="629" mnc="10" network="Libertis Telecom"/>
+	<entry mcc="629" mnc="?" network="African Telecoms"/>
+	<entry mcc="629" mnc="?" network="Congolaise Wireless"/>
+	<entry mcc="548" mnc="01" network="Telecom Cook"/>
+	<entry mcc="712" mnc="01" network="Instituto Costarricense de Electricidad (ICE)"/>
+	<entry mcc="712" mnc="02" network="Instituto Costarricense de Electricidad (ICE)"/>
+	<entry mcc="712" mnc="03" network="Instituto Costarricense de Electricidad (ICE)"/>
+	<entry mcc="219" mnc="01" network="T-Mobile Croatia"/>
+	<entry mcc="219" mnc="10" network="VIPnet"/>
+	<entry mcc="219" mnc="?" network="Tele2"/>
+	<entry mcc="368" mnc="01" network="Cubacel"/>
+	<entry mcc="280" mnc="01" network="Cytamobile-Vodafone"/>
+	<entry mcc="280" mnc="10" network="Areeba Cyprus"/>
+	<entry mcc="230" mnc="01" network="T-Mobile Czech Republic"/>
+	<entry mcc="230" mnc="02" network="Telefónica O2 Czech Republic"/>
+	<entry mcc="230" mnc="03" network="Vodafone Czech Republic - Vodafone"/>
+	<entry mcc="230" mnc="99" network="Ceský Mobil a.s., R&ampl;D Centre"/>
+	<entry mcc="630" mnc="01" network="Vodacom Congo RDC sprl"/>
+	<entry mcc="630" mnc="86" network="Congo-Chine Telecom s.a.r.l."/>
+	<entry mcc="238" mnc="01" network="TDC / Tele-Danmark Mobil"/>
+	<entry mcc="238" mnc="02" network="Sonofon"/>
+	<entry mcc="238" mnc="03" network="MIGway A/S"/>
+	<entry mcc="238" mnc="04" network="TetraStar"/>
+	<entry mcc="238" mnc="05" network="Sonofon"/>
+	<entry mcc="238" mnc="06" network="3 / Hi3G / Hutchsion 3G"/>
+	<entry mcc="238" mnc="10" network="TDC Mobil"/>
+	<entry mcc="238" mnc="20" network="Telia"/>
+	<entry mcc="238" mnc="30" network="Telia"/>
+	<entry mcc="238" mnc="77" network="Tele2"/>
+	<entry mcc="638" mnc="01" network="Evatis"/>
+	<entry mcc="370" mnc="01" network="Orange Dominicana"/>
+	<entry mcc="370" mnc="02" network="Compañía Dominicana de Teléfonos, C por A. (Claro)"/>
+	<entry mcc="370" mnc="03" network="Tricom S.A."/>
+	<entry mcc="370" mnc="04" network="Viva Dominicana"/>
+	<entry mcc="740" mnc="00" network="Otecel S.A. - (formerly Bellsouth)"/>
+	<entry mcc="740" mnc="01" network="Porta GSM"/>
+	<entry mcc="740" mnc="02" network="Telecsa S.A."/>
+	<entry mcc="602" mnc="01" network="Mobinil" />
+	<entry mcc="602" mnc="02" network="Vodafone Egypt - Vodafone" />
+	<entry mcc="602" mnc="03" network="Etisalat Egypt - Etisalat"/>
+	<entry mcc="706" mnc="01" network="Personal / Telecom / Claro"/>
+	<entry mcc="706" mnc="02" network="Digicel Group (digicel)"/>
+	<entry mcc="706" mnc="03" network="Telemovil (Millicom) / Tigo"/>
+	<entry mcc="706" mnc="04" network="Telefónica Móviles El Salvador (movistar)"/>
+	<entry mcc="706" mnc="10" network="Personal / Telecom / Claro" />
+	<entry mcc="248" mnc="01" network="Estonian Mobile Telecom" />
+	<entry mcc="248" mnc="02" network="Elisa"/>
+	<entry mcc="248" mnc="03" network="Tele 2"/>
+	<entry mcc="248" mnc="04" network="OY Top Connect"/>
+	<entry mcc="248" mnc="05" network="AS Bravocom Mobiil"/>
+	<entry mcc="248" mnc="06" network="OY ViaTel"/>
+	<entry mcc="636" mnc="01" network="ETH MTN / Ethiopian Telecoms Auth."/>
+	<entry mcc="288" mnc="01" network="Faroese Telecom"/>
+	<entry mcc="288" mnc="02" network="Kell GSM"/>
+	<entry mcc="542" mnc="01" network="Vodafone"/>
+	<entry mcc="244" mnc="03" network="Telia"/>
+	<entry mcc="244" mnc="04" network="Finnet Networks Ltd."/>
+	<entry mcc="244" mnc="05" network="Elisa"/>
+	<entry mcc="244" mnc="09" network="Finnet Group / Lnnen Puhelin / Helsingin Puhelin"/>
+	<entry mcc="244" mnc="12" network="FinNet"/>
+	<entry mcc="244" mnc="14" network="Alands Mobiltelefon AB"/>
+	<entry mcc="244" mnc="16" network="Oy Finland Tele2 AB"/>
+	<entry mcc="244" mnc="21" network="Saunalahti Group Ltd."/>
+	<entry mcc="244" mnc="91" network="Sonera Corporation"/>
+	<entry mcc="208" mnc="01" network="Orange"/>
+	<entry mcc="208" mnc="02" network="Orange"/>
+	<entry mcc="208" mnc="05" network="Globalstar Europe"/>
+	<entry mcc="208" mnc="06" network="Globalstar Europe"/>
+	<entry mcc="208" mnc="07" network="Globalstar Europe"/>
+	<entry mcc="208" mnc="10" network="SFR"/>
+	<entry mcc="208" mnc="11" network="SFR (UMTS)"/>
+	<entry mcc="208" mnc="13" network="SFR (Zones Blanches)"/>
+	<entry mcc="208" mnc="20" network="Bouygues Telecom"/>
+	<entry mcc="208" mnc="21" network="Bouygues Telecom"/>
+	<entry mcc="208" mnc="88" network="Bouygues Telecom (Zones Blanches)"/>
+	<entry mcc="547" mnc="20" network="Tikiphone"/>
+	<entry mcc="628" mnc="01" network="Libertis S.A."/>
+	<entry mcc="628" mnc="02" network="Telecel Gabon S.A."/>
+	<entry mcc="628" mnc="03" network="Celtel Gabon S.A."/>
+	<entry mcc="607" mnc="01" network="Gamcel"/>
+	<entry mcc="607" mnc="02" network="Africel"/>
+	<entry mcc="282" mnc="01" network="Geocell Limited"/>
+	<entry mcc="282" mnc="02" network="Magticom GSM"/>
+	<entry mcc="282" mnc="03" network="Iberiatel Ltd."/>
+	<entry mcc="282" mnc="?" network="Superphone"/>
+	<entry mcc="262" mnc="01" network="T-Mobile / D1 - DeTe Mobil"/>
+	<entry mcc="262" mnc="02" network="Vodafone"/>
+	<entry mcc="262" mnc="03" network="E-Plus"/>
+	<entry mcc="262" mnc="04" network="Vodafone" />
+	<entry mcc="262" mnc="05" network="E-Plus"/>
+	<entry mcc="262" mnc="06" network="T-Mobile"/>
+	<entry mcc="262" mnc="07" network="O2"/>
+	<entry mcc="262" mnc="08" network="O2"/>
+	<entry mcc="262" mnc="09" network="Vodafone"/>
+	<entry mcc="262" mnc="10" network="Arcor AG &ampl; Co"/>
+	<entry mcc="262" mnc="11" network="O2"/>
+	<entry mcc="262" mnc="12" network="Dolphin Telecom" />
+	<entry mcc="262" mnc="13" network="Mobilcom Multimedia"/>
+	<entry mcc="262" mnc="14" network="Group 3G UMTS"/>
+	<entry mcc="262" mnc="15" network="Airdata"/>
+	<entry mcc="262" mnc="16" network="vistream (MVNO)"/>
+	<entry mcc="262" mnc="60" network="DB Telematik"/>
+	<entry mcc="262" mnc="76" network="Siemens AG"/>
+	<entry mcc="262" mnc="77" network="E-Plus" />
+	<entry mcc="620" mnc="01" network="MTN - Areeba / ScanCom"/>
+	<entry mcc="620" mnc="02" network="Onetouch / Ghana Telecom" />
+	<entry mcc="620" mnc="03" network="Tigo / Mobitel" />
+	<entry mcc="266" mnc="01" network="Gibraltar Telecoms GibTel"/>
+	<entry mcc="202" mnc="01" network="Cosmote" />
+	<entry mcc="202" mnc="05" network="Vodafone Greece - Vodafone"/>
+	<entry mcc="202" mnc="09" network="Q-telecom"/>
+	<entry mcc="202" mnc="10" network="WIND Hellas - WIND"/>
+	<entry mcc="290" mnc="01" network="Tele Greenland"/>
+	<entry mcc="340" mnc="01" network="Orange Caraïbe Mobiles"/>
+	<entry mcc="340" mnc="02" network="Outremer Telecom"/>
+	<entry mcc="340" mnc="03" network="Saint Martin et Saint Barthelemy Telcell Sarl"/>
+	<entry mcc="340" mnc="20" network="Bouygues Telecom Caraïbe"/>
+	<entry mcc="704" mnc="01" network="América Móvil Guatemala / SERCOM / PCS Digital / Claro" />
+	<entry mcc="704" mnc="02" network="Millicom Guatemala / Comcel / Tigo"/>
+	<entry mcc="704" mnc="03" network="Telefónica Móviles Guatemala (movistar)" />
+	<entry mcc="704" mnc="?" network="Digicel Group Guatemala (digicel)" />
+	<entry mcc="611" mnc="01" network="Spacetel"/>
+	<entry mcc="611" mnc="02" network="Sotelgui Lagui"/>
+	<entry mcc="632" mnc="02" network="Spacetel Guiné-Bissau S.A."/>
+	<entry mcc="738" mnc="01" network="Cel*Star"/>
+	<entry mcc="708" mnc="01" network="Megatel / Alo / Claro"/>
+	<entry mcc="708" mnc="02" network="Celtel / Tigo" />
+	<entry mcc="708" mnc="30" network="Hondutel"/>
+	<entry mcc="708" mnc="40" network="Digicel"/>
+	<entry mcc="454" mnc="00" network="Hong Kong Telecom CSL"/>
+	<entry mcc="454" mnc="01" network="Citic (Mobile virtual network operator - MVNO)"/>
+	<entry mcc="454" mnc="02" network="Hong Kong Telecom CSL 3G"/>
+	<entry mcc="454" mnc="03" network="Hutchison 3G"/>
+	<entry mcc="454" mnc="04" network="Hutchison Telecom / Orange"/>
+	<entry mcc="454" mnc="05" network="Hutchison Telecom (CDMA)"/>
+	<entry mcc="454" mnc="06" network="SmarTone Mobile Comms"/>
+	<entry mcc="454" mnc="07" network="China Unicom (MVNO)"/>
+	<entry mcc="454" mnc="08" network="Trident (MVNO)"/>
+	<entry mcc="454" mnc="09" network="China Motion Telecom (MVNO)"/>
+	<entry mcc="454" mnc="10" network="New World PCS" />
+	<entry mcc="454" mnc="11" network="CHKTL (MVNO)"/>
+	<entry mcc="454" mnc="12" network="Peoples Telephone Company" />
+	<entry mcc="454" mnc="15" network="SMT (UMTS)" />
+	<entry mcc="454" mnc="16" network="PCCW Mobile / Sunday (PCCW Ltd)"/>
+	<entry mcc="454" mnc="18" network="Hong Kong Telecom CSL / Pacific Link" />
+	<entry mcc="454" mnc="19" network="PCCW Mobile / Sunday (PCCW Ltd)"/>
+	<entry mcc="454" mnc="22" network="P Plus Comm / SMC PCS"/>
+	<entry mcc="216" mnc="01" network="Pannon"/>
+	<entry mcc="216" mnc="30" network="T-Mobile" />
+	<entry mcc="216" mnc="70" network="Vodafone" />
+	<entry mcc="274" mnc="01" network="Iceland Telecom Siminn"/>
+	<entry mcc="274" mnc="02" network="Vodafone Iceland - Vodafone"/>
+	<entry mcc="274" mnc="03" network="Islandssimi ehf"/>
+	<entry mcc="274" mnc="04" network="IMC Islande ehf"/>
+	<entry mcc="274" mnc="07" network="IceCell ehf" />
+	<entry mcc="404" mnc="01" network="AirCell Digilink"/>
+	<entry mcc="404" mnc="02" network="AirTel / Bharti Mobile"/>
+	<entry mcc="404" mnc="03" network="INA Airtel / Bharti Telenet"/>
+	<entry mcc="404" mnc="04" network="IDEA"/>
+	<entry mcc="404" mnc="05" network="Hutch / Fascel"/>
+	<entry mcc="404" mnc="06" network="Bharti Mobile"/>
+	<entry mcc="404" mnc="07" network="TATA Cellular / Idea Cellular"/>
+	<entry mcc="404" mnc="09" network="Reliance Telecom Private"/>
+	<entry mcc="404" mnc="10" network="Bharti Cellular Telecom Airtel"/>
+	<entry mcc="404" mnc="11" network="Essar / Sterling Cellular"/>
+	<entry mcc="404" mnc="12" network="Escotel Mobile Comms"/>
+	<entry mcc="404" mnc="13" network="Hutchison Essar South"/>
+	<entry mcc="404" mnc="14" network="Spice Communications / Modi Telstra Modicom"/>
+	<entry mcc="404" mnc="15" network="Aircell Digilink Essar Cellph."/>
+	<entry mcc="404" mnc="20" network="Hutchison Maxtouch / Orange"/>
+	<entry mcc="404" mnc="21" network="BPL Mobile"/>
+	<entry mcc="404" mnc="22" network="Idea"/>
+	<entry mcc="404" mnc="24" network="Idea"/>
+	<entry mcc="404" mnc="27" network="BPL USWest Cellular / Cellular Comms"/>
+	<entry mcc="404" mnc="30" network="Usha Martin Tel. Command"/>
+	<entry mcc="404" mnc="31" network="AirTel / Mobilenet / Bharti Mobinet"/>
+	<entry mcc="404" mnc="34" network="BSNL"/>
+	<entry mcc="404" mnc="36" network="Reliance Telecom Private"/>
+	<entry mcc="404" mnc="38" network="BSNL"/>
+	<entry mcc="404" mnc="40" network="AirTel / SkyCell Communications / Bharti Mobinet"/>
+	<entry mcc="404" mnc="41" network="RPG MAA"/>
+	<entry mcc="404" mnc="42" network="Srinivas Cellcom / Aircel"/>
+	<entry mcc="404" mnc="43" network="BPL Mobile Cellular"/>
+	<entry mcc="404" mnc="44" network="Spice"/>
+	<entry mcc="404" mnc="45" network="AirTel"/>
+	<entry mcc="404" mnc="46" network="BPL Cellular"/>
+	<entry mcc="404" mnc="49" network="IND AIRTEL / Bharti Mobile"/>
+	<entry mcc="404" mnc="50" network="Reliance Telecom Private"/>
+	<entry mcc="404" mnc="51" network="BSNL"/>
+	<entry mcc="404" mnc="52" network="Reliance Telecom Private"/>
+	<entry mcc="404" mnc="53" network="BSNL"/>
+	<entry mcc="404" mnc="54" network="BSNL"/>
+	<entry mcc="404" mnc="55" network="BSNL"/>
+	<entry mcc="404" mnc="56" network="Escotel Mobile Communications Private"/>
+	<entry mcc="404" mnc="57" network="BSNL"/>
+	<entry mcc="404" mnc="58" network="BSNL"/>
+	<entry mcc="404" mnc="59" network="BSNL"/>
+	<entry mcc="404" mnc="60" network="Aircell Digilink"/>
+	<entry mcc="404" mnc="62" network="BSNL"/>
+	<entry mcc="404" mnc="64" network="BSNL"/>
+	<entry mcc="404" mnc="66" network="BSNL"/>
+	<entry mcc="404" mnc="67" network="Reliance Telecom Private"/>
+	<entry mcc="404" mnc="68" network="Mahanagar Telephone Nigam"/>
+	<entry mcc="404" mnc="69" network="DOLPHIN / Mahanagar Telephone Nigam"/>
+	<entry mcc="404" mnc="70" network="AirTel / Hexicom"/>
+	<entry mcc="404" mnc="71" network="BSNL"/>
+	<entry mcc="404" mnc="72" network="BSNL"/>
+	<entry mcc="404" mnc="73" network="BSNL"/>
+	<entry mcc="404" mnc="74" network="BSNL"/>
+	<entry mcc="404" mnc="75" network="BSNL / CellOne"/>
+	<entry mcc="404" mnc="76" network="BSNL"/>
+	<entry mcc="404" mnc="77" network="BSNL"/>
+	<entry mcc="404" mnc="78" network="BTA Cellcom"/>
+	<entry mcc="404" mnc="80" network="BSNL"/>
+	<entry mcc="404" mnc="81" network="BSNL"/>
+	<entry mcc="404" mnc="82" network="Escorts Telecom"/>
+	<entry mcc="404" mnc="83" network="Reliable Internet Services"/>
+	<entry mcc="404" mnc="84" network="Hutchison Essar South"/>
+	<entry mcc="404" mnc="85" network="Reliance Telecom Private"/>
+	<entry mcc="404" mnc="86" network="Hutchinson Essar South"/>
+	<entry mcc="404" mnc="87" network="Escorts Telecom"/>
+	<entry mcc="404" mnc="88" network="Escorts Telecom"/>
+	<entry mcc="404" mnc="89" network="Escorts Telecom"/>
+	<entry mcc="404" mnc="90" network="AirTel / Bharti Cellular"/>
+	<entry mcc="404" mnc="92" network="AirTel / Bharti Cellular"/>
+	<entry mcc="404" mnc="93" network="AirTel / Bharti Cellular"/>
+	<entry mcc="404" mnc="94" network="AirTel / Bharti Cellular"/>
+	<entry mcc="404" mnc="95" network="AirTel / Bharti Cellular"/>
+	<entry mcc="404" mnc="96" network="AirTel / Bharti Cellular"/>
+	<entry mcc="404" mnc="97" network="AirTel / Bharti Cellular"/>
+	<entry mcc="404" mnc="98" network="AirTel / Bharti Cellular"/>
+	<entry mcc="405" mnc="51" network="IND AirTel"/>
+	<entry mcc="405" mnc="52" network="IND AirTel"/>
+	<entry mcc="405" mnc="66" network="Hutch"/>
+	<entry mcc="510" mnc="00" network="PSN"/>
+	<entry mcc="510" mnc="01" network="PT Satelindo / PT Satelit Palapa / INDOSAT"/>
+	<entry mcc="510" mnc="08" network="Natrindo (Lippo Telecom)"/>
+	<entry mcc="510" mnc="10" network="Telkomsel"/>
+	<entry mcc="510" mnc="11" network="PT Excelcomindo Excelcom / proXL"/>
+	<entry mcc="510" mnc="21" network="IND IM3 / INDOSAT"/>
+	<entry mcc="510" mnc="28" network="Komselindo"/>
+	<entry mcc="510" mnc="89" network="Hutchinson Telecomunication Indonesia / HCPT"/>
+	<entry mcc="901" mnc="01" network="ICO Global Communications" />
+	<entry mcc="901" mnc="02" network="Sense Communications International"/>
+	<entry mcc="901" mnc="03" network="Iridium Satellite" />
+	<entry mcc="901" mnc="04" network="Globalstar (GMSS)"/>
+	<entry mcc="901" mnc="05" network="Thuraya RMSS Network" />
+	<entry mcc="901" mnc="06" network="Thuraya Satellite Telecommunications Company" />
+	<entry mcc="901" mnc="07" network="Ellipso"/>
+	<entry mcc="901" mnc="08" network="[Reserved for station identification where the mobile does not have a subscription IMSI]"/>
+	<entry mcc="901" mnc="09" network="Tele1 Europe"/>
+	<entry mcc="901" mnc="10" network="Asia Cellular Satellite (AceS)"/>
+	<entry mcc="901" mnc="11" network="Inmarsat" />
+	<entry mcc="901" mnc="12" network="Maritime Communications Partner AS (MCP)" />
+	<entry mcc="901" mnc="13" network="Global Networks"/>
+	<entry mcc="901" mnc="14" network="Telenor GSM - services in aircraft"/>
+	<entry mcc="901" mnc="15" network="SITA GSM - services in aircraft"/>
+	<entry mcc="432" mnc="11" network="Mobile Communications Company of Iran / IR-MCI" />
+	<entry mcc="432" mnc="35" network="MTN Irancell - Irancell" />
+	<entry mcc="432" mnc="32" network="Taliya" />
+	<entry mcc="432" mnc="19" network="Mobile Telecommunications Company of Esfahan (MTCE)" />
+	<entry mcc="432" mnc="14" network="Telecommunication Kish Co. (Kifzo)" />
+	<entry mcc="418" mnc="01" network="Iraq Telecom"/>
+	<entry mcc="272" mnc="01" network="Vodafone Ireland - Vodafone" />
+	<entry mcc="272" mnc="02" network="O2 Ireland - O2" />
+	<entry mcc="272" mnc="03" network="Meteor (mobile network) - Meteor" />
+	<entry mcc="272" mnc="04" network="Access Telecom"/>
+	<entry mcc="272" mnc="07" network="Eircom"/>
+	<entry mcc="272" mnc="09" network="Clever Communications"/>
+	<entry mcc="425" mnc="01" network="Orange Israel - Orange"/>
+	<entry mcc="425" mnc="02" network="Cellcom" />
+	<entry mcc="425" mnc="03" network="Pelephone" />
+	<entry mcc="425" mnc="?" network="Mirs" />
+	<entry mcc="222" mnc="01" network="Telecom Italia Mobile - TIM" />
+	<entry mcc="222" mnc="02" network="Elsacom" />
+	<entry mcc="222" mnc="10" network="Vodafone Italy - Vodafone" />
+	<entry mcc="222" mnc="77" network="IPSE 2000" />
+	<entry mcc="222" mnc="88" network="WIND (Italy) - Wind" />
+	<entry mcc="222" mnc="98" network="Blu" />
+	<entry mcc="222" mnc="99" network="H3G" />
+	<entry mcc="612" mnc="01" network="Cora de Comstar"/>
+	<entry mcc="612" mnc="02" network="Moov" />
+	<entry mcc="612" mnc="03" network="Orange" />
+	<entry mcc="612" mnc="04" network="KOZ de Comium" />
+	<entry mcc="612" mnc="05" network="MTN" />
+	<entry mcc="338" mnc="020" network="bmobile - Cable &ampl; Wireless" />
+	<entry mcc="338" mnc="050" network="Mossel Digicel -  -  Operativa" />
+	<entry mcc="338" mnc="05" network="Digicel" />
+	<entry mcc="338" mnc="180" network="bmobile - C&ampl;W"/>
+	<entry mcc="338" mnc="?" network="Claro (Claro Jamaica)"/>
+	<entry mcc="440" mnc="01" network="NTT DoCoMo"/>
+	<entry mcc="440" mnc="02" network="NTT DoCoMo Kansai"/>
+	<entry mcc="440" mnc="03" network="NTT DoCoMo Hokuriku"/>
+	<entry mcc="440" mnc="04" network="Vodafone"/>
+	<entry mcc="440" mnc="06" network="Vodafone"/>
+	<entry mcc="440" mnc="07" network="KDDI Corporation"/>
+	<entry mcc="440" mnc="08" network="KDDI Corporation"/>
+	<entry mcc="440" mnc="09" network="NTT DoCoMo Kansai"/>
+	<entry mcc="440" mnc="10" network="NTT DoCoMo Kansai"/>
+	<entry mcc="440" mnc="11" network="NTT DoCoMo Tokai"/>
+	<entry mcc="440" mnc="12" network="NTT DoCoMo"/>
+	<entry mcc="440" mnc="13" network="NTT DoCoMo"/>
+	<entry mcc="440" mnc="14" network="NTT DoCoMo Tohoku"/>
+	<entry mcc="440" mnc="15" network="NTT DoCoMo"/>
+	<entry mcc="440" mnc="16" network="NTT DoCoMo"/>
+	<entry mcc="440" mnc="17" network="NTT DoCoMo"/>
+	<entry mcc="440" mnc="18" network="NTT DoCoMo Tokai"/>
+	<entry mcc="440" mnc="19" network="NTT DoCoMo Hokkaido"/>
+	<entry mcc="440" mnc="20" network="NTT DoCoMo Hokuriku"/>
+	<entry mcc="440" mnc="21" network="NTT DoCoMo"/>
+	<entry mcc="440" mnc="22" network="NTT DoCoMo Kansai"/>
+	<entry mcc="440" mnc="23" network="NTT DoCoMo Tokai"/>
+	<entry mcc="440" mnc="24" network="NTT DoCoMo Chugoku"/>
+	<entry mcc="440" mnc="25" network="NTT DoCoMo Hokkaido"/>
+	<entry mcc="440" mnc="26" network="NTT DoCoMo Kyushu"/>
+	<entry mcc="440" mnc="27" network="NTT DoCoMoTohoku"/>
+	<entry mcc="440" mnc="28" network="NTT DoCoMo Shikoku"/>
+	<entry mcc="440" mnc="29" network="NTT DoCoMo"/>
+	<entry mcc="440" mnc="30" network="NTT DoCoMo"/>
+	<entry mcc="440" mnc="31" network="NTT DoCoMo Kansai"/>
+	<entry mcc="440" mnc="32" network="NTT DoCoMo"/>
+	<entry mcc="440" mnc="33" network="NTT DoCoMo Tokai"/>
+	<entry mcc="440" mnc="34" network="NTT DoCoMo Kyushu"/>
+	<entry mcc="440" mnc="35" network="NTT DoCoMo Kansai"/>
+	<entry mcc="440" mnc="36" network="NTT DoCoMo"/>
+	<entry mcc="440" mnc="37" network="NTT DoCoMo"/>
+	<entry mcc="440" mnc="38" network="NTT DoCoMo"/>
+	<entry mcc="440" mnc="39" network="NTT DoCoMo"/>
+	<entry mcc="440" mnc="40" network="Vodafone"/>
+	<entry mcc="440" mnc="41" network="Vodafone"/>
+	<entry mcc="440" mnc="42" network="Vodafone"/>
+	<entry mcc="440" mnc="43" network="Vodafone"/>
+	<entry mcc="440" mnc="44" network="Vodafone"/>
+	<entry mcc="440" mnc="45" network="Vodafone"/>
+	<entry mcc="440" mnc="46" network="Vodafone"/>
+	<entry mcc="440" mnc="47" network="Vodafone"/>
+	<entry mcc="440" mnc="48" network="Vodafone"/>
+	<entry mcc="440" mnc="49" network="NTT DoCoMo"/>
+	<entry mcc="440" mnc="50" network="KDDI Corporation"/>
+	<entry mcc="440" mnc="51" network="KDDI Corporation"/>
+	<entry mcc="440" mnc="52" network="KDDI Corporation"/>
+	<entry mcc="440" mnc="53" network="KDDI Corporation"/>
+	<entry mcc="440" mnc="54" network="KDDI Corporation"/>
+	<entry mcc="440" mnc="55" network="KDDI Corporation"/>
+	<entry mcc="440" mnc="56" network="KDDI Corporation"/>
+	<entry mcc="440" mnc="58" network="NTT DoCoMo Kansai"/>
+	<entry mcc="440" mnc="60" network="NTT DoCoMo Kansai"/>
+	<entry mcc="440" mnc="61" network="NTT DoCoMo Chugoku"/>
+	<entry mcc="440" mnc="62" network="NTT DoCoMo Kyushu"/>
+	<entry mcc="440" mnc="63" network="NTT DoCoMo"/>
+	<entry mcc="440" mnc="64" network="NTT DoCoMo"/>
+	<entry mcc="440" mnc="65" network="NTT DoCoMo Shikoku"/>
+	<entry mcc="440" mnc="66" network="NTT DoCoMo"/>
+	<entry mcc="440" mnc="67" network="NTT DoCoMo Tohoku"/>
+	<entry mcc="440" mnc="68" network="NTT DoCoMo Kyushu"/>
+	<entry mcc="440" mnc="69" network="NTT DoCoMo"/>
+	<entry mcc="440" mnc="70" network="KDDI Corporation"/>
+	<entry mcc="440" mnc="71" network="KDDI Corporation"/>
+	<entry mcc="440" mnc="72" network="KDDI Corporation"/>
+	<entry mcc="440" mnc="73" network="KDDI Corporation"/>
+	<entry mcc="440" mnc="74" network="KDDI Corporation"/>
+	<entry mcc="440" mnc="75" network="KDDI Corporation"/>
+	<entry mcc="440" mnc="76" network="KDDI Corporation"/>
+	<entry mcc="440" mnc="77" network="KDDI Corporation"/>
+	<entry mcc="440" mnc="78" network="Okinawa Cellular Telephone"/>
+	<entry mcc="440" mnc="79" network="KDDI Corporation"/>
+	<entry mcc="440" mnc="80" network="TU-KA Cellular Tokyo"/>
+	<entry mcc="440" mnc="81" network="TU-KA Cellular Tokyo"/>
+	<entry mcc="440" mnc="82" network="TU-KA Phone Kansai"/>
+	<entry mcc="440" mnc="83" network="TU-KA Cellular Tokai"/>
+	<entry mcc="440" mnc="84" network="TU-KA Phone Kansai"/>
+	<entry mcc="440" mnc="85" network="TU-KA Cellular Tokai"/>
+	<entry mcc="440" mnc="86" network="TU-KA Cellular Tokyo"/>
+	<entry mcc="440" mnc="87" network="NTT DoCoMo Chugoku"/>
+	<entry mcc="440" mnc="88" network="KDDI Corporation"/>
+	<entry mcc="440" mnc="89" network="KDDI Corporation"/>
+	<entry mcc="440" mnc="90" network="Vodafone"/>
+	<entry mcc="440" mnc="92" network="Vodafone"/>
+	<entry mcc="440" mnc="93" network="Vodafone"/>
+	<entry mcc="440" mnc="94" network="Vodafone"/>
+	<entry mcc="440" mnc="95" network="Vodafone"/>
+	<entry mcc="440" mnc="96" network="Vodafone"/>
+	<entry mcc="440" mnc="97" network="Vodafone"/>
+	<entry mcc="440" mnc="98" network="Vodafone"/>
+	<entry mcc="440" mnc="99" network="NTT DoCoMo"/>
+	<entry mcc="416" mnc="01" network="J.M.T.S. Fastlink"/>
+	<entry mcc="416" mnc="77" network="MobCom"/>
+	<entry mcc="401" mnc="01" network="K-Mobile / Kar-Tel"/>
+	<entry mcc="401" mnc="02" network="K'Cell / TSC Kazak Telecom"/>
+	<entry mcc="639" mnc="02" network="Safaricom Ltd."/>
+	<entry mcc="639" mnc="03" network="Kencell Communications Ltd."/>
+	<entry mcc="450" mnc="05" network="SK Telecom" />
+	<entry mcc="450" mnc="08" network="KTF" />
+	<entry mcc="419" mnc="02" network="Mobile Telecoms / MTCNet"/>
+	<entry mcc="419" mnc="03" network="Wataniya"/>
+	<entry mcc="437" mnc="01" network="Bitel Ltd"/>
+	<entry mcc="457" mnc="01" network="Lao Shinawatra Telecom"/>
+	<entry mcc="457" mnc="02" network="ETL Mobile"/>
+	<entry mcc="457" mnc="08" network="Millicom"/>
+	<entry mcc="247" mnc="01" network="Latvian Mobile Tel."/>
+	<entry mcc="247" mnc="02" network="Tele 2 / BALTCOM GSM"/>
+	<entry mcc="247" mnc="03" network="Telekom Baltija"/>
+	<entry mcc="247" mnc="04" network="Beta Telecom"/>
+	<entry mcc="415" mnc="01" network="Alfa"/>
+	<entry mcc="415" mnc="03" network="MTC Touch"/>
+	<entry mcc="415" mnc="32" network="Alfa"/>
+	<entry mcc="415" mnc="33" network="Alfa"/>
+	<entry mcc="415" mnc="34" network="Alfa"/>
+	<entry mcc="415" mnc="35" network="Alfa"/>
+	<entry mcc="415" mnc="36" network="MTC Touch"/>
+	<entry mcc="415" mnc="37" network="MTC Touch"/>
+	<entry mcc="415" mnc="38" network="MTC Touch"/>
+	<entry mcc="415" mnc="39" network="MTC Touch"/>
+	<entry mcc="651" mnc="01" network="Vodacom"/>
+	<entry mcc="651" mnc="02" network="Econet Ezin-cel"/>
+	<entry mcc="618" mnc="01" network="Omega Communications"/>
+	<entry mcc="618" mnc="04" network="Comium Liberi"/>
+	<entry mcc="606" mnc="01" network="AlMadar"/>
+	<entry mcc="606" mnc="00" network="Libyana"/>
+	<entry mcc="295" mnc="02" network="Viag Europlatform AG"/>
+	<entry mcc="295" mnc="05" network="Mobilkom (Liechtenstein) AG"/>
+	<entry mcc="295" mnc="77" network="Tele2 AG"/>
+	<entry mcc="246" mnc="01" network="Omnitel"/>
+	<entry mcc="246" mnc="02" network="UAB Bité GSM"/>
+	<entry mcc="246" mnc="03" network="Tele 2"/>
+	<entry mcc="270" mnc="01" network="P&ampl;T Luxembourg" />
+	<entry mcc="270" mnc="77" network="Tango" />
+	<entry mcc="270" mnc="99" network="Voxmobile" />
+	<entry mcc="455" mnc="00" network="Smartone Mobile Communications (Macao) Ltd" />
+	<entry mcc="455" mnc="01" network="C.T.M. Telemovel+" />
+	<entry mcc="455" mnc="03" network="Hutchison Telecom" />
+	<entry mcc="294" mnc="01" network="Mobimak / T-Mobile Macedonia"/>
+	<entry mcc="294" mnc="02" network="Cosmofon"/>
+	<entry mcc="646" mnc="01" network="Madacom" />
+	<entry mcc="646" mnc="02" network="Orange" />
+	<entry mcc="646" mnc="03" network="Sacel" />
+	<entry mcc="650" mnc="01" network="TNL / Telecom Network Callpoint"/>
+	<entry mcc="650" mnc="10" network="Celtel ltd."/>
+	<entry mcc="502" mnc="00" network="Art900" />
+	<entry mcc="502" mnc="02" network="My BSB"/>
+	<entry mcc="502" mnc="03" network="Binariang"/>
+	<entry mcc="502" mnc="12" network="Maxis / Binariang Communications" />
+	<entry mcc="502" mnc="13" network="Celcom TM / TM Touch"/>
+	<entry mcc="502" mnc="16" network="DiGi Telecommunications" />
+	<entry mcc="502" mnc="17" network="TimeCel / Binariang Communications Maxis"/>
+	<entry mcc="502" mnc="19" network="Celcom TM" />
+	<entry mcc="472" mnc="01" network="DhiMobile"/>
+	<entry mcc="610" mnc="01" network="Malitel"/>
+	<entry mcc="278" mnc="01" network="Vodafone / Telecell"/>
+	<entry mcc="278" mnc="21" network="go mobile"/>
+	<entry mcc="609" mnc="01" network="Mattel"/>
+	<entry mcc="617" mnc="01" network="Cellplus"/>
+	<entry mcc="617" mnc="02" network="Mahanagar Telephone (Mauritius) Ltd."/>
+	<entry mcc="617" mnc="10" network="Emtel"/>
+	<entry mcc="334" mnc="01" network="Nextel México" />
+	<entry mcc="334" mnc="02" network="Telcel" />
+	<entry mcc="334" mnc="03" network="Telefónica Móviles México (movistar)"/>
+	<entry mcc="334" mnc="04" network="Iusacell/Unefon"/>
+	<entry mcc="550" mnc="01" network="FSM Telecom"/>
+	<entry mcc="259" mnc="01" network="Orange Moldova - Orange" />
+	<entry mcc="259" mnc="02" network="Moldcell" />
+	<entry mcc="259" mnc="03" network="Unité" />
+	<entry mcc="208" mnc="01" network="France Telecom"/>
+	<entry mcc="208" mnc="10" network="SFR"/>
+	<entry mcc="428" mnc="99" network="Mobicom"/>
+	<entry mcc="220" mnc="02" network="ProMonte" />
+	<entry mcc="220" mnc="04" network="T-Mobile#Montenegro - T-Mobile Montenegro" />
+	<entry mcc="297" mnc="03" network="MTEL - m:tel" />
+	<entry mcc="604" mnc="00" network="Méditel"/>
+	<entry mcc="604" mnc="01" network="IAM / Ittissalat Al Maghrid / Maroc Telecom"/>
+	<entry mcc="643" mnc="01" network="Mocambique Celular S.A.R.L (mCel)"/>
+	<entry mcc="643" mnc="04" network="VM, S.A.R.L. (Vodacom Mozambique)"/>
+	<entry mcc="414" mnc="01" network="Myanmar Post and Telecommunication"/>
+	<entry mcc="649" mnc="01" network="MTC"/>
+	<entry mcc="429" mnc="01" network="Nepal Telecommunications"/>
+	<entry mcc="204" mnc="02" network="Tele2 Netherlands"/>
+	<entry mcc="204" mnc="21" network="NS Railinfrabeheer B.V."/>
+	<entry mcc="204" mnc="04" network="Vodafone Netherlands - Vodafone" />
+	<entry mcc="204" mnc="08" network="KPN" />
+	<entry mcc="204" mnc="12" network="Telfort / O2 (KPN)" />
+	<entry mcc="204" mnc="16" network="T-Mobile / Ben" />
+	<entry mcc="204" mnc="20" network="Orange / Dutchtone (T-mobile)" />
+	<entry mcc="362" mnc="51" network="TELCELL GSM"/>
+	<entry mcc="362" mnc="69" network="CT GSM"/>
+	<entry mcc="362" mnc="91" network="SETEL GSM / CHIPP"/>
+	<entry mcc="546" mnc="01" network="OPT Mobilis"/>
+	<entry mcc="530" mnc="00" network="Reserved for AMPS MIN based IMSI's" />
+	<entry mcc="530" mnc="01" network="Vodafone New Zealand" />
+	<entry mcc="530" mnc="02" network="Teleom New Zealand CDMA Mobile Network" />
+	<entry mcc="530" mnc="03" network="Telecom New Zealand / Walker Wireless Ltd."/>
+	<entry mcc="530" mnc="04" network="TelstraClear" />
+	<entry mcc="530" mnc="28" network="Econet Wireless New Zealand"/>
+	<entry mcc="710" mnc="21" network="Empresa Nicaragüense de Telecomunicaciones, S.A. (Claro)" />
+	<entry mcc="710" mnc="30" network="Telefónica Móviles Nicaragua (movistar)" />
+	<entry mcc="710" mnc="300" network="Telefónica Móviles Nicaragua (movistar)" />
+	<entry mcc="710" mnc="73" network="SERCOM / Servicios de Comunicaciones S.A. / Claro" />
+	<entry mcc="614" mnc="01" network="Sahel.Com"/>
+	<entry mcc="614" mnc="02" network="Celtel"/>
+	<entry mcc="614" mnc="03" network="Telecel"/>
+	<entry mcc="621" mnc="20" network="Celtel / V-Mobile / Econet Wireless Nigeria Ltd."/>
+	<entry mcc="621" mnc="30" network="MTN"/>
+	<entry mcc="621" mnc="40" network="Nigeria Telecommunications Ltd."/>
+	<entry mcc="621" mnc="50" network="Glo"/>
+	<entry mcc="242" mnc="01" network="Telenor - Telenor Mobil" />
+	<entry mcc="242" mnc="02" network="NetCom (Norway) - NetCom GSM" />
+	<entry mcc="242" mnc="03" network="Teletopia" />
+	<entry mcc="242" mnc="04" network="Tele2" />
+	<entry mcc="242" mnc="05" network="NetworkNorway"/>
+	<entry mcc="242" mnc="07" network="Ventelo" />
+	<entry mcc="422" mnc="02" network="General Telecoms"/>
+	<entry mcc="410" mnc="01" network="Mobilink" />
+	<entry mcc="410" mnc="03" network="UFONE" />
+	<entry mcc="410" mnc="04" network="Paktel" />
+	<entry mcc="410" mnc="06" network="Telenor" />
+	<entry mcc="410" mnc="07" network="Warid" />
+	<entry mcc="552" mnc="01" network="Palau National Communications Corp. - PNCC"/>
+	<entry mcc="714" mnc="01" network="Cable &ampl; Wireless Panama S.A." />
+	<entry mcc="714" mnc="02" network="Telefónica Móviles Panamá S.A. (movistar)"/>
+	<entry mcc="714" mnc="?" network="Digicel Panama S.A. (digicel)" />
+	<entry mcc="714" mnc="?" network="Claro Panama S.A. (claro)" />
+	<entry mcc="310" mnc="01" network="Pacific Mobile Comms"/>
+	<entry mcc="744" mnc="01" network="VOX / Hola Paraguay S.A." />
+	<entry mcc="744" mnc="02" network="Hutchison Telecom S.A. / América Móvil Paraguay / CTI Móvil / Claro Paraguay -  -  Operativa" />
+	<entry mcc="744" mnc="03" network="Compañía Privada de Comunicaciones S.A." />
+	<entry mcc="744" mnc="04" network="Telecel / Tigo" />
+	<entry mcc="744" mnc="05" network="Personal" />
+	<entry mcc="716" mnc="06" network="Telefónica Móviles Perú (movistar)" />
+	<entry mcc="716" mnc="10" network="TIM Peru / América Móvil Perú / Claro" />
+	<entry mcc="716" mnc="07" network="Nextel Perú" />
+	<entry mcc="515" mnc="01" network="Islacom / Isla Comms"/>
+	<entry mcc="515" mnc="02" network="Globe Telecom"/>
+	<entry mcc="515" mnc="03" network="Smart Communications"/>
+	<entry mcc="515" mnc="05" network="Digitel"/>
+	<entry mcc="260" mnc="01" network="Plus (Polkomtel)" />
+	<entry mcc="260" mnc="02" network="Era (telecommunications) - Era (PTC)" />
+	<entry mcc="260" mnc="03" network="Orange Polska - Orange (PTK Centertel)" />
+	<entry mcc="260" mnc="04" network="Tele2 Polska"/>
+	<entry mcc="260" mnc="06" network="Play (P4)" />
+	<entry mcc="260" mnc="07" network="Premium Internet"/>
+	<entry mcc="260" mnc="08" network="E-Telko"/>
+	<entry mcc="260" mnc="09" network="Telekomunikacja Kolejowa"/>
+	<entry mcc="260" mnc="10" network="Telefonu Opalenickie"/>
+	<entry mcc="260" mnc="12" network="Halo Polsat"/>
+	<entry mcc="268" mnc="01" network="Vodafone Portugal - Vodafone" />
+	<entry mcc="268" mnc="03" network="Optimus Telecomunicações, S.A. - Optimus" />
+	<entry mcc="268" mnc="06" network="Telecomunicações Móveis Nacionais - TMN" />
+	<entry mcc="427" mnc="01" network="Q-Net / Q-Tel QATARNET"/>
+	<entry mcc="647" mnc="00" network="Orange La Réunion"/>
+	<entry mcc="647" mnc="02" network="Outremer Telecom"/>
+	<entry mcc="647" mnc="10" network="SRR / Société Réunionnaise du Radiotéléphone"/>
+	<entry mcc="226" mnc="01" network="Vodafone România - Vodafone" />
+	<entry mcc="226" mnc="03" network="Cosmote România - Cosmote" />
+	<entry mcc="226" mnc="10" network="Orange România - Orange" />
+	<entry mcc="226" mnc="?" network="Zapp Mobile - Zapp" />
+	<entry mcc="250" mnc="01" network="Mobile Telesystems - MTS" />
+	<entry mcc="250" mnc="02" network="Megafon" />
+	<entry mcc="250" mnc="03" network="NCC / Nizhegorodskaya Cellular Communications" />
+	<entry mcc="250" mnc="04" network="Sibchallenge"/>
+	<entry mcc="250" mnc="05" network="ETK / Yeniseytelecom" />
+	<entry mcc="250" mnc="07" network="Zao SMARTS" />
+	<entry mcc="250" mnc="10" network="Dontelekom"/>
+	<entry mcc="250" mnc="11" network="Orensot"/>
+	<entry mcc="250" mnc="12" network="Baykal Westcom / New Telephone Company / Far Eastern Cellular" />
+	<entry mcc="250" mnc="13" network="Kuban GSM"/>
+	<entry mcc="250" mnc="14" network="Di-ex / Teleset LTD" />
+	<entry mcc="250" mnc="16" network="NTC / New Telephone Company"/>
+	<entry mcc="250" mnc="17" network="Ermak RMS" />
+	<entry mcc="250" mnc="19" network="Volgograd Mobile / INDIGO" />
+	<entry mcc="250" mnc="20" network="TELE2 / ECC" />
+	<entry mcc="250" mnc="28" network="Extel"/>
+	<entry mcc="250" mnc="39" network="Uraltel / Uralsvyazinform" />
+	<entry mcc="250" mnc="44" network="Stavtelesot / North Caucasian GSM"/>
+	<entry mcc="250" mnc="92" network="Primtelefon"/>
+	<entry mcc="250" mnc="93" network="Telecom XXI"/>
+	<entry mcc="250" mnc="99" network="Beeline" />
+	<entry mcc="635" mnc="10" network="Rwandacell / MTN"/>
+	<entry mcc="308" mnc="01" network="St. Pierre-et-Miquelon Télécom"/>
+	<entry mcc="549" mnc="01" network="Telecom Samoa Cellular Ltd."/>
+	<entry mcc="292" mnc="01" network="Prima (San Marino) - Prima (San Marino Telecom)"/>
+	<entry mcc="222" mnc="01" network="Telefonia Mobile Sammarinese - TMS"/>
+	<entry mcc="222" mnc="01" network="Telecom Italia Mobile - TIM"/>
+	<entry mcc="222" mnc="10" network="Vodafone Italy - Vodafone"/>
+	<entry mcc="222" mnc="88" network="WIND (Italy) - Wind"/>
+	<entry mcc="626" mnc="01" network="Companhia Santomese de Telecomunicaçôes (CSTmovel)" />
+	<entry mcc="420" mnc="01" network="Saudí Telecom / Ministry of PTT Al Jawal"/>
+	<entry mcc="420" mnc="07" network="Electronics App' Est. / EAE"/>
+	<entry mcc="608" mnc="01" network="Sonatel ALIZE"/>
+	<entry mcc="608" mnc="02" network="Sentel GSM"/>
+	<entry mcc="220" mnc="01" network="Telenor Serbia - Telenor" />
+	<entry mcc="220" mnc="03" network="MTS - Telekom Srbija" />
+	<entry mcc="220" mnc="05" network="VIP Mobile" />
+	<entry mcc="633" mnc="01" network="Cable &ampl; Wireless (Seychelles) Ltd."/>
+	<entry mcc="633" mnc="02" network="Mediatech International Ltd."/>
+	<entry mcc="633" mnc="10" network="Telecom Airtel"/>
+	<entry mcc="619" mnc="01" network="Celtel"/>
+	<entry mcc="619" mnc="02" network="Millicom"/>
+	<entry mcc="619" mnc="03" network="Africell"/>
+	<entry mcc="619" mnc="04" network="Comium"/>
+	<entry mcc="619" mnc="05" network="Lintel"/>
+	<entry mcc="619" mnc="25" network="Mobitel"/>
+	<entry mcc="525" mnc="01" network="Singapore Telecom / SingTel" />
+	<entry mcc="525" mnc="02" network="Singapore Telecom / SingTel" />
+	<entry mcc="525" mnc="03" network="MobileOne Asia / SGP-M1-3GS"/>
+	<entry mcc="525" mnc="05" network="StarHub"/>
+	<entry mcc="525" mnc="12" network="Digital Trunked Radio Network"/>
+	<entry mcc="231" mnc="01" network="Orange Slovensko - Orange" />
+	<entry mcc="231" mnc="02" network="T-Mobile Slovensko" />
+	<entry mcc="231" mnc="03" network="Unient Communications"/>
+	<entry mcc="231" mnc="04" network="T-Mobile Slovensko (UMTS)" />
+	<entry mcc="231" mnc="05" network="Mobile Entertainment Company (UMTS)"/>
+	<entry mcc="231" mnc="06" network="Telefónica O2 Slovakia" />
+	<entry mcc="231" mnc="99" network="ŽSR"/>
+	<entry mcc="293" mnc="40" network="Si Mobil"/>
+	<entry mcc="293" mnc="41" network="Mobitel"/>
+	<entry mcc="293" mnc="70" network="Vega"/>
+	<entry mcc="655" mnc="01" network="Vodacom"/>
+	<entry mcc="655" mnc="06" network="Sentech (Pty) Ltd."/>
+	<entry mcc="655" mnc="07" network="Cell C"/>
+	<entry mcc="655" mnc="10" network="MTN / Mobile Telephone Networks"/>
+	<entry mcc="655" mnc="11" network="SAPS Gauteng"/>
+	<entry mcc="655" mnc="21" network="Cape Town Metropolitan Council"/>
+	<entry mcc="655" mnc="30" network="Bokamoso Consortium"/>
+	<entry mcc="655" mnc="31" network="Karabo Telecoms (Pty) Ltd."/>
+	<entry mcc="655" mnc="32" network="Ilizwi Telecommunications"/>
+	<entry mcc="655" mnc="33" network="Thinta Thinta Telecommunications"/>
+	<entry mcc="214" mnc="01" network="Vodafone España - Vodafone" />
+	<entry mcc="214" mnc="03" network="Orange España - Orange" />
+	<entry mcc="214" mnc="04" network="Yoigo / Xfera" />
+	<entry mcc="214" mnc="05" network="Telefónica Móviles España (used by resellers)" />
+	<entry mcc="214" mnc="06" network="Vodafone España - Vodafone (used by resellers)" />
+	<entry mcc="214" mnc="07" network="Telefónica Móviles España (movistar)" />
+	<entry mcc="214" mnc="08" network="Euskaltel (MVNO)" />
+	<entry mcc="214" mnc="09" network="Orange España - Orange (used by resellers)" />
+	<entry mcc="214" mnc="16" network="TeleCable (MVNO)" />
+	<entry mcc="214" mnc="18" network="ONO (MVNO)" />
+	<entry mcc="214" mnc="19" network="KPN (MVNO)" />
+	<entry mcc="214" mnc="21" network="Jazztel (MVNO)" />
+	<entry mcc="214" mnc="23" network="Barablu Móvil España" />
+	<entry mcc="413" mnc="02" network="Dialog Telekom PLC."/>
+	<entry mcc="413" mnc="03" network="Celtel Lanka Ltd / Tigo."/>
+	<entry mcc="413" mnc="03" network="Mobitel Lanka Ltd."/>
+	<entry mcc="413" mnc="03" network="Hutch Sri Lanka."/>
+	<entry mcc="634" mnc="01" network="Mobitel / Mobile Telephone Company" />
+	<entry mcc="634" mnc="02" network="MTN Sudan" />
+	<entry mcc="746" mnc="02" network="Telesu"/>
+	<entry mcc="653" mnc="10" network="Swazi MTN"/>
+	<entry mcc="240" mnc="01" network="Telia" />
+	<entry mcc="240" mnc="02" network="3 (telecommunications) - 3" />
+	<entry mcc="240" mnc="03" network="Nordisk Mobiltelefon (CDMA2000)"/>
+	<entry mcc="240" mnc="04" network="3G Infrastructure Services"/>
+	<entry mcc="240" mnc="05" network="Sweden 3G (Universal Mobile Telecommunications System - UMTS) (Owned by Telia and Tele2)"/>
+	<entry mcc="240" mnc="06" network="Telenor (Universal Mobile Telecommunications System - UMTS)"/>
+	<entry mcc="240" mnc="07" network="Tele2" />
+	<entry mcc="240" mnc="08" network="Telenor" />
+	<entry mcc="240" mnc="09" network="Telenor Mobile Sverige"/>
+	<entry mcc="240" mnc="10" network="SpringMobil"/>
+	<entry mcc="240" mnc="20" network="Wireless Maingate"/>
+	<entry mcc="240" mnc="21" network="Banverket"/>
+	<entry mcc="228" mnc="01" network="Swisscom NATEL / Telecom FL A" />
+	<entry mcc="228" mnc="02" network="diAx mobile / Sunrise"/>
+	<entry mcc="228" mnc="03" network="Orange"/>
+	<entry mcc="228" mnc="05" network="Togewanet AG"/>
+	<entry mcc="228" mnc="06" network="SBB AG"/>
+	<entry mcc="228" mnc="07" network="IN&ampl;Phone SA"/>
+	<entry mcc="228" mnc="08" network="Tele2 Telecommunications AG"/>
+	<entry mcc="228" mnc="12" network="Sunrise UMTS"/>
+	<entry mcc="228" mnc="50" network="3G Mobile AG"/>
+	<entry mcc="228" mnc="51" network="Global Networks Schweiz AG"/>
+	<entry mcc="417" mnc="01" network="SyriaTel"/>
+	<entry mcc="417" mnc="02" network="Spacetel Syria"/>
+	<entry mcc="417" mnc="09" network="Syrian Telecom Est. MOBILE"/>
+	<entry mcc="436" mnc="01" network="JC Somoncom"/>
+	<entry mcc="436" mnc="02" network="CJSC Indigo Tajikistan"/>
+	<entry mcc="436" mnc="03" network="TT mobile"/>
+	<entry mcc="436" mnc="04" network="Josa Babilon-T"/>
+	<entry mcc="436" mnc="05" network="CTJTHSC Tajik-tel"/>
+	<entry mcc="466" mnc="01" network="FarEasTone"/>
+	<entry mcc="466" mnc="06" network="Tuntex Telecom"/>
+	<entry mcc="466" mnc="11" network="Chunghwa"/>
+	<entry mcc="466" mnc="88" network="KG Telecom"/>
+	<entry mcc="466" mnc="89" network="VIBO Telecom"/>
+	<entry mcc="466" mnc="92" network="LDTA"/>
+	<entry mcc="466" mnc="93" network="Mobitai Communications"/>
+	<entry mcc="466" mnc="97" network="Pacific Cellular TWN GSM"/>
+	<entry mcc="466" mnc="99" network="TransAsia Telecoms"/>
+	<entry mcc="640" mnc="01" network="Tritel"/>
+	<entry mcc="640" mnc="02" network="MIC"/>
+	<entry mcc="640" mnc="03" network="Zantel"/>
+	<entry mcc="640" mnc="04" network="Vodacom"/>
+	<entry mcc="640" mnc="05" network="Celtel"/>
+	<entry mcc="520" mnc="00" network="CAT CDMA"/>
+	<entry mcc="520" mnc="01" network="AIS / Advanced Info Service GSM" />
+	<entry mcc="520" mnc="10" network="WCS IQ"/>
+	<entry mcc="520" mnc="15" network="ACT Mobile"/>
+	<entry mcc="520" mnc="18" network="Total Access Comms / Total Access Worldphone" />
+	<entry mcc="520" mnc="23" network="Digital Phone Hello" />
+	<entry mcc="520" mnc="99" network="True / Orange" />
+	<entry mcc="615" mnc="01" network="Togo Telecom / TOGO CELL"/>
+	<entry mcc="539" mnc="01" network="Tonga Communications Corporation"/>
+	<entry mcc="539" mnc="43" network="Shoreline Communication"/>
+	<entry mcc="374" mnc="12" network="TSTT" />
+	<entry mcc="374" mnc="13" network="Digicel" />
+	<entry mcc="605" mnc="02" network="Tunicell / Tunisian PTT / Tunisie Telecom"/>
+	<entry mcc="605" mnc="03" network="Orascom Telecom"/>
+	<entry mcc="286" mnc="01" network="Turkcell"/>
+	<entry mcc="286" mnc="02" network="Vodafone Turkey - Vodafone"/>
+	<entry mcc="286" mnc="03" network="Avea / Aria"/>
+	<entry mcc="286" mnc="04" network="Aycell"/>
+	<entry mcc="438" mnc="01" network="Barash Communication Technologies (BCTI)"/>
+	<entry mcc="438" mnc="02" network="TM-Cell"/>
+	<entry mcc="641" mnc="01" network="Celtel Cellular"/>
+	<entry mcc="641" mnc="10" network="MTN Uganda"/>
+	<entry mcc="641" mnc="11" network="Uganda Telecom Ltd."/>
+	<entry mcc="255" mnc="01" network="MTS Ukraine - MTS" />
+	<entry mcc="255" mnc="02" network="Beeline Ukraine - Beeline" />
+	<entry mcc="255" mnc="03" network="Kyivstar" />
+	<entry mcc="255" mnc="05" network="Golden Telecom" />
+	<entry mcc="255" mnc="06" network="life:)" />
+	<entry mcc="424" mnc="01" network="UAE ETISALAT-G1"/>
+	<entry mcc="424" mnc="02" network="Etisalat / UAE ETISALAT-G2"/>
+	<entry mcc="234" mnc="00" network="Virgin 3510i" />
+	<entry mcc="234" mnc="02" network="O2" />
+	<entry mcc="234" mnc="03" network="Jersey Telenet / Bharti / AirTel" />
+	<entry mcc="234" mnc="10" network="Cellnet / O2" />
+	<entry mcc="234" mnc="11" network="Telefónica O2 - O2" />
+	<entry mcc="234" mnc="12" network="Railtrack" />
+	<entry mcc="234" mnc="15" network="Vodafone" />
+	<entry mcc="234" mnc="18" network="Cloud9" />
+	<entry mcc="234" mnc="20" network="3 (telecommunications) - 3 / Hutchison 3G" />
+	<entry mcc="234" mnc="30" network="T-Mobile" />
+	<entry mcc="234" mnc="31" network="Virgin Mobile - Virgin" />
+	<entry mcc="234" mnc="32" network="Virgin Mobile - Virgin" />
+	<entry mcc="234" mnc="33" network="Orange UK - Orange" />
+	<entry mcc="234" mnc="34" network="Orange UK - Orange" />
+	<entry mcc="234" mnc="50" network="Jersey Telecom / Wave (Guernsey)" />
+	<entry mcc="234" mnc="55" network="Cable &ampl; Wireless Guernsey / Sure Mobile (Jersey)" />
+	<entry mcc="234" mnc="58" network="Manx Telecom" />
+	<entry mcc="234" mnc="75" network="Inquam Telecom"/>
+	<entry mcc="310" mnc="000" network="Mid-Tex Celular"/>
+	<entry mcc="310" mnc="010" network="MCI"/>
+	<entry mcc="310" mnc="012" network="Verizon Wireless"/>
+	<entry mcc="310" mnc="013" network="MobileTel"/>
+	<entry mcc="310" mnc="014" network="Testing"/>
+	<entry mcc="310" mnc="016" network="Cricket Communications"/>
+	<entry mcc="310" mnc="017" network="North Sight Communications Inc."/>
+	<entry mcc="310" mnc="020" network="APC Sprint Spectrum / Union Telephone Company" />
+	<entry mcc="310" mnc="030" network="Centennial Communications" />
+	<entry mcc="310" mnc="032" network="IT&ampl;E Overseas, Inc."/>
+	<entry mcc="310" mnc="033" network="Guam Telephone Authority"/>
+	<entry mcc="310" mnc="034" network="Nevada Wireless LLC"/>
+	<entry mcc="310" mnc="040" network="Concho Cellular Telephone Co., Inc." />
+	<entry mcc="310" mnc="060" network="Consolidated Telcom"/>
+	<entry mcc="310" mnc="070" network="Highland Cellular, Inc."/>
+	<entry mcc="310" mnc="080" network="Corr Wireless Communications LLC" />
+	<entry mcc="310" mnc="090" network="Edge Wireless" />
+	<entry mcc="310" mnc="100" network="New Mexico RSA 4 East Ltd. Partnership" />
+	<entry mcc="310" mnc="110" network="Wireless 2000 Telephone"/>
+	<entry mcc="310" mnc="150" network="Cingular / Bell South / BellSouth Mobility DCS" />
+	<entry mcc="310" mnc="160" network="T-Mobile / Omnipoint Communications" />
+	<entry mcc="310" mnc="170" network="Cingular / Pacific Bell Wireless / T-Mobile"/>
+	<entry mcc="310" mnc="180" network="Cingular / West Central Wireless" />
+	<entry mcc="310" mnc="190" network="Alaska Telecom Mobile / Alaska Wireless Communications" />
+	<entry mcc="310" mnc="200" network="T-Mobile / T-Mobile Idaho / Oregon / Washington State" />
+	<entry mcc="310" mnc="210" network="T-Mobile / T-Mobile Iowa" />
+	<entry mcc="310" mnc="220" network="T-Mobile / T-Mobile Kansas / Oklahoma" />
+	<entry mcc="310" mnc="230" network="T-Mobile / T-Mobile Utah" />
+	<entry mcc="310" mnc="240" network="T-Mobile / T-Mobile New Mexico / Texas / Arizona" />
+	<entry mcc="310" mnc="250" network="T-Mobile / T-Mobile Hawaii" />
+	<entry mcc="310" mnc="260" network="T-Mobile / Western Wireless / Voicestream" />
+	<entry mcc="310" mnc="270" network="T-Mobile / Powertel" />
+	<entry mcc="310" mnc="280" network="T-Mobile" />
+	<entry mcc="310" mnc="290" network="T-Mobile" />
+	<entry mcc="310" mnc="300" network="T-Mobile" />
+	<entry mcc="310" mnc="340" network="High Plains Midwest LLC (Westlink Communications)" />
+	<entry mcc="310" mnc="310" network="T-Mobile / T-Mobile Florida / Aerial Communications" />
+	<entry mcc="310" mnc="380" network="AT&ampl;T Wireless / Cingular" />
+	<entry mcc="310" mnc="410" network="AT&ampl;T" />
+	<entry mcc="310" mnc="420" network="Cincinnati Bell Wireless" />
+	<entry mcc="310" mnc="430" network="Alaska Digitel" />
+	<entry mcc="310" mnc="450" network="North East Cellular" />
+	<entry mcc="310" mnc="460" network="TMP Corporation" />
+	<entry mcc="310" mnc="470" network="Guam Wireless Telephone Company"/>
+	<entry mcc="310" mnc="480" network="Choice Phone"/>
+	<entry mcc="310" mnc="490" network="Triton PCS"/>
+	<entry mcc="310" mnc="500" network="Public Service Cellular"/>
+	<entry mcc="310" mnc="510" network="Airtel Wireless"/>
+	<entry mcc="310" mnc="520" network="VeriSign"/>
+	<entry mcc="310" mnc="530" network="West Virginia Wireless"/>
+	<entry mcc="310" mnc="540" network="Oklahoma Western Telephone Company" />
+	<entry mcc="310" mnc="560" network="American Cellular Corporation"/>
+	<entry mcc="310" mnc="570" network="MTPCS, LLC / Chinook Wireless" />
+	<entry mcc="310" mnc="580" network="PCS ONE"/>
+	<entry mcc="310" mnc="590" network="Western Wireless Corporation" />
+	<entry mcc="310" mnc="610" network="Elkhart Telephone Co. / Epic Touch Co." />
+	<entry mcc="310" mnc="620" network="Coleman County Telecommunications / Trans Texas PCS" />
+	<entry mcc="310" mnc="630" network="Comtel PCS Mainstreet LP"/>
+	<entry mcc="310" mnc="640" network="Airadigm Communications" />
+	<entry mcc="310" mnc="660" network="T-Mobile" />
+	<entry mcc="310" mnc="670" network="Northstar"/>
+	<entry mcc="310" mnc="680" network="Noverr Publishing, Inc. dba NPI Wireless"/>
+	<entry mcc="310" mnc="690" network="Conestoga Wireless Company"/>
+	<entry mcc="310" mnc="740" network="Telemetrix Technologies"/>
+	<entry mcc="310" mnc="760" network="Panhandle Telecommunications Systems Inc."/>
+	<entry mcc="310" mnc="770" network="Iowa Wireless Services" />
+	<entry mcc="310" mnc="780" network="Message Express Company dba Airlink PCS"/>
+	<entry mcc="310" mnc="790" network="PinPoint Communications" />
+	<entry mcc="310" mnc="800" network="T-Mobile" />
+	<entry mcc="310" mnc="830" network="Caprock Cellular" />
+	<entry mcc="310" mnc="850" network="Aeris Communications"/>
+	<entry mcc="310" mnc="870" network="Kaplan Telephone Company" />
+	<entry mcc="310" mnc="880" network="Advantage Cellular Systems" />
+	<entry mcc="310" mnc="890" network="Rural Cellular Corporation" />
+	<entry mcc="310" mnc="900" network="Taylor Telecommunications" />
+	<entry mcc="310" mnc="910" network="Southern IL RSA Partnership / First Cellular of Southern Illinois" />
+	<entry mcc="310" mnc="940" network="Poka Lambro Telecommunications"/>
+	<entry mcc="310" mnc="950" network="Texas RSA 1 dba XIT Cellular (XIT Wireless)" />
+	<entry mcc="310" mnc="970" network="Globalstar"/>
+	<entry mcc="310" mnc="980" network="AT&ampl;T Wireless Services" />
+	<entry mcc="311" mnc="000" network="Mid-Tex Cellular" />
+	<entry mcc="311" mnc="010" network="Chariton Valley Communications" />
+	<entry mcc="311" mnc="020" network="Missouri RSA 5 Partnership" />
+	<entry mcc="311" mnc="030" network="Indigo Wireless" />
+	<entry mcc="311" mnc="040" network="Commet Wireless"/>
+	<entry mcc="311" mnc="050" network="Farmers Cellular Telephone" />
+	<entry mcc="311" mnc="060" network="Farmers Cellular Telephone" />
+	<entry mcc="311" mnc="070" network="Easterbrooke Cellular Corporation" />
+	<entry mcc="311" mnc="080" network="Pine Cellular / Pine Telephone Company" />
+	<entry mcc="311" mnc="090" network="Siouxland PCS"/>
+	<entry mcc="311" mnc="100" network="High Plains Wireless" />
+	<entry mcc="311" mnc="110" network="High Plains Wireless" />
+	<entry mcc="311" mnc="120" network="Choice Phone"/>
+	<entry mcc="311" mnc="130" network="Amarillo License" />
+	<entry mcc="311" mnc="140" network="MBO Wireless / Cross Telephone Company"/>
+	<entry mcc="311" mnc="150" network="Wilkes Cellular" />
+	<entry mcc="311" mnc="160" network="Endless Mountains Wireless"/>
+	<entry mcc="311" mnc="180" network="Cingular Wireless / Licensee Pacific Telesis Mobile Services" />
+	<entry mcc="311" mnc="210" network="Farmers Cellular Telephone" />
+	<entry mcc="316" mnc="010" network="Nextel Communications" />
+	<entry mcc="316" mnc="011" network="Southern Communications Services"/>
+	<entry mcc="748" mnc="00" network="Ancel" />
+	<entry mcc="748" mnc="01" network="Ancel" />
+	<entry mcc="748" mnc="07" network="Telefónica Móviles Uruguay" />
+	<entry mcc="748" mnc="10" network="América Móvil Uruguay / CTI Móvil" />
+	<entry mcc="434" mnc="01" network="Buztel"/>
+	<entry mcc="434" mnc="02" network="Uzmacom"/>
+	<entry mcc="434" mnc="04" network="Daewoo Unitel"/>
+	<entry mcc="434" mnc="05" network="Coscom"/>
+	<entry mcc="434" mnc="07" network="Uzdunrobita"/>
+	<entry mcc="541" mnc="01" network="SMILE"/>
+	<entry mcc="225" mnc="--" network="No own network" />
+	<entry mcc="222" mnc="01" network="Telecom Italia Mobile - TIM" />
+	<entry mcc="222" mnc="10" network="Vodafone Italy - Vodafone" />
+	<entry mcc="222" mnc="88" network="WIND (Italy) - Wind"/>
+	<entry mcc="222" mnc="99" network="H3G"/>
+	<entry mcc="734" mnc="01" network="Digitel / Infonet" />
+	<entry mcc="734" mnc="02" network="Digitel" />
+	<entry mcc="734" mnc="03" network="Digitel / Digicel" />
+	<entry mcc="734" mnc="04" network="Telefónica Móviles Venezuela (movistar)" />
+	<entry mcc="734" mnc="06" network="Movilnet -  -  Operativa" />
+	<entry mcc="452" mnc="01" network="Mobifon / MTSC"/>
+	<entry mcc="452" mnc="02" network="Vinaphone / DGPT"/>
+	<entry mcc="421" mnc="01" network="SabaFon / Yemen Mobile Phone Company"/>
+	<entry mcc="421" mnc="02" network="Spacetel Yemen"/>
+	<entry mcc="630" mnc="?" network="African Telecom Net"/>
+	<entry mcc="645" mnc="01" network="Celtel / Zamcell"/>
+	<entry mcc="645" mnc="02" network="Telecel"/>
+	<entry mcc="648" mnc="01" network="Net One"/>
+	<entry mcc="648" mnc="03" network="Telecel"/>
+	<entry mcc="648" mnc="04" network="Econet"/>
+	<entry mcc="901" mnc="01" network="ICO Global Communications"/>
+	<entry mcc="901" mnc="02" network="Sense Communications"/>
+	<entry mcc="901" mnc="03" network="Iridium Satellite LLC"/>
+	<entry mcc="901" mnc="04" network="Globalstar"/>
+	<entry mcc="901" mnc="05" network="Thuraya RMSS Network"/>
+	<entry mcc="901" mnc="06" network="Thuraya Satellite Telecommunications Company"/>
+	<entry mcc="901" mnc="07" network="Ellipso"/>
+	<entry mcc="901" mnc="08" network="GSM unsubscribed"/>
+	<entry mcc="901" mnc="09" network="Tele1 Europe"/>
+	<entry mcc="901" mnc="10" network="Asia Cellular Satellite"/>
+	<entry mcc="901" mnc="11" network="Inmarsat Ltd."/>
+	<entry mcc="901" mnc="12" network="Maritime Communications Partner AS"/>
+	<entry mcc="901" mnc="13" network="Global Networks, Inc."/>
+	<entry mcc="901" mnc="14" network="AeroMobile (ArInc/Telenor)"/>
+	<entry mcc="901" mnc="15" network="SITA (On Air)"/>
+	<entry mcc="901" mnc="16" network="Jasper Systems, Inc."/>
+	<entry mcc="901" mnc="17" network="Jersey Telecom"/>
+	<entry mcc="901" mnc="18" network="Cingular Wireless WMS"/>
+	<entry mcc="901" mnc="19" network="Vodafone Malta Maritime"/>
+</mncentries>

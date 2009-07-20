@@ -130,7 +130,6 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             Type 18  Not fixed  Not fixed
             Type 19  Not Fixed  Not Fixed
             Type 20  Not fixed  Not fixed
-         * 
          */
 
         public long TC

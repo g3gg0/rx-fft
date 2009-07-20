@@ -133,7 +133,8 @@ namespace LibRXFFT.Libraries.GSM.Layer2
                 else
                 {
                     StatusMessage += "Faulty length?! Length = " + (packetBufferOffset + length) + Environment.NewLine;
-                    StatusMessage += DumpBytes(l2Data);
+                    StatusMessage += "          Raw Data" + Environment.NewLine;
+                    StatusMessage += "             " + DumpBytes(l2Data) + Environment.NewLine;
                     ShowMessage = true;
                 }
 

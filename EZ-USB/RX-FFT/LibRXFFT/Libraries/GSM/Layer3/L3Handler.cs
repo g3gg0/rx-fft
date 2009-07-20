@@ -37,6 +37,8 @@ namespace LibRXFFT.Libraries.GSM.Layer3
         public static L3Messages L3Messages;
         public static L3PDUList L3PduList;
         public static MCCTable MCCTable;
+        public static MNCTable MNCTable;
+        
 
 
         public static bool SniffIMSI = false;
@@ -93,6 +95,7 @@ namespace LibRXFFT.Libraries.GSM.Layer3
             L3PduList = new L3PDUList("pdulist.xml");
             L3Messages = new L3Messages("messagelist.xml");
             MCCTable = new MCCTable("mccentries.xml");
+            MNCTable = new MNCTable("mncentries.xml");
         }
 
         private string ParseRA(L3Handler handler, long value)
@@ -446,13 +449,25 @@ namespace LibRXFFT.Libraries.GSM.Layer3
 
             if (type == 1)
             {
-                MCCEntry entry = MCCTable.Get(imsi.Substring(0, 3));
-                string imsiString = "";
+                string imsiString = imsi;
 
-                if (entry == null)
-                    imsiString = imsi;
-                else
-                    imsiString = imsi + "  " + entry.CC + " (" + entry.Country + ")";
+                string mcc = imsi.Substring(0, 3);
+                string mnc2 = imsi.Substring(3, 2);
+                string mnc3 = imsi.Substring(3, 3);
+
+                MCCEntry countryEntry = MCCTable.Get(mcc);
+                MNCEntry netEntry2 = MNCTable.Get(mcc, mnc2);
+                MNCEntry netEntry3 = MNCTable.Get(mcc, mnc3);
+
+                if (countryEntry != null)
+                    imsiString += "  " + countryEntry.CC + " (" + countryEntry.Country + ")";
+
+                if (netEntry2 != null)
+                    imsiString += " (" + netEntry2.Network + ")";
+
+                if (netEntry3 != null)
+                    imsiString += " (" + netEntry3.Network + ")";
+
 
                 msg[1] += imsiString;
 

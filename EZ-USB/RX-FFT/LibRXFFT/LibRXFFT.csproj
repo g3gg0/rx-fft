@@ -197,6 +197,7 @@
     <Compile Include="Libraries\GSM\Layer3\CBCHandler.cs" />
     <Compile Include="Libraries\GSM\Misc\BitMapping.cs" />
     <Compile Include="Libraries\GSM\Misc\FrequencyFormatter.cs" />
+    <Compile Include="Libraries\GSM\Misc\GaussKrueger.cs" />
     <Compile Include="Libraries\GSM\Misc\MCCTable.cs" />
     <Compile Include="Libraries\GSM\Bursts\NormalBurst.cs" />
     <Compile Include="Libraries\GSM\Bursts\SCHBurst.cs" />
@@ -207,6 +208,7 @@
     <Compile Include="Libraries\GSM\Layer3\L3Messages.cs" />
     <Compile Include="Libraries\GSM\Layer3\L3PacketTypes.cs" />
     <Compile Include="Libraries\GSM\Layer3\L3PDUList.cs" />
+    <Compile Include="Libraries\GSM\Misc\MNCTable.cs" />
     <Compile Include="Libraries\SampleSources\SampleSource.cs" />
     <Compile Include="Libraries\SampleSources\ShmemSampleSource.cs" />
     <Compile Include="Libraries\SampleSources\USRPSampleSource.cs" />

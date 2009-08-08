@@ -20,6 +20,7 @@ namespace LibRXFFT.Libraries.GSM.Layer2
         private int LastNS = -1;
 
         private CBCHandler CBCHandler;
+        private L2HeaderWrapper L2Data = new L2HeaderWrapper();
 
         public L2Handler()
         {
@@ -58,12 +59,7 @@ namespace LibRXFFT.Libraries.GSM.Layer2
             {
                 StatusMessage = "Pseudo L2 Header" + Environment.NewLine;
 
-                /* remove the pseudo length (1 byte) 
-                byte[] buf = new byte[l2data.Length - startOffset - 1];
-                Array.Copy(l2data, 1, buf, 0, buf.Length);
-                */
-
-                /* pass to L3 handler if not empty */
+                /* pass to L3 handler if not empty and skip pseudo length */
                 if (!PacketIsEmpty(l2Data, 1))
                     l3.Handle(l2Data, 1);
             }
@@ -73,66 +69,51 @@ namespace LibRXFFT.Libraries.GSM.Layer2
                 /* always show empty/multiframe messages if requested */
                 ShowMessage = ShowAllMessages;
 
-                int dataStart = startOffset + 3;
-                int sapi = (l2Data[startOffset] >> 2) & 7;
-                int cr = (l2Data[startOffset] >> 1) & 1;
-                int ea = (l2Data[startOffset] >> 0) & 1;
-                int control = l2Data[startOffset + 1];
-                int lengthIndicator = l2Data[startOffset + 2];
+                L2Data.Payload = l2Data;
+                L2Data.StartOffset = startOffset;
 
-                /* get the flags from the length field */
-                bool flagExtension = ((lengthIndicator >> 0) & 1) == 1;
-                bool flagMore = ((lengthIndicator >> 1) & 1) == 1;
-                int length = lengthIndicator >> 2;
-
-                StatusMessage = "SAPI: " + sapi + "  C/R: " + cr + "  EA: " + ea + "  ";
-                StatusMessage += "M: " + (flagMore ? "1" : "0") + "  ";
-                StatusMessage += "EL: " + (flagExtension ? "1" : "0") + "  ";
-                StatusMessage += "L: " + length + "  ";
-
-                int NR = -1;
-                int NS = -1;
-                int U = -1;
-                int S = -1;
-
-                switch (control & 3)
+                if (L3Handler.ExceptFieldsEnabled || ShowMessage)
                 {
-                    case 1:
-                        NR = (control >> 5);
-                        S = ((control >> 2) & 3);
-                        StatusMessage += "S Format, N(R)=" + NR + " S=" + S + " ";
-                        break;
+                    StatusMessage = "SAPI: " + L2Data.SAPI + "  C/R: " + (L2Data.CR ? "1" : "0") + "  EA: " + (L2Data.EA ? "1" : "0") + "  ";
+                    StatusMessage += "M: " + (L2Data.M ? "1" : "0") + "  ";
+                    StatusMessage += "EL: " + (L2Data.EL ? "1" : "0") + "  ";
+                    StatusMessage += "L: " + L2Data.Length + "  ";
 
-                    case 3:
-                        U = (((control >> 3) & 0x1C) | ((control >> 2) & 3));
-                        StatusMessage += "U Format, U=" + U + " ";
-                        break;
+                    switch (L2Data.FrameFormat)
+                    {
+                        case eFrameFormat.S_Format:
+                            StatusMessage += "S Format, N(R)=" + L2Data.NR + " S=" + L2Data.S + " " + (eSupervisory)L2Data.S;
+                            break;
 
-                    default:
-                        NR = (control >> 5);
-                        NS = ((control >> 1) & 0x7);
-                        StatusMessage += "I Format, N(R)=" + NR + " N(S)=" + NS + " ";
-                        break;
+                        case eFrameFormat.U_Format:
+                            StatusMessage += "U Format, U=" + L2Data.U + " " + (eUnnumbered)L2Data.U;
+                            break;
+
+                        case eFrameFormat.I_Format:
+                            StatusMessage += "I Format, N(R)=" + L2Data.NR + " N(S)=" + L2Data.NS + " ";
+                            break;
+                    }
                 }
 
                 /* check if there is enough space in the buffer */
-                if (length + packetBufferOffset <= packetBuffer.Length && length + dataStart <= l2Data.Length)
+                if (L2Data.Length + packetBufferOffset <= packetBuffer.Length && L2Data.Length + L2Data.DataStart <= L2Data.Payload.Length)
                 {
                     /* dont buffer when its the same frame number (retransmission) */
-                    if (!flagMore || LastNS < NS)
+                    if (!L2Data.M || LastNS < L2Data.NS)
                     {
-                        Array.Copy(l2Data, dataStart, packetBuffer, packetBufferOffset, length);
-                        packetBufferOffset += length;
-                        LastNS = NS;
+                        Array.Copy(L2Data.Payload, L2Data.DataStart, packetBuffer, packetBufferOffset, L2Data.Length);
+                        packetBufferOffset += L2Data.Length;
+                        LastNS = L2Data.NS;
                     }
                     else
                     {
-                        StatusMessage += "!! Retransmission !! ";
+                        if (L3Handler.ExceptFieldsEnabled || ShowMessage)
+                            StatusMessage += "!! Retransmission !! ";
                     }
                 }
                 else
                 {
-                    StatusMessage += "Faulty length?! Length = " + (packetBufferOffset + length) + Environment.NewLine;
+                    StatusMessage += "Faulty length?! Length = " + (packetBufferOffset + L2Data.Length) + Environment.NewLine;
                     StatusMessage += "          Raw Data" + Environment.NewLine;
                     StatusMessage += "             " + DumpBytes(l2Data) + Environment.NewLine;
                     ShowMessage = true;
@@ -142,12 +123,15 @@ namespace LibRXFFT.Libraries.GSM.Layer2
                 NumPackets++;
 
                 /* when reached the last packet, pass it to L3 handler */
-                if (!flagMore)
+                if (!L2Data.M)
                 {
-                    if (NumPackets > 1)
-                        StatusMessage += "(packet " + NumPackets + ", total " + packetBufferOffset + " bytes)" + Environment.NewLine;
-                    else
-                        StatusMessage += Environment.NewLine;
+                    if (L3Handler.ExceptFieldsEnabled || ShowMessage)
+                    {
+                        if (NumPackets > 1)
+                            StatusMessage += "(packet " + NumPackets + ", total " + packetBufferOffset + " bytes)" + Environment.NewLine;
+                        else
+                            StatusMessage += Environment.NewLine;
+                    }
 
                     /* but only pass it through when there is any data */
                     if (packetBufferOffset > 0)
@@ -167,11 +151,11 @@ namespace LibRXFFT.Libraries.GSM.Layer2
                     NumPackets = 0;
                     LastNS = -1;
                 }
-                else
+                else if (L3Handler.ExceptFieldsEnabled || ShowMessage)
                     StatusMessage += "(packet " + NumPackets + ")" + Environment.NewLine;
             }
 
-            if (DumpRawData)
+            if (DumpRawData && (L3Handler.ExceptFieldsEnabled || ShowMessage))
             {
                 StatusMessage += "          Raw Data" + Environment.NewLine;
                 StatusMessage += "             " + DumpBytes(l2Data) + Environment.NewLine;
@@ -187,6 +171,155 @@ namespace LibRXFFT.Libraries.GSM.Layer2
                 msg += String.Format("{0:X02} ", value);
 
             return msg;
+        }
+
+        internal enum eUnnumbered
+        {
+            SABM = 7,
+            DM = 3,
+            UI = 0,
+            DISC = 8,
+            UA = 12
+        }
+
+        internal enum eSupervisory
+        {
+            RR = 0,
+            RNR = 1,
+            REJ = 4
+        }
+
+
+        internal enum eFrameFormat
+        {
+            I_Format,
+            S_Format,
+            U_Format
+        }
+
+        internal class L2HeaderWrapper
+        {
+            internal int StartOffset = 0;
+            internal byte[] Payload = new byte[0];
+
+            internal int DataStart
+            {
+                get
+                {
+                    return StartOffset + 3;
+                }
+            }
+
+            internal int LPD
+            {
+                get
+                {
+                    return (Payload[StartOffset] >> 5) & 3;
+                }
+            }
+
+            internal int SAPI
+            {
+                get
+                {
+                    return (Payload[StartOffset] >> 2) & 7;
+                }
+            }
+
+            internal bool CR
+            {
+                get
+                {
+                    return ((Payload[StartOffset] >> 1) & 1) != 0;
+                }
+            }
+
+            internal bool EA
+            {
+                get
+                {
+                    return (Payload[StartOffset] & 1) != 0;
+                }
+            }
+
+            internal eFrameFormat FrameFormat
+            {
+                get
+                {
+                    if ((Payload[StartOffset + 1] & 1) == 0)
+                        return eFrameFormat.I_Format;
+
+                    if ((Payload[StartOffset + 1] & 2) == 0)
+                        return eFrameFormat.S_Format;
+
+                    return eFrameFormat.U_Format;
+                }
+            }
+
+            internal int Length
+            {
+                get
+                {
+                    return Payload[StartOffset + 2] >> 2;
+                }
+            }
+
+            internal bool M
+            {
+                get
+                {
+                    return ((Payload[StartOffset + 2] >> 1) & 1) != 0;
+                }
+            }
+
+            internal bool EL
+            {
+                get
+                {
+                    return (Payload[StartOffset + 2] & 1) != 0;
+                }
+            }
+
+            internal int NR
+            {
+                get
+                {
+                    return Payload[StartOffset + 1] >> 5;
+                }
+            }
+
+            internal int NS
+            {
+                get
+                {
+                    return (Payload[StartOffset + 1] >> 1) & 7;
+                }
+            }
+
+            internal int S
+            {
+                get
+                {
+                    return (Payload[StartOffset + 1] >> 2) & 7;
+                }
+            }
+
+            internal int U
+            {
+                get
+                {
+                    return ((Payload[StartOffset + 1] >> 3) & 0x1C) | ((Payload[StartOffset + 1] >> 2) & 7);
+                }
+            }
+
+            internal bool PF
+            {
+                get
+                {
+                    return ((Payload[StartOffset + 2] >> 4) & 1) != 0;
+                }
+            }
+
         }
     }
 }

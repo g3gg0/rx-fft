@@ -14,12 +14,12 @@ namespace LibRXFFT.Components.DirectX
         Vertex[] CursorVertexes = new Vertex[6];
         public bool[] BurstBits = new bool[0];
 
-        internal override void AllocateResources()
+        protected override void AllocateResources()
         {
             SmallFont = new Font(Device, new System.Drawing.Font("Arial", 8));
         }
 
-        internal override void ReleaseResources()
+        protected override void ReleaseResources()
         {
             if (SmallFont != null)
                 SmallFont.Dispose();
@@ -28,7 +28,7 @@ namespace LibRXFFT.Components.DirectX
 
 
 
-        internal void DrawBit(int bitNum, uint color1, uint color2, uint colorText)
+        protected void DrawBit(int bitNum, uint color1, uint color2, uint colorText)
         {
             float stubLength = (float)DirectXHeight / 3;
             float bitStartPos = (float)(XAxisGridOffset * XZoomFactor - DisplayXOffset + ((bitNum - 0.5f) * XAxisUnit * XZoomFactor));
@@ -87,7 +87,7 @@ namespace LibRXFFT.Components.DirectX
             SmallFont.DrawString(null, (bitNum + 1).ToString(), (int)(bitStartPos + bitEndPos) / 2, (int)DirectXHeight / 2, (int)colorText);
         }
 
-        internal override void RenderOverlay()
+        protected override void RenderOverlay()
         {
             float stubLength = (float)DirectXHeight / 3;
             float stubWidth = 20;

@@ -17,21 +17,33 @@ namespace LibRXFFT.Components.DirectX
 
     public class DirectXPlot : UserControl
     {
+        public double UpdateRate
+        {
+            get { return 1000 / RenderSleepDelay; }
+            set { RenderSleepDelay = 1000 / value; }
+        }
+        public double RenderSleepDelay = 1000 / 25;
+        public DirectXPlot SlavePlot = null;
+
+        public string MainText = "";
+        public string MainTextPrev = "";
  
         public UserEventCallbackDelegate UserEventCallback;
 
-        internal int DirectXWidth = 1280;
-        internal int DirectXHeight = 1024;
+        protected int DirectXWidth = 1280;
+        protected int DirectXHeight = 1024;
 
-        internal bool YAxisCentered = true;
+        protected bool YAxisCentered = true;
 
-        private bool DirectXAvailable = false;
+        protected bool DirectXAvailable = false;
 
-        private Direct3D Direct3D;
-        private PresentParameters PresentParameters;
+        protected Direct3D Direct3D;
+        protected PresentParameters PresentParameters;
 
-        internal Device Device;
-        internal Font DisplayFont;
+        protected Device Device;
+        protected Font DisplayFont;
+        protected Font SmallFont;
+        protected Font FixedFont;
 
         /* add some interface to set the YAxisLines - for now external code is locking and modifying member variables */
         public readonly Mutex DirectXLock = new Mutex();
@@ -39,34 +51,46 @@ namespace LibRXFFT.Components.DirectX
         protected int PlotVertsEntries = 0;
 
         protected Vertex[] PlotVerts = new Vertex[0];
+        protected Vertex[] PlotVertsOverview = new Vertex[0];
         protected Vertex[] XAxisVerts = new Vertex[0];
         protected Vertex[] YAxisVerts = new Vertex[0];
+        protected Vertex[] OverviewVertexes = new Vertex[14];
+        
 
         protected Point[] LinePoints;
+        protected Object LinePointsLock = new Object();
         public ArrayList YAxisLines = new ArrayList();
         public ArrayList YAxisNames = new ArrayList();
 
-        internal bool UpdateOverlays = false;
+        protected bool UpdateOverlays = false;
         public bool LinePointsUpdated = true;
         public bool AxisUpdated = true;
 
         protected int LinePointEntries;
         private bool SizeHasChanged;
 
-        internal bool ShiftPressed;
-        internal bool AltPressed;
-        internal bool ControlPressed;
+        protected bool ShiftPressed;
+        protected bool AltPressed;
+        protected bool ControlPressed;
+
+        protected bool OverviewMode;
+        protected bool OverviewModeEnabled = true;
 
         public eUserAction ActionMousePosX = eUserAction.XPos;
         public eUserAction ActionMousePosY = eUserAction.YPos;
 
-        public eUserAction ActionMouseWheel = eUserAction.YZoom;
-        public eUserAction ActionMouseWheelShift = eUserAction.XZoom;
-        public eUserAction ActionMouseWheelControl = eUserAction.None;
-        public eUserAction ActionMouseWheelAlt = eUserAction.None;
+        public eUserAction ActionMouseWheelUp = eUserAction.YZoomIn;
+        public eUserAction ActionMouseWheelUpShift = eUserAction.XZoomIn;
+        public eUserAction ActionMouseWheelUpControl = eUserAction.None;
+        public eUserAction ActionMouseWheelUpAlt = eUserAction.None;
+
+        public eUserAction ActionMouseWheelDown = eUserAction.YZoomOut;
+        public eUserAction ActionMouseWheelDownShift = eUserAction.XZoomOut;
+        public eUserAction ActionMouseWheelDownControl = eUserAction.None;
+        public eUserAction ActionMouseWheelDownAlt = eUserAction.None;
 
         public eUserAction ActionMouseDragX = eUserAction.XOffset;
-        public eUserAction ActionMouseDragXShift = eUserAction.XOffset;
+        public eUserAction ActionMouseDragXShift = eUserAction.XOffsetOverview;
         public eUserAction ActionMouseDragXControl = eUserAction.XOffset;
         public eUserAction ActionMouseDragXAlt = eUserAction.XOffset;
 
@@ -75,12 +99,25 @@ namespace LibRXFFT.Components.DirectX
         public eUserAction ActionMouseDragYControl = eUserAction.None;
         public eUserAction ActionMouseDragYAlt = eUserAction.None;
 
+        /* mouse click actions */
+        public eUserAction ActionMouseClickLeft = eUserAction.None;
+        public eUserAction ActionMouseClickLeftShift = eUserAction.None;
+        public eUserAction ActionMouseClickLeftControl = eUserAction.None;
+        public eUserAction ActionMouseClickLeftAlt = eUserAction.None;
+        public eUserAction ActionMouseClickMiddle = eUserAction.None;
+        public eUserAction ActionMouseClickMiddleShift = eUserAction.None;
+        public eUserAction ActionMouseClickMiddleControl = eUserAction.None;
+        public eUserAction ActionMouseClickMiddleAlt = eUserAction.None;
+        public eUserAction ActionMouseClickRight = eUserAction.None;
+        public eUserAction ActionMouseClickRightShift = eUserAction.None;
+        public eUserAction ActionMouseClickRightControl = eUserAction.None;
+        public eUserAction ActionMouseClickRightAlt = eUserAction.None;
 
         /* values are in pixels and set by the DragX/Y functions */
-        internal double DisplayXOffset = 0;
-        internal double DisplayYOffset = 0;
+        protected double DisplayXOffset = 0;
+        protected double DisplayYOffset = 0;
 
-        internal Point LastMousePos = new Point();
+        protected Point LastMousePos = new Point();
 
         /* distance of X Axis lines */
         public double XAxisUnit = 100;
@@ -89,21 +126,39 @@ namespace LibRXFFT.Components.DirectX
         public double XMaximum = 0;
         public int XAxisLines = 0;
 
+        public double XZoomStep = 1.05f;
+        public double YZoomStep = 1.05f;
+
         public double YZoomFactor { get; set; }
         public double XZoomFactor { get; set; }
 
+        public Color ColorOverview { get; set; }
+        public Color ColorFont { get; set; }
         public Color ColorFG { get; set; }
         public Color ColorBG { get; set; }
-        public Color ColorFont { get; set; }
+        public Color ColorCursor { get; set; }
 
 
-        public DirectXPlot()
+        public DirectXPlot() : this(false)
+        { 
+        }
+
+        public DirectXPlot(bool slaveMode)
         {
+            ColorOverview = Color.Red;
+            ColorFont = Color.DarkCyan;
             ColorFG = Color.Cyan;
             ColorBG = Color.Black;
-            ColorFont = Color.DarkCyan;
+            ColorCursor = Color.Red;
 
-            InitializeDirectX();
+            try
+            {
+                InitializeDirectX();
+            }
+            catch (Direct3D9Exception e)
+            {
+                MessageBox.Show("Failed initializing DirectX." + Environment.NewLine + e.ToString());
+            }
         }
 
         protected void CreateVertexBufferForPoints(Point[] points)
@@ -122,12 +177,15 @@ namespace LibRXFFT.Components.DirectX
 
                 if (Device != null)
                 {
-                    uint color = (uint)ColorFG.ToArgb();
+                    uint colorFG = ((uint)ColorFG.ToArgb()) & 0xFFFFFF;
 
                     if (numPoints > 0)
                     {
                         if (numPoints > PlotVerts.Length)
+                        {
                             PlotVerts = new Vertex[numPoints];
+                            PlotVertsOverview = new Vertex[numPoints];
+                        }
 
                         PlotVertsEntries = numPoints - 1;
 
@@ -136,11 +194,20 @@ namespace LibRXFFT.Components.DirectX
                         {
                             for (int pos = 0; pos < numPoints; pos++)
                             {
-                                PlotVerts[pos].PositionRhw.X = (float)(XAxisSampleOffset * XZoomFactor - DisplayXOffset + points[pos].X * XZoomFactor);
+                                PlotVerts[pos].PositionRhw.X = (float)((XAxisSampleOffset + points[pos].X) * XZoomFactor - DisplayXOffset);
                                 PlotVerts[pos].PositionRhw.Y = (float)(DirectXHeight - (DisplayYOffset + points[pos].Y * YZoomFactor)) / 2;
                                 PlotVerts[pos].PositionRhw.Z = 0.5f;
                                 PlotVerts[pos].PositionRhw.W = 1;
-                                PlotVerts[pos].Color = color;
+                                PlotVerts[pos].Color = 0xFF000000 | colorFG;
+
+                                if (OverviewModeEnabled)
+                                {
+                                    PlotVertsOverview[pos].PositionRhw.X = (float)(XAxisSampleOffset + points[pos].X);
+                                    PlotVertsOverview[pos].PositionRhw.Y = PlotVerts[pos].PositionRhw.Y;
+                                    PlotVertsOverview[pos].PositionRhw.Z = PlotVerts[pos].PositionRhw.Z;
+                                    PlotVertsOverview[pos].PositionRhw.W = PlotVerts[pos].PositionRhw.W;
+                                    PlotVertsOverview[pos].Color = PlotVerts[pos].Color;
+                                }
 
                                 maximum = (int)Math.Max(points[pos].X, maximum);
                             }
@@ -149,11 +216,20 @@ namespace LibRXFFT.Components.DirectX
                         {
                             for (int pos = 0; pos < numPoints; pos++)
                             {
-                                PlotVerts[pos].PositionRhw.X = (float)(XAxisSampleOffset * XZoomFactor - DisplayXOffset + points[pos].X * XZoomFactor);
+                                PlotVerts[pos].PositionRhw.X = (float)((XAxisSampleOffset + points[pos].X) * XZoomFactor - DisplayXOffset);
                                 PlotVerts[pos].PositionRhw.Y = (float)(DirectXHeight - (DisplayYOffset + points[pos].Y * YZoomFactor));
                                 PlotVerts[pos].PositionRhw.Z = 0.5f;
                                 PlotVerts[pos].PositionRhw.W = 1;
-                                PlotVerts[pos].Color = color;
+                                PlotVerts[pos].Color = 0xFF000000 | colorFG;
+
+                                if (OverviewModeEnabled)
+                                {
+                                    PlotVertsOverview[pos].PositionRhw.X = (float)(XAxisSampleOffset + points[pos].X);
+                                    PlotVertsOverview[pos].PositionRhw.Y = PlotVerts[pos].PositionRhw.Y;
+                                    PlotVertsOverview[pos].PositionRhw.Z = PlotVerts[pos].PositionRhw.Z;
+                                    PlotVertsOverview[pos].PositionRhw.W = PlotVerts[pos].PositionRhw.W;
+                                    PlotVertsOverview[pos].Color = PlotVerts[pos].Color;
+                                }
 
                                 maximum = (int)Math.Max(points[pos].X, maximum);
                             }
@@ -282,7 +358,13 @@ namespace LibRXFFT.Components.DirectX
         protected void ResetDirectX()
         {
             ReleaseDirectX();
-            InitializeDirectX();
+            try
+            {
+                InitializeDirectX();
+            }
+            catch (Direct3D9Exception e)
+            {
+            }
         }
 
         protected void ReleaseDirectX()
@@ -294,6 +376,12 @@ namespace LibRXFFT.Components.DirectX
             if (DisplayFont != null)
                 DisplayFont.Dispose();
 
+            if (FixedFont != null)
+                FixedFont.Dispose();
+
+            if (SmallFont != null)
+                SmallFont.Dispose();
+
             if (Device != null)
                 Device.Dispose();
 
@@ -303,6 +391,8 @@ namespace LibRXFFT.Components.DirectX
             DisplayFont = null;
             Device = null;
             Direct3D = null;
+            SmallFont = null;
+            FixedFont = null;
 
             DirectXLock.ReleaseMutex();
         }
@@ -340,6 +430,8 @@ namespace LibRXFFT.Components.DirectX
                     Device.SetRenderState(RenderState.DestinationBlend, Blend.InverseSourceAlpha);
 
                     DisplayFont = new Font(Device, new System.Drawing.Font("Arial", 20));
+                    SmallFont = new Font(Device, new System.Drawing.Font("Arial", 8));
+                    FixedFont = new Font(Device, new System.Drawing.Font("Courier Newo", 8));
 
                     AllocateResources();
                 }
@@ -349,6 +441,7 @@ namespace LibRXFFT.Components.DirectX
                     PresentParameters.BackBufferWidth = DirectXWidth;
 
                     DisplayFont.Dispose();
+                    SmallFont.Dispose();
                     ReleaseResources();
                     Device.Reset(PresentParameters);
                     Device.SetRenderState(RenderState.AlphaBlendEnable, true);
@@ -356,6 +449,9 @@ namespace LibRXFFT.Components.DirectX
                     Device.SetRenderState(RenderState.DestinationBlend, Blend.InverseSourceAlpha);
 
                     DisplayFont = new Font(Device, new System.Drawing.Font("Arial", 20));
+                    SmallFont = new Font(Device, new System.Drawing.Font("Arial", 8));
+                    FixedFont = new Font(Device, new System.Drawing.Font("Courier Newo", 8));
+
                     AllocateResources();
                 }
 
@@ -366,7 +462,7 @@ namespace LibRXFFT.Components.DirectX
             }
             catch (Exception e)
             {
-                throw new Exception("Failed to initialize DirectX", e);
+                throw e;
             }
             finally
             {
@@ -376,16 +472,153 @@ namespace LibRXFFT.Components.DirectX
             return;
         }
 
-        internal virtual void AllocateResources()
+        protected virtual void AllocateResources()
         {
         }
 
-        internal virtual void ReleaseResources()
+        protected virtual void ReleaseResources()
         {
         }
 
+        protected virtual string XLabelFromCursorPos(double xPos)
+        {
+            double offset = ((DisplayXOffset + xPos) / (XZoomFactor)) - XAxisSampleOffset;
+            return "Sample " + offset.ToString();
+        }
 
-        protected void Render()
+        protected virtual string XLabelFromSampleNum(double num)
+        {
+            return "Sample " + num.ToString();
+        }
+
+        protected virtual void RenderOverview(int vertexCount, Vertex[] vertexes)
+        {
+            Device.DrawUserPrimitives(PrimitiveType.LineStrip, vertexCount, vertexes);
+
+            /* only recalc scale lines when axis need to get updated */
+            if (UpdateOverlays)
+            {
+                int pos = 0;
+                uint colorOverview = ((uint)ColorOverview.ToArgb()) & 0xFFFFFF;
+
+                /* draw left margin */
+                OverviewVertexes[pos].PositionRhw.X = (float)(DisplayXOffset / XZoomFactor);
+                OverviewVertexes[pos].PositionRhw.Y = 0;
+                OverviewVertexes[pos].PositionRhw.Z = 0.5f;
+                OverviewVertexes[pos].PositionRhw.W = 1;
+                OverviewVertexes[pos].Color = 0x9F000000;
+                pos++;
+
+                OverviewVertexes[pos].PositionRhw.X = (float)(DisplayXOffset / XZoomFactor);
+                OverviewVertexes[pos].PositionRhw.Y = DirectXHeight / 2;
+                OverviewVertexes[pos].PositionRhw.Z = 0.5f;
+                OverviewVertexes[pos].PositionRhw.W = 1;
+                OverviewVertexes[pos].Color = 0x9F000000 | colorOverview;
+                pos++;
+
+                OverviewVertexes[pos].PositionRhw.X = (float)(DisplayXOffset / XZoomFactor);
+                OverviewVertexes[pos].PositionRhw.Y = DirectXHeight / 2;
+                OverviewVertexes[pos].PositionRhw.Z = 0.5f;
+                OverviewVertexes[pos].PositionRhw.W = 1;
+                OverviewVertexes[pos].Color = 0x9F000000 | colorOverview;
+                pos++;
+
+                OverviewVertexes[pos].PositionRhw.X = (float)(DisplayXOffset / XZoomFactor);
+                OverviewVertexes[pos].PositionRhw.Y = DirectXHeight;
+                OverviewVertexes[pos].PositionRhw.Z = 0.5f;
+                OverviewVertexes[pos].PositionRhw.W = 1;
+                OverviewVertexes[pos].Color = 0x9F000000;
+                pos++;
+
+                /* draw right margin */
+                OverviewVertexes[pos].PositionRhw.X = (float)((DisplayXOffset + DirectXWidth) / XZoomFactor);
+                OverviewVertexes[pos].PositionRhw.Y = 0;
+                OverviewVertexes[pos].PositionRhw.Z = 0.5f;
+                OverviewVertexes[pos].PositionRhw.W = 1;
+                OverviewVertexes[pos].Color = 0x9F000000;
+                pos++;
+
+                OverviewVertexes[pos].PositionRhw.X = (float)((DisplayXOffset + DirectXWidth) / XZoomFactor);
+                OverviewVertexes[pos].PositionRhw.Y = DirectXHeight / 2;
+                OverviewVertexes[pos].PositionRhw.Z = 0.5f;
+                OverviewVertexes[pos].PositionRhw.W = 1;
+                OverviewVertexes[pos].Color = 0x9F000000 | colorOverview;
+                pos++;
+
+                OverviewVertexes[pos].PositionRhw.X = (float)((DisplayXOffset + DirectXWidth) / XZoomFactor);
+                OverviewVertexes[pos].PositionRhw.Y = DirectXHeight / 2;
+                OverviewVertexes[pos].PositionRhw.Z = 0.5f;
+                OverviewVertexes[pos].PositionRhw.W = 1;
+                OverviewVertexes[pos].Color = 0x9F000000 | colorOverview;
+                pos++;
+
+                OverviewVertexes[pos].PositionRhw.X = (float)((DisplayXOffset + DirectXWidth) / XZoomFactor);
+                OverviewVertexes[pos].PositionRhw.Y = DirectXHeight;
+                OverviewVertexes[pos].PositionRhw.Z = 0.5f;
+                OverviewVertexes[pos].PositionRhw.W = 1;
+                OverviewVertexes[pos].Color = 0x9F000000;
+                pos++;
+
+                /* horizonal line */
+                OverviewVertexes[pos].PositionRhw.X = (float)(DisplayXOffset / XZoomFactor);
+                OverviewVertexes[pos].PositionRhw.Y = DirectXHeight / 2;
+                OverviewVertexes[pos].PositionRhw.Z = 0.5f;
+                OverviewVertexes[pos].PositionRhw.W = 1;
+                OverviewVertexes[pos].Color = 0x9F000000 | colorOverview;
+                pos++;
+
+                OverviewVertexes[pos].PositionRhw.X = (float)((DisplayXOffset + DirectXWidth) / XZoomFactor);
+                OverviewVertexes[pos].PositionRhw.Y = DirectXHeight / 2;
+                OverviewVertexes[pos].PositionRhw.Z = 0.5f;
+                OverviewVertexes[pos].PositionRhw.W = 1;
+                OverviewVertexes[pos].Color = 0x9F000000 | colorOverview;
+                pos++;
+
+                /* draw center line */
+                OverviewVertexes[pos].PositionRhw.X = (float)((DisplayXOffset + DirectXWidth / 2) / XZoomFactor);
+                OverviewVertexes[pos].PositionRhw.Y = DirectXHeight / 4;
+                OverviewVertexes[pos].PositionRhw.Z = 0.5f;
+                OverviewVertexes[pos].PositionRhw.W = 1;
+                OverviewVertexes[pos].Color = 0x9F000000;
+                pos++;
+
+                OverviewVertexes[pos].PositionRhw.X = (float)((DisplayXOffset + DirectXWidth / 2) / XZoomFactor);
+                OverviewVertexes[pos].PositionRhw.Y = DirectXHeight / 2;
+                OverviewVertexes[pos].PositionRhw.Z = 0.5f;
+                OverviewVertexes[pos].PositionRhw.W = 1;
+                OverviewVertexes[pos].Color = 0x9F000000 | colorOverview;
+                pos++;
+
+                OverviewVertexes[pos].PositionRhw.X = (float)((DisplayXOffset + DirectXWidth / 2) / XZoomFactor);
+                OverviewVertexes[pos].PositionRhw.Y = DirectXHeight / 2;
+                OverviewVertexes[pos].PositionRhw.Z = 0.5f;
+                OverviewVertexes[pos].PositionRhw.W = 1;
+                OverviewVertexes[pos].Color = 0x9F000000 | colorOverview;
+                pos++;
+
+                OverviewVertexes[pos].PositionRhw.X = (float)((DisplayXOffset + DirectXWidth / 2) / XZoomFactor);
+                OverviewVertexes[pos].PositionRhw.Y = 3 * DirectXHeight / 4;
+                OverviewVertexes[pos].PositionRhw.Z = 0.5f;
+                OverviewVertexes[pos].PositionRhw.W = 1;
+                OverviewVertexes[pos].Color = 0x9F000000;
+                pos++;
+            }
+
+            int startPos = (int)(DisplayXOffset / XZoomFactor);
+            int endPos = (int)(((DisplayXOffset + DirectXWidth) / XZoomFactor));
+            int centerPos = (int)((startPos + endPos) / 2);
+
+            Device.DrawUserPrimitives(PrimitiveType.LineList, 7, OverviewVertexes);
+            SmallFont.DrawString(null, XLabelFromSampleNum(startPos), startPos + 10, 60, ColorFont.ToArgb());
+            SmallFont.DrawString(null, XLabelFromSampleNum(endPos), endPos + 10, 60, ColorFont.ToArgb());
+            SmallFont.DrawString(null, XLabelFromSampleNum(centerPos), centerPos, 60, ColorFont.ToArgb());
+        }
+
+        internal virtual void PrepareLinePoints()
+        {
+        }
+
+        internal virtual void Render()
         {
             if (!DirectXAvailable)
                 return;
@@ -404,9 +637,11 @@ namespace LibRXFFT.Components.DirectX
                 if (LinePointsUpdated)
                 {
                     LinePointsUpdated = false;
-                    CreateVertexBufferForPoints(LinePoints, LinePointEntries);
+                    lock (LinePointsLock)
+                    {
+                        CreateVertexBufferForPoints(LinePoints, LinePointEntries);
+                    }
                 }
-
 
                 Device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, ColorBG, 1.0f, 0);
                 Device.BeginScene();
@@ -416,11 +651,16 @@ namespace LibRXFFT.Components.DirectX
                     Device.DrawUserPrimitives(PrimitiveType.LineList, XAxisVerts.Length / 2, XAxisVerts);
                 if (YAxisVerts.Length > 0)
                     Device.DrawUserPrimitives(PrimitiveType.LineList, YAxisVerts.Length / 2, YAxisVerts);
-                if (PlotVerts.Length > 0)
-                    Device.DrawUserPrimitives(PrimitiveType.LineStrip, PlotVertsEntries, PlotVerts);
+                if (PlotVertsEntries > 0)
+                {
+                    if (ShiftPressed)
+                        RenderOverview(PlotVertsEntries, PlotVertsOverview);
+                    else
+                        Device.DrawUserPrimitives(PrimitiveType.LineStrip, PlotVertsEntries, PlotVerts);
+                }
 
-                DisplayFont.DrawString(null, Name, 20, 30, ColorBG);
-                DisplayFont.DrawString(null, Name, 21, 31, ColorFont);
+                DisplayFont.DrawString(null, MainText, 20, 30, ColorBG);
+                DisplayFont.DrawString(null, MainText, 21, 31, ColorFont);
 
                 RenderOverlay();
 
@@ -435,12 +675,11 @@ namespace LibRXFFT.Components.DirectX
                 DirectXAvailable = false;
                 DirectXLock.ReleaseMutex();
 
-                int loops = 10;
+                int loops = 50;
                 while (!DirectXAvailable && loops-- > 0)
                 {
-                    Thread.Sleep(250);
                     BeginInvoke(new ResetDirectXDelegate(ResetDirectX), null);
-                    Thread.Sleep(750);
+                    Thread.Sleep(100);
                 }
 
                 if (!DirectXAvailable)
@@ -461,37 +700,106 @@ namespace LibRXFFT.Components.DirectX
             }
         }
 
-        internal virtual void RenderOverlay()
+        protected virtual void RenderOverlay()
         {
         }
+
+        protected virtual void KeyPressed(Keys key)
+        {
+        }
+
+        protected virtual void KeyReleased(Keys key)
+        {
+        }
+
 
         protected override void OnKeyDown(KeyEventArgs e)
         {
             if ((e.KeyData & System.Windows.Forms.Keys.Shift) != 0)
-                ShiftPressed = true;
-            if ((e.KeyData & System.Windows.Forms.Keys.Alt) != 0)
-                AltPressed = true;
-            if ((e.KeyData & System.Windows.Forms.Keys.Control) != 0)
-                ControlPressed = true;
+            {
+                if (!ShiftPressed)
+                {
+                    ShiftPressed = true;
+                    KeyPressed(Keys.Shift);
+                }
+            }
 
-            LinePointsUpdated = true;
-            AxisUpdated = true;
+            if ((e.KeyData & System.Windows.Forms.Keys.Alt) != 0)
+            {
+                if (!AltPressed)
+                {
+                    AltPressed = true;
+                    KeyPressed(Keys.Alt);
+                }
+            }
+
+            if ((e.KeyData & System.Windows.Forms.Keys.Control) != 0)
+            {
+                if (!ControlPressed)
+                {
+                    ControlPressed = true;
+                    KeyPressed(Keys.Control);
+                }
+            }
+
+
+            if (OverviewModeEnabled)
+            {
+                if (ShiftPressed && !OverviewMode)
+                {
+                    OverviewMode = true;
+                    MainTextPrev = MainText;
+                    MainText = "Zoom Selection";
+                }
+            }
+
+            //LinePointsUpdated = true;
+            //AxisUpdated = true;
         }
+
 
         protected override void OnKeyUp(KeyEventArgs e)
         {
             if ((e.KeyData & System.Windows.Forms.Keys.Shift) == 0)
-                ShiftPressed = false;
+            {
+                if (ShiftPressed)
+                {
+                    ShiftPressed = false;
+                    KeyReleased(Keys.Shift);
+                }
+            }
             if ((e.KeyData & System.Windows.Forms.Keys.Alt) == 0)
-                AltPressed = false;
+            {
+                if (AltPressed)
+                {
+                    AltPressed = false;
+                    KeyReleased(Keys.Alt);
+                }
+            } 
             if ((e.KeyData & System.Windows.Forms.Keys.Control) == 0)
-                ControlPressed = false;
+            {
+                if (ControlPressed)
+                {
+                    ControlPressed = false;
+                    KeyReleased(Keys.Control);
+                }
+            } 
 
-            LinePointsUpdated = true;
-            AxisUpdated = true;
+            if (OverviewModeEnabled)
+            {
+                if (!ShiftPressed && OverviewMode)
+                {
+                    OverviewMode = false;
+                    MainText = MainTextPrev;
+                    MainTextPrev = "";
+                }
+            }
+
+            //LinePointsUpdated = true;
+            //AxisUpdated = true;
         }
 
-        public void ProcessUserEvent(eUserEvent evt, double delta)
+        public void ProcessUserEvent(eUserEvent evt, double param)
         {
             eUserAction action = eUserAction.None;
 
@@ -504,17 +812,30 @@ namespace LibRXFFT.Components.DirectX
                     action = ActionMousePosY;
                     break;
 
-                case eUserEvent.MouseWheel:
-                    action = ActionMouseWheel;
+                case eUserEvent.MouseWheelUp:
+                    action = ActionMouseWheelUp;
                     break;
-                case eUserEvent.MouseWheelShift:
-                    action = ActionMouseWheelShift;
+                case eUserEvent.MouseWheelUpShift:
+                    action = ActionMouseWheelUpShift;
                     break;
-                case eUserEvent.MouseWheelControl:
-                    action = ActionMouseWheelControl;
+                case eUserEvent.MouseWheelUpControl:
+                    action = ActionMouseWheelUpControl;
                     break;
-                case eUserEvent.MouseWheelAlt:
-                    action = ActionMouseWheelAlt;
+                case eUserEvent.MouseWheelUpAlt:
+                    action = ActionMouseWheelUpAlt;
+                    break;
+
+                case eUserEvent.MouseWheelDown:
+                    action = ActionMouseWheelDown;
+                    break;
+                case eUserEvent.MouseWheelDownShift:
+                    action = ActionMouseWheelDownShift;
+                    break;
+                case eUserEvent.MouseWheelDownControl:
+                    action = ActionMouseWheelDownControl;
+                    break;
+                case eUserEvent.MouseWheelDownAlt:
+                    action = ActionMouseWheelDownAlt;
                     break;
 
                 case eUserEvent.MouseDragX:
@@ -542,82 +863,218 @@ namespace LibRXFFT.Components.DirectX
                 case eUserEvent.MouseDragYAlt:
                     action = ActionMouseDragYAlt;
                     break;
+
+                case eUserEvent.MouseClickLeft:
+                    action = ActionMouseClickLeft;
+                    break;
+                case eUserEvent.MouseClickLeftShift:
+                    action = ActionMouseClickLeftShift;
+                    break;
+                case eUserEvent.MouseClickLeftControl:
+                    action = ActionMouseClickLeftControl;
+                    break;
+                case eUserEvent.MouseClickLeftAlt:
+                    action = ActionMouseClickLeftAlt;
+                    break;
+
+                case eUserEvent.MouseClickMiddle:
+                    action = ActionMouseClickMiddle;
+                    break;
+                case eUserEvent.MouseClickMiddleShift:
+                    action = ActionMouseClickMiddleShift;
+                    break;
+                case eUserEvent.MouseClickMiddleControl:
+                    action = ActionMouseClickMiddleControl;
+                    break;
+                case eUserEvent.MouseClickMiddleAlt:
+                    action = ActionMouseClickMiddleAlt;
+                    break;
+
+                case eUserEvent.MouseClickRight:
+                    action = ActionMouseClickRight;
+                    break;
+                case eUserEvent.MouseClickRightShift:
+                    action = ActionMouseClickRightShift;
+                    break;
+                case eUserEvent.MouseClickRightControl:
+                    action = ActionMouseClickRightControl;
+                    break;
+                case eUserEvent.MouseClickRightAlt:
+                    action = ActionMouseClickRightAlt;
+                    break;
             }
 
             if (action == eUserAction.UserCallback)
-                UserEventCallback(evt, delta);
+                UserEventCallback(evt, param);
             else
-                ProcessUserAction(action, delta);
+                ProcessUserAction(action, param);
         }
 
-        public void ProcessUserAction(eUserAction action, double delta)
+        public virtual void ProcessUserAction(eUserAction action, double param)
         {
-            if (delta == 0)
-                return;
+            double delta1 = 0;
+            double delta2 = 0;
+            double oldOffset = 0;
 
             switch (action)
             {
                 case eUserAction.XPos:
-                    LastMousePos.X = delta;
+                    UpdateOverlays = true;
+                    LastMousePos.X = param;
                     break;
 
                 case eUserAction.YPos:
-                    LastMousePos.Y = delta;
+                    UpdateOverlays = true;
+                    LastMousePos.Y = param;
                     break;
 
+                case eUserAction.XOffsetOverview:
+                    oldOffset = DisplayXOffset;
+                    delta1 = -param * XZoomFactor + DisplayXOffset;
+                    delta2 = Math.Min(XMaximum * XZoomFactor - DirectXWidth, delta1);
+                    DisplayXOffset = Math.Round(Math.Max(0, delta2));
+
+                    if (oldOffset != DisplayXOffset)
+                    {
+                        LinePointsUpdated = true;
+                        AxisUpdated = true;
+                    }
+
+                    break;
+                    
                 case eUserAction.XOffset:
-                    double delta1 = delta + DisplayXOffset;
-                    double delta2 = Math.Min(XMaximum * XZoomFactor - DirectXWidth, delta1);
+                    oldOffset = DisplayXOffset;
+                    delta1 = param + DisplayXOffset;
+                    delta2 = Math.Min(XMaximum * XZoomFactor - DirectXWidth, delta1);
                     DisplayXOffset = Math.Max(0, delta2);
 
-                    LinePointsUpdated = true;
-                    AxisUpdated = true;
+                    if (oldOffset != DisplayXOffset)
+                    {
+                        LinePointsUpdated = true;
+                        AxisUpdated = true;
+                    }
 
                     break;
 
                 case eUserAction.YOffset:
-                    delta += DisplayYOffset;
+                    oldOffset = DisplayYOffset;
 
-                    delta = Math.Min(DirectXHeight * YZoomFactor, delta);
-                    DisplayYOffset = Math.Max(-DirectXHeight * YZoomFactor, delta);
+                    param += DisplayYOffset;
+                    param = Math.Min(DirectXHeight * YZoomFactor, param);
+                    DisplayYOffset = Math.Max(-DirectXHeight * YZoomFactor, param);
 
-                    LinePointsUpdated = true;
-                    AxisUpdated = true;
-
-                    break;
-
-                case eUserAction.XZoom:
-                    if (delta > 0 && XZoomFactor < 20.0f)
-                        XZoomFactor *= 1.1f;
-
-                    if (delta < 0 && XZoomFactor > 0.01f)
-                        XZoomFactor /= 1.1f;
-
-                    /* call ourselves again for min/max fitting */
-                    ProcessUserAction(eUserAction.XOffset, 0);
-
-                    LinePointsUpdated = true;
-                    AxisUpdated = true;
+                    if (oldOffset != DisplayYOffset)
+                    {
+                        LinePointsUpdated = true;
+                        AxisUpdated = true;
+                    }
 
                     break;
 
-                case eUserAction.YZoom:
-                    if (delta > 0 && YZoomFactor < 50.0f)
-                        YZoomFactor *= 1.1f;
+                case eUserAction.XZoomIn:
+                    if (XZoomFactor < 20.0f)
+                    {
+                        DisplayXOffset = (DisplayXOffset + LastMousePos.X) * XZoomStep - LastMousePos.X;
+                        XZoomFactor *= XZoomStep;
 
-                    if (delta < 0 && YZoomFactor > 0.001f)
-                        YZoomFactor /= 1.1f;
+                        /* call ourselves again for min/max fitting */
+                        ProcessUserAction(eUserAction.XOffset, 0);
 
-                    /* call ourselves again for min/max fitting */
-                    ProcessUserAction(eUserAction.YOffset, 0);
+                        LinePointsUpdated = true;
+                        AxisUpdated = true;
+                    }
 
-                    LinePointsUpdated = true;
-                    AxisUpdated = true;
+                    if (XMaximum * XZoomFactor < DirectXWidth)
+                        XZoomFactor = DirectXWidth / XMaximum;
+
+                    break;
+
+                case eUserAction.XZoomOut:
+                    if (XZoomFactor > 0.01f)
+                    {
+                        DisplayXOffset = (DisplayXOffset + LastMousePos.X) / XZoomStep - LastMousePos.X;
+                        XZoomFactor /= XZoomStep;
+
+                        /* call ourselves again for min/max fitting */
+                        ProcessUserAction(eUserAction.XOffset, 0);
+
+                        LinePointsUpdated = true;
+                        AxisUpdated = true;
+                    }
+
+                    if (XMaximum * XZoomFactor < DirectXWidth)
+                        XZoomFactor = DirectXWidth / XMaximum;
+
+                    break;
+
+                case eUserAction.YZoomIn:
+                    if (YZoomFactor < 50.0f)
+                    {
+                        YZoomFactor *= YZoomStep;
+
+                        /* call ourselves again for min/max fitting */
+                        ProcessUserAction(eUserAction.YOffset, 0);
+
+                        LinePointsUpdated = true;
+                        AxisUpdated = true;
+                    }
+
+                    break;
+
+                case eUserAction.YZoomOut:
+                    if (YZoomFactor > 0.001f)
+                    {
+                        YZoomFactor /= YZoomStep;
+
+                        /* call ourselves again for min/max fitting */
+                        ProcessUserAction(eUserAction.YOffset, 0);
+
+                        LinePointsUpdated = true;
+                        AxisUpdated = true;
+                    }
 
                     break;
             }
         }
 
+        protected override void OnMouseClick(MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+                if (AltPressed)
+                    ProcessUserEvent(eUserEvent.MouseClickRightAlt, 0);
+                else if (ControlPressed)
+                    ProcessUserEvent(eUserEvent.MouseClickRightControl, 0);
+                else if (ShiftPressed)
+                    ProcessUserEvent(eUserEvent.MouseClickRightShift, 0);
+                else
+                    ProcessUserEvent(eUserEvent.MouseClickRight, 0);
+            }
+
+            if (e.Button == MouseButtons.Left)
+            {
+                if (AltPressed)
+                    ProcessUserEvent(eUserEvent.MouseClickLeftAlt, 0);
+                else if (ControlPressed)
+                    ProcessUserEvent(eUserEvent.MouseClickLeftControl, 0);
+                else if (ShiftPressed)
+                    ProcessUserEvent(eUserEvent.MouseClickLeftShift, 0);
+                else
+                    ProcessUserEvent(eUserEvent.MouseClickLeft, 0);
+            }
+
+            if (e.Button == MouseButtons.Middle)
+            {
+                if (AltPressed)
+                    ProcessUserEvent(eUserEvent.MouseClickMiddleAlt, 0);
+                else if (ControlPressed)
+                    ProcessUserEvent(eUserEvent.MouseClickMiddleControl, 0);
+                else if (ShiftPressed)
+                    ProcessUserEvent(eUserEvent.MouseClickMiddleShift, 0);
+                else
+                    ProcessUserEvent(eUserEvent.MouseClickMiddle, 0);
+            }
+        }
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
@@ -654,20 +1111,40 @@ namespace LibRXFFT.Components.DirectX
 
         protected override void OnMouseWheel(MouseEventArgs e)
         {
-            if (AltPressed)
-                ProcessUserEvent(eUserEvent.MouseWheelAlt, e.Delta);
-            else if (ControlPressed)
-                ProcessUserEvent(eUserEvent.MouseWheelControl, e.Delta);
-            else if (ShiftPressed)
-                ProcessUserEvent(eUserEvent.MouseWheelShift, e.Delta);
+            if (e.Delta > 0)
+            {
+                if (AltPressed)
+                    ProcessUserEvent(eUserEvent.MouseWheelUpAlt, e.Delta);
+                else if (ControlPressed)
+                    ProcessUserEvent(eUserEvent.MouseWheelUpControl, e.Delta);
+                else if (ShiftPressed)
+                    ProcessUserEvent(eUserEvent.MouseWheelUpShift, e.Delta);
+                else
+                    ProcessUserEvent(eUserEvent.MouseWheelUp, e.Delta);
+            }
             else
-                ProcessUserEvent(eUserEvent.MouseWheel, e.Delta);
+            {
+                if (AltPressed)
+                    ProcessUserEvent(eUserEvent.MouseWheelDownAlt, e.Delta);
+                else if (ControlPressed)
+                    ProcessUserEvent(eUserEvent.MouseWheelDownControl, e.Delta);
+                else if (ShiftPressed)
+                    ProcessUserEvent(eUserEvent.MouseWheelDownShift, e.Delta);
+                else
+                    ProcessUserEvent(eUserEvent.MouseWheelDown, e.Delta);
+            }
 
         }
 
         protected override void OnSizeChanged(EventArgs e)
         {
-            InitializeDirectX();
+            try
+            {
+                InitializeDirectX();
+            }
+            catch (Direct3D9Exception ex)
+            {
+            }
         }
 
         protected override void OnResize(EventArgs e)

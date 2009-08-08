@@ -16,7 +16,7 @@ namespace LibRXFFT.Libraries.GMSK
     {
         public double SampleOffset = 0;
 
-        public eInterpolation Interpolation = eInterpolation.Automatic;
+        public eInterpolation Interpolation = eInterpolation.None;
 
         public static double MinPowerFact = 0.1;
         private readonly double Oversampling;
@@ -143,6 +143,15 @@ namespace LibRXFFT.Libraries.GMSK
 
                                 /* is that correct? */
                                 sampleValue = sampleValue1 * Math.Sin(delta) / delta + sampleValue2 * Math.Sin(1 - delta) / (1 - delta);
+                            }
+                            break;
+
+                        case eInterpolation.None:
+                            {
+                                if (samplePos >= 0 && samplePos < srcData.Length)
+                                    sampleValue = srcData[(int)samplePos];
+                                else
+                                    sampleValue = 0;
                             }
                             break;
 

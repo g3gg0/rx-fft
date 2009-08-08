@@ -27,6 +27,7 @@ namespace RX_FFT
             cmbWindowFunc.Text = FFTDisplay.WindowingFunction.ToString();
             cmbAverage.Text = FFTDisplay.Averaging.ToString();
             cmbFFTSize.Text = FFTSize.ToString();
+            txtUpdatesPerSecond.Text = FFTDisplay.UpdateRate.ToString();
         }
 
         int FFTSize
@@ -42,24 +43,40 @@ namespace RX_FFT
             }
         }
 
+        delegate void setRateDelegate(int rate);
+        void setRate(int rate)
+        {
+            txtSamplingRate.Text = rate.ToString();
+        }
+
         void FFTReadFunc()
         {
-            Random rnd = new Random();
+            int lastRate = 0;
 
             while (ThreadActive)
             {
                 //dev.Read(inBuffer);
                 lock (SpinLock)
                 {
+                    int rate = ShmemChannel.Rate / 2;
+
+                    if (lastRate != rate)
+                    {
+                        lastRate = rate;
+                        FFTDisplay.SamplingRate = rate;
+
+                        try
+                        {
+                            this.BeginInvoke(new setRateDelegate(setRate), rate);
+                        }
+                        catch (Exception)
+                        {
+                        }
+                    }
                     ShmemChannel.Read(ReadBuffer, 0, ReadBuffer.Length);
 
-                    //Thread.Sleep(5);
-                    //rnd.NextBytes(inBuffer);
-
                     if (!processPaused)
-                    {
                         FFTDisplay.ProcessRawData(ReadBuffer);
-                    }
                 }
             }
         }
@@ -96,7 +113,7 @@ namespace RX_FFT
             }
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void btnPause_Click(object sender, EventArgs e)
         {
             processPaused = !processPaused;
         }
@@ -133,6 +150,26 @@ namespace RX_FFT
 
             FFTSize = size;
             FFTDisplay.FFTSize = size;
+        }
+
+        private void txtSamplingRate_TextChanged(object sender, EventArgs e)
+        {
+            long rate;
+
+            if (!long.TryParse(txtSamplingRate.Text, out rate))
+                return;
+
+            FFTDisplay.SamplingRate = rate;
+        }
+
+        private void txtUpdatesPerSecond_TextChanged(object sender, EventArgs e)
+        {
+            double rate;
+
+            if (!double.TryParse(txtUpdatesPerSecond.Text, out rate))
+                return;
+
+            FFTDisplay.UpdateRate = rate;
         }
 
     }

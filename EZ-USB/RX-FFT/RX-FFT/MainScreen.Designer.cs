@@ -42,15 +42,19 @@ namespace RX_FFT
         private void InitializeComponent()
         {
             this.btnOpen = new System.Windows.Forms.Button();
-            this.button1 = new System.Windows.Forms.Button();
+            this.btnPause = new System.Windows.Forms.Button();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.txtSamplingRate = new System.Windows.Forms.TextBox();
+            this.label4 = new System.Windows.Forms.Label();
+            this.cmbFFTSize = new System.Windows.Forms.ComboBox();
+            this.label3 = new System.Windows.Forms.Label();
             this.cmbAverage = new System.Windows.Forms.ComboBox();
             this.label2 = new System.Windows.Forms.Label();
             this.cmbWindowFunc = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
             this.FFTDisplay = new LibRXFFT.Components.DirectX.DirectXWaterfallFFTDisplay();
-            this.label3 = new System.Windows.Forms.Label();
-            this.cmbFFTSize = new System.Windows.Forms.ComboBox();
+            this.txtUpdatesPerSecond = new System.Windows.Forms.TextBox();
+            this.label5 = new System.Windows.Forms.Label();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -66,27 +70,30 @@ namespace RX_FFT
             this.btnOpen.UseVisualStyleBackColor = true;
             this.btnOpen.Click += new System.EventHandler(this.btnOpen_Click);
             // 
-            // button1
+            // btnPause
             // 
-            this.button1.Location = new System.Drawing.Point(84, 3);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(75, 23);
-            this.button1.TabIndex = 3;
-            this.button1.Text = "Pause/Cont";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            this.btnPause.Location = new System.Drawing.Point(84, 3);
+            this.btnPause.Name = "btnPause";
+            this.btnPause.Size = new System.Drawing.Size(75, 23);
+            this.btnPause.TabIndex = 3;
+            this.btnPause.Text = "Pause/Cont";
+            this.btnPause.UseVisualStyleBackColor = true;
+            this.btnPause.Click += new System.EventHandler(this.btnPause_Click);
             // 
             // splitContainer1
             // 
             this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.splitContainer1.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
-            this.splitContainer1.IsSplitterFixed = true;
             this.splitContainer1.Location = new System.Drawing.Point(0, 0);
             this.splitContainer1.Name = "splitContainer1";
             this.splitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
             // 
             // splitContainer1.Panel1
             // 
+            this.splitContainer1.Panel1.Controls.Add(this.label5);
+            this.splitContainer1.Panel1.Controls.Add(this.txtUpdatesPerSecond);
+            this.splitContainer1.Panel1.Controls.Add(this.txtSamplingRate);
+            this.splitContainer1.Panel1.Controls.Add(this.label4);
             this.splitContainer1.Panel1.Controls.Add(this.cmbFFTSize);
             this.splitContainer1.Panel1.Controls.Add(this.label3);
             this.splitContainer1.Panel1.Controls.Add(this.cmbAverage);
@@ -94,15 +101,58 @@ namespace RX_FFT
             this.splitContainer1.Panel1.Controls.Add(this.cmbWindowFunc);
             this.splitContainer1.Panel1.Controls.Add(this.label1);
             this.splitContainer1.Panel1.Controls.Add(this.btnOpen);
-            this.splitContainer1.Panel1.Controls.Add(this.button1);
+            this.splitContainer1.Panel1.Controls.Add(this.btnPause);
             // 
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.FFTDisplay);
-            this.splitContainer1.Size = new System.Drawing.Size(851, 596);
-            this.splitContainer1.SplitterDistance = 31;
+            this.splitContainer1.Size = new System.Drawing.Size(1002, 596);
+            this.splitContainer1.SplitterDistance = 51;
             this.splitContainer1.SplitterWidth = 1;
             this.splitContainer1.TabIndex = 4;
+            // 
+            // txtSamplingRate
+            // 
+            this.txtSamplingRate.Location = new System.Drawing.Point(877, 4);
+            this.txtSamplingRate.Name = "txtSamplingRate";
+            this.txtSamplingRate.Size = new System.Drawing.Size(100, 20);
+            this.txtSamplingRate.TabIndex = 11;
+            this.txtSamplingRate.TextChanged += new System.EventHandler(this.txtSamplingRate_TextChanged);
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(792, 8);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(79, 13);
+            this.label4.TabIndex = 10;
+            this.label4.Text = "Sampling Rate:";
+            // 
+            // cmbFFTSize
+            // 
+            this.cmbFFTSize.FormattingEnabled = true;
+            this.cmbFFTSize.Items.AddRange(new object[] {
+            "256",
+            "512",
+            "1024",
+            "2048",
+            "4096",
+            "8192",
+            "16384"});
+            this.cmbFFTSize.Location = new System.Drawing.Point(243, 3);
+            this.cmbFFTSize.Name = "cmbFFTSize";
+            this.cmbFFTSize.Size = new System.Drawing.Size(78, 21);
+            this.cmbFFTSize.TabIndex = 9;
+            this.cmbFFTSize.TextChanged += new System.EventHandler(this.cmbFFTSize_TextChanged);
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(166, 9);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(52, 13);
+            this.label3.TabIndex = 8;
+            this.label3.Text = "FFT Size:";
             // 
             // cmbAverage
             // 
@@ -157,41 +207,32 @@ namespace RX_FFT
             this.FFTDisplay.FFTSize = 256;
             this.FFTDisplay.Location = new System.Drawing.Point(0, 0);
             this.FFTDisplay.Name = "FFTDisplay";
-            this.FFTDisplay.Size = new System.Drawing.Size(851, 564);
+            this.FFTDisplay.Size = new System.Drawing.Size(1002, 544);
             this.FFTDisplay.TabIndex = 0;
             this.FFTDisplay.WindowingFunction = LibRXFFT.Libraries.FFTW.FFTTransformer.eWindowingFunction.BlackmanHarris;
             // 
-            // label3
+            // txtUpdatesPerSecond
             // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(166, 9);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(52, 13);
-            this.label3.TabIndex = 8;
-            this.label3.Text = "FFT Size:";
+            this.txtUpdatesPerSecond.Location = new System.Drawing.Point(243, 26);
+            this.txtUpdatesPerSecond.Name = "txtUpdatesPerSecond";
+            this.txtUpdatesPerSecond.Size = new System.Drawing.Size(78, 20);
+            this.txtUpdatesPerSecond.TabIndex = 12;
+            this.txtUpdatesPerSecond.TextChanged += new System.EventHandler(this.txtUpdatesPerSecond_TextChanged);
             // 
-            // cmbFFTSize
+            // label5
             // 
-            this.cmbFFTSize.FormattingEnabled = true;
-            this.cmbFFTSize.Items.AddRange(new object[] {
-            "256",
-            "512",
-            "1024",
-            "2048",
-            "4096",
-            "8192",
-            "16384"});
-            this.cmbFFTSize.Location = new System.Drawing.Point(225, 3);
-            this.cmbFFTSize.Name = "cmbFFTSize";
-            this.cmbFFTSize.Size = new System.Drawing.Size(96, 21);
-            this.cmbFFTSize.TabIndex = 9;
-            this.cmbFFTSize.TextChanged += new System.EventHandler(this.cmbFFTSize_TextChanged);
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(166, 29);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(71, 13);
+            this.label5.TabIndex = 13;
+            this.label5.Text = "Update Rate:";
             // 
             // MainScreen
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(851, 596);
+            this.ClientSize = new System.Drawing.Size(1002, 596);
             this.Controls.Add(this.splitContainer1);
             this.Name = "MainScreen";
             this.Text = "RX-FFT";
@@ -206,7 +247,7 @@ namespace RX_FFT
         #endregion
 
         private System.Windows.Forms.Button btnOpen;
-        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button btnPause;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.ComboBox cmbWindowFunc;
         private System.Windows.Forms.Label label1;
@@ -215,6 +256,10 @@ namespace RX_FFT
         private LibRXFFT.Components.DirectX.DirectXWaterfallFFTDisplay FFTDisplay;
         private System.Windows.Forms.ComboBox cmbFFTSize;
         private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.TextBox txtSamplingRate;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.TextBox txtUpdatesPerSecond;
     }
 }
 

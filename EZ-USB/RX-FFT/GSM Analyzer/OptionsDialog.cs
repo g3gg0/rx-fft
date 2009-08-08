@@ -50,9 +50,10 @@ namespace GSM_Analyzer
             txtOffset3.Text = Analyzer.BurstLengthJitter[2].ToString();
             txtOffset4.Text = Analyzer.BurstLengthJitter[3].ToString();
 
+            chkFastAtan2.Checked = Analyzer.Demodulator.UseFastAtan2;
+
             if (Analyzer.Source != null)
             {
-                chkFastAtan2.Checked = Analyzer.Demodulator.UseFastAtan2;
                 chkInvert.Checked = Analyzer.Demodulator.InvertedSpectrum;
                 txtRate.Text = Analyzer.Source.InputSamplingRate.ToString();
                 txtInternalOvers.Text = Analyzer.Source.InternalOversampling.ToString();
@@ -62,7 +63,6 @@ namespace GSM_Analyzer
             }
             else
             {
-                chkFastAtan2.Checked = GMSKDemodulator.UseFastAtan2Default;
                 chkInvert.Checked = GMSKDemodulator.InvertedSpectrumDefault;
                 txtRate.Text = Analyzer.DefaultSamplingRate.ToString();
                 txtInternalOvers.Text = Analyzer.InternalOversampling.ToString();
@@ -79,10 +79,7 @@ namespace GSM_Analyzer
 
         private void chkFastAtan2_CheckedChanged(object sender, EventArgs e)
         {
-            if (Analyzer.Source != null)
-                Analyzer.Demodulator.UseFastAtan2 = chkFastAtan2.Checked;
-
-            GMSKDemodulator.UseFastAtan2Default = chkFastAtan2.Checked;
+            Analyzer.Demodulator.UseFastAtan2 = chkFastAtan2.Checked;
         }
 
         private void chkInvert_CheckedChanged(object sender, EventArgs e)

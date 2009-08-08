@@ -27,6 +27,7 @@ namespace GSM_Analyzer
             lstExcept.Items.Add("IMEISV");
             lstExcept.Items.Add("IMSI");
             lstExcept.Items.Add("TMSI/P-TMSI");
+            lstExcept.Items.Add("Emergency call");
 
 
             /* add all known messages */
@@ -52,6 +53,9 @@ namespace GSM_Analyzer
                 foreach (string field in L3Handler.ExceptFields.Keys)
                     lstExcept.SelectedItems.Add(field);
             }
+
+            chkExcept.Checked = L3Handler.ExceptFieldsEnabled;
+            lstExcept.Enabled = L3Handler.ExceptFieldsEnabled;
 
             Initializing = false;
         }
@@ -166,6 +170,12 @@ namespace GSM_Analyzer
         {
             public ArrayList FilteredMessages = new ArrayList();
             public ArrayList ExceptionFields = new ArrayList();
+        }
+
+        private void chkExcept_CheckedChanged(object sender, EventArgs e)
+        {
+            L3Handler.ExceptFieldsEnabled = chkExcept.Checked;
+            lstExcept.Enabled = L3Handler.ExceptFieldsEnabled;
         }
 
     }

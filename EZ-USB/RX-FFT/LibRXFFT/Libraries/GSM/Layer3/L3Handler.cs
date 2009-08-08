@@ -44,6 +44,7 @@ namespace LibRXFFT.Libraries.GSM.Layer3
         public static bool SniffIMSI = false;
         public string SniffResult = null;
 
+        public static bool ExceptFieldsEnabled = true;
         public static Dictionary<string, bool> SkipMessages = new Dictionary<string, bool>();
         public static Dictionary<string, bool> ExceptFields = new Dictionary<string, bool>();
 
@@ -92,8 +93,8 @@ namespace LibRXFFT.Libraries.GSM.Layer3
             L3PacketTypesMM = new L3PacketTypes("packeteering-mm.xml");
             L3PacketTypesCC = new L3PacketTypes("packeteering-cc.xml");
             L3PacketTypesRR = new L3PacketTypes("packeteering-rr.xml");
-            L3PduList = new L3PDUList("pdulist.xml");
             L3Messages = new L3Messages("messagelist.xml");
+            L3PduList = new L3PDUList("pdulist.xml");
             MCCTable = new MCCTable("mccentries.xml");
             MNCTable = new MNCTable("mncentries.xml");
         }
@@ -123,6 +124,11 @@ namespace LibRXFFT.Libraries.GSM.Layer3
                         break;
                     case 5:
                         retVal = "Emergency call (SDCCH)";
+                        lock (ExceptFields)
+                        {
+                            if (ExceptFields.ContainsKey("Emergency call"))
+                                ShowMessage = true;
+                        }
                         break;
                     case 6:
                         retVal = "Call re-establishment (SDCCH)";
@@ -180,6 +186,11 @@ namespace LibRXFFT.Libraries.GSM.Layer3
                         break;
                     case 5:
                         retVal = "Emergency call (SDCCH)";
+                        lock (ExceptFields)
+                        {
+                            if (ExceptFields.ContainsKey("Emergency call"))
+                                ShowMessage = true;
+                        }
                         break;
                     case 6:
                         retVal = "Call re-establishment (SDCCH)";
@@ -823,11 +834,15 @@ namespace LibRXFFT.Libraries.GSM.Layer3
                             {
 
                                 /* check if this packet should be skipped */
-
                                 lock (SkipMessages)
                                 {
                                     if (SkipMessages.ContainsKey(type.RefDown))
-                                        ShowMessage = false;
+                                    {
+                                        if (ExceptFieldsEnabled)
+                                            ShowMessage = false;
+                                        else
+                                            return;
+                                    }
                                 }
 
                                 StatusMessage = PD + ": " + type.Description + " (" + type.RefDown + ")" +
@@ -851,7 +866,12 @@ namespace LibRXFFT.Libraries.GSM.Layer3
                                 lock (SkipMessages)
                                 {
                                     if (SkipMessages.ContainsKey(type.RefDown))
-                                        ShowMessage = false;
+                                    {
+                                        if (ExceptFieldsEnabled)
+                                            ShowMessage = false;
+                                        else
+                                            return;
+                                    }
                                 }
 
                                 StatusMessage = PD + ": " + type.Description + " (" + type.RefDown + ")" +
@@ -876,7 +896,12 @@ namespace LibRXFFT.Libraries.GSM.Layer3
                                 lock (SkipMessages)
                                 {
                                     if (SkipMessages.ContainsKey(type.RefDown))
-                                        ShowMessage = false;
+                                    {
+                                        if (ExceptFieldsEnabled)
+                                            ShowMessage = false;
+                                        else
+                                            return;
+                                    }
                                 }
 
                                 StatusMessage = PD + ": " + type.Description + " (" + type.RefDown + ")" +

@@ -143,6 +143,7 @@ namespace LibRXFFT.Libraries.GSM.Bursts
                 /* convert u[] to d[] bytes */
                 PackBytes();
 
+                /* payload starts at octet 3 (GSM 04.04 7.1) */
                 L2.Handle(this, L3, BurstBufferD, 2);
 
                 return eSuccessState.Succeeded;

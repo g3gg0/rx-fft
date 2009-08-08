@@ -43,15 +43,15 @@ namespace LibRXFFT.Libraries.GSM.Bursts
         {
             double startOffset = Parameters.SampleStartPosition;
 
+            int bitTolerance = 2;
 
-            int bitTolerance = 3;
-
+            /* only the first SCH has to be searched in a much higher range */
             if (Parameters.FirstSCH)
                 bitTolerance = 16;
 
             Parameters.FirstSCH = false;
 
-            /* skip the number of data bits defined in SCHBurst plus SpareBits that are "pre"-feeded */
+            /* skip the number of data bits defined in SCHBurst */
             int sequencePos = (int)(startOffset + Parameters.Oversampling * (SCHBurst.SyncOffset + 2));
 
             /* locate the training sequence over two bits */

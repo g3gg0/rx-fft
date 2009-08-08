@@ -38,6 +38,7 @@
             this.btnLoad = new System.Windows.Forms.Button();
             this.btnSave = new System.Windows.Forms.Button();
             this.btnOk = new System.Windows.Forms.Button();
+            this.chkExcept = new System.Windows.Forms.CheckBox();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -116,6 +117,7 @@
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.chkExcept);
             this.groupBox2.Controls.Add(this.lstExcept);
             this.groupBox2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.groupBox2.Location = new System.Drawing.Point(0, 0);
@@ -125,7 +127,6 @@
             this.groupBox2.Size = new System.Drawing.Size(178, 351);
             this.groupBox2.TabIndex = 0;
             this.groupBox2.TabStop = false;
-            this.groupBox2.Text = "Except the message contains:";
             // 
             // lstExcept
             // 
@@ -173,6 +174,17 @@
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
+            // chkExcept
+            // 
+            this.chkExcept.AutoSize = true;
+            this.chkExcept.Location = new System.Drawing.Point(7, 0);
+            this.chkExcept.Name = "chkExcept";
+            this.chkExcept.Size = new System.Drawing.Size(113, 17);
+            this.chkExcept.TabIndex = 1;
+            this.chkExcept.Text = "Except it contains:";
+            this.chkExcept.UseVisualStyleBackColor = true;
+            this.chkExcept.CheckedChanged += new System.EventHandler(this.chkExcept_CheckedChanged);
+            // 
             // FilterDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -192,6 +204,7 @@
             this.splitContainer2.ResumeLayout(false);
             this.groupBox1.ResumeLayout(false);
             this.groupBox2.ResumeLayout(false);
+            this.groupBox2.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -207,5 +220,6 @@
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.ListBox lstFiltered;
         private System.Windows.Forms.SplitContainer splitContainer2;
+        private System.Windows.Forms.CheckBox chkExcept;
     }
 }

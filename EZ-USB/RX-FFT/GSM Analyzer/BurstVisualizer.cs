@@ -72,9 +72,11 @@ namespace GSM_Analyzer
             StrengthDisplay.UserEventCallback = UserEventCallback;
 
             SampleDisplay.ActionMouseDragX = eUserAction.UserCallback;
-            SampleDisplay.ActionMouseWheelShift = eUserAction.UserCallback;
+            SampleDisplay.ActionMouseWheelUpShift = eUserAction.UserCallback;
+            SampleDisplay.ActionMouseWheelDownShift = eUserAction.UserCallback;
             StrengthDisplay.ActionMouseDragX = eUserAction.UserCallback;
-            StrengthDisplay.ActionMouseWheelShift = eUserAction.UserCallback;
+            StrengthDisplay.ActionMouseWheelUpShift = eUserAction.UserCallback;
+            StrengthDisplay.ActionMouseWheelDownShift = eUserAction.UserCallback;
         }
 
         public void ProcessBurst(double[] signal, double[] strength)
@@ -92,9 +94,14 @@ namespace GSM_Analyzer
                     StrengthDisplay.ProcessUserAction(eUserAction.XOffset, delta);
                     break;
 
-                case eUserEvent.MouseWheelShift:
-                    SampleDisplay.ProcessUserAction(eUserAction.XZoom, delta);
-                    StrengthDisplay.ProcessUserAction(eUserAction.XZoom, delta);
+                case eUserEvent.MouseWheelUpShift:
+                    SampleDisplay.ProcessUserAction(eUserAction.XZoomIn, delta);
+                    StrengthDisplay.ProcessUserAction(eUserAction.XZoomIn, delta);
+                    break;
+
+                case eUserEvent.MouseWheelDownShift:
+                    SampleDisplay.ProcessUserAction(eUserAction.XZoomOut, delta);
+                    StrengthDisplay.ProcessUserAction(eUserAction.XZoomOut, delta);
                     break;
             }
         }

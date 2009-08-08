@@ -13,10 +13,7 @@ namespace LibRXFFT.Components.DirectX
     {
         readonly Thread DisplayThread;
         readonly ArrayList SampleValues = new ArrayList();
-        private DisplayFuncState DisplayTimerState;
 
-
-        Point[] LinePoints;
 
         double lastPhase = 0;
 
@@ -28,7 +25,11 @@ namespace LibRXFFT.Components.DirectX
         public int StartSample { get; set; }
         public int MaxSamples { get; set; }
 
-        public DirectXPhaseDisplay()
+        public DirectXPhaseDisplay() : this(false)
+        {
+        }
+
+        public DirectXPhaseDisplay(bool slaveMode)
         {
             UseLines = true;
             MaxSamples = 10000;
@@ -37,13 +38,21 @@ namespace LibRXFFT.Components.DirectX
             ColorBG = Color.Black;
 
             InitializeComponent();
-            InitializeDirectX();
+            try
+            {
+                InitializeDirectX();
+            }
+            catch (SlimDX.Direct3D9.Direct3D9Exception e)
+            {
+                MessageBox.Show("Failed initializing DirectX." + Environment.NewLine + e.ToString());
+            }
             InitFields();
 
-
-            DisplayTimerState = new DisplayFuncState();
-            DisplayThread = new Thread(DisplayFunc);
-            DisplayThread.Start();
+            if (!slaveMode)
+            {
+                DisplayThread = new Thread(DisplayFunc);
+                DisplayThread.Start();
+            }
         }
 
         private void InitFields()
@@ -52,7 +61,7 @@ namespace LibRXFFT.Components.DirectX
             {
                 LinePoints = new Point[DirectXWidth];
                 for (int pos = 0; pos < LinePoints.Length; pos++)
-                    LinePoints[pos] = new Point(0, 0);
+                    LinePoints[pos] = new Point();
             }
         }
 
@@ -126,68 +135,61 @@ namespace LibRXFFT.Components.DirectX
             }
         }
 
-        class DisplayFuncState
+        internal override void PrepareLinePoints()
         {
-            protected internal Font TextFont;
-            protected internal DateTime StartTime;
-            protected internal long FrameNumber;
-            protected internal double FPS;
-
-            public DisplayFuncState()
+            lock (SampleValues)
             {
-                FPS = 0;
-                FrameNumber = 0;
-                TextFont = new Font("Arial", 16);
-                StartTime = DateTime.Now;
+                if (SampleValues.Count > 0)
+                {
+                    int startPos = StartSample;
+                    int samples = DirectXWidth;
+
+                    if (startPos + samples > SampleValues.Count)
+                        startPos = SampleValues.Count - samples;
+
+                    if (startPos < 0)
+                    {
+                        startPos = 0;
+                        samples = SampleValues.Count;
+                    }
+
+                    for (int pos = 0; pos < samples; pos++)
+                    {
+                        double sampleValue = (double)SampleValues[startPos + pos];
+                        int posX = pos;
+                        int posY = (int)(DirectXHeight - (sampleValue * ZoomFactor * DirectXHeight)) / 2;
+
+                        posY = Math.Min(posY, DirectXHeight - 1);
+                        posY = Math.Max(posY, 0);
+
+                        LinePoints[pos].X = posX;
+                        LinePoints[pos].Y = posY;
+                    }
+
+                    if (SampleValues.Count > MaxSamples)
+                    {
+                        int removeCount = SampleValues.Count - MaxSamples;
+                        SampleValues.RemoveRange(0, removeCount);
+                    }
+
+                    CreateVertexBufferForPoints(LinePoints);
+                }
             }
         }
 
         private void DisplayFunc()
         {
-            DisplayFuncState s = DisplayTimerState;
-
             while (true)
             {
-                lock (SampleValues)
-                {
-                    if (SampleValues.Count > 0)
-                    {
-                        int startPos = StartSample;
-                        int samples = DirectXWidth;
+                if (SlavePlot != null)
+                    SlavePlot.PrepareLinePoints();
+                PrepareLinePoints();
 
-                        if (startPos + samples > SampleValues.Count)
-                            startPos = SampleValues.Count - samples;
-
-                        if (startPos < 0)
-                        {
-                            startPos = 0;
-                            samples = SampleValues.Count;
-                        }
-
-                        for (int pos = 0; pos < samples; pos++)
-                        {
-                            double sampleValue = (double) SampleValues[startPos + pos];
-                            int posX = pos;
-                            int posY = (int)(DirectXHeight - (sampleValue * ZoomFactor * DirectXHeight)) / 2;
-
-                            posY = Math.Min(posY, DirectXHeight - 1);
-                            posY = Math.Max(posY, 0);
-
-                            LinePoints[pos].X = posX;
-                            LinePoints[pos].Y = posY;
-                        }
-
-                        if (SampleValues.Count > MaxSamples)
-                        {
-                            int removeCount = SampleValues.Count - MaxSamples;
-                            SampleValues.RemoveRange(0, removeCount);
-                        }
-
-                        CreateVertexBufferForPoints(LinePoints);
-                    }
-                }
+                if (SlavePlot != null)
+                    SlavePlot.Render();
                 Render();
-                Thread.Sleep(10);
+
+                Thread.Sleep(1000/60);
             }
         }
     }

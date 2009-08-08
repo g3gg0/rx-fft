@@ -12,10 +12,13 @@ namespace LibRXFFT.Components.DirectX
         None,
         YPos,
         XPos,
-        YZoom,
-        XZoom,
+        YZoomIn,
+        XZoomIn,
+        YZoomOut,
+        XZoomOut,
         YOffset,
         XOffset,
+        XOffsetOverview,
         UserCallback
     }
 
@@ -32,10 +35,26 @@ namespace LibRXFFT.Components.DirectX
         MouseDragYShift,
         MouseDragYAlt,
         MouseDragYControl,
-        MouseWheel,
-        MouseWheelShift,
-        MouseWheelAlt,
-        MouseWheelControl,
+        MouseWheelUp,
+        MouseWheelUpShift,
+        MouseWheelUpAlt,
+        MouseWheelUpControl,
+        MouseWheelDown,
+        MouseWheelDownShift,
+        MouseWheelDownAlt,
+        MouseWheelDownControl,
+        MouseClickLeft,
+        MouseClickLeftShift,
+        MouseClickLeftAlt,
+        MouseClickLeftControl,
+        MouseClickMiddle,
+        MouseClickMiddleShift,
+        MouseClickMiddleAlt,
+        MouseClickMiddleControl,
+        MouseClickRight,
+        MouseClickRightShift,
+        MouseClickRightAlt,
+        MouseClickRightControl,
         RenderOverlay
     }
 
@@ -43,12 +62,6 @@ namespace LibRXFFT.Components.DirectX
     {
         public double X;
         public double Y;
-
-        public Point(double x, double y)
-        {
-            X = x;
-            Y = y;
-        }
     }
 
     [StructLayout(LayoutKind.Sequential)]

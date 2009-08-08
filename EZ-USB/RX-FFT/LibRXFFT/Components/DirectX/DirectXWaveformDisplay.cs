@@ -36,7 +36,14 @@ namespace LibRXFFT.Components.DirectX
             ActionMouseDragY = eUserAction.None;
 
             InitializeComponent();
-            InitializeDirectX();
+            try
+            {
+                InitializeDirectX();
+            }
+            catch (SlimDX.Direct3D9.Direct3D9Exception e)
+            {
+                MessageBox.Show("Failed initializing DirectX." + Environment.NewLine + e.ToString());
+            }
 
             DisplayTimerState = new DisplayFuncState();
             DisplayThread = new Thread(DisplayFunc);
@@ -101,7 +108,7 @@ namespace LibRXFFT.Components.DirectX
             }
         }
 
-        internal override void RenderOverlay()
+        protected override void RenderOverlay()
         {
             if (UserEventCallback != null)
                 UserEventCallback(eUserEvent.RenderOverlay, 0);
@@ -124,27 +131,30 @@ namespace LibRXFFT.Components.DirectX
                         {
                             int samples = SampleValues.Count;
 
-                            if (LinePoints == null || LinePoints.Length < samples)
-                                LinePoints = new Point[samples];
-
-                            for (int pos = 0; pos < samples; pos++)
+                            lock (LinePointsLock)
                             {
-                                double sampleValue = (double) SampleValues[pos];
-                                double posX = pos;
-                                double posY = sampleValue * DirectXHeight;
+                                if (LinePoints == null || LinePoints.Length < samples)
+                                    LinePoints = new Point[samples];
 
-                                LinePoints[pos].X = posX;
-                                LinePoints[pos].Y = posY;
+                                for (int pos = 0; pos < samples; pos++)
+                                {
+                                    double sampleValue = (double)SampleValues[pos];
+                                    double posX = pos;
+                                    double posY = sampleValue * DirectXHeight;
+
+                                    LinePoints[pos].X = posX;
+                                    LinePoints[pos].Y = posY;
+                                }
+
+                                if (SampleValues.Count > MaxSamples)
+                                {
+                                    int removeCount = SampleValues.Count - MaxSamples;
+                                    SampleValues.RemoveRange(0, removeCount);
+                                }
+
+                                LinePointEntries = samples;
+                                LinePointsUpdated = true;
                             }
-
-                            if (SampleValues.Count > MaxSamples)
-                            {
-                                int removeCount = SampleValues.Count - MaxSamples;
-                                SampleValues.RemoveRange(0, removeCount);
-                            }
-
-                            LinePointEntries = samples;
-                            LinePointsUpdated = true;
                         }
                     }
                 }

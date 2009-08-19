@@ -34,12 +34,12 @@ namespace GSM_Analyzer
 
         public void ProcessIQSample(double I, double Q)
         {
-            FFTDisplay.ProcessIQSample(I, Q);
+            FFTDisplay.ProcessSample(I, Q);
         }
 
         public void ProcessIQData(double[] iSamples, double[] qSamples)
         {
-            FFTDisplay.ProcessIQData(iSamples, qSamples);
+            FFTDisplay.ProcessData(iSamples, qSamples);
         }
 
         int FFTSize

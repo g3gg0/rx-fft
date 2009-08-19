@@ -18,6 +18,7 @@ using System.Text;
 using LibRXFFT.Components.DirectX;
 using LibRXFFT.Libraries.GSM.Misc;
 using System.Collections;
+using LibRXFFT.Libraries.Misc;
 
 namespace GSM_Analyzer
 {
@@ -676,7 +677,7 @@ namespace GSM_Analyzer
                                                 BurstWindow.XAxisGridOffset = ((int)(Oversampling * Handler.SpareBits) + Oversampling / 2);
                                                 BurstWindow.XAxisSampleOffset = -Parameters.SubSampleOffset;
                                                 BurstWindow.Oversampling = Oversampling;
-                                                BurstWindow.SampleDisplay.AxisUpdated = true;
+                                                BurstWindow.SampleDisplay.UpdateAxis = true;
                                                 BurstWindow.SampleDisplay.DirectXLock.ReleaseMutex();
                                                 BurstWindow.ProcessBurst(burstBuffer, burstStrengthBuffer);
 
@@ -695,7 +696,7 @@ namespace GSM_Analyzer
                                                 BurstWindow.SampleDisplay.YAxisLines.Add(Handler.Decoder.MaxPower);
                                                 BurstWindow.SampleDisplay.YAxisLines.Add(Handler.Decoder.DecisionPower);
                                                 BurstWindow.BurstBits = Handler.BurstBits;
-                                                BurstWindow.SampleDisplay.AxisUpdated = true;
+                                                BurstWindow.SampleDisplay.UpdateAxis = true;
                                                 BurstWindow.SampleDisplay.DirectXLock.ReleaseMutex();
                                             }
                                         }

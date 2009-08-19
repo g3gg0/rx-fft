@@ -27,8 +27,8 @@ namespace RX_FFT
                 ReadThread.Join();
             }
 
-            if (ShmemChannel != null)
-                ShmemChannel.Unregister();
+            if (SampleSource != null)
+                SampleSource.Close();
 
             base.Dispose(disposing);
         }
@@ -44,6 +44,13 @@ namespace RX_FFT
             this.btnOpen = new System.Windows.Forms.Button();
             this.btnPause = new System.Windows.Forms.Button();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.btnDemod = new System.Windows.Forms.Button();
+            this.txtFileName = new System.Windows.Forms.TextBox();
+            this.chkRecording = new System.Windows.Forms.CheckBox();
+            this.txtAverageSamples = new System.Windows.Forms.TextBox();
+            this.label6 = new System.Windows.Forms.Label();
+            this.label5 = new System.Windows.Forms.Label();
+            this.txtUpdatesPerSecond = new System.Windows.Forms.TextBox();
             this.txtSamplingRate = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
             this.cmbFFTSize = new System.Windows.Forms.ComboBox();
@@ -53,8 +60,6 @@ namespace RX_FFT
             this.cmbWindowFunc = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
             this.FFTDisplay = new LibRXFFT.Components.DirectX.DirectXWaterfallFFTDisplay();
-            this.txtUpdatesPerSecond = new System.Windows.Forms.TextBox();
-            this.label5 = new System.Windows.Forms.Label();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -90,6 +95,11 @@ namespace RX_FFT
             // 
             // splitContainer1.Panel1
             // 
+            this.splitContainer1.Panel1.Controls.Add(this.btnDemod);
+            this.splitContainer1.Panel1.Controls.Add(this.txtFileName);
+            this.splitContainer1.Panel1.Controls.Add(this.chkRecording);
+            this.splitContainer1.Panel1.Controls.Add(this.txtAverageSamples);
+            this.splitContainer1.Panel1.Controls.Add(this.label6);
             this.splitContainer1.Panel1.Controls.Add(this.label5);
             this.splitContainer1.Panel1.Controls.Add(this.txtUpdatesPerSecond);
             this.splitContainer1.Panel1.Controls.Add(this.txtSamplingRate);
@@ -111,9 +121,73 @@ namespace RX_FFT
             this.splitContainer1.SplitterWidth = 1;
             this.splitContainer1.TabIndex = 4;
             // 
+            // btnDemod
+            // 
+            this.btnDemod.Location = new System.Drawing.Point(3, 26);
+            this.btnDemod.Name = "btnDemod";
+            this.btnDemod.Size = new System.Drawing.Size(75, 23);
+            this.btnDemod.TabIndex = 18;
+            this.btnDemod.Text = "Demod";
+            this.btnDemod.UseVisualStyleBackColor = true;
+            this.btnDemod.Click += new System.EventHandler(this.btnDemod_Click);
+            // 
+            // txtFileName
+            // 
+            this.txtFileName.Location = new System.Drawing.Point(862, 4);
+            this.txtFileName.Name = "txtFileName";
+            this.txtFileName.Size = new System.Drawing.Size(100, 20);
+            this.txtFileName.TabIndex = 17;
+            this.txtFileName.Text = "waterfall.png";
+            this.txtFileName.TextChanged += new System.EventHandler(this.txtFileName_TextChanged);
+            // 
+            // chkRecording
+            // 
+            this.chkRecording.AutoSize = true;
+            this.chkRecording.Location = new System.Drawing.Point(763, 6);
+            this.chkRecording.Name = "chkRecording";
+            this.chkRecording.Size = new System.Drawing.Size(93, 17);
+            this.chkRecording.TabIndex = 16;
+            this.chkRecording.Text = "Record Image";
+            this.chkRecording.UseVisualStyleBackColor = true;
+            this.chkRecording.CheckedChanged += new System.EventHandler(this.chkRecording_CheckedChanged);
+            // 
+            // txtAverageSamples
+            // 
+            this.txtAverageSamples.Location = new System.Drawing.Point(440, 26);
+            this.txtAverageSamples.Name = "txtAverageSamples";
+            this.txtAverageSamples.Size = new System.Drawing.Size(121, 20);
+            this.txtAverageSamples.TabIndex = 15;
+            this.txtAverageSamples.TextChanged += new System.EventHandler(this.txtAverageSamples_TextChanged);
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(327, 30);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(93, 13);
+            this.label6.TabIndex = 14;
+            this.label6.Text = "Average Samples:";
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(166, 30);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(71, 13);
+            this.label5.TabIndex = 13;
+            this.label5.Text = "Update Rate:";
+            // 
+            // txtUpdatesPerSecond
+            // 
+            this.txtUpdatesPerSecond.Location = new System.Drawing.Point(243, 26);
+            this.txtUpdatesPerSecond.Name = "txtUpdatesPerSecond";
+            this.txtUpdatesPerSecond.Size = new System.Drawing.Size(78, 20);
+            this.txtUpdatesPerSecond.TabIndex = 12;
+            this.txtUpdatesPerSecond.TextChanged += new System.EventHandler(this.txtUpdatesPerSecond_TextChanged);
+            // 
             // txtSamplingRate
             // 
-            this.txtSamplingRate.Location = new System.Drawing.Point(877, 4);
+            this.txtSamplingRate.Location = new System.Drawing.Point(656, 4);
             this.txtSamplingRate.Name = "txtSamplingRate";
             this.txtSamplingRate.Size = new System.Drawing.Size(100, 20);
             this.txtSamplingRate.TabIndex = 11;
@@ -122,7 +196,7 @@ namespace RX_FFT
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(792, 8);
+            this.label4.Location = new System.Drawing.Point(567, 8);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(79, 13);
             this.label4.TabIndex = 10;
@@ -139,7 +213,7 @@ namespace RX_FFT
             "4096",
             "8192",
             "16384"});
-            this.cmbFFTSize.Location = new System.Drawing.Point(243, 3);
+            this.cmbFFTSize.Location = new System.Drawing.Point(243, 4);
             this.cmbFFTSize.Name = "cmbFFTSize";
             this.cmbFFTSize.Size = new System.Drawing.Size(78, 21);
             this.cmbFFTSize.TabIndex = 9;
@@ -148,7 +222,7 @@ namespace RX_FFT
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(166, 9);
+            this.label3.Location = new System.Drawing.Point(166, 8);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(52, 13);
             this.label3.TabIndex = 8;
@@ -167,20 +241,20 @@ namespace RX_FFT
             "7",
             "8",
             "9"});
-            this.cmbAverage.Location = new System.Drawing.Point(660, 4);
+            this.cmbAverage.Location = new System.Drawing.Point(656, 26);
             this.cmbAverage.Name = "cmbAverage";
-            this.cmbAverage.Size = new System.Drawing.Size(121, 21);
+            this.cmbAverage.Size = new System.Drawing.Size(100, 21);
             this.cmbAverage.TabIndex = 7;
             this.cmbAverage.TextChanged += new System.EventHandler(this.cmbAverage_TextChanged);
             // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(570, 8);
+            this.label2.Location = new System.Drawing.Point(567, 30);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(83, 13);
+            this.label2.Size = new System.Drawing.Size(84, 13);
             this.label2.TabIndex = 6;
-            this.label2.Text = "Average Factor:";
+            this.label2.Text = "Vertical Smooth:";
             // 
             // cmbWindowFunc
             // 
@@ -207,26 +281,14 @@ namespace RX_FFT
             this.FFTDisplay.FFTSize = 256;
             this.FFTDisplay.Location = new System.Drawing.Point(0, 0);
             this.FFTDisplay.Name = "FFTDisplay";
+            this.FFTDisplay.SamplesToAverage = ((long)(0));
+            this.FFTDisplay.SamplingRate = 100;
+            this.FFTDisplay.SavingEnabled = false;
+            this.FFTDisplay.SavingName = "waterfall.png";
             this.FFTDisplay.Size = new System.Drawing.Size(1002, 544);
             this.FFTDisplay.TabIndex = 0;
+            this.FFTDisplay.UpdateRate = 25;
             this.FFTDisplay.WindowingFunction = LibRXFFT.Libraries.FFTW.FFTTransformer.eWindowingFunction.BlackmanHarris;
-            // 
-            // txtUpdatesPerSecond
-            // 
-            this.txtUpdatesPerSecond.Location = new System.Drawing.Point(243, 26);
-            this.txtUpdatesPerSecond.Name = "txtUpdatesPerSecond";
-            this.txtUpdatesPerSecond.Size = new System.Drawing.Size(78, 20);
-            this.txtUpdatesPerSecond.TabIndex = 12;
-            this.txtUpdatesPerSecond.TextChanged += new System.EventHandler(this.txtUpdatesPerSecond_TextChanged);
-            // 
-            // label5
-            // 
-            this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(166, 29);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(71, 13);
-            this.label5.TabIndex = 13;
-            this.label5.Text = "Update Rate:";
             // 
             // MainScreen
             // 
@@ -260,6 +322,11 @@ namespace RX_FFT
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.TextBox txtUpdatesPerSecond;
+        private System.Windows.Forms.TextBox txtAverageSamples;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.TextBox txtFileName;
+        private System.Windows.Forms.CheckBox chkRecording;
+        private System.Windows.Forms.Button btnDemod;
     }
 }
 

@@ -23,7 +23,7 @@ namespace LibRXFFT.Libraries.SampleSources
             ShmemChannel.ReadMode = eReadMode.TimeLimited;
 
             InvertedSpectrum = false;
-            DataFormat = eDataFormat.Direct16BitIQFixedPoint;
+            DataFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPoint;
 
             InBuffer = new byte[BlockSize * BytesPerSamplePair];
 
@@ -55,13 +55,13 @@ namespace LibRXFFT.Libraries.SampleSources
 
             if (InternalOversampling > 1)
             {
-                DecodeFromBinary(InBuffer, OversampleI, OversampleQ);
+                ByteUtil.SamplesFromBinary(InBuffer, OversampleI, OversampleQ, DataFormat, InvertedSpectrum);
                 IOversampler.Oversample(OversampleI, SourceSamplesI);
                 QOversampler.Oversample(OversampleQ, SourceSamplesQ);
             }
             else
             {
-                DecodeFromBinary(InBuffer, SourceSamplesI, SourceSamplesQ);
+                ByteUtil.SamplesFromBinary(InBuffer, SourceSamplesI, SourceSamplesQ, DataFormat, InvertedSpectrum);
             }
 
             SamplesRead = SourceSamplesI.Length;

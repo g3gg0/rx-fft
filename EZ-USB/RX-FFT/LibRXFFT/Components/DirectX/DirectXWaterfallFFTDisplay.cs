@@ -14,6 +14,8 @@ namespace LibRXFFT.Components.DirectX
         private int _FFTSize = 256;
         private double[] FFTResult = new double[256];
 
+        public UserEventCallbackDelegate UserEventCallback;
+
         double IMax = -100;
         double IMin = 100;
 
@@ -22,37 +24,41 @@ namespace LibRXFFT.Components.DirectX
             InitializeComponent();
 
             /* we work with already squared FFT values for performance reasons */
-            fftDisplay.SquaredFFTData = true;
-            waterfallDisplay.SquaredFFTData = true;
+            FFTDisplay.SquaredFFTData = true;
+            WaterfallDisplay.SquaredFFTData = true;
 
             /* handle X Zoom and X Offset ourselves */
-            fftDisplay.UserEventCallback = UserEventCallback;
-            waterfallDisplay.UserEventCallback = UserEventCallback;
+            FFTDisplay.UserEventCallback = UserEventCallbackFunc;
+            WaterfallDisplay.UserEventCallback = UserEventCallbackFunc;
 
-            fftDisplay.ActionMouseClickRight = eUserAction.UserCallback;
-            fftDisplay.ActionMousePosX = eUserAction.UserCallback;
-            fftDisplay.ActionMouseDragX = eUserAction.UserCallback;
-            fftDisplay.ActionMouseDragY = eUserAction.YOffset;
-            fftDisplay.ActionMouseDragXShift = eUserAction.UserCallback;
-            fftDisplay.ActionMouseDragYShift = eUserAction.YOffset;
-            fftDisplay.ActionMouseWheelUp = eUserAction.UserCallback;
-            fftDisplay.ActionMouseWheelDown = eUserAction.UserCallback;
-            fftDisplay.ActionMouseWheelUpShift = eUserAction.UserCallback;
-            fftDisplay.ActionMouseWheelDownShift = eUserAction.UserCallback;
+            FFTDisplay.ActionMouseClickRight = eUserAction.UserCallback;
+            FFTDisplay.ActionMousePosX = eUserAction.UserCallback;
+            FFTDisplay.ActionMouseDragX = eUserAction.UserCallback;
+            FFTDisplay.ActionMouseDragY = eUserAction.YOffset;
+            FFTDisplay.ActionMouseDragXShift = eUserAction.UserCallback;
+            FFTDisplay.ActionMouseDragYShift = eUserAction.YOffset;
+            FFTDisplay.ActionMouseWheelUp = eUserAction.UserCallback;
+            FFTDisplay.ActionMouseWheelDown = eUserAction.UserCallback;
+            FFTDisplay.ActionMouseWheelUpShift = eUserAction.UserCallback;
+            FFTDisplay.ActionMouseWheelDownShift = eUserAction.UserCallback;
 
-            waterfallDisplay.ActionMouseClickRight = eUserAction.UserCallback;
-            waterfallDisplay.ActionMousePosX = eUserAction.UserCallback;
-            waterfallDisplay.ActionMouseDragX = eUserAction.UserCallback;
-            waterfallDisplay.ActionMouseDragXShift = eUserAction.UserCallback;
-            waterfallDisplay.ActionMouseWheelUpAlt = eUserAction.UserCallback;
-            waterfallDisplay.ActionMouseWheelDownAlt = eUserAction.UserCallback;
+            WaterfallDisplay.ActionMouseClickRight = eUserAction.UserCallback;
+            WaterfallDisplay.ActionMousePosX = eUserAction.UserCallback;
+            WaterfallDisplay.ActionMouseDragX = eUserAction.UserCallback;
+            WaterfallDisplay.ActionMouseDragXShift = eUserAction.UserCallback;
+            WaterfallDisplay.ActionMouseWheelUpAlt = eUserAction.UserCallback;
+            WaterfallDisplay.ActionMouseWheelDownAlt = eUserAction.UserCallback;
         }
 
 
         public double SamplingRate
         {
-            set { fftDisplay.SamplingRate = value; }
-            get { return fftDisplay.SamplingRate; }
+            set 
+            { 
+                FFTDisplay.SamplingRate = value;
+                WaterfallDisplay.SamplingRate = value;
+            }
+            get { return FFTDisplay.SamplingRate; }
         }
 
 
@@ -60,19 +66,41 @@ namespace LibRXFFT.Components.DirectX
         {
             set 
             { 
-                fftDisplay.UpdateRate = value;
-                waterfallDisplay.UpdateRate = value;
+                FFTDisplay.UpdateRate = value;
+                WaterfallDisplay.UpdateRate = value;
             }
-            get { return fftDisplay.UpdateRate; }
+            get { return FFTDisplay.UpdateRate; }
+        }
+
+        public long SamplesToAverage
+        {
+            set 
+            {
+                FFTDisplay.SamplesToAverage = value;
+                WaterfallDisplay.SamplesToAverage = value;
+            }
+            get { return FFTDisplay.SamplesToAverage; }
+        }
+
+        public bool SavingEnabled
+        {
+            get { return WaterfallDisplay.SavingEnabled; }
+            set { WaterfallDisplay.SavingEnabled = value; }
+        }
+
+        public string SavingName
+        {
+            get { return WaterfallDisplay.SavingName; }
+            set { WaterfallDisplay.SavingName = value; }
         }
 
         public double Averaging
         {
-            get { return fftDisplay.Averaging; }
+            get { return FFTDisplay.Averaging; }
             set 
             { 
-                fftDisplay.Averaging = value;
-                waterfallDisplay.Averaging = value;
+                FFTDisplay.Averaging = value;
+                WaterfallDisplay.Averaging = value;
             }
         }
 
@@ -82,61 +110,64 @@ namespace LibRXFFT.Components.DirectX
             set { FFT.WindowingFunction = value; }
         }
 
-        public void UserEventCallback(eUserEvent evt, double param)
+        public void UserEventCallbackFunc(eUserEvent evt, double param)
         {
+            if (UserEventCallback != null)
+                UserEventCallback(evt, param);
+
             switch (evt)
             {
                 case eUserEvent.MouseClickRight:
-                    double freq = fftDisplay.FrequencyFromCursorPos();
+                    double freq = FFTDisplay.FrequencyFromCursorPos();
                     break;
 
                 case eUserEvent.MouseWheelUp:
-                    fftDisplay.ProcessUserAction(eUserAction.YZoomIn, param);
+                    FFTDisplay.ProcessUserAction(eUserAction.YZoomIn, param);
                     break;
 
                 case eUserEvent.MouseWheelDown:
-                    fftDisplay.ProcessUserAction(eUserAction.YZoomOut, param);
+                    FFTDisplay.ProcessUserAction(eUserAction.YZoomOut, param);
                     break;
 
 
                 case eUserEvent.MousePosX:
-                    fftDisplay.ProcessUserAction(eUserAction.XPos, param);
-                    waterfallDisplay.ProcessUserAction(eUserAction.XPos, param);
+                    FFTDisplay.ProcessUserAction(eUserAction.XPos, param);
+                    WaterfallDisplay.ProcessUserAction(eUserAction.XPos, param);
                     break;
 
                 case eUserEvent.MouseDragXShift:
-                    fftDisplay.ProcessUserAction(eUserAction.XOffsetOverview, param);
-                    waterfallDisplay.ProcessUserAction(eUserAction.XOffsetOverview, param);
+                    FFTDisplay.ProcessUserAction(eUserAction.XOffsetOverview, param);
+                    WaterfallDisplay.ProcessUserAction(eUserAction.XOffsetOverview, param);
                     break;
 
                 case eUserEvent.MouseDragX:
-                    fftDisplay.ProcessUserAction(eUserAction.XOffset, param);
-                    waterfallDisplay.ProcessUserAction(eUserAction.XOffset, param);
+                    FFTDisplay.ProcessUserAction(eUserAction.XOffset, param);
+                    WaterfallDisplay.ProcessUserAction(eUserAction.XOffset, param);
                     break;
 
                 case eUserEvent.MouseWheelUpShift:
-                    fftDisplay.ProcessUserAction(eUserAction.XZoomIn, param);
-                    waterfallDisplay.ProcessUserAction(eUserAction.XZoomIn, param);
+                    FFTDisplay.ProcessUserAction(eUserAction.XZoomIn, param);
+                    WaterfallDisplay.ProcessUserAction(eUserAction.XZoomIn, param);
                     break;
 
                 case eUserEvent.MouseWheelDownShift:
-                    fftDisplay.ProcessUserAction(eUserAction.XZoomOut, param);
-                    waterfallDisplay.ProcessUserAction(eUserAction.XZoomOut, param);
+                    FFTDisplay.ProcessUserAction(eUserAction.XZoomOut, param);
+                    WaterfallDisplay.ProcessUserAction(eUserAction.XZoomOut, param);
                     break;
 
                 case eUserEvent.MouseWheelUpAlt:
-                    if (waterfallDisplay.UpdateRate < 512)
+                    if (WaterfallDisplay.UpdateRate < 512)
                     {
-                        fftDisplay.UpdateRate *= 2;
-                        waterfallDisplay.UpdateRate *= 2;
+                        FFTDisplay.UpdateRate *= 2;
+                        WaterfallDisplay.UpdateRate *= 2;
                     }
                     break;
 
                 case eUserEvent.MouseWheelDownAlt:
-                    if (waterfallDisplay.UpdateRate > 1)
+                    if (WaterfallDisplay.UpdateRate > 1)
                     {
-                        fftDisplay.UpdateRate /= 2;
-                        waterfallDisplay.UpdateRate /= 2;
+                        FFTDisplay.UpdateRate /= 2;
+                        WaterfallDisplay.UpdateRate /= 2;
                     }
                     break;
             }
@@ -153,16 +184,19 @@ namespace LibRXFFT.Components.DirectX
                     FFTResult = new double[_FFTSize];
                     FFT = new FFTTransformer(value);
 
-                    fftDisplay.FFTSize = value;
-                    waterfallDisplay.FFTSize = value;
+                    FFTDisplay.FFTSize = value;
+                    WaterfallDisplay.FFTSize = value;
                 }
             }
         }
 
-        public void ProcessRawData(byte[] dataBuffer)
+        public void ProcessData(byte[] dataBuffer)
         {
             const int bytePerSample = 2;
             const int channels = 2;
+
+            if (FFTDisplay.EnoughData)
+                return;
 
             lock (FFTLock)
             {
@@ -181,15 +215,18 @@ namespace LibRXFFT.Components.DirectX
                     {
                         FFT.GetResultSquared(FFTResult);
 
-                        fftDisplay.ProcessFFTData(FFTResult);
-                        waterfallDisplay.ProcessFFTData(FFTResult);
+                        FFTDisplay.ProcessFFTData(FFTResult);
+                        WaterfallDisplay.ProcessFFTData(FFTResult);
                     }
                 }
             }
         }
 
-        public void ProcessIQData(double[] iSamples, double[] qSamples)
+        public void ProcessData(double[] iSamples, double[] qSamples)
         {
+            if (FFTDisplay.EnoughData)
+                return;
+
             lock (FFTLock)
             {
                 int samplePairs = iSamples.Length;
@@ -197,7 +234,7 @@ namespace LibRXFFT.Components.DirectX
                 for (int samplePair = 0; samplePair < samplePairs; samplePair++)
                 {
                     double I = iSamples[samplePair];
-                    double Q = iSamples[samplePair];
+                    double Q = qSamples[samplePair];
 
                     FFT.AddSample(I, Q);
 
@@ -205,15 +242,15 @@ namespace LibRXFFT.Components.DirectX
                     {
                         FFT.GetResultSquared(FFTResult);
 
-                        fftDisplay.ProcessFFTData(FFTResult);
-                        waterfallDisplay.ProcessFFTData(FFTResult);
+                        FFTDisplay.ProcessFFTData(FFTResult);
+                        WaterfallDisplay.ProcessFFTData(FFTResult);
                     }
                 }
             }
         }
 
 
-        public void ProcessIQSample(double I, double Q)
+        public void ProcessSample(double I, double Q)
         {
             lock (FFTLock)
             {
@@ -223,8 +260,8 @@ namespace LibRXFFT.Components.DirectX
                 {
                     FFT.GetResultSquared(FFTResult);
 
-                    fftDisplay.ProcessFFTData(FFTResult);
-                    waterfallDisplay.ProcessFFTData(FFTResult);
+                    FFTDisplay.ProcessFFTData(FFTResult);
+                    WaterfallDisplay.ProcessFFTData(FFTResult);
                 }
             }
         }

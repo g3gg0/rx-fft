@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace LibRXFFT.Libraries.GSM.Misc
+namespace LibRXFFT.Libraries.Misc
 {
     public class FrequencyFormatter
     {

@@ -18,6 +18,10 @@
                 components.Dispose();
             }
 
+            if (ScreenRefreshTimer != null)
+                ScreenRefreshTimer.Stop();
+            if (LinePointUpdateTimer != null)
+                LinePointUpdateTimer.Stop();
             if (DisplayThread != null)
                 DisplayThread.Abort();
 

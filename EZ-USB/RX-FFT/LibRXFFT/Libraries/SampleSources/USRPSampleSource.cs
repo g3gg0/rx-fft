@@ -15,7 +15,7 @@ namespace LibRXFFT.Libraries.SampleSources
         {
             /* USRP has an inverted spectrum */
             InvertedSpectrum = true;
-            DataFormat = eDataFormat.Direct64BitIQFloat64k;
+            DataFormat = ByteUtil.eSampleFormat.Direct64BitIQFloat64k;
 
             InBuffer = new byte[BlockSize * BytesPerSamplePair];
 
@@ -50,13 +50,13 @@ namespace LibRXFFT.Libraries.SampleSources
 
             if (InternalOversampling > 1)
             {
-                DecodeFromBinary(InBuffer, OversampleI, OversampleQ);
+                ByteUtil.SamplesFromBinary(InBuffer, OversampleI, OversampleQ, DataFormat, InvertedSpectrum);
                 IOversampler.Oversample(OversampleI, SourceSamplesI);
                 QOversampler.Oversample(OversampleQ, SourceSamplesQ);
             }
             else
             {
-                DecodeFromBinary(InBuffer, SourceSamplesI, SourceSamplesQ);
+                ByteUtil.SamplesFromBinary(InBuffer, SourceSamplesI, SourceSamplesQ, DataFormat, InvertedSpectrum);
                 //Demodulator.ProcessData(SourceSamplesI, SourceSamplesQ, Signal, Strength);
             }
 

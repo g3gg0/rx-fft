@@ -47,6 +47,7 @@ namespace LibRXFFT.Components.DirectX
 
             DisplayTimerState = new DisplayFuncState();
             DisplayThread = new Thread(DisplayFunc);
+            DisplayThread.Name = "WaveformDisplay Display Thread";
             DisplayThread.Start();
         }
 

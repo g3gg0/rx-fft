@@ -6,11 +6,12 @@ using System.Timers;
 using System.Windows.Forms;
 using LibRXFFT.Libraries;
 using LibRXFFT.Libraries.FFTW;
-using Timer = System.Timers.Timer;
+using Timer = LibRXFFT.Libraries.Timers.AccurateTimer;
 using Font = SlimDX.Direct3D9.Font;
 using SlimDX.Direct3D9;
 using LibRXFFT.Libraries.SignalProcessing;
 using LibRXFFT.Libraries.GSM.Misc;
+using LibRXFFT.Libraries.Misc;
 
 namespace LibRXFFT.Components.DirectX
 {
@@ -18,38 +19,56 @@ namespace LibRXFFT.Components.DirectX
     {
 
         /* DirectX related graphic stuff */
-        Vertex[] CursorVertexesVert = new Vertex[4];
-        Vertex[] CursorVertexesHor = new Vertex[3];
-        Vertex[] ScaleVertexes = new Vertex[100];
+        protected Vertex[] CursorVertexesVert = new Vertex[4];
+        protected Vertex[] CursorVertexesHor = new Vertex[3];
+        protected Vertex[] ScaleVertexes = new Vertex[100];
+        protected int ScaleVertexesUsed = 0;
 
-
-        private readonly Thread DisplayThread;
-        private bool NeedsUpdate = false;
+        protected Timer ScreenRefreshTimer;
+        protected Timer LinePointUpdateTimer;
+        protected Thread DisplayThread;
+        protected bool NeedsUpdate = false;
+        public bool EnoughData = false;
 
         /* sample value buffer */
         protected double[] SampleValues = new double[0];
         protected long SampleValuesAveraged = 0;
-        public long SamplesToAverage = 0;
+        public long SamplesToAverage = 2;
 
         /* processing related */
-        private Mutex FFTLock = new Mutex();
-        private FFTTransformer FFT;
+        protected Mutex FFTLock = new Mutex();
+        protected FFTTransformer FFT;
 
-        private int _FFTSize = 256;
+        protected int _FFTSize = 256;
         public double FFTPrescaler = 1.0f;
         public double FFTOffset = 0.0f;
-        private double fftPrescalerDefault = 1.0f;
-        private double fftOffsetDefault = 0.0f;
-
-        public double Averaging = 1;
-
-        public double SamplingRate = 100;
-        
+        protected double fftPrescalerDefault = 1.0f;
+        protected double fftOffsetDefault = 0.0f;
 
         /* if the fft data provided is already squared, set to true */
         public bool SquaredFFTData = false;
 
         private double MaxPower = -99999.0f;
+
+        /* the averaging value to smooth the displayed lines */
+        public double Averaging = 1;
+
+        public double SamplingRate = 100;
+
+        public double UpdateRate
+        {
+            get { return 1000 / RenderSleepDelay; }
+            set 
+            { 
+                RenderSleepDelay = 1000 / value;
+                if (!double.IsNaN(RenderSleepDelay) && !double.IsInfinity(RenderSleepDelay) && LinePointUpdateTimer != null)
+                {
+                    LinePointUpdateTimer.Interval = (uint)RenderSleepDelay;
+                    ScreenRefreshTimer.Interval = (uint)((value < 60) ? (1000 / 60) : RenderSleepDelay);
+                }
+            }
+        }
+
 
         public DirectXFFTDisplay()
             : this(false)
@@ -88,18 +107,16 @@ namespace LibRXFFT.Components.DirectX
 
             if (!slaveMode)
             {
-                DisplayThread = new Thread(DisplayFunc);
-                DisplayThread.Start();
+                ScreenRefreshTimer = new Timer();
+                ScreenRefreshTimer.Interval = 1000 / 60;
+                ScreenRefreshTimer.Timer += new EventHandler(ScreenRefreshTimer_Func);
+                ScreenRefreshTimer.Start();
+
+                LinePointUpdateTimer = new Timer();
+                LinePointUpdateTimer.Interval = (uint) RenderSleepDelay;
+                LinePointUpdateTimer.Timer += new EventHandler(LinePointUpdateTimer_Func);
+                LinePointUpdateTimer.Start();
             }
-        }
-
-
-        protected override void AllocateResources()
-        {
-        }
-
-        protected override void ReleaseResources()
-        {
         }
 
         protected override void CreateVertexBufferForPoints(Point[] points, int numPoints)
@@ -129,6 +146,7 @@ namespace LibRXFFT.Components.DirectX
                         {
                             double yVal = points[pos].Y;
                             double xPos = ((double)points[pos].X / (double)numPoints) * DirectXWidth;
+
                             PlotVerts[pos].PositionRhw.X = (float)((XAxisSampleOffset + xPos) * XZoomFactor - DisplayXOffset);
                             PlotVerts[pos].PositionRhw.Y = (float)(-sampleToDBScale(SquaredFFTData ? DBTools.SquaredSampleTodB(yVal) : DBTools.SampleTodB(yVal)));
                             PlotVerts[pos].PositionRhw.Z = 0.5f;
@@ -167,14 +185,12 @@ namespace LibRXFFT.Components.DirectX
         }
 
 
-        private Cursor CreateEmptyCursor()
+        protected Cursor CreateEmptyCursor()
         {
             Bitmap b = new Bitmap(16, 16);
             Graphics g = Graphics.FromImage(b);
-
-            //g.DrawString("Test", this.Font, Brushes.Blue, 0, 0);
-
             IntPtr ptr = b.GetHicon();
+
             return new Cursor(ptr);
         }
 
@@ -191,6 +207,7 @@ namespace LibRXFFT.Components.DirectX
                     {
                         _FFTSize = value;
                         SampleValuesAveraged = 0;
+                        EnoughData = false;
                         FFT = new FFTTransformer(value);
                     }
                 }
@@ -199,25 +216,56 @@ namespace LibRXFFT.Components.DirectX
 
         public void ProcessFFTData(double[] amplitudes)
         {
+            if (EnoughData)
+                return;
+
             lock (SampleValues)
             {
                 if (SampleValues.Length != amplitudes.Length)
                     SampleValues = new double[amplitudes.Length];
 
-                if (SampleValuesAveraged == 0)
+                if (SamplesToAverage == 0)
                 {
-                    for (int pos = 0; pos < amplitudes.Length; pos++)
-                        SampleValues[pos] = amplitudes[pos];
+                    /* no preference made, just average all samples we get */
+                    if (SampleValuesAveraged == 0)
+                    {
+                        for (int pos = 0; pos < amplitudes.Length; pos++)
+                            SampleValues[pos] = amplitudes[pos];
+                    }
+                    else
+                    {
+                        for (int pos = 0; pos < amplitudes.Length; pos++)
+                            SampleValues[pos] += amplitudes[pos];
+                    }
+
+                    SampleValuesAveraged++;
+                    NeedsUpdate = true;
                 }
                 else
                 {
-                    for (int pos = 0; pos < amplitudes.Length; pos++)
-                        SampleValues[pos] += amplitudes[pos];
-                }
+                    /* dont average more as requested */
+                    if (SampleValuesAveraged < SamplesToAverage)
+                    {
+                        if (SampleValuesAveraged == 0)
+                        {
+                            for (int pos = 0; pos < amplitudes.Length; pos++)
+                                SampleValues[pos] = amplitudes[pos];
+                        }
+                        else
+                        {
+                            for (int pos = 0; pos < amplitudes.Length; pos++)
+                                SampleValues[pos] += amplitudes[pos];
+                        }
 
-                SampleValuesAveraged++;
-                if (SampleValuesAveraged > SamplesToAverage)
-                    NeedsUpdate = true;
+                        SampleValuesAveraged++;
+                    }
+                    // to reduce CPU load
+                    if (SampleValuesAveraged >= SamplesToAverage)
+                    {
+                        EnoughData = true;
+                        NeedsUpdate = true;
+                    }
+                }
             }
         }
 
@@ -225,6 +273,9 @@ namespace LibRXFFT.Components.DirectX
         {
             const int bytePerSample = 2;
             const int channels = 2;
+
+            if (EnoughData)
+                return;
 
             lock (FFTLock)
             {
@@ -248,12 +299,12 @@ namespace LibRXFFT.Components.DirectX
             }
         }
 
-        private double sampleToDBScale(double sampleValue)
+        protected double sampleToDBScale(double sampleValue)
         {
             return FFTPrescaler * sampleValue + FFTOffset;
         }
 
-        private double sampleFromDBScale(double scaleValue)
+        protected double sampleFromDBScale(double scaleValue)
         {
             return (scaleValue - FFTOffset) / FFTPrescaler;
         }
@@ -277,7 +328,7 @@ namespace LibRXFFT.Components.DirectX
                     FFTPrescaler *= YZoomStep;
 
                     LinePointsUpdated = true;
-                    AxisUpdated = true;
+                    UpdateAxis = true;
                     break;
 
                 case eUserAction.YZoomOut:
@@ -285,14 +336,14 @@ namespace LibRXFFT.Components.DirectX
                     FFTPrescaler /= YZoomStep;
 
                     LinePointsUpdated = true;
-                    AxisUpdated = true;
+                    UpdateAxis = true;
                     break;
 
                 case eUserAction.YOffset:
                     if (Math.Abs(param) < 5)
                     {
                         FFTOffset += param;
-                        AxisUpdated = true;
+                        UpdateAxis = true;
                         LinePointsUpdated = true;
                     }
                     break;
@@ -310,50 +361,55 @@ namespace LibRXFFT.Components.DirectX
             /* only recalc scale lines when axis need to get updated */
             if (UpdateOverlays)
             {
+                ScaleVertexesUsed = 0;
                 for (int dBLevel = 0; dBLevel <= 15; dBLevel++)
                 {
                     int pos = 4 * dBLevel;
 
-                    ScaleVertexes[pos].PositionRhw.X = 0;
-                    ScaleVertexes[pos].PositionRhw.Y = (float)-sampleToDBScale(-dBLevel * 10);
-                    ScaleVertexes[pos].PositionRhw.Z = 0.5f;
-                    ScaleVertexes[pos].PositionRhw.W = 1;
-                    ScaleVertexes[pos].Color = color;
+                    ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = 0;
+                    ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = (float)-sampleToDBScale(-dBLevel * 10);
+                    ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
+                    ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 1;
+                    ScaleVertexes[ScaleVertexesUsed].Color = color;
+                    ScaleVertexesUsed++;
 
                     if (dBLevel % 10 == 0)
-                        ScaleVertexes[pos + 1].PositionRhw.X = 50;
+                        ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = 50;
                     else if (dBLevel % 5 == 0)
-                        ScaleVertexes[pos + 1].PositionRhw.X = 20;
+                        ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = 20;
                     else
-                        ScaleVertexes[pos + 1].PositionRhw.X = 10;
+                        ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = 10;
 
-                    ScaleVertexes[pos + 1].PositionRhw.Y = (float)-sampleToDBScale(-dBLevel * 10);
-                    ScaleVertexes[pos + 1].PositionRhw.Z = 0.5f;
-                    ScaleVertexes[pos + 1].PositionRhw.W = 1;
-                    ScaleVertexes[pos + 1].Color = color & 0x00FFFFFF;
+                    ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = (float)-sampleToDBScale(-dBLevel * 10);
+                    ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
+                    ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 1;
+                    ScaleVertexes[ScaleVertexesUsed].Color = color & 0x00FFFFFF;
+                    ScaleVertexesUsed++;
 
-                    ScaleVertexes[pos + 2].PositionRhw.X = DirectXWidth;
-                    ScaleVertexes[pos + 2].PositionRhw.Y = (float)-sampleToDBScale(-dBLevel * 10);
-                    ScaleVertexes[pos + 2].PositionRhw.Z = 0.5f;
-                    ScaleVertexes[pos + 2].PositionRhw.W = 1;
-                    ScaleVertexes[pos + 2].Color = color;
+                    ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = DirectXWidth;
+                    ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = (float)-sampleToDBScale(-dBLevel * 10);
+                    ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
+                    ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 1;
+                    ScaleVertexes[ScaleVertexesUsed].Color = color;
+                    ScaleVertexesUsed++;
 
                     if (dBLevel % 10 == 0)
-                        ScaleVertexes[pos + 3].PositionRhw.X = DirectXWidth - 50;
+                        ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = DirectXWidth - 50;
                     else if (dBLevel % 5 == 0)
-                        ScaleVertexes[pos + 3].PositionRhw.X = DirectXWidth - 20;
+                        ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = DirectXWidth - 20;
                     else
-                        ScaleVertexes[pos + 3].PositionRhw.X = DirectXWidth - 10;
-                    
-                    ScaleVertexes[pos + 3].PositionRhw.Y = (float)-sampleToDBScale(-dBLevel * 10);
-                    ScaleVertexes[pos + 3].PositionRhw.Z = 0.5f;
-                    ScaleVertexes[pos + 3].PositionRhw.W = 1;
-                    ScaleVertexes[pos + 3].Color = color & 0x00FFFFFF; ;
+                        ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = DirectXWidth - 10;
+
+                    ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = (float)-sampleToDBScale(-dBLevel * 10);
+                    ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
+                    ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 1;
+                    ScaleVertexes[ScaleVertexesUsed].Color = color & 0x00FFFFFF;
+                    ScaleVertexesUsed++;
                 }
             }
 
             /* draw scale */
-            Device.DrawUserPrimitives(PrimitiveType.LineList, 16 * 2, ScaleVertexes);
+            Device.DrawUserPrimitives(PrimitiveType.LineList, ScaleVertexesUsed / 2, ScaleVertexes);
             SmallFont.DrawString(null, "0 dB", 10, (int)-sampleToDBScale(0), (int)(color & 0x80FFFFFF));
             SmallFont.DrawString(null, "-50 dB", 10, (int)-sampleToDBScale(-50), (int)(color & 0x80FFFFFF));
             SmallFont.DrawString(null, "-100 dB", 10, (int)-sampleToDBScale(-100), (int)(color & 0x80FFFFFF));
@@ -372,6 +428,16 @@ namespace LibRXFFT.Components.DirectX
             CursorVertexesVert[1].PositionRhw.X = xPos;
             CursorVertexesVert[2].PositionRhw.X = xPos;
             CursorVertexesVert[3].PositionRhw.X = xPos;
+
+            /* horizontal line */
+            CursorVertexesHor[0].PositionRhw.X = xPos - 30;
+            CursorVertexesHor[0].PositionRhw.Y = yPos;
+
+            CursorVertexesHor[1].PositionRhw.X = xPos;
+            CursorVertexesHor[1].PositionRhw.Y = yPos;
+
+            CursorVertexesHor[2].PositionRhw.X = xPos + 30;
+            CursorVertexesHor[2].PositionRhw.Y = yPos;
 
             /* if axis changed, recalc lines */
             if (UpdateOverlays)
@@ -395,23 +461,7 @@ namespace LibRXFFT.Components.DirectX
                 CursorVertexesVert[3].PositionRhw.Z = 0.5f;
                 CursorVertexesVert[3].PositionRhw.W = 1;
                 CursorVertexesVert[3].Color = color & 0x00FFFFFF;
-            }
 
-            Device.DrawUserPrimitives(PrimitiveType.LineStrip, 3, CursorVertexesVert);
-
-            /* horizontal line */
-            CursorVertexesHor[0].PositionRhw.X = xPos - 15;
-            CursorVertexesHor[0].PositionRhw.Y = yPos;
-
-            CursorVertexesHor[1].PositionRhw.X = xPos;
-            CursorVertexesHor[1].PositionRhw.Y = yPos;
-
-            CursorVertexesHor[2].PositionRhw.X = xPos + 15;
-            CursorVertexesHor[2].PositionRhw.Y = yPos;
-
-            /* if axis changed, recalc lines (this is needed just once btw.) */
-            if (UpdateOverlays)
-            {
                 CursorVertexesHor[0].PositionRhw.Z = 0.5f;
                 CursorVertexesHor[0].PositionRhw.W = 1;
                 CursorVertexesHor[0].Color = color & 0x00FFFFFF;
@@ -425,22 +475,26 @@ namespace LibRXFFT.Components.DirectX
                 CursorVertexesHor[2].Color = color & 0x00FFFFFF;
             }
 
-            Device.DrawUserPrimitives(PrimitiveType.LineStrip, 2, CursorVertexesHor);
+            if (MouseHovering)
+            {
+                Device.DrawUserPrimitives(PrimitiveType.LineStrip, 3, CursorVertexesVert);
+                Device.DrawUserPrimitives(PrimitiveType.LineStrip, 2, CursorVertexesHor);
 
-            /* draw the horizontal position (preliminary) */
-            string label;
-            if (OverviewMode)
-                label = XLabelFromSampleNum(xPos);
-            else
-                label = XLabelFromCursorPos(xPos);
+                /* draw the horizontal position (preliminary) */
+                string label;
+                if (OverviewMode)
+                    label = XLabelFromSampleNum(xPos);
+                else
+                    label = XLabelFromCursorPos(xPos);
 
-            if (xPos > DirectXWidth / 2)
-                SmallFont.DrawString(null, label, (int)xPos - 40, 20, ColorFG.ToArgb());
-            else
-                SmallFont.DrawString(null, label, (int)xPos + 20, 20, ColorFG.ToArgb());
+                if (xPos > DirectXWidth / 2)
+                    SmallFont.DrawString(null, label, (int)xPos - 40, 20, ColorFG.ToArgb());
+                else
+                    SmallFont.DrawString(null, label, (int)xPos + 20, 20, ColorFG.ToArgb());
 
-            /* and the strength at the current position */
-            SmallFont.DrawString(null, dB + " dB", (int)xPos + 20, (int)yPos, ColorFG.ToArgb());
+                /* and the strength at the current position */
+                SmallFont.DrawString(null, dB + " dB", (int)xPos + 20, (int)yPos, ColorFG.ToArgb());
+            }
         }
 
         protected override string XLabelFromCursorPos(double xPos)
@@ -508,41 +562,27 @@ namespace LibRXFFT.Components.DirectX
                         }
                     }
                     SampleValuesAveraged = 0;
+                    EnoughData = false;
                 }
             }
         }
 
-        private void DisplayFunc()
+        private void LinePointUpdateTimer_Func(object sender, EventArgs e)
         {
-            DateTime lastUpdate = DateTime.Now;
-            DateTime curTime = DateTime.Now;
-
-            while (true)
+            if (NeedsUpdate)
             {
-                curTime = DateTime.Now;
-
-                if (NeedsUpdate && curTime.Subtract(lastUpdate).TotalMilliseconds > RenderSleepDelay)
-                {
-                    lastUpdate = curTime;
-                    NeedsUpdate = false;
-
-                    if (SlavePlot != null)
-                        SlavePlot.PrepareLinePoints();
-                    PrepareLinePoints();
-                }
-                else
-                {
-                    // to have approx. 60 FPS
-                    Thread.Sleep(1000 / 60);
-                }
-
-
+                NeedsUpdate = false;
                 if (SlavePlot != null)
-                    SlavePlot.Render();
-                Render();
+                    SlavePlot.PrepareLinePoints();
+                PrepareLinePoints();
             }
         }
 
-
+        private void ScreenRefreshTimer_Func(object sender, EventArgs e)
+        {
+            if (SlavePlot != null)
+                SlavePlot.Render();
+            Render();
+        }
     }
 }

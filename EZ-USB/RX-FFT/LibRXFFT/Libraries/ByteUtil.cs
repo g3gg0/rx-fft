@@ -2,11 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Runtime.InteropServices;
 
 namespace LibRXFFT.Libraries
 {
     public class ByteUtil
     {
+        public static bool UseNative = false;
+
+        [DllImport("libRXFFT_native.dll", EntryPoint = "SamplesFromBinary")]
+        public static unsafe extern void SamplesFromBinaryNative(byte[] dataBuffer, int bytesRead, double[] samplesI, double[] samplesQ, int dataFormat, bool invertedSpectrum);
 
 
         public static byte[] BitsToBytesRev(bool[] srcData)
@@ -288,6 +293,85 @@ namespace LibRXFFT.Libraries
             writeBuffer[pos + 1] = (byte)(value >> 8);
         }
 
+        public enum eSampleFormat
+        {
+            Direct16BitIQFixedPoint = 0,
+            Direct64BitIQFloat = 1,
+            Direct64BitIQFloat64k = 2
+        }
+        
+        public static void SamplesFromBinary(byte[] dataBuffer, double[] samplesI, double[] samplesQ, eSampleFormat dataFormat, bool InvertedSpectrum)
+        {
+            SamplesFromBinary(dataBuffer, dataBuffer.Length, samplesI, samplesQ, dataFormat, InvertedSpectrum);
+        }
 
+        public static void SamplesFromBinary(byte[] dataBuffer, int bytesRead, double[] samplesI, double[] samplesQ, eSampleFormat dataFormat, bool invertedSpectrum)
+        {
+            if (UseNative)
+            {
+                SamplesFromBinaryNative(dataBuffer, bytesRead, samplesI, samplesQ, (int)dataFormat, invertedSpectrum);
+            }
+            else
+            {
+                int bytesPerSample;
+                int bytesPerSamplePair;
+
+                switch (dataFormat)
+                {
+                    case ByteUtil.eSampleFormat.Direct16BitIQFixedPoint:
+                        bytesPerSamplePair = 4;
+                        bytesPerSample = 2;
+                        break;
+
+                    case ByteUtil.eSampleFormat.Direct64BitIQFloat:
+                    case ByteUtil.eSampleFormat.Direct64BitIQFloat64k:
+                        bytesPerSamplePair = 8;
+                        bytesPerSample = 4;
+                        break;
+
+                    default:
+                        bytesPerSamplePair = 0;
+                        bytesPerSample = 0;
+                        break;
+                }
+
+                int samplePos = 0;
+                int samplePairs = bytesRead / bytesPerSamplePair;
+
+                for (int pos = 0; pos < samplePairs; pos++)
+                {
+                    double I;
+                    double Q;
+                    switch (dataFormat)
+                    {
+                        case eSampleFormat.Direct16BitIQFixedPoint:
+                            I = ByteUtil.getDoubleFromBytes(dataBuffer, bytesPerSamplePair * pos);
+                            Q = ByteUtil.getDoubleFromBytes(dataBuffer, bytesPerSamplePair * pos + bytesPerSample);
+                            break;
+
+                        case eSampleFormat.Direct64BitIQFloat:
+                            I = BitConverter.ToSingle(dataBuffer, bytesPerSamplePair * pos);
+                            Q = BitConverter.ToSingle(dataBuffer, bytesPerSamplePair * pos + bytesPerSample);
+                            break;
+
+                        case eSampleFormat.Direct64BitIQFloat64k:
+                            I = BitConverter.ToSingle(dataBuffer, bytesPerSamplePair * pos) / 65536;
+                            Q = BitConverter.ToSingle(dataBuffer, bytesPerSamplePair * pos + bytesPerSample) / 65536;
+                            break;
+
+                        default:
+                            return;
+                    }
+
+                    if (invertedSpectrum)
+                        I = -I;
+
+                    samplesI[pos] = I;
+                    samplesQ[pos] = Q;
+                }
+
+                return;
+            }
+        }
     }
 }

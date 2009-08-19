@@ -51,6 +51,7 @@ namespace LibRXFFT.Components.DirectX
             if (!slaveMode)
             {
                 DisplayThread = new Thread(DisplayFunc);
+                DisplayThread.Name = "PhaseDisplay Display Thread";
                 DisplayThread.Start();
             }
         }

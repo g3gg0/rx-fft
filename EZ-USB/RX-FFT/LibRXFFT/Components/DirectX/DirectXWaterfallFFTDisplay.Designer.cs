@@ -31,9 +31,9 @@ namespace LibRXFFT.Components.DirectX
         private void InitializeComponent()
         {
             this.splitContainer = new System.Windows.Forms.SplitContainer();
-            this.fftDisplay = new DirectXFFTDisplay(false);
-            this.waterfallDisplay = new DirectXWaterfallDisplay(true);
-            this.fftDisplay.SlavePlot = this.waterfallDisplay;
+            this.FFTDisplay = new DirectXFFTDisplay(false);
+            this.WaterfallDisplay = new DirectXWaterfallDisplay(true);
+            this.FFTDisplay.SlavePlot = this.WaterfallDisplay;
             this.splitContainer.Panel1.SuspendLayout();
             this.splitContainer.Panel2.SuspendLayout();
             this.splitContainer.SuspendLayout();
@@ -48,11 +48,11 @@ namespace LibRXFFT.Components.DirectX
             // 
             // splitContainer.Panel1
             // 
-            this.splitContainer.Panel1.Controls.Add(this.fftDisplay);
+            this.splitContainer.Panel1.Controls.Add(this.FFTDisplay);
             // 
             // splitContainer.Panel2
             // 
-            this.splitContainer.Panel2.Controls.Add(this.waterfallDisplay);
+            this.splitContainer.Panel2.Controls.Add(this.WaterfallDisplay);
             this.splitContainer.Size = new System.Drawing.Size(537, 377);
             this.splitContainer.SplitterDistance = 179;
             this.splitContainer.SplitterWidth = 2;
@@ -60,19 +60,19 @@ namespace LibRXFFT.Components.DirectX
             // 
             // fftDisplay
             // 
-            this.fftDisplay.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.fftDisplay.Location = new System.Drawing.Point(0, 0);
-            this.fftDisplay.Name = "fftDisplay";
-            this.fftDisplay.Size = new System.Drawing.Size(537, 179);
-            this.fftDisplay.TabIndex = 0;
+            this.FFTDisplay.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.FFTDisplay.Location = new System.Drawing.Point(0, 0);
+            this.FFTDisplay.Name = "fftDisplay";
+            this.FFTDisplay.Size = new System.Drawing.Size(537, 179);
+            this.FFTDisplay.TabIndex = 0;
             // 
             // waterfallDisplay
             // 
-            this.waterfallDisplay.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.waterfallDisplay.Location = new System.Drawing.Point(0, 0);
-            this.waterfallDisplay.Name = "waterfallDisplay";
-            this.waterfallDisplay.Size = new System.Drawing.Size(537, 196);
-            this.waterfallDisplay.TabIndex = 0;
+            this.WaterfallDisplay.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.WaterfallDisplay.Location = new System.Drawing.Point(0, 0);
+            this.WaterfallDisplay.Name = "waterfallDisplay";
+            this.WaterfallDisplay.Size = new System.Drawing.Size(537, 196);
+            this.WaterfallDisplay.TabIndex = 0;
             // 
             // WaterfallFFTDisplay
             // 
@@ -91,7 +91,7 @@ namespace LibRXFFT.Components.DirectX
         #endregion
 
         private System.Windows.Forms.SplitContainer splitContainer;
-        private DirectXFFTDisplay fftDisplay;
-        private DirectXWaterfallDisplay waterfallDisplay;
+        private DirectXFFTDisplay FFTDisplay;
+        private DirectXWaterfallDisplay WaterfallDisplay;
     }
 }

@@ -12,69 +12,76 @@ using SlimDX;
 using Font = SlimDX.Direct3D9.Font;
 using System.Runtime.InteropServices;
 using LibRXFFT.Libraries.SignalProcessing;
+using System.IO;
 
 namespace LibRXFFT.Components.DirectX
 {
-    public partial class DirectXWaterfallDisplay : DirectXPlot
+    public partial class DirectXWaterfallDisplay : DirectXFFTDisplay
     {
 
         /* DirectX related graphic stuff */
         protected Sprite Sprite;
         protected Surface DefaultRenderTarget;
-        protected Texture LastWaterfallTexture;
+        protected Texture WaterfallTexture;
         protected Texture TempWaterfallTexture;
+        protected Texture SaveImageDisplayContext;
+        protected Texture SaveWaterfallTexture;
+        protected Texture SaveTempWaterfallTexture;
+        protected Texture SaveImageThreadContext;
         protected Color ColorFaderBG = Color.Orange;
 
-        protected Vertex[] CursorVertexes = new Vertex[4];
         protected double DisplayXOffsetPrev = 0;
         protected Object DisplayXOffsetLock = new Object();
         protected bool ResetScaleBar = true;
 
-        Vertex[] ScaleBarVertexes = new Vertex[4];
-        Vertex[] ScaleBarVertexesLeft = new Vertex[3];
-        Vertex[] ScaleBarVertexesRight = new Vertex[3];
-        Vertex[] ScaleBarPos = new Vertex[4];
-
         /* timestamp related */
         protected DateTime TimeStamp = DateTime.Now;
         protected int LinesWithoutTimestamp = 0;
-        protected int LinesWithoutTimestampMin = 16;
+        protected int LinesWithoutTimestampMin = 20;
         public double TimeStampEveryMiliseconds = 1000;
 
-        /* the averaging value to smooth the displayed lines */
-        public double Averaging = 1;
+        /* waterfall saving related */
+        public string SavingName = "waterfall.png";
+        protected bool _SavingEnabled = false;
+        public bool SavingEnabled
+        {
+            get { return _SavingEnabled; }
+            set
+            {
+                _SavingEnabled = value;
 
-        /* sample value buffer */
-        protected double[] SampleValues = new double[0];
-        protected long SampleValuesAveraged = 0;
-        public long SamplesToAverage = 0;
+                /* notify that its disabled */
+                if (!SavingEnabled)
+                    SaveBufferTrigger.Release(1);
+            }
+        }
 
-        /* processing related */
-        private readonly Thread DisplayThread;
-        private bool NeedsUpdate = false;
-
-        /* FFT related */
-        private Mutex FFTLock = new Mutex();
-        private FFTTransformer FFT;
-        private int _FFTSize = 256;
-        public double FFTPrescaler = 0.05f;
-        public double FFTOffset = 0.3f;
-        private double fftPrescalerDefault = 0.05f;
-        private double fftOffsetDefault = 0.3f;
-
-        /* if the fft data provided is already squared, set to true */
-        public bool SquaredFFTData = false;
+        protected bool SaveImage;
+        protected Mutex SaveImageLock = new Mutex();
+        protected Semaphore SaveBufferTrigger = new Semaphore(0, 1);
+        protected PresentParameters SaveParameters;
+        protected Device SaveDeviceDisplayContext;
+        protected Device SaveDeviceThreadContext;
+        protected Sprite SaveSprite;
+        protected Thread SaveThread;
+        protected Image SavedImage;
+        protected Font SaveFixedFont;
+        protected int SaveWaterfallLinesRendered = 0;
+        protected int SaveWaterfallLinesToRender = 0;
+        protected int SaveImageBlockSize = 512;
 
         public double LeveldBWhite = -10;
         public double LeveldBBlack = -100;
         public double LeveldBMax = -150;
 
 
-        public DirectXWaterfallDisplay() : this(false)
+        public DirectXWaterfallDisplay()
+            : this(false)
         {
         }
 
         public DirectXWaterfallDisplay(bool slaveMode)
+            : base(slaveMode)
         {
             ColorFG = Color.Cyan;
             ColorBG = Color.Black;
@@ -96,23 +103,81 @@ namespace LibRXFFT.Components.DirectX
             /* thats not possible with this display */
             OverviewModeEnabled = false;
 
-            InitializeComponent();
-            try
-            {
-                InitializeDirectX();
-            }
-            catch (Direct3D9Exception e)
-            {
-                MessageBox.Show("Failed initializing DirectX." + Environment.NewLine + e.ToString());
-            }
-
-            if (!slaveMode)
-            {
-                DisplayThread = new Thread(DisplayFunc);
-                DisplayThread.Start();
-            }
+            /* periodically run the save routine that checks if an texture should get
+             * appended to the saved waterfall image
+             */
+            SaveThread = new Thread(new ThreadStart(SaveThreadFunc));
+            SaveThread.Name = "WaterfallSaveThread";
+            SaveThread.Start();
         }
 
+
+        private void SaveThreadFunc()
+        {
+            try
+            {
+                while (true)
+                {
+                    /* wait until we should do something */
+                    SaveBufferTrigger.WaitOne();
+
+                    /* clear old file when got disabled */
+                    if (!SavingEnabled)
+                    {
+                        if (SavedImage != null)
+                            SavedImage.Dispose();
+                        SavedImage = null;
+                    }
+
+                    /* if there is a new texture to save */
+                    if (SaveImage)
+                    {
+                        SaveImage = false;
+
+
+                        /* build an image from the texture */
+                        SaveImageLock.WaitOne();
+                        DataStream saveImageStream = Texture.ToStream(SaveImageThreadContext, ImageFileFormat.Png);
+                        SaveImageLock.ReleaseMutex();
+
+                        Image curImage = Image.FromStream(saveImageStream);
+
+
+                        /* and create a new image with the new size */
+                        Image newImage;
+                        if (SavedImage != null && SavedImage.Width == curImage.Width)
+                            newImage = new Bitmap(curImage.Width, SavedImage.Height + curImage.Height / 2);
+                        else
+                            newImage = new Bitmap(curImage.Width, curImage.Height / 2);
+
+                        /* draw last image and the current texture into the new image */
+                        Graphics g = Graphics.FromImage(newImage);
+                        g.DrawImage(curImage, 0, -(curImage.Height / 2));
+                        if (SavedImage != null)
+                            g.DrawImage(SavedImage, 0, curImage.Height / 2);
+
+                        /* and save it to disk */
+                        try
+                        {
+                            newImage.Save(SavingName, System.Drawing.Imaging.ImageFormat.Png);
+                        }
+                        catch (Exception e)
+                        {
+                        }
+
+                        /* dispose old image */
+                        if (SavedImage != null)
+                            SavedImage.Dispose();
+
+                        /* and keep for the next time */
+                        SavedImage = newImage;
+                    }
+                }
+            }
+            catch (ThreadAbortException e)
+            {
+            }
+        }
 
         public int FFTSize
         {
@@ -124,228 +189,246 @@ namespace LibRXFFT.Components.DirectX
                     lock (SampleValues)
                     {
                         _FFTSize = value;
+                        InitializeDirectX();
                         SampleValuesAveraged = 0;
+                        EnoughData = false;
                         FFT = new FFTTransformer(value);
                     }
                 }
             }
         }
 
-        public void ProcessFFTData(double[] amplitudes)
-        {
-            lock (SampleValues)
-            {
-                /* did the number of samples change? */
-                if (SampleValues.Length != amplitudes.Length)
-                {
-                    SampleValues = new double[amplitudes.Length];
-                    SampleValuesAveraged = 0;
-                }
-
-                /* the first samples are just copied, the others get added */
-                if (SampleValuesAveraged == 0)
-                {
-                    for (int pos = 0; pos < amplitudes.Length; pos++)
-                        SampleValues[pos] = amplitudes[pos];
-                }
-                else
-                {
-                    for (int pos = 0; pos < amplitudes.Length; pos++)
-                        SampleValues[pos] += amplitudes[pos];
-                }
-
-                SampleValuesAveraged++;
-
-                /* if SampleValuesAverageCount is set and we summed up that many samples, we're done */
-                if (SamplesToAverage == 0 || SampleValuesAveraged == SamplesToAverage)
-                    NeedsUpdate = true;
-            }
-        }
-
-        public void ProcessRawData(byte[] dataBuffer)
-        {
-            const int bytePerSample = 2;
-            const int channels = 2;
-
-            lock (FFTLock)
-            {
-                int samplePairs = dataBuffer.Length / (channels * bytePerSample);
-
-                for (int samplePair = 0; samplePair < samplePairs; samplePair++)
-                {
-                    int samplePairPos = samplePair * bytePerSample * channels;
-                    double I = ByteUtil.getDoubleFromBytes(dataBuffer, samplePairPos);
-                    double Q = ByteUtil.getDoubleFromBytes(dataBuffer, samplePairPos + bytePerSample);
-
-                    FFT.AddSample(I, Q);
-
-                    if (FFT.ResultAvailable)
-                    {
-                        double[] amplitudes = FFT.GetResult();
-
-                        ProcessFFTData(amplitudes);
-                    }
-                }
-            }
-        }
-
-        private double sampleToDBScale(double sampleValue)
-        {
-            return FFTPrescaler * sampleValue + FFTOffset;
-        }
-
-        private double sampleFromDBScale(double scaleValue)
-        {
-            return (scaleValue - FFTOffset) / FFTPrescaler;
-        }
 
         internal virtual void RenderOverlay()
         {
-
             /* draw white/black bar */
+            uint color = (uint)ColorFaderBG.ToArgb();
+            uint colorBarUpper = (uint)Color.White.ToArgb();
+            uint colorBarLower = (uint)Color.White.ToArgb();
             int barLength = 50;
             int barTop = DirectXHeight - barLength - 20;
             int barBottom = barTop + barLength;
             int whiteYPos = (int)((LeveldBWhite / LeveldBMax) * barLength);
             int blackYPos = (int)((LeveldBBlack / LeveldBMax) * barLength);
 
+            if (ShiftPressed)
+                colorBarUpper = (uint)Color.Green.ToArgb();
+            if (ControlPressed)
+                colorBarLower = (uint)Color.Green.ToArgb();
 
             if (UpdateOverlays)
             {
-                uint color = (uint)ColorFaderBG.ToArgb();
+                ScaleVertexesUsed = 0;
 
-                ScaleBarVertexes[0].PositionRhw.X = 20;
-                ScaleBarVertexes[0].PositionRhw.Y = barTop;
-                ScaleBarVertexes[0].PositionRhw.Z = 0.5f;
-                ScaleBarVertexes[0].PositionRhw.W = 1;
-                ScaleBarVertexes[0].Color = color & 0x80FFFFFF;
+                /* center line */
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = 20;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = barTop;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 1;
+                ScaleVertexes[ScaleVertexesUsed].Color = color & 0x80FFFFFF;
+                ScaleVertexesUsed++;
 
-                ScaleBarVertexes[1].PositionRhw.X = 20;
-                ScaleBarVertexes[1].PositionRhw.Y = barTop + 10;
-                ScaleBarVertexes[1].PositionRhw.Z = 0.5f;
-                ScaleBarVertexes[1].PositionRhw.W = 2;
-                ScaleBarVertexes[1].Color = color;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = 20;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = barTop + 10;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 2;
+                ScaleVertexes[ScaleVertexesUsed].Color = color;
+                ScaleVertexesUsed++;
 
-                ScaleBarVertexes[2].PositionRhw.X = 20;
-                ScaleBarVertexes[2].PositionRhw.Y = barBottom - 10;
-                ScaleBarVertexes[2].PositionRhw.Z = 0.5f;
-                ScaleBarVertexes[2].PositionRhw.W = 2;
-                ScaleBarVertexes[2].Color = color;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = 20;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = barTop + 10;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 2;
+                ScaleVertexes[ScaleVertexesUsed].Color = color;
+                ScaleVertexesUsed++;
 
-                ScaleBarVertexes[3].PositionRhw.X = 20;
-                ScaleBarVertexes[3].PositionRhw.Y = barBottom;
-                ScaleBarVertexes[3].PositionRhw.Z = 0.5f;
-                ScaleBarVertexes[3].PositionRhw.W = 1;
-                ScaleBarVertexes[3].Color = color & 0x80FFFFFF;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = 20;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = barBottom - 10;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 2;
+                ScaleVertexes[ScaleVertexesUsed].Color = color;
+                ScaleVertexesUsed++;
 
-                ScaleBarVertexesLeft[0].PositionRhw.X = 19;
-                ScaleBarVertexesLeft[0].PositionRhw.Y = barTop;
-                ScaleBarVertexesLeft[0].PositionRhw.Z = 0.5f;
-                ScaleBarVertexesLeft[0].PositionRhw.W = 1;
-                ScaleBarVertexesLeft[0].Color = color & 0x00FFFFFF;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = 20;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = barBottom - 10;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 2;
+                ScaleVertexes[ScaleVertexesUsed].Color = color;
+                ScaleVertexesUsed++;
 
-                ScaleBarVertexesLeft[1].PositionRhw.X = 19;
-                ScaleBarVertexesLeft[1].PositionRhw.Y = (barTop + barBottom) / 2;
-                ScaleBarVertexesLeft[1].PositionRhw.Z = 0.5f;
-                ScaleBarVertexesLeft[1].PositionRhw.W = 1;
-                ScaleBarVertexesLeft[1].Color = color;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = 20;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = barBottom;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 1;
+                ScaleVertexes[ScaleVertexesUsed].Color = color & 0x80FFFFFF;
+                ScaleVertexesUsed++;
 
-                ScaleBarVertexesLeft[2].PositionRhw.X = 19;
-                ScaleBarVertexesLeft[2].PositionRhw.Y = barBottom;
-                ScaleBarVertexesLeft[2].PositionRhw.Z = 0.5f;
-                ScaleBarVertexesLeft[2].PositionRhw.W = 1;
-                ScaleBarVertexesLeft[2].Color = color & 0x00FFFFFF;
+                /* left line */
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = 19;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = barTop;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 1;
+                ScaleVertexes[ScaleVertexesUsed].Color = color & 0x00FFFFFF;
+                ScaleVertexesUsed++;
 
-                ScaleBarVertexesRight[0].PositionRhw.X = 21;
-                ScaleBarVertexesRight[0].PositionRhw.Y = barTop;
-                ScaleBarVertexesRight[0].PositionRhw.Z = 0.5f;
-                ScaleBarVertexesRight[0].PositionRhw.W = 1;
-                ScaleBarVertexesRight[0].Color = color & 0x00FFFFFF;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = 19;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = (barTop + barBottom) / 2;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 1;
+                ScaleVertexes[ScaleVertexesUsed].Color = color;
+                ScaleVertexesUsed++;
 
-                ScaleBarVertexesRight[1].PositionRhw.X = 21;
-                ScaleBarVertexesRight[1].PositionRhw.Y = (barTop + barBottom) / 2;
-                ScaleBarVertexesRight[1].PositionRhw.Z = 0.5f;
-                ScaleBarVertexesRight[1].PositionRhw.W = 1;
-                ScaleBarVertexesRight[1].Color = color;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = 19;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = (barTop + barBottom) / 2;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 1;
+                ScaleVertexes[ScaleVertexesUsed].Color = color;
+                ScaleVertexesUsed++;
 
-                ScaleBarVertexesRight[2].PositionRhw.X = 21;
-                ScaleBarVertexesRight[2].PositionRhw.Y = barBottom;
-                ScaleBarVertexesRight[2].PositionRhw.Z = 0.5f;
-                ScaleBarVertexesRight[2].PositionRhw.W = 1;
-                ScaleBarVertexesRight[2].Color = color & 0x00FFFFFF;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = 19;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = barBottom;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 1;
+                ScaleVertexes[ScaleVertexesUsed].Color = color & 0x00FFFFFF;
+                ScaleVertexesUsed++;
+
+                /* right line */
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = 21;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = barTop;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 1;
+                ScaleVertexes[ScaleVertexesUsed].Color = color & 0x00FFFFFF;
+                ScaleVertexesUsed++;
+
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = 21;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = (barTop + barBottom) / 2;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 1;
+                ScaleVertexes[ScaleVertexesUsed].Color = color;
+                ScaleVertexesUsed++;
+
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = 21;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = (barTop + barBottom) / 2;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 1;
+                ScaleVertexes[ScaleVertexesUsed].Color = color;
+                ScaleVertexesUsed++;
+
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = 21;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = barBottom;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 1;
+                ScaleVertexes[ScaleVertexesUsed].Color = color & 0x00FFFFFF;
+                ScaleVertexesUsed++;
 
                 /* draw white/black limiter */
 
-                ScaleBarPos[0].PositionRhw.X = 15;
-                ScaleBarPos[0].PositionRhw.Y = barTop + whiteYPos;
-                ScaleBarPos[0].PositionRhw.Z = 0.5f;
-                ScaleBarPos[0].PositionRhw.W = 1;
-                ScaleBarPos[0].Color = 0xFFFFFFFF;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = 15;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = barTop + whiteYPos;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 1;
+                ScaleVertexes[ScaleVertexesUsed].Color = colorBarUpper;
+                ScaleVertexesUsed++;
 
-                ScaleBarPos[1].PositionRhw.X = 25;
-                ScaleBarPos[1].PositionRhw.Y = barTop + whiteYPos;
-                ScaleBarPos[1].PositionRhw.Z = 0.5f;
-                ScaleBarPos[1].PositionRhw.W = 2;
-                ScaleBarPos[1].Color = 0xFFFFFFFF;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = 25;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = barTop + whiteYPos;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 2;
+                ScaleVertexes[ScaleVertexesUsed].Color = colorBarUpper;
+                ScaleVertexesUsed++;
 
-                ScaleBarPos[2].PositionRhw.X = 15;
-                ScaleBarPos[2].PositionRhw.Y = barTop + blackYPos;
-                ScaleBarPos[2].PositionRhw.Z = 0.5f;
-                ScaleBarPos[2].PositionRhw.W = 1;
-                ScaleBarPos[2].Color = 0xFFFFFFFF;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = 15;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = barTop + blackYPos;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 1;
+                ScaleVertexes[ScaleVertexesUsed].Color = colorBarLower;
+                ScaleVertexesUsed++;
 
-                ScaleBarPos[3].PositionRhw.X = 25;
-                ScaleBarPos[3].PositionRhw.Y = barTop + blackYPos;
-                ScaleBarPos[3].PositionRhw.Z = 0.5f;
-                ScaleBarPos[3].PositionRhw.W = 2;
-                ScaleBarPos[3].Color = 0xFFFFFFFF;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = 25;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = barTop + blackYPos;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
+                ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 2;
+                ScaleVertexes[ScaleVertexesUsed].Color = colorBarLower;
+                ScaleVertexesUsed++;
             }
 
-            Device.DrawUserPrimitives(PrimitiveType.LineStrip, 2, ScaleBarVertexesLeft);
-            Device.DrawUserPrimitives(PrimitiveType.LineStrip, 3, ScaleBarVertexes);
-            Device.DrawUserPrimitives(PrimitiveType.LineStrip, 2, ScaleBarVertexesRight);
-            Device.DrawUserPrimitives(PrimitiveType.LineList, 2, ScaleBarPos);
+            Device.DrawUserPrimitives(PrimitiveType.LineList, ScaleVertexesUsed / 2, ScaleVertexes);
+            SmallFont.DrawString(null, LeveldBWhite + " dB", 27, barTop + whiteYPos - 6, (int)colorBarUpper);
+            SmallFont.DrawString(null, LeveldBBlack + " dB", 27, barTop + blackYPos - 6, (int)colorBarLower);
 
 
-
-            SmallFont.DrawString(null, LeveldBWhite + " dB", 27, barTop + whiteYPos - 6, Color.White.ToArgb());
-            SmallFont.DrawString(null, LeveldBBlack + " dB", 27, barTop + blackYPos - 6, Color.White.ToArgb());
-
-
-            /* draw vertical line */
-            float xPos = (float)LastMousePos.X;
+            /* draw vertical cursor line */
+            color = (uint)ColorCursor.ToArgb();
             float stubLength = (float)DirectXHeight / 10.0f;
+            float xPos = (float)LastMousePos.X;
+            float yPos = (float)LastMousePos.Y;
 
-            CursorVertexes[0].PositionRhw.X = xPos;
-            CursorVertexes[1].PositionRhw.X = xPos;
-            CursorVertexes[2].PositionRhw.X = xPos;
-            CursorVertexes[3].PositionRhw.X = xPos;
+            CursorVertexesVert[0].PositionRhw.X = xPos;
+            CursorVertexesVert[1].PositionRhw.X = xPos;
+            CursorVertexesVert[2].PositionRhw.X = xPos;
+            CursorVertexesVert[3].PositionRhw.X = xPos;
 
+            /* horizontal line */
+            CursorVertexesHor[0].PositionRhw.X = xPos - 30;
+            CursorVertexesHor[0].PositionRhw.Y = yPos;
+
+            CursorVertexesHor[1].PositionRhw.X = xPos;
+            CursorVertexesHor[1].PositionRhw.Y = yPos;
+
+            CursorVertexesHor[2].PositionRhw.X = xPos + 30;
+            CursorVertexesHor[2].PositionRhw.Y = yPos;
+
+            /* if axis information changed, recalc lines (this is needed just once btw.) */
             if (UpdateOverlays)
             {
-                CursorVertexes[0].PositionRhw.Y = 0;
-                CursorVertexes[0].PositionRhw.Z = 0.5f;
-                CursorVertexes[0].PositionRhw.W = 1;
-                CursorVertexes[0].Color = 0x00FF3030;
+                CursorVertexesVert[0].PositionRhw.Y = 0;
+                CursorVertexesVert[0].PositionRhw.Z = 0.5f;
+                CursorVertexesVert[0].PositionRhw.W = 1;
+                CursorVertexesVert[0].Color = 0x00FF3030;
 
-                CursorVertexes[1].PositionRhw.Y = stubLength;
-                CursorVertexes[1].PositionRhw.Z = 0.5f;
-                CursorVertexes[1].PositionRhw.W = 1;
-                CursorVertexes[1].Color = 0xFFFF3030;
+                CursorVertexesVert[1].PositionRhw.Y = stubLength;
+                CursorVertexesVert[1].PositionRhw.Z = 0.5f;
+                CursorVertexesVert[1].PositionRhw.W = 1;
+                CursorVertexesVert[1].Color = 0xFFFF3030;
 
-                CursorVertexes[2].PositionRhw.Y = DirectXHeight - stubLength;
-                CursorVertexes[2].PositionRhw.Z = 0.5f;
-                CursorVertexes[2].PositionRhw.W = 1;
-                CursorVertexes[2].Color = 0xFFFF3030;
+                CursorVertexesVert[2].PositionRhw.Y = DirectXHeight - stubLength;
+                CursorVertexesVert[2].PositionRhw.Z = 0.5f;
+                CursorVertexesVert[2].PositionRhw.W = 1;
+                CursorVertexesVert[2].Color = 0xFFFF3030;
 
-                CursorVertexes[3].PositionRhw.Y = DirectXHeight;
-                CursorVertexes[3].PositionRhw.Z = 0.5f;
-                CursorVertexes[3].PositionRhw.W = 1;
-                CursorVertexes[3].Color = 0x00FF3030;
+                CursorVertexesVert[3].PositionRhw.Y = DirectXHeight;
+                CursorVertexesVert[3].PositionRhw.Z = 0.5f;
+                CursorVertexesVert[3].PositionRhw.W = 1;
+                CursorVertexesVert[3].Color = 0x00FF3030;
+
+                CursorVertexesHor[0].PositionRhw.Z = 0.5f;
+                CursorVertexesHor[0].PositionRhw.W = 1;
+                CursorVertexesHor[0].Color = color & 0x00FFFFFF;
+
+                CursorVertexesHor[1].PositionRhw.Z = 0.5f;
+                CursorVertexesHor[1].PositionRhw.W = 1;
+                CursorVertexesHor[1].Color = color;
+
+                CursorVertexesHor[2].PositionRhw.Z = 0.5f;
+                CursorVertexesHor[2].PositionRhw.W = 1;
+                CursorVertexesHor[2].Color = color & 0x00FFFFFF;
             }
 
-            Device.DrawUserPrimitives(PrimitiveType.LineStrip, 3, CursorVertexes);
 
+
+            if (MouseHovering)
+            {
+                Device.DrawUserPrimitives(PrimitiveType.LineStrip, 2, CursorVertexesHor);
+                Device.DrawUserPrimitives(PrimitiveType.LineStrip, 3, CursorVertexesVert);
+
+                /* draw the horizontal position (preliminary) */
+                string label = XLabelFromCursorPos(xPos);
+
+                if (xPos > DirectXWidth / 2)
+                    SmallFont.DrawString(null, label, (int)xPos - 40, (int)yPos, ColorFG.ToArgb());
+                else
+                    SmallFont.DrawString(null, label, (int)xPos + 20, (int)yPos, ColorFG.ToArgb());
+            }
         }
 
         internal override void PrepareLinePoints()
@@ -356,100 +439,163 @@ namespace LibRXFFT.Components.DirectX
             {
                 if (SampleValuesAveraged > 0)
                 {
-                    double[] sampleArray = SampleValues;
+                    int samples = SampleValues.Length;
+
+                    lock (LinePointsLock)
                     {
-                        int samples = sampleArray.Length;
+                        if (LinePoints == null || LinePoints.Length < samples)
+                            LinePoints = new Point[samples];
 
-                        lock (LinePointsLock)
+                        for (int pos = 0; pos < samples; pos++)
                         {
-                            if (LinePoints == null || LinePoints.Length < samples)
-                                LinePoints = new Point[samples];
+                            double sampleValue = (double)SampleValues[pos];
+                            double posX = pos;
+                            double posY = sampleValue;
 
-                            for (int pos = 0; pos < samples; pos++)
+                            LinePoints[pos].X = posX;
+
+                            /* some simple averaging */
+                            unchecked
                             {
-                                double sampleValue = (double)sampleArray[pos];
-                                double posX = pos;
-                                double posY = sampleValue;
-
-                                LinePoints[pos].X = posX;
-
-                                /* some simple averaging */
-                                unchecked
-                                {
-                                    LinePoints[pos].Y *= (Averaging - 1);
-                                    LinePoints[pos].Y += posY / SampleValuesAveraged;
-                                    LinePoints[pos].Y /= Averaging;
-                                }
-
-                                if (double.IsNaN(LinePoints[pos].Y))
-                                    LinePoints[pos].Y = 0;
+                                LinePoints[pos].Y *= (Averaging - 1);
+                                LinePoints[pos].Y += posY / SampleValuesAveraged;
+                                LinePoints[pos].Y /= Averaging;
                             }
-                            resetAverage = false;
-                            LinePointEntries = samples;
-                            LinePointsUpdated = true;
+
+                            if (double.IsNaN(LinePoints[pos].Y))
+                                LinePoints[pos].Y = 0;
                         }
+                        resetAverage = false;
+                        LinePointEntries = samples;
+                        LinePointsUpdated = true;
                     }
                     SampleValuesAveraged = 0;
+                    EnoughData = false;
                 }
             }
         }
 
-        private void DisplayFunc()
+
+        protected override void AllocateDevices()
         {
-            DateTime lastUpdate = DateTime.Now;
-            DateTime curTime = DateTime.Now;
+            base.AllocateDevices();
 
-            while (true)
+            /* we dont need to allocate that all the time. once is enough */
+            if (SaveParameters == null)
             {
-                curTime = DateTime.Now;
-
-                if (NeedsUpdate && curTime.Subtract(lastUpdate).TotalMilliseconds >= RenderSleepDelay)
-                {
-                    lastUpdate = curTime;
-                    NeedsUpdate = false;
-
-                    if (SlavePlot != null)
-                        SlavePlot.PrepareLinePoints();
-                    PrepareLinePoints();
-                }
-                else
-                {
-                    // to have approx. 60 FPS
-                    int delay = (int)Math.Min(1000 / 60, RenderSleepDelay - curTime.Subtract(lastUpdate).TotalMilliseconds);
-                    if (delay >= 0)
-                        Thread.Sleep(delay);
-                    else
-                        Thread.Sleep(1000 / 60);
-                }
-
-                if (SlavePlot != null)
-                    SlavePlot.Render();
-                Render();
+                SaveParameters = new PresentParameters();
+                SaveParameters.BackBufferHeight = SaveImageBlockSize;
+                SaveParameters.BackBufferWidth = Math.Min(FFTSize, 8192);
+                SaveParameters.DeviceWindowHandle = Handle;
+                SaveParameters.BackBufferFormat = Format.A8R8G8B8;
+                SaveParameters.Multisample = MultisampleType.TwoSamples;
             }
+
+            SaveDeviceThreadContext = new Device(Direct3D, 0, DeviceType.Hardware, Handle, CreateFlags.HardwareVertexProcessing, SaveParameters);
+            SaveDeviceThreadContext.SetRenderState(RenderState.AlphaBlendEnable, true);
+            SaveDeviceThreadContext.SetRenderState(RenderState.SourceBlend, Blend.SourceAlpha);
+            SaveDeviceThreadContext.SetRenderState(RenderState.DestinationBlend, Blend.InverseSourceAlpha);
+
+            SaveDeviceDisplayContext = new Device(Direct3D, 0, DeviceType.Hardware, Handle, CreateFlags.HardwareVertexProcessing, SaveParameters);
+            SaveDeviceDisplayContext.SetRenderState(RenderState.AlphaBlendEnable, true);
+            SaveDeviceDisplayContext.SetRenderState(RenderState.SourceBlend, Blend.SourceAlpha);
+            SaveDeviceDisplayContext.SetRenderState(RenderState.DestinationBlend, Blend.InverseSourceAlpha);
+
+            SaveDeviceThreadContext.VertexFormat = VertexFormat.PositionRhw | VertexFormat.Diffuse;
+            SaveDeviceDisplayContext.VertexFormat = VertexFormat.PositionRhw | VertexFormat.Diffuse;
         }
 
+        protected override void ResetDevices()
+        {
+            base.ResetDevices();
 
+            SaveParameters.BackBufferHeight = SaveImageBlockSize;
+            SaveParameters.BackBufferWidth = Math.Min(FFTSize, 8192);
+            SaveDeviceDisplayContext.Reset(SaveParameters);
+        }
+
+        protected override void ReleaseDevices()
+        {
+            base.ReleaseDevices();
+
+            if (SaveDeviceDisplayContext!=null)
+                SaveDeviceDisplayContext.Dispose();
+            if (SaveDeviceThreadContext != null)
+                SaveDeviceThreadContext.Dispose();
+            SaveDeviceDisplayContext = null;
+            SaveDeviceThreadContext = null;
+        }
 
         protected override void AllocateResources()
         {
+            base.AllocateResources();
+
             DefaultRenderTarget = Device.GetRenderTarget(0);
 
             SmallFont = new Font(Device, new System.Drawing.Font("Arial", 8));
 
-            LastWaterfallTexture = new Texture(Device, PresentParameters.BackBufferWidth, PresentParameters.BackBufferHeight, 1, Usage.RenderTarget, Format.A8R8G8B8, Pool.Default);
+            WaterfallTexture = new Texture(Device, PresentParameters.BackBufferWidth, PresentParameters.BackBufferHeight, 1, Usage.RenderTarget, Format.A8R8G8B8, Pool.Default);
             TempWaterfallTexture = new Texture(Device, PresentParameters.BackBufferWidth, PresentParameters.BackBufferHeight, 1, Usage.RenderTarget, Format.A8R8G8B8, Pool.Default);
             Sprite = new Sprite(Device);
+
+            /* save file every screen roll-over */
+            SaveWaterfallLinesToRender = SaveParameters.BackBufferHeight;
+            SaveWaterfallLinesRendered = 0;
+
+            SaveImageThreadContext = new Texture(SaveDeviceThreadContext, SaveParameters.BackBufferWidth, SaveParameters.BackBufferHeight, 1, Usage.RenderTarget, Format.A8R8G8B8, Pool.Default);
+            SaveWaterfallTexture = new Texture(SaveDeviceDisplayContext, SaveParameters.BackBufferWidth, SaveParameters.BackBufferHeight, 1, Usage.RenderTarget, Format.A8R8G8B8, Pool.Default);
+            SaveTempWaterfallTexture = new Texture(SaveDeviceDisplayContext, SaveParameters.BackBufferWidth, SaveParameters.BackBufferHeight, 1, Usage.RenderTarget, Format.A8R8G8B8, Pool.Default);
+            SaveImageDisplayContext = new Texture(SaveDeviceDisplayContext, SaveParameters.BackBufferWidth, SaveParameters.BackBufferHeight, 1, Usage.RenderTarget, Format.A8R8G8B8, Pool.Default);
+            
+            SaveFixedFont = new Font(SaveDeviceDisplayContext, new System.Drawing.Font("Courier New", 8));
+            SaveSprite = new Sprite(SaveDeviceDisplayContext);
         }
 
         protected override void ReleaseResources()
         {
-            Sprite.Dispose();
-            TempWaterfallTexture.Dispose();
-            LastWaterfallTexture.Dispose();
+            base.ReleaseResources();
 
-            SmallFont.Dispose();
+            if (SaveTempWaterfallTexture != null)
+                SaveTempWaterfallTexture.Dispose();
+            if (SaveWaterfallTexture != null)
+                SaveWaterfallTexture.Dispose();
+            SaveTempWaterfallTexture = null;
+            SaveWaterfallTexture = null;
 
-            DefaultRenderTarget.Dispose();
+            SaveImageLock.WaitOne();
+
+            if (SaveImageDisplayContext != null)
+                SaveImageDisplayContext.Dispose();
+            if (SaveImageThreadContext != null)
+                SaveImageThreadContext.Dispose();
+            SaveImageDisplayContext = null;
+            SaveImageThreadContext = null;
+
+            SaveImageLock.ReleaseMutex();
+
+
+            if (Sprite != null)
+                Sprite.Dispose();
+            if (SaveSprite != null)
+                SaveSprite.Dispose();
+            Sprite = null;
+            SaveSprite = null;
+
+            if (TempWaterfallTexture != null)
+                TempWaterfallTexture.Dispose();
+            if (WaterfallTexture != null)
+                WaterfallTexture.Dispose();
+            WaterfallTexture = null;
+            TempWaterfallTexture = null;
+
+            if (SaveFixedFont != null)
+                SaveFixedFont.Dispose();
+            SaveFixedFont = null;
+
+
+            if (DefaultRenderTarget != null)
+                DefaultRenderTarget.Dispose();
+            DefaultRenderTarget = null;
         }
 
         protected override void OnSizeChanged(EventArgs e)
@@ -461,31 +607,37 @@ namespace LibRXFFT.Components.DirectX
 
         protected override void KeyPressed(Keys key)
         {
+            /* set main text and update overlays so the active bar gets colored */
             if (key == Keys.Shift)
             {
                 MainTextPrev = MainText;
                 MainText = "Change Upper Limit (White)";
+                UpdateOverlays = true;
             }
 
             if (key == Keys.Control)
             {
                 MainTextPrev = MainText;
                 MainText = "Change Lower Limit (Black)";
+                UpdateOverlays = true;
             }
         }
 
         protected override void KeyReleased(Keys key)
         {
+            /* reset main text and update overlays so the active bar gets colored */
             if (key == Keys.Shift)
             {
                 MainText = MainTextPrev;
                 MainTextPrev = "";
+                UpdateOverlays = true;
             }
 
             if (key == Keys.Control)
             {
                 MainText = MainTextPrev;
                 MainTextPrev = "";
+                UpdateOverlays = true;
             }
         }
 
@@ -495,17 +647,17 @@ namespace LibRXFFT.Components.DirectX
             {
                 case eUserAction.YOffset:
                     LeveldBWhite = Math.Max(LeveldBBlack, Math.Min(0, LeveldBWhite + 2 * Math.Sign(param)));
-                    AxisUpdated = true;
+                    UpdateAxis = true;
                     break;
 
                 case eUserAction.YZoomIn:
                     LeveldBBlack = Math.Max(LeveldBMax, Math.Min(LeveldBWhite, LeveldBBlack + 2));
-                    AxisUpdated = true;
+                    UpdateAxis = true;
                     break;
 
                 case eUserAction.YZoomOut:
                     LeveldBBlack = Math.Max(LeveldBMax, Math.Min(LeveldBWhite, LeveldBBlack - 2));
-                    AxisUpdated = true;
+                    UpdateAxis = true;
                     break;
 
                 default:
@@ -532,6 +684,36 @@ namespace LibRXFFT.Components.DirectX
                 {
                     if (numPoints > 0)
                     {
+                        if (numPoints != PlotVertsOverview.Length)
+                            PlotVertsOverview = new Vertex[numPoints];
+
+                        if (SavingEnabled)
+                        {
+                            for (int pos = 0; pos < numPoints; pos++)
+                            {
+                                double yVal = points[pos].Y;
+                                float dB = (float)(SquaredFFTData ? DBTools.SquaredSampleTodB(yVal) : DBTools.SampleTodB(yVal));
+                                double ampl = 1 - ((dB - LeveldBWhite) / (LeveldBBlack - LeveldBWhite));
+
+                                ampl = Math.Max(0, ampl);
+                                ampl = Math.Min(1, ampl);
+
+                                int colorCode = 0;
+                                colorCode <<= 8;
+                                colorCode |= (int)(ColorFG.R * ampl);
+                                colorCode <<= 8;
+                                colorCode |= (int)(ColorFG.G * ampl);
+                                colorCode <<= 8;
+                                colorCode |= (int)(ColorFG.B * ampl);
+
+                                PlotVertsOverview[pos].PositionRhw.X = (float)(((float)pos / (float)numPoints) * SaveParameters.BackBufferWidth);
+                                PlotVertsOverview[pos].PositionRhw.Y = 0;
+                                PlotVertsOverview[pos].PositionRhw.Z = 0.5f;
+                                PlotVertsOverview[pos].PositionRhw.W = 1;
+                                PlotVertsOverview[pos].Color = (uint)(0xFF000000 | colorCode);
+                            }
+                        }
+
                         /* get density */
                         int density = 0;
                         for (int pos = 0; (pos < numPoints) && (((double)points[pos].X / (double)numPoints) * DirectXWidth * XZoomFactor < 1); pos++)
@@ -540,7 +722,6 @@ namespace LibRXFFT.Components.DirectX
                         /* calculate average on high density */
                         if (density > 1)
                         {
-
                             int newNumPoints = (int)(((double)points[numPoints - 1].X / (double)numPoints) * DirectXWidth * XZoomFactor);
                             double ratio = (double)numPoints / (double)newNumPoints;
 
@@ -549,12 +730,10 @@ namespace LibRXFFT.Components.DirectX
                                 startPos++;
 
                             if (newNumPoints != PlotVerts.Length)
-                            {
                                 PlotVerts = new Vertex[newNumPoints];
-                                PlotVertsOverview = new Vertex[newNumPoints];
-                            }
 
                             PlotVertsEntries = newNumPoints - 1;
+
 
                             for (int pos = 0; pos < newNumPoints; pos++)
                             {
@@ -590,10 +769,7 @@ namespace LibRXFFT.Components.DirectX
                         else
                         {
                             if (numPoints != PlotVerts.Length)
-                            {
                                 PlotVerts = new Vertex[numPoints];
-                                PlotVertsOverview = new Vertex[numPoints];
-                            }
 
                             PlotVertsEntries = numPoints - 1;
 
@@ -635,70 +811,112 @@ namespace LibRXFFT.Components.DirectX
             }
         }
 
-        internal override void Render()
+        protected override void RenderCore()
         {
-            if (!DirectXAvailable)
-                return;
-
-            try
+            if (UpdateAxis)
             {
-                DirectXLock.WaitOne();
+                UpdateAxis = false;
+                UpdateOverlays = true;
+                CreateVertexBufferForAxis();
+            }
 
-                if (AxisUpdated)
+            if (LinePointsUpdated)
+            {
+                LinePointsUpdated = false;
+                lock (LinePointsLock)
                 {
-                    AxisUpdated = false;
-                    UpdateOverlays = true;
-                    CreateVertexBufferForAxis();
+                    CreateVertexBufferForPoints(LinePoints, LinePointEntries);
                 }
+            }
 
-                if (LinePointsUpdated)
-                {
-                    LinePointsUpdated = false;
-                    lock (LinePointsLock)
-                    {
-                        CreateVertexBufferForPoints(LinePoints, LinePointEntries);
-                    }
-                }
 
+            if (PlotVertsEntries > 0)
+            {
+                Device.BeginScene();
+
+                /* render into temporary buffer */
+                Device.SetRenderTarget(0, TempWaterfallTexture.GetSurfaceLevel(0));
+
+                /* clear temp buffer */
+                Device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, ColorBG, 1.0f, 0);
                 Device.VertexFormat = VertexFormat.PositionRhw | VertexFormat.Diffuse;
 
-                if (PlotVertsEntries > 0)
+                /* move the old image when XOffset has changed */
+                float delta = 0;
+                lock (DisplayXOffsetLock)
                 {
-                    Device.SetRenderTarget(0, TempWaterfallTexture.GetSurfaceLevel(0));
-                    Device.SetRenderState(RenderState.AlphaBlendEnable, true);
-                    Device.SetRenderState(RenderState.SourceBlend, Blend.SourceAlpha);
-                    Device.SetRenderState(RenderState.DestinationBlend, Blend.InverseSourceAlpha);
-                    Device.BeginScene();
+                    delta = (float)(DisplayXOffsetPrev - DisplayXOffset);
+                    DisplayXOffsetPrev = DisplayXOffset;
+                }
+
+                /* draw the old waterfall image */
+                Sprite.Begin(SpriteFlags.None);
+                Sprite.Draw(WaterfallTexture, Vector3.Zero, new Vector3(delta, 1, 0), new Color4(Color.White));
+                Sprite.End();
+
+                /* paint first line */
+                Device.DrawUserPrimitives(PrimitiveType.LineStrip, PlotVertsEntries, PlotVerts);
+                PlotVertsEntries = 0;
+
+                bool drawTimeStamp = false;
+
+                LinesWithoutTimestamp++;
+                /* draw a new timestamp */
+                DateTime newTimeStamp = DateTime.Now;
+                if (newTimeStamp.Subtract(TimeStamp).TotalMilliseconds > TimeStampEveryMiliseconds && LinesWithoutTimestamp > LinesWithoutTimestampMin)
+                {
+                    drawTimeStamp = true;
+                    TimeStamp = newTimeStamp;
+                    LinesWithoutTimestamp = 0;
+
+                    Vertex[] lineVertexes = new Vertex[2];
+                    lineVertexes[0].PositionRhw.X = 0;
+                    lineVertexes[0].PositionRhw.Y = 0;
+                    lineVertexes[0].PositionRhw.Z = 0.5f;
+                    lineVertexes[0].PositionRhw.W = 1;
+                    lineVertexes[0].Color = (uint)ColorCursor.ToArgb();
+                    lineVertexes[1].PositionRhw.X = 20;
+                    lineVertexes[1].PositionRhw.Y = 0;
+                    lineVertexes[1].PositionRhw.Z = 0.5f;
+                    lineVertexes[1].PositionRhw.W = 1;
+                    lineVertexes[1].Color = (uint)ColorCursor.ToArgb();
+
+                    Device.DrawUserPrimitives(PrimitiveType.LineList, 1, lineVertexes);
+                    FixedFont.DrawString(null, TimeStamp.ToString(), 5, 1, (int)(ColorCursor.ToArgb()));
+                }
+
+                /* now write the temp buffer into the real image buffer */
+                Device.SetRenderTarget(0, WaterfallTexture.GetSurfaceLevel(0));
+
+                Sprite.Begin(SpriteFlags.None);
+                Sprite.Draw(TempWaterfallTexture, new Color4(Color.White));
+                Sprite.End();
+
+                Device.EndScene();
+
+                /* save the view into a file */
+                if (SavingEnabled)
+                {
+                    SaveDeviceDisplayContext.BeginScene();
+
+                    /* render into temporary buffer */
+                    SaveDeviceDisplayContext.SetRenderTarget(0, SaveTempWaterfallTexture.GetSurfaceLevel(0));
 
                     /* clear temp buffer */
-                    Device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, ColorBG, 1.0f, 0);
-
-                    /* move the old image when XOffset has changed */
-                    float delta = 0;
-                    lock (DisplayXOffsetLock)
-                    {
-                        delta = (float)(DisplayXOffsetPrev - DisplayXOffset);
-                        DisplayXOffsetPrev = DisplayXOffset;
-                    }
+                    SaveDeviceDisplayContext.Clear(ClearFlags.Target | ClearFlags.ZBuffer, ColorBG, 1.0f, 0);
+                    SaveDeviceDisplayContext.VertexFormat = VertexFormat.PositionRhw | VertexFormat.Diffuse;
 
                     /* draw the old waterfall image */
-                    Sprite.Begin(SpriteFlags.None);
-                    Sprite.Draw(LastWaterfallTexture, Vector3.Zero, new Vector3(delta, 1, 0), new Color4(Color.White));
-                    Sprite.End();
-
+                    SaveSprite.Begin(SpriteFlags.None);
+                    SaveSprite.Draw(SaveWaterfallTexture, Vector3.Zero, new Vector3(0, 1, 0), new Color4(Color.White));
+                    SaveSprite.End();
+                    
                     /* paint first line */
-                    Device.DrawUserPrimitives(PrimitiveType.LineStrip, PlotVertsEntries, PlotVerts);
-                    PlotVertsEntries = 0;
+                    SaveDeviceDisplayContext.DrawUserPrimitives(PrimitiveType.LineStrip, PlotVertsOverview.Length - 1, PlotVertsOverview);
 
-                    LinesWithoutTimestamp++;
-                    /* draw a new timestamp */
-                    DateTime newTimeStamp = DateTime.Now;
-                    if (newTimeStamp.Subtract(TimeStamp).TotalMilliseconds > TimeStampEveryMiliseconds && LinesWithoutTimestamp > LinesWithoutTimestampMin)
+                    if (drawTimeStamp)
                     {
-                        TimeStamp = newTimeStamp;
-                        LinesWithoutTimestamp = 0; 
-                        
-                        Vertex[] lineVertexes = new Vertex[4];
+                        Vertex[] lineVertexes = new Vertex[2];
                         lineVertexes[0].PositionRhw.X = 0;
                         lineVertexes[0].PositionRhw.Y = 0;
                         lineVertexes[0].PositionRhw.Z = 0.5f;
@@ -710,99 +928,84 @@ namespace LibRXFFT.Components.DirectX
                         lineVertexes[1].PositionRhw.W = 1;
                         lineVertexes[1].Color = (uint)ColorCursor.ToArgb();
 
-                        lineVertexes[2].PositionRhw.X = 20;
-                        lineVertexes[2].PositionRhw.Y = 0;
-                        lineVertexes[2].PositionRhw.Z = 0.5f;
-                        lineVertexes[2].PositionRhw.W = 1;
-                        lineVertexes[2].Color = (uint)ColorBG.ToArgb();
-                        lineVertexes[3].PositionRhw.X = 22;
-                        lineVertexes[3].PositionRhw.Y = 0;
-                        lineVertexes[3].PositionRhw.Z = 0.5f;
-                        lineVertexes[3].PositionRhw.W = 1;
-                        lineVertexes[3].Color = (uint)ColorBG.ToArgb();
+                        SaveDeviceDisplayContext.DrawUserPrimitives(PrimitiveType.LineList, 1, lineVertexes);
 
-                        Device.DrawUserPrimitives(PrimitiveType.LineList, 2, lineVertexes);
-
-                        //FixedFont.DrawString(null, TimeStamp.ToString(), 6, 2, ColorBG);
-                        FixedFont.DrawString(null, TimeStamp.ToString(), 5, 1, (int)(ColorCursor.ToArgb() & 0xFF8F8F8F));
+                        SaveFixedFont.DrawString(null, TimeStamp.ToString(), 5, 1, (int)(ColorCursor.ToArgb()));
                     }
 
                     /* now write the temp buffer into the real image buffer */
-                    Device.SetRenderTarget(0, LastWaterfallTexture.GetSurfaceLevel(0));
+                    SaveDeviceDisplayContext.SetRenderTarget(0, SaveWaterfallTexture.GetSurfaceLevel(0));
 
-                    Sprite.Begin(SpriteFlags.None);
-                    Sprite.Draw(TempWaterfallTexture, new Color4(Color.White));
-                    Sprite.End();
+                    SaveSprite.Begin(SpriteFlags.None);
+                    SaveSprite.Draw(SaveTempWaterfallTexture, new Color4(Color.White));
+                    SaveSprite.End();
 
-                    Device.EndScene();
+
+                    if (++SaveWaterfallLinesRendered >= SaveWaterfallLinesToRender)
+                    {
+                        /* backup the current image */
+                        SaveDeviceDisplayContext.SetRenderTarget(0, SaveImageDisplayContext.GetSurfaceLevel(0));
+
+                        SaveSprite.Begin(SpriteFlags.None);
+                        SaveSprite.Draw(SaveWaterfallTexture, new Color4(Color.White));
+                        SaveSprite.End();
+
+                        /* get image into save thread device context */
+                        SaveImageLock.WaitOne();
+                        Surface.FromSurface(SaveImageThreadContext.GetSurfaceLevel(0), SaveImageDisplayContext.GetSurfaceLevel(0), Filter.None, 0);
+                        SaveImageLock.ReleaseMutex();
+
+                        SaveWaterfallLinesRendered = SaveWaterfallLinesToRender / 2 + 1;
+
+                        try
+                        {
+                            SaveImage = true;
+                            SaveBufferTrigger.Release(1);
+                        }
+                        catch (SemaphoreFullException e)
+                        {
+                        }
+                    }
+
+                    SaveDeviceDisplayContext.EndScene();
                 }
-
-
-                /* paint overlay */
-                Device.SetRenderTarget(0, TempWaterfallTexture.GetSurfaceLevel(0));
-                Device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.Transparent, 1.0f, 0);
-
-                Device.BeginScene();
-
-                if (XAxisVerts.Length > 0)
-                    Device.DrawUserPrimitives(PrimitiveType.LineList, XAxisVerts.Length / 2, XAxisVerts);
-                if (YAxisVerts.Length > 0)
-                    Device.DrawUserPrimitives(PrimitiveType.LineList, YAxisVerts.Length / 2, YAxisVerts);
-
-                DisplayFont.DrawString(null, MainText, 20, 30, ColorBG);
-                DisplayFont.DrawString(null, MainText, 21, 31, ColorFont);
-
-                RenderOverlay();
-                Device.EndScene();
-                /* end paint overlay */
-
-
-                /* paint waterfall + overlay */
-                Device.SetRenderTarget(0, DefaultRenderTarget);
-                Device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, ColorBG, 1.0f, 0);
-
-                Device.BeginScene();
-
-                Sprite.Begin(SpriteFlags.AlphaBlend);
-                Sprite.Draw(LastWaterfallTexture, Color.White);
-                Sprite.Draw(TempWaterfallTexture, Color.White);
-                Sprite.End();
-                Device.EndScene();
-                /* end paint waterfall*/
-
-
-                Device.Present();
-
-                UpdateOverlays = false;
             }
-            catch (Direct3D9Exception e)
-            {
-                DirectXLock.ReleaseMutex();
-                DirectXAvailable = false;
 
-                int loops = 50;
-                while (!DirectXAvailable && loops-- > 0)
-                {
-                    BeginInvoke(new ResetDirectXDelegate(ResetDirectX), null);
-                    Thread.Sleep(100);
-                }
+            #region build overlay 
+            Device.SetRenderTarget(0, TempWaterfallTexture.GetSurfaceLevel(0));
+            Device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.Transparent, 1.0f, 0);
 
-                if (!DirectXAvailable)
-                {
-                    MessageBox.Show("Failed to re-init DirectX ater 10 seconds");
-                    System.Console.WriteLine(e.ToString());
-                }
+            Device.BeginScene();
 
-                DirectXLock.WaitOne();
-            }
-            catch (Exception e)
-            {
-                System.Console.WriteLine(e.ToString());
-            }
-            finally
-            {
-                DirectXLock.ReleaseMutex();
-            }
+            if (XAxisVerts.Length > 0)
+                Device.DrawUserPrimitives(PrimitiveType.LineList, XAxisVerts.Length / 2, XAxisVerts);
+            if (YAxisVerts.Length > 0)
+                Device.DrawUserPrimitives(PrimitiveType.LineList, YAxisVerts.Length / 2, YAxisVerts);
+
+            DisplayFont.DrawString(null, MainText, 20, 30, ColorBG);
+            DisplayFont.DrawString(null, MainText, 21, 31, ColorFont);
+
+            RenderOverlay();
+            Device.EndScene();
+            #endregion
+
+
+            #region draw waterfall + overlay
+            Device.SetRenderTarget(0, DefaultRenderTarget);
+            Device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, ColorBG, 1.0f, 0);
+
+            Device.BeginScene();
+
+            Sprite.Begin(SpriteFlags.AlphaBlend);
+            Sprite.Draw(WaterfallTexture, Color.White);
+            Sprite.Draw(TempWaterfallTexture, Color.White);
+            Sprite.End();
+            Device.EndScene();
+            #endregion
+
+            Device.Present();
+
+            UpdateOverlays = false;
         }
     }
 }

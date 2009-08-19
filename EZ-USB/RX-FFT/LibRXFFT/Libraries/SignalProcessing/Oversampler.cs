@@ -167,12 +167,18 @@ namespace LibRXFFT.Libraries.SignalProcessing
                         for (int windowPos = windowStart; windowPos < windowEnd; windowPos++)
                         {
                             double delta = outPos / Oversampling - windowPos;
-                            double sampleValue;
+                            double sampleValue = 0;
 
                             if (windowPos >= srcData.Length)
-                                sampleValue = NextBlockFirstSamples[windowPos - srcData.Length];
+                            {
+                                if(windowPos - srcData.Length >= 0 && windowPos - srcData.Length < NextBlockFirstSamples.Length)
+                                    sampleValue = NextBlockFirstSamples[windowPos - srcData.Length];
+                            }
                             else if (windowPos < 0)
-                                sampleValue = LastBlockLastSamples[windowPos + SinXDepth];
+                            {
+                                if (windowPos + SinXDepth >= 0 && windowPos + SinXDepth < NextBlockFirstSamples.Length)
+                                    sampleValue = NextBlockFirstSamples[windowPos + SinXDepth];
+                            }
                             else
                                 sampleValue = srcData[windowPos];
 

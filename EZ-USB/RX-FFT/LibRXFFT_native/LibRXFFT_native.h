@@ -20,6 +20,17 @@ typedef struct
 
 typedef struct 
 {
+	double *Num;
+	double *Den;
+	double Gain;
+	int Section;
+	double *m1;
+	double *m2;
+} IIRState;
+
+
+typedef struct 
+{
 	double LastI;
 	double LastQ;
 } FMDemodState;
@@ -35,7 +46,11 @@ typedef struct
 
 LIBRXFFT_NATIVE_API int *FIRInit(double *coeff, int entries);
 LIBRXFFT_NATIVE_API void FIRFree(int *ctx);
-LIBRXFFT_NATIVE_API void FIRProcess(int *ctx, double *inData, double *outData, int entries);
+LIBRXFFT_NATIVE_API void FIRProcess(int *ctx, double *inData, double *outData, int samples);
+
+LIBRXFFT_NATIVE_API int *IIRInit(double gain, int section, double *num, double *den);
+LIBRXFFT_NATIVE_API void IIRFree(int *ctx);
+LIBRXFFT_NATIVE_API void IIRProcess(int *ctx, double *inData, double *outData, int samples);
 
 LIBRXFFT_NATIVE_API int *FMDemodInit();
 LIBRXFFT_NATIVE_API void FMDemodFree(int *ctx);

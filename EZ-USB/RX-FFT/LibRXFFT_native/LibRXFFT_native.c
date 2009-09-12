@@ -72,6 +72,72 @@ LIBRXFFT_NATIVE_API void FIRProcess(int *ctx, double *inData, double *outData, i
 	return;
 }
 
+LIBRXFFT_NATIVE_API int *IIRInit(double gain, int section, double *num, double *den)
+{
+	int pos = 0;
+	IIRState *state = (IIRState *)malloc(sizeof(IIRState));
+
+	state->m1 = (double*)malloc(sizeof(double) * section);
+	state->m2 = (double*)malloc(sizeof(double) * section);
+	state->Num = (double*)malloc(sizeof(double) * section * 3);
+	state->Den = (double*)malloc(sizeof(double) * section * 3);
+
+	for(pos = 0; pos < section * 3; pos++)
+	{
+		state->Num[pos] = num[pos];
+		state->Den[pos] = den[pos];
+	}
+
+	state->Gain = gain;
+	state->Section = section;
+
+	return (int *)state;
+}
+
+
+LIBRXFFT_NATIVE_API void IIRFree(int *ctx)
+{
+	IIRState *state = (IIRState *)ctx;
+
+	free(state->Den);
+	free(state->Num);
+	free(state->m1);
+	free(state->m2);
+	free(state);
+}
+
+LIBRXFFT_NATIVE_API void IIRProcess(int *ctx, double *inData, double *outData, int samples)
+{
+	IIRState *state = (IIRState *)ctx;
+    double *m1 = state->m1;
+    double *m2 = state->m2;
+    double *localDen = state->Den;
+    double *localNum = state->Num;
+	double Gain = state->Gain;
+	int Section = state->Section;
+	int pos = 0;
+
+	for(pos = 0; pos < samples; pos++)
+	{
+		int i = 0;
+        int arrayPos = 0;
+        double s0 = 0;
+        double s1 = 0;
+
+        s0 = Gain * inData[pos];
+
+        for (i = 0; i < Section; i++)
+        {
+            s1 = (s0 * localNum[arrayPos + 0] + m1[i]) / localDen[arrayPos + 0];
+            m1[i] = m2[i] + s0 * localNum[arrayPos + 1] - s1 * localDen[arrayPos + 1];
+            m2[i] = s0 * localNum[arrayPos + 2] - s1 * localDen[arrayPos + 2];
+            s0 = s1;
+            arrayPos += 3;
+        }
+
+        outData[pos] = s1;
+	}
+}
 
 
 LIBRXFFT_NATIVE_API int *FMDemodInit()

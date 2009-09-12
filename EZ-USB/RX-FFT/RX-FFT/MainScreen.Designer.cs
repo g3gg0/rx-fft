@@ -15,6 +15,9 @@ namespace RX_FFT
         /// <param name="disposing">True, wenn verwaltete Ressourcen gelöscht werden sollen; andernfalls False.</param>
         protected override void Dispose(bool disposing)
         {
+            if (DemodOptions != null)
+                DemodOptions.Dispose();
+
             if (disposing && (components != null))
             {
                 components.Dispose();
@@ -60,6 +63,7 @@ namespace RX_FFT
             this.cmbWindowFunc = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
             this.FFTDisplay = new LibRXFFT.Components.DirectX.DirectXWaterfallFFTDisplay();
+            this.btnStats = new System.Windows.Forms.Button();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -95,6 +99,7 @@ namespace RX_FFT
             // 
             // splitContainer1.Panel1
             // 
+            this.splitContainer1.Panel1.Controls.Add(this.btnStats);
             this.splitContainer1.Panel1.Controls.Add(this.btnDemod);
             this.splitContainer1.Panel1.Controls.Add(this.txtFileName);
             this.splitContainer1.Panel1.Controls.Add(this.chkRecording);
@@ -290,6 +295,16 @@ namespace RX_FFT
             this.FFTDisplay.UpdateRate = 25;
             this.FFTDisplay.WindowingFunction = LibRXFFT.Libraries.FFTW.FFTTransformer.eWindowingFunction.BlackmanHarris;
             // 
+            // btnStats
+            // 
+            this.btnStats.Location = new System.Drawing.Point(84, 26);
+            this.btnStats.Name = "btnStats";
+            this.btnStats.Size = new System.Drawing.Size(75, 23);
+            this.btnStats.TabIndex = 19;
+            this.btnStats.Text = "Stats";
+            this.btnStats.UseVisualStyleBackColor = true;
+            this.btnStats.Click += new System.EventHandler(this.btnStats_Click);
+            // 
             // MainScreen
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -327,6 +342,7 @@ namespace RX_FFT
         private System.Windows.Forms.TextBox txtFileName;
         private System.Windows.Forms.CheckBox chkRecording;
         private System.Windows.Forms.Button btnDemod;
+        private System.Windows.Forms.Button btnStats;
     }
 }
 

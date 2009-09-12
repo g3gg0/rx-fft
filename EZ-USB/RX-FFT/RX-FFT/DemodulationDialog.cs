@@ -137,8 +137,15 @@ namespace RX_FFT
 
         public void UpdateInformation()
         {
-            BeginInvoke(new MethodInvoker(UpdateInformationInternal));
+            try
+            {
+                BeginInvoke(new MethodInvoker(UpdateInformationInternal));
+            }
+            catch (Exception e)
+            {
+            }
         }
+
 
         private void UpdateInformationInternal()
         {
@@ -212,101 +219,158 @@ namespace RX_FFT
 
         private void chkEnableCursorWin_CheckedChanged(object sender, EventArgs e)
         {
-            Demod.CursorPositionWindowEnabled = chkEnableCursorWin.Checked;
-            Demod.ReinitSound = true;
-            UpdateInformationInternal();
+            lock (Demod)
+            {
+                Demod.CursorPositionWindowEnabled = chkEnableCursorWin.Checked;
+                Demod.ReinitSound = true;
+                UpdateInformationInternal();
+            }
         }
 
         private void radioAM_CheckedChanged(object sender, EventArgs e)
         {
-            Demod.Demod = new AMDemodulator();
-            UpdateInformationInternal();
+            lock (Demod)
+            {
+                Demod.Demod = new AMDemodulator();
+                UpdateInformationInternal();
+                
+            }
         }
 
         private void radioFMFast_CheckedChanged(object sender, EventArgs e)
         {
-            Demod.Demod = new FMDemodulator();
-            UpdateInformationInternal();
+            lock (Demod)
+            {
+                Demod.Demod = new FMDemodulator();
+                UpdateInformationInternal();
+                
+            }
         }
 
         private void radioFMAccurate_CheckedChanged(object sender, EventArgs e)
         {
-            Demod.Demod = new FMDemodulator();
-            UpdateInformationInternal();
+            lock (Demod)
+            {
+                Demod.Demod = new FMDemodulator();
+                UpdateInformationInternal();
+                
+            }
         }
 
 
 
         private void radioFilter2_CheckedChanged(object sender, EventArgs e)
         {
-            Demod.CursorWindowFilterWidthFract = 2;
-            Demod.CursorWindowFilterI = new FIRFilter(FIRCoefficients.FIRLowPass_2_Low);
-            Demod.CursorWindowFilterQ = new FIRFilter(FIRCoefficients.FIRLowPass_2_Low);
-            Demod.ReinitSound = true;
-            UpdateInformationInternal();
+            if (!radioFilter2.Checked)
+                return;
+            lock (Demod)
+            {
+                Demod.CursorWindowFilterWidthFract = 2;
+//                Demod.CursorWindowFilterI = new FIRFilter(FIRCoefficients.FIRLowPass_2_Low);
+//                Demod.CursorWindowFilterQ = new FIRFilter(FIRCoefficients.FIRLowPass_2_Low);
+                Demod.CursorWindowFilterI = new IIRFilter(IIRCoefficients.IIRLowPass_2);
+                Demod.CursorWindowFilterQ = new IIRFilter(IIRCoefficients.IIRLowPass_2);
+                Demod.ReinitSound = true;
+                UpdateInformationInternal();
+            }
         }
 
         private void radioFilter4_CheckedChanged(object sender, EventArgs e)
         {
-            Demod.CursorWindowFilterWidthFract = 4;
-            Demod.CursorWindowFilterI = new FIRFilter(FIRCoefficients.FIRLowPass_4_Low);
-            Demod.CursorWindowFilterQ = new FIRFilter(FIRCoefficients.FIRLowPass_4_Low);
-            Demod.ReinitSound = true;
-            UpdateInformationInternal();
+            if (!radioFilter4.Checked)
+                return;
+            lock (Demod)
+            {
+                Demod.CursorWindowFilterWidthFract = 4;
+                Demod.CursorWindowFilterI = new IIRFilter(IIRCoefficients.IIRLowPass_4);
+                Demod.CursorWindowFilterQ = new IIRFilter(IIRCoefficients.IIRLowPass_4);
+                Demod.ReinitSound = true;
+                UpdateInformationInternal();
+            }
         }
 
         private void radioFilter8_CheckedChanged(object sender, EventArgs e)
         {
-            Demod.CursorWindowFilterWidthFract = 8;
-            Demod.CursorWindowFilterI = new FIRFilter(FIRCoefficients.FIRLowPass_8_Low);
-            Demod.CursorWindowFilterQ = new FIRFilter(FIRCoefficients.FIRLowPass_8_Low);
-            Demod.ReinitSound = true;
-            UpdateInformationInternal();
+            if (!radioFilter8.Checked)
+                return;
+            lock (Demod)
+            {
+                Demod.CursorWindowFilterWidthFract = 8;
+                Demod.CursorWindowFilterI = new IIRFilter(IIRCoefficients.IIRLowPass_8_Low);
+                Demod.CursorWindowFilterQ = new IIRFilter(IIRCoefficients.IIRLowPass_8_Low);
+                Demod.ReinitSound = true;
+                UpdateInformationInternal();
+            }
         }
 
         private void radioFilter16_CheckedChanged(object sender, EventArgs e)
         {
-            Demod.CursorWindowFilterWidthFract = 16;
-            Demod.CursorWindowFilterI = new FIRFilter(FIRCoefficients.FIRLowPass_16_Low);
-            Demod.CursorWindowFilterQ = new FIRFilter(FIRCoefficients.FIRLowPass_16_Low);
-            Demod.ReinitSound = true;
-            UpdateInformationInternal();
+            if (!radioFilter16.Checked)
+                return;
+            lock (Demod)
+            {
+                Demod.CursorWindowFilterWidthFract = 16;
+                Demod.CursorWindowFilterI = new IIRFilter(IIRCoefficients.IIRLowPass_16);
+                Demod.CursorWindowFilterQ = new IIRFilter(IIRCoefficients.IIRLowPass_16);
+                Demod.ReinitSound = true;
+                UpdateInformationInternal();
+            }
         }
 
         private void radioFilter32_CheckedChanged(object sender, EventArgs e)
         {
-            Demod.CursorWindowFilterWidthFract = 32;
-            Demod.CursorWindowFilterI = new FIRFilter(FIRCoefficients.FIRLowPass_32_Low);
-            Demod.CursorWindowFilterQ = new FIRFilter(FIRCoefficients.FIRLowPass_32_Low);
-            Demod.ReinitSound = true;
-            UpdateInformationInternal();
+            if (!radioFilter32.Checked)
+                return;
+            lock (Demod)
+            {
+                Demod.CursorWindowFilterWidthFract = 32;
+                Demod.CursorWindowFilterI = new IIRFilter(IIRCoefficients.IIRLowPass_32);
+                Demod.CursorWindowFilterQ = new IIRFilter(IIRCoefficients.IIRLowPass_32);
+                Demod.ReinitSound = true;
+                UpdateInformationInternal();
+            }
         }
 
         private void radioFilter64_CheckedChanged(object sender, EventArgs e)
         {
-            Demod.CursorWindowFilterWidthFract = 64;
-            Demod.CursorWindowFilterI = new FIRFilter(FIRCoefficients.FIRLowPass_64_Low);
-            Demod.CursorWindowFilterQ = new FIRFilter(FIRCoefficients.FIRLowPass_64_Low);
-            Demod.ReinitSound = true;
-            UpdateInformationInternal();
+            if (!radioFilter64.Checked)
+                return;
+            lock (Demod)
+            {
+                Demod.CursorWindowFilterWidthFract = 64;
+                Demod.CursorWindowFilterI = new IIRFilter(IIRCoefficients.IIRLowPass_64);
+                Demod.CursorWindowFilterQ = new IIRFilter(IIRCoefficients.IIRLowPass_64);
+                Demod.ReinitSound = true;
+                UpdateInformationInternal();
+            }
         }
 
         private void radioFilter128_CheckedChanged(object sender, EventArgs e)
         {
-            Demod.CursorWindowFilterWidthFract = 128;
-            Demod.CursorWindowFilterI = new FIRFilter(FIRCoefficients.FIRLowPass_128_Low);
-            Demod.CursorWindowFilterQ = new FIRFilter(FIRCoefficients.FIRLowPass_128_Low);
-            Demod.ReinitSound = true;
-            UpdateInformationInternal();
+            if (!radioFilter128.Checked)
+                return;
+            lock (Demod)
+            {
+                Demod.CursorWindowFilterWidthFract = 128;
+                Demod.CursorWindowFilterI = new IIRFilter(IIRCoefficients.IIRLowPass_128);
+                Demod.CursorWindowFilterQ = new IIRFilter(IIRCoefficients.IIRLowPass_128);
+                Demod.ReinitSound = true;
+                UpdateInformationInternal();
+            }
         }
 
         private void radioFilter256_CheckedChanged(object sender, EventArgs e)
         {
-            Demod.CursorWindowFilterWidthFract = 256;
-            Demod.CursorWindowFilterI = new FIRFilter(FIRCoefficients.FIRLowPass_256_Low);
-            Demod.CursorWindowFilterQ = new FIRFilter(FIRCoefficients.FIRLowPass_256_Low);
-            Demod.ReinitSound = true;
-            UpdateInformationInternal();
+            if (!radioFilter256.Checked)
+                return;
+            lock (Demod)
+            {
+                Demod.CursorWindowFilterWidthFract = 256;
+                Demod.CursorWindowFilterI = new IIRFilter(IIRCoefficients.IIRLowPass_256);
+                Demod.CursorWindowFilterQ = new IIRFilter(IIRCoefficients.IIRLowPass_256);
+                Demod.ReinitSound = true;
+                UpdateInformationInternal();
+            }
         }
 
         private void chkEnableLowpass_CheckedChanged(object sender, EventArgs e)
@@ -316,58 +380,90 @@ namespace RX_FFT
 
         private void radioLowPass2_CheckedChanged(object sender, EventArgs e)
         {
-            Demod.AudioLowPassWidthFract = 2;
-            Demod.AudioLowPass = new FIRFilter(FIRCoefficients.FIRLowPass_2_Low);
-            UpdateInformationInternal();
+            lock (Demod)
+            {
+                Demod.AudioLowPassWidthFract = 2;
+                Demod.AudioLowPass = new FIRFilter(FIRCoefficients.FIRLowPass_2_Low);
+                UpdateInformationInternal();
+                
+            }
         }
 
         private void radioLowPass4_CheckedChanged(object sender, EventArgs e)
         {
-            Demod.AudioLowPassWidthFract = 4;
-            Demod.AudioLowPass = new FIRFilter(FIRCoefficients.FIRLowPass_4_Low);
-            UpdateInformationInternal();
+            lock (Demod)
+            {
+                Demod.AudioLowPassWidthFract = 4;
+                Demod.AudioLowPass = new FIRFilter(FIRCoefficients.FIRLowPass_4_Low);
+                UpdateInformationInternal();
+                
+            }
         }
 
         private void radioLowPass8_CheckedChanged(object sender, EventArgs e)
         {
-            Demod.AudioLowPassWidthFract = 8;
-            Demod.AudioLowPass = new FIRFilter(FIRCoefficients.FIRLowPass_8_Low);
-            UpdateInformationInternal();
+            lock (Demod)
+            {
+                Demod.AudioLowPassWidthFract = 8;
+                Demod.AudioLowPass = new FIRFilter(FIRCoefficients.FIRLowPass_8_Low);
+                UpdateInformationInternal();
+                
+            }
         }
 
         private void radioLowPass16_CheckedChanged(object sender, EventArgs e)
         {
-            Demod.AudioLowPassWidthFract = 16;
-            Demod.AudioLowPass = new FIRFilter(FIRCoefficients.FIRLowPass_16_Low);
-            UpdateInformationInternal();
+            lock (Demod)
+            {
+                Demod.AudioLowPassWidthFract = 16;
+                Demod.AudioLowPass = new FIRFilter(FIRCoefficients.FIRLowPass_16_Low);
+                UpdateInformationInternal();
+                
+            }
         }
 
         private void radioLowPass32_CheckedChanged(object sender, EventArgs e)
         {
-            Demod.AudioLowPassWidthFract = 32;
-            Demod.AudioLowPass = new FIRFilter(FIRCoefficients.FIRLowPass_32_Low);
-            UpdateInformationInternal();
+            lock (Demod)
+            {
+                Demod.AudioLowPassWidthFract = 32;
+                Demod.AudioLowPass = new FIRFilter(FIRCoefficients.FIRLowPass_32_Low);
+                UpdateInformationInternal();
+                
+            }
         }
         
         private void radioLowPass64_CheckedChanged(object sender, EventArgs e)
         {
-            Demod.AudioLowPassWidthFract = 64;
-            Demod.AudioLowPass = new FIRFilter(FIRCoefficients.FIRLowPass_64_Low);
-            UpdateInformationInternal();
+            lock (Demod)
+            {
+                Demod.AudioLowPassWidthFract = 64;
+                Demod.AudioLowPass = new FIRFilter(FIRCoefficients.FIRLowPass_64_Low);
+                UpdateInformationInternal();
+                
+            }
         }
 
         private void radioLowPass128_CheckedChanged(object sender, EventArgs e)
         {
-            Demod.AudioLowPassWidthFract = 128;
-            Demod.AudioLowPass = new FIRFilter(FIRCoefficients.FIRLowPass_128_Low);
-            UpdateInformationInternal();
+            lock (Demod)
+            {
+                Demod.AudioLowPassWidthFract = 128;
+                Demod.AudioLowPass = new FIRFilter(FIRCoefficients.FIRLowPass_128_Low);
+                UpdateInformationInternal();
+                
+            }
         }
 
         private void radioLowPass256_CheckedChanged(object sender, EventArgs e)
         {
-            Demod.AudioLowPassWidthFract = 256;
-            Demod.AudioLowPass = new FIRFilter(FIRCoefficients.FIRLowPass_256_Low);
-            UpdateInformationInternal();
+            lock (Demod)
+            {
+                Demod.AudioLowPassWidthFract = 256;
+                Demod.AudioLowPass = new FIRFilter(FIRCoefficients.FIRLowPass_256_Low);
+                UpdateInformationInternal();
+                
+            }
         }
 
 
@@ -408,6 +504,7 @@ namespace RX_FFT
         private void chkNative_CheckedChanged(object sender, EventArgs e)
         {
             FIRFilter.UseNative = chkNative.Checked;
+            IIRFilter.UseNative = chkNative.Checked;
             Demodulator.UseNative = chkNative.Checked;
             Downmixer.UseNative = chkNative.Checked;
             ByteUtil.UseNative = chkNative.Checked;

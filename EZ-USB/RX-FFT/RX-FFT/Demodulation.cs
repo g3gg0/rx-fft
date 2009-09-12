@@ -5,6 +5,7 @@ using System.Text;
 using LibRXFFT.Libraries.Filters;
 using LibRXFFT.Libraries.SignalProcessing;
 using LibRXFFT.Libraries.Demodulators;
+using System.Threading;
 
 namespace RX_FFT
 {
@@ -29,8 +30,8 @@ namespace RX_FFT
 
         public bool AudioLowPassEnabled = false;
         public int AudioLowPassWidthFract = 2;
-        public FIRFilter _AudioLowPass = new FIRFilter(FIRCoefficients.FIRLowPass_8);
-        public FIRFilter AudioLowPass
+        public Filter _AudioLowPass = new FIRFilter(FIRCoefficients.FIRLowPass_8);
+        public Filter AudioLowPass
         {
             get { return _AudioLowPass; }
             set
@@ -53,15 +54,20 @@ namespace RX_FFT
                 if (!CursorPositionWindowEnabled)
                     return 1;
 
-                if (CursorWindowFilterWidthFract > 2)
-                    return CursorWindowFilterWidthFract / 2;
+                if (CursorWindowFilterWidthFract > 1)
+                    return CursorWindowFilterWidthFract;
 
                 return 1;
             }
         }
-        public FIRFilter _CursorWindowFilterI = new FIRFilter(FIRCoefficients.FIRLowPass_4);
-        public FIRFilter _CursorWindowFilterQ = new FIRFilter(FIRCoefficients.FIRLowPass_4);
-        public FIRFilter CursorWindowFilterI
+
+        protected Filter _CursorWindowFilterI;
+        protected Filter _CursorWindowFilterQ;
+        public ManualResetEvent[] CursorWindowFilterEvents = new ManualResetEvent[2];
+        public FilterThread CursorWindowFilterThreadI;
+        public FilterThread CursorWindowFilterThreadQ;
+
+        public Filter CursorWindowFilterI
         {
             get { return _CursorWindowFilterI; }
             set
@@ -72,9 +78,13 @@ namespace RX_FFT
                 }
 
                 _CursorWindowFilterI = value;
+                if (CursorWindowFilterThreadI != null)
+                    CursorWindowFilterThreadI.Stop();
+                CursorWindowFilterThreadI = new FilterThread(value);
+                CursorWindowFilterEvents[0] = CursorWindowFilterThreadI.DataProcessed;
             }
         }
-        public FIRFilter CursorWindowFilterQ
+        public Filter CursorWindowFilterQ
         {
             get { return _CursorWindowFilterQ; }
             set
@@ -85,7 +95,29 @@ namespace RX_FFT
                 }
 
                 _CursorWindowFilterQ = value;
+                if (CursorWindowFilterThreadQ != null)
+                    CursorWindowFilterThreadQ.Stop();
+                CursorWindowFilterThreadQ = new FilterThread(value);
+                CursorWindowFilterEvents[1] = CursorWindowFilterThreadQ.DataProcessed;
             }
+        }
+
+        public Demodulation()
+        {
+            CursorWindowFilterI = new FIRFilter(FIRCoefficients.FIRLowPass_4);
+            CursorWindowFilterQ = new FIRFilter(FIRCoefficients.FIRLowPass_4);
+        }
+
+        public void Dispose()
+        {
+            if (CursorWindowFilterThreadQ != null)
+                CursorWindowFilterThreadQ.Dispose();
+            if (CursorWindowFilterThreadI != null)
+                CursorWindowFilterThreadI.Dispose();
+            if (CursorWindowFilterI != null)
+                CursorWindowFilterI.Dispose();
+            if (CursorWindowFilterI != null)
+                CursorWindowFilterI.Dispose();
         }
 
     }

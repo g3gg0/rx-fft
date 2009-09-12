@@ -8,25 +8,11 @@ namespace LibRXFFT.Components.DirectX
 {
     public class DirectXBurstDisplay : DirectXWaveformDisplay
     {
-        internal Font SmallFont = null;
         uint[,] BitLineColorTable = new uint[,] { { 0xFFFF3030, 0xF8F0000 }, { 0xFF9F1818, 0xFF7F1818 }, { 0xFF7F0C0C, 0xFF4F0C0C }, { 0xFF5F0000, 0xFF2F0000 }, { 0xFF3F0000, 0xFF1F0000 } };
 
         Vertex[] CursorVertexes = new Vertex[6];
         public bool[] BurstBits = new bool[0];
-
-        protected override void AllocateResources()
-        {
-            SmallFont = new Font(Device, new System.Drawing.Font("Arial", 8));
-        }
-
-        protected override void ReleaseResources()
-        {
-            if (SmallFont != null)
-                SmallFont.Dispose();
-            SmallFont = null;
-        }
-
-
+        
 
         protected void DrawBit(int bitNum, uint color1, uint color2, uint colorText)
         {

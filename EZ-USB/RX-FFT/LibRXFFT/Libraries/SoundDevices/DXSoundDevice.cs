@@ -77,10 +77,11 @@ public class DXSoundDevice
         description.Format.FormatTag = WaveFormatTag.Pcm;
         description.Format.SamplesPerSecond = SamplingRate;
         description.Format.AverageBytesPerSecond = SamplingRate * 2;
-        description.SizeInBytes = description.Format.AverageBytesPerSecond / 4;
+        description.SizeInBytes = description.Format.AverageBytesPerSecond / 8;
         description.Flags = BufferFlags.GlobalFocus | BufferFlags.GetCurrentPosition2;
 
         BufferSize = description.SizeInBytes;
+        SampleBufferPos = 0;
 
         try
         {
@@ -122,6 +123,8 @@ public class DXSoundDevice
         PacketsPlayed = 0;
     }
 
+
+
     public void Write(double[] data)
     {
         short[] buff = new short[data.Length];
@@ -145,6 +148,11 @@ public class DXSoundDevice
                 Secondary.Restore();
 
             int maxSamples = (BufferSize - SampleBufferPos) / Secondary.Format.BlockAlignment;
+            if (maxSamples == 0)
+            {
+                SampleBufferPos = 0;
+                maxSamples = data.Length;
+            }
 
             if (maxSamples < data.Length)
             {

@@ -50,6 +50,15 @@ namespace LibRXFFT.Components.DirectX
             WaterfallDisplay.ActionMouseWheelDownAlt = eUserAction.UserCallback;
         }
 
+        /* return a value between -0.5 to 0.5 that indicates the cursor position relative to the center */
+        public double RelativeCursrorXPos
+        {
+            get
+            {
+                return FFTDisplay.XRelativeCoordFromCursorPos();
+            }
+        }
+
 
         public double SamplingRate
         {

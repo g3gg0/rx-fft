@@ -1,9 +1,41 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace LibRXFFT.Libraries.USB_RX
+namespace LibRXFFT.Libraries.USB_RX.Devices
 {
     class USBRXDeviceNative
     {
+        public static int MODE_IDLE = 0;
+        public static int MODE_GPIF = 1;
+
+        public static int PIN_SPI_RESET = 3;
+        public static int PIN_SPI_CLK = 6;
+        public static int PIN_SPI_SDI = 4;
+        public static int PIN_SPI_SDO = 5;
+        public static int PIN_SPI_LED_IN = 7;
+
+        public static int PIN_DIR_IN = 0;
+        public static int PIN_DIR_OUT = 1;
+
+        public static int PIN_STATE_LOW = 0;
+        public static int PIN_STATE_HIGH = 1;
+
+        /* those are the bits set via UsbSetTimeout when DevNum is 0x80 */
+        public static ushort MODE_NORMAL = 0x00000000;
+        public static ushort MODE_NOATMEL = 0x00000001;
+        public static ushort MODE_FASTI2C = 0x00000002;
+        public static ushort MODE_POWERLINE = 0x00000004;
+        public static ushort MODE_CONSOLE = 0x00000008;
+        public static ushort MODE_PREBUFFER = 0x00000010;
+
+        [DllImport("usb2.dll", CallingConvention = CallingConvention.StdCall)]
+        public static extern uint UsbGetShmemID(int DevNum);
+        [DllImport("usb2.dll", CallingConvention = CallingConvention.StdCall)]
+        public static extern bool UsbSetGPIFMode (int DevNum );
+        [DllImport("usb2.dll", CallingConvention = CallingConvention.StdCall)]
+        public static extern bool UsbSetIdleMode (int DevNum );
+        [DllImport("usb2.dll", CallingConvention = CallingConvention.StdCall)]
+        public static extern bool UsbSetControlledTransfer (int DevNum, uint bytes, uint blocksize );
+	
         [DllImport("usb2.dll", CallingConvention = CallingConvention.StdCall)]
         public static extern bool UsbSetTimeout(int DevNum, ushort timeout);
         [DllImport("usb2.dll", CallingConvention = CallingConvention.StdCall)]
@@ -49,7 +81,7 @@ namespace LibRXFFT.Libraries.USB_RX
         [DllImport("usb2.dll", CallingConvention = CallingConvention.StdCall)]
         public static extern bool UsbI2CWriteBytes(int DevNum, int SlaveAddr, ushort Length, byte[] Data);
         [DllImport("usb2.dll", CallingConvention = CallingConvention.StdCall)]
-        public static extern bool UsbI2CWriteByte(int DevNum, int SlaveAddr, int Data);
+        public static extern bool UsbI2CWriteByte(int DevNum, int SlaveAddr, byte Data);
         [DllImport("usb2.dll", CallingConvention = CallingConvention.StdCall)]
         public static extern bool UsbI2CReadBytes(int DevNum, int SlaveAddr, ushort Length, byte[] Data);
         [DllImport("usb2.dll", CallingConvention = CallingConvention.StdCall)]

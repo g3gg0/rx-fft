@@ -40,11 +40,13 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
     <OutputPath>bin\x64\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>
+    </DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>x64</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <DebugSymbols>true</DebugSymbols>
@@ -174,6 +176,10 @@
     <Compile Include="Libraries\ByteUtil.cs" />
     <Compile Include="Libraries\Demodulators\AMDemodulator.cs" />
     <Compile Include="Libraries\Demodulators\Demodulator.cs" />
+    <Compile Include="Libraries\Filters\Filter.cs" />
+    <Compile Include="Libraries\Filters\FilterThread.cs" />
+    <Compile Include="Libraries\Filters\IIRCoefficients.cs" />
+    <Compile Include="Libraries\Filters\IIRFilter.cs" />
     <Compile Include="Libraries\SignalProcessing\Downmixer.cs" />
     <Compile Include="Libraries\Demodulators\FMDemodulator.cs" />
     <Compile Include="Libraries\FFTW\complexarray.cs" />
@@ -230,8 +236,18 @@
     <Compile Include="Libraries\SignalProcessing\SignalPower.cs" />
     <Compile Include="Libraries\SoundDevices\DXSoundDevice.cs" />
     <Compile Include="Libraries\Timers\AccurateTimer.cs" />
-    <Compile Include="Libraries\USB-RX\USBRXDevice.cs" />
-    <Compile Include="Libraries\USB-RX\USBRXDeviceNative.cs" />
+    <Compile Include="Libraries\Timers\HighPerformanceCounter.cs" />
+    <Compile Include="Libraries\USB-RX\Devices\AD6636.cs" />
+    <Compile Include="Libraries\USB-RX\Devices\Atmel.cs" />
+    <Compile Include="Libraries\USB-RX\Interfaces\AD6636Interface.cs" />
+    <Compile Include="Libraries\USB-RX\Interfaces\I2CInterface.cs" />
+    <Compile Include="Libraries\USB-RX\Interfaces\SPIInterface.cs" />
+    <Compile Include="Libraries\USB-RX\Misc\FilterFile.cs" />
+    <Compile Include="Libraries\USB-RX\Tuners\Tuner.cs" />
+    <Compile Include="Libraries\USB-RX\Tuners\TunerMT2131.cs" />
+    <Compile Include="Libraries\USB-RX\Tuners\TunerStack.cs" />
+    <Compile Include="Libraries\USB-RX\Devices\USBRXDevice.cs" />
+    <Compile Include="Libraries\USB-RX\Devices\USBRXDeviceNative.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

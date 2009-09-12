@@ -15,12 +15,8 @@ namespace LibRXFFT.Components.DirectX
     {
         readonly Thread DisplayThread;
         readonly ArrayList SampleValues = new ArrayList();
-        private DisplayFuncState DisplayTimerState;
         private bool NeedsUpdate = false;
-
-
-        public string DisplayName { get; set; }
-        public bool ShowFPS { get; set; }
+        
         public int MaxSamples { get; set; }
 
 
@@ -45,7 +41,6 @@ namespace LibRXFFT.Components.DirectX
                 MessageBox.Show("Failed initializing DirectX." + Environment.NewLine + e.ToString());
             }
 
-            DisplayTimerState = new DisplayFuncState();
             DisplayThread = new Thread(DisplayFunc);
             DisplayThread.Name = "WaveformDisplay Display Thread";
             DisplayThread.Start();
@@ -93,21 +88,7 @@ namespace LibRXFFT.Components.DirectX
             }
         }
 
-        class DisplayFuncState
-        {
-            protected internal Font TextFont;
-            protected internal DateTime StartTime;
-            protected internal long FrameNumber;
-            protected internal double FPS;
 
-            public DisplayFuncState()
-            {
-                FPS = 0;
-                FrameNumber = 0;
-                TextFont = new Font("Arial", 16);
-                StartTime = DateTime.Now;
-            }
-        }
 
         protected override void RenderOverlay()
         {
@@ -117,9 +98,6 @@ namespace LibRXFFT.Components.DirectX
 
         private void DisplayFunc()
         {
-            DisplayFuncState s = DisplayTimerState;
-
-
             while (true)
             {
                 lock (SampleValues)

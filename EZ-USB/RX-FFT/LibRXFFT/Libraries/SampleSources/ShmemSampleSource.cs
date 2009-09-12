@@ -8,7 +8,19 @@ namespace LibRXFFT.Libraries.SampleSources
     {
         private SharedMem ShmemChannel;
 
-        private int BlockSize = 1024;
+        public override int SamplesPerBlock
+        {
+            set
+            {
+                InBuffer = new byte[value * BytesPerSamplePair];
+                AllocateBuffers();
+            }
+            get
+            {
+                return InBuffer.Length / BytesPerSamplePair;
+            }
+        }
+
         private byte[] InBuffer;
 
         public ShmemSampleSource(string name, int oversampling)
@@ -16,18 +28,20 @@ namespace LibRXFFT.Libraries.SampleSources
         {
         }
 
-        public ShmemSampleSource(string name, int oversampling, double samplingRate) : base(oversampling)
+        public ShmemSampleSource(string name, int oversampling, double samplingRate)
+            : base(oversampling)
         {
             ShmemChannel = new SharedMem(0, -1, name, 256 * 1024 * 1024);
-            ShmemChannel.ReadTimeout = 10;
+            ShmemChannel.ReadTimeout = 100;
             ShmemChannel.ReadMode = eReadMode.TimeLimited;
 
             InvertedSpectrum = false;
             DataFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPoint;
 
-            InBuffer = new byte[BlockSize * BytesPerSamplePair];
+            SamplesPerBlock = 1024;
 
-            InputSamplingRate = samplingRate;
+            if (samplingRate > 0)
+                InputSamplingRate = samplingRate;
         }
 
         public override void Close()

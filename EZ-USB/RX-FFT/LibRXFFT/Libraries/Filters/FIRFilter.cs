@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 
 namespace LibRXFFT.Libraries.Filters
 {
-    public class FIRFilter
+    public class FIRFilter : Filter
     {
         public static bool UseNative = false;
 
@@ -18,7 +18,7 @@ namespace LibRXFFT.Libraries.Filters
         [DllImport("libRXFFT_native.dll", EntryPoint = "FIRInit")]
         public static unsafe extern IntPtr FIRInit(double[] coeff, int entries);
         [DllImport("libRXFFT_native.dll", EntryPoint = "FIRProcess")]
-        public static unsafe extern void FIRProcess(IntPtr ctx, double[] inData, double[] outData, int entries);
+        public static unsafe extern void FIRProcess(IntPtr ctx, double[] inData, double[] outData, int samples);
         [DllImport("libRXFFT_native.dll", EntryPoint = "FIRFree")]
         public static unsafe extern void FIRFree(IntPtr ctx);
 
@@ -32,7 +32,7 @@ namespace LibRXFFT.Libraries.Filters
             DelayLine = new double[Coefficients.Length];
         }
 
-        public void Dispose ()
+        public override void Dispose ()
         {
             if (NativeContext != IntPtr.Zero)
             {
@@ -41,7 +41,7 @@ namespace LibRXFFT.Libraries.Filters
             }
         }
 
-        public double[] Process(double[] inData, double[] outData)
+        public override double[] Process(double[] inData, double[] outData)
         {
             if (outData == null)
                 outData = new double[inData.Length];

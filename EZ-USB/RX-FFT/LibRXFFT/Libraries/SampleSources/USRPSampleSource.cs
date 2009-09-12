@@ -17,7 +17,7 @@ namespace LibRXFFT.Libraries.SampleSources
             InvertedSpectrum = true;
             DataFormat = ByteUtil.eSampleFormat.Direct64BitIQFloat64k;
 
-            InBuffer = new byte[BlockSize * BytesPerSamplePair];
+            InBuffer = new byte[SamplesPerBlock * BytesPerSamplePair];
 
             InputStream = new FileStream(fileName, FileMode.Open);
 

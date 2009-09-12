@@ -63,12 +63,23 @@ namespace LibRXFFT.Libraries.SampleSources
         public double[] OversampleI;
         public double[] OversampleQ;
         public int SamplesRead;
-        public int BlockSize = 1024;
+        public virtual int SamplesPerBlock
+        {
+            set
+            {
+                AllocateBuffers();
+            }
+            get
+            {
+                return 1024;
+            }
+        }
+
         public int OutputBlockSize
         {
             get
             {
-                return BlockSize * InternalOversampling;
+                return SamplesPerBlock * InternalOversampling;
             }
         }
 
@@ -85,6 +96,9 @@ namespace LibRXFFT.Libraries.SampleSources
 
         protected SampleSource(int oversampling)
         {
+            DataFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPoint;
+            SamplesPerBlock = 1024;
+
             InternalOversampling = oversampling;
 
             IOversampler = new Oversampler(InternalOversampling);
@@ -95,12 +109,15 @@ namespace LibRXFFT.Libraries.SampleSources
             QOversampler.Type = DefaultOversamplingType;
             QOversampler.SinXDepth = DefaultSinXDepth;
 
-            SourceSamplesI = new double[BlockSize * InternalOversampling];
-            SourceSamplesQ = new double[BlockSize * InternalOversampling];
-            OversampleI = new double[BlockSize];
-            OversampleQ = new double[BlockSize];
-
             SamplingRateChanged = true;
+        }
+
+        protected void AllocateBuffers()
+        {
+            SourceSamplesI = new double[SamplesPerBlock * InternalOversampling];
+            SourceSamplesQ = new double[SamplesPerBlock * InternalOversampling];
+            OversampleI = new double[SamplesPerBlock];
+            OversampleQ = new double[SamplesPerBlock];
         }
 
         public virtual bool Read()

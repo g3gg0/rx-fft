@@ -475,7 +475,7 @@ namespace LibRXFFT.Components.DirectX
                 CursorVertexesHor[2].Color = color & 0x00FFFFFF;
             }
 
-            if (MouseHovering)
+            if (MouseHovering && !ShiftPressed)
             {
                 Device.DrawUserPrimitives(PrimitiveType.LineStrip, 3, CursorVertexesVert);
                 Device.DrawUserPrimitives(PrimitiveType.LineStrip, 2, CursorVertexesHor);
@@ -495,6 +495,19 @@ namespace LibRXFFT.Components.DirectX
                 /* and the strength at the current position */
                 SmallFont.DrawString(null, dB + " dB", (int)xPos + 20, (int)yPos, ColorFG.ToArgb());
             }
+        }
+
+        public double XRelativeCoordFromCursorPos(double xPos)
+        {
+            /* offset (-0.5 ... 0.5) */
+            double offset = ((DisplayXOffset + xPos) / (XZoomFactor * DirectXWidth)) - 0.5f - XAxisSampleOffset;
+
+            return offset;
+        }
+
+        public double XRelativeCoordFromCursorPos()
+        {
+            return XRelativeCoordFromCursorPos(LastMousePos.X);
         }
 
         protected override string XLabelFromCursorPos(double xPos)
@@ -584,5 +597,6 @@ namespace LibRXFFT.Components.DirectX
                 SlavePlot.Render();
             Render();
         }
+
     }
 }

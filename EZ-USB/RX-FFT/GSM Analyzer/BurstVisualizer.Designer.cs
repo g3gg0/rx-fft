@@ -63,12 +63,11 @@ namespace GSM_Analyzer
             this.SampleDisplay.ColorBG = System.Drawing.Color.Black;
             this.SampleDisplay.ColorFG = System.Drawing.Color.Cyan;
             this.SampleDisplay.ColorFont = System.Drawing.Color.DarkCyan;
-            this.SampleDisplay.DisplayName = null;
             this.SampleDisplay.Dock = System.Windows.Forms.DockStyle.Fill;
             this.SampleDisplay.Location = new System.Drawing.Point(0, 0);
             this.SampleDisplay.MaxSamples = 10000;
             this.SampleDisplay.Name = "SampleDisplay";
-            this.SampleDisplay.ShowFPS = false;
+            this.SampleDisplay.MainText = "Sample Value";
             this.SampleDisplay.Size = new System.Drawing.Size(873, 232);
             this.SampleDisplay.TabIndex = 0;
             this.SampleDisplay.XZoomFactor = 2;
@@ -79,12 +78,11 @@ namespace GSM_Analyzer
             this.StrengthDisplay.ColorBG = System.Drawing.Color.Black;
             this.StrengthDisplay.ColorFG = System.Drawing.Color.Cyan;
             this.StrengthDisplay.ColorFont = System.Drawing.Color.DarkCyan;
-            this.StrengthDisplay.DisplayName = null;
             this.StrengthDisplay.Dock = System.Windows.Forms.DockStyle.Fill;
             this.StrengthDisplay.Location = new System.Drawing.Point(0, 0);
             this.StrengthDisplay.MaxSamples = 10000;
             this.StrengthDisplay.Name = "StrengthDisplay";
-            this.StrengthDisplay.ShowFPS = false;
+            this.StrengthDisplay.MainText = "Strength";
             this.StrengthDisplay.Size = new System.Drawing.Size(873, 253);
             this.StrengthDisplay.TabIndex = 0;
             this.StrengthDisplay.XZoomFactor = 2;

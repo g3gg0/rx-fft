@@ -135,12 +135,10 @@ namespace GaussGenerator
             // 
             // waveformDisplay
             // 
-            this.waveformDisplay.DisplayName = null;
             this.waveformDisplay.Dock = System.Windows.Forms.DockStyle.Fill;
             this.waveformDisplay.Location = new System.Drawing.Point(0, 0);
             this.waveformDisplay.MaxSamples = 10000;
             this.waveformDisplay.Name = "waveformDisplay";
-            this.waveformDisplay.ShowFPS = false;
             this.waveformDisplay.Size = new System.Drawing.Size(867, 443);
             this.waveformDisplay.TabIndex = 0;
             this.waveformDisplay.YZoomFactor = 1;

@@ -98,6 +98,12 @@
       <DependentUpon>DirectXPhaseDisplay.cs</DependentUpon>
     </Compile>
     <Compile Include="Components\DirectX\DirectXTypes.cs" />
+    <Compile Include="Components\GDI\AD6636FilterList.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Components\GDI\AD6636FilterList.Designer.cs">
+      <DependentUpon>AD6636FilterList.cs</DependentUpon>
+    </Compile>
     <Compile Include="Components\GDI\CFileDecimationDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -142,6 +148,9 @@
     </Compile>
     <Compile Include="Components\GDI\FFTDisplay.Designer.cs">
       <DependentUpon>FFTDisplay.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Components\GDI\FrequencySelector.cs">
+      <SubType>Component</SubType>
     </Compile>
     <Compile Include="Components\GDI\StatusLamp.cs">
       <SubType>UserControl</SubType>
@@ -253,6 +262,10 @@
   <ItemGroup>
     <EmbeddedResource Include="Components\DirectX\DirectXPhaseDisplay.resx">
       <DependentUpon>DirectXPhaseDisplay.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Components\GDI\AD6636FilterList.resx">
+      <DependentUpon>AD6636FilterList.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Components\GDI\CFileDecimationDialog.resx">

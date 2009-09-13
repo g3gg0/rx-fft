@@ -113,6 +113,28 @@ namespace LibRXFFT.Components.DirectX
             }
         }
 
+        public double CenterFrequency
+        {
+            get
+            {
+                return FFTDisplay.CenterFrequency;
+            }
+            set
+            {
+                FFTDisplay.CenterFrequency = value;
+                WaterfallDisplay.CenterFrequency = value;
+            }
+        }
+
+
+        public long Frequency
+        {
+            get
+            {
+                return FFTDisplay.FrequencyFromCursorPos();
+            }
+        }
+
         public FFTTransformer.eWindowingFunction WindowingFunction
         {
             get { return FFT.WindowingFunction; }
@@ -127,7 +149,6 @@ namespace LibRXFFT.Components.DirectX
             switch (evt)
             {
                 case eUserEvent.MouseClickRight:
-                    double freq = FFTDisplay.FrequencyFromCursorPos();
                     break;
 
                 case eUserEvent.MouseWheelUp:

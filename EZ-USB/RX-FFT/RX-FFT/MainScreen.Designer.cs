@@ -30,8 +30,8 @@ namespace RX_FFT
                 ReadThread.Join();
             }
 
-            if (SampleSource != null)
-                SampleSource.Close();
+            if (Device != null)
+                Device.Close();
 
             base.Dispose(disposing);
         }
@@ -47,6 +47,7 @@ namespace RX_FFT
             this.btnOpen = new System.Windows.Forms.Button();
             this.btnPause = new System.Windows.Forms.Button();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.btnStats = new System.Windows.Forms.Button();
             this.btnDemod = new System.Windows.Forms.Button();
             this.txtFileName = new System.Windows.Forms.TextBox();
             this.chkRecording = new System.Windows.Forms.CheckBox();
@@ -63,7 +64,6 @@ namespace RX_FFT
             this.cmbWindowFunc = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
             this.FFTDisplay = new LibRXFFT.Components.DirectX.DirectXWaterfallFFTDisplay();
-            this.btnStats = new System.Windows.Forms.Button();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -122,9 +122,19 @@ namespace RX_FFT
             // 
             this.splitContainer1.Panel2.Controls.Add(this.FFTDisplay);
             this.splitContainer1.Size = new System.Drawing.Size(1002, 596);
-            this.splitContainer1.SplitterDistance = 51;
+            this.splitContainer1.SplitterDistance = 56;
             this.splitContainer1.SplitterWidth = 1;
             this.splitContainer1.TabIndex = 4;
+            // 
+            // btnStats
+            // 
+            this.btnStats.Location = new System.Drawing.Point(84, 26);
+            this.btnStats.Name = "btnStats";
+            this.btnStats.Size = new System.Drawing.Size(75, 23);
+            this.btnStats.TabIndex = 19;
+            this.btnStats.Text = "Stats";
+            this.btnStats.UseVisualStyleBackColor = true;
+            this.btnStats.Click += new System.EventHandler(this.btnStats_Click);
             // 
             // btnDemod
             // 
@@ -282,6 +292,7 @@ namespace RX_FFT
             // FFTDisplay
             // 
             this.FFTDisplay.Averaging = 1;
+            this.FFTDisplay.CenterFrequency = 0;
             this.FFTDisplay.Dock = System.Windows.Forms.DockStyle.Fill;
             this.FFTDisplay.FFTSize = 256;
             this.FFTDisplay.Location = new System.Drawing.Point(0, 0);
@@ -290,20 +301,10 @@ namespace RX_FFT
             this.FFTDisplay.SamplingRate = 100;
             this.FFTDisplay.SavingEnabled = false;
             this.FFTDisplay.SavingName = "waterfall.png";
-            this.FFTDisplay.Size = new System.Drawing.Size(1002, 544);
+            this.FFTDisplay.Size = new System.Drawing.Size(1002, 539);
             this.FFTDisplay.TabIndex = 0;
             this.FFTDisplay.UpdateRate = 25;
             this.FFTDisplay.WindowingFunction = LibRXFFT.Libraries.FFTW.FFTTransformer.eWindowingFunction.BlackmanHarris;
-            // 
-            // btnStats
-            // 
-            this.btnStats.Location = new System.Drawing.Point(84, 26);
-            this.btnStats.Name = "btnStats";
-            this.btnStats.Size = new System.Drawing.Size(75, 23);
-            this.btnStats.TabIndex = 19;
-            this.btnStats.Text = "Stats";
-            this.btnStats.UseVisualStyleBackColor = true;
-            this.btnStats.Click += new System.EventHandler(this.btnStats_Click);
             // 
             // MainScreen
             // 
@@ -343,6 +344,7 @@ namespace RX_FFT
         private System.Windows.Forms.CheckBox chkRecording;
         private System.Windows.Forms.Button btnDemod;
         private System.Windows.Forms.Button btnStats;
+        private LibRXFFT.Components.GDI.FrequencySelector freqSelector;
     }
 }
 

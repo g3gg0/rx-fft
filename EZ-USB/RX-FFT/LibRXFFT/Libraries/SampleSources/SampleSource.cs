@@ -7,7 +7,7 @@ namespace LibRXFFT.Libraries.SampleSources
 
     public class SampleSource
     {
-        protected bool InvertedSpectrum = false;
+        public bool InvertedSpectrum = false;
         protected Oversampler IOversampler;
         protected Oversampler QOversampler;
 
@@ -93,6 +93,7 @@ namespace LibRXFFT.Libraries.SampleSources
         }
 
         public bool SamplingRateChanged;
+        public event EventHandler SamplingRateChangedEvent;
 
         protected SampleSource(int oversampling)
         {
@@ -129,5 +130,12 @@ namespace LibRXFFT.Libraries.SampleSources
         {
         }
 
+        public virtual void ForceInputRate(double rate)
+        {
+            SamplingRateChanged = true;
+            InputSamplingRate = rate;
+            if (SamplingRateChangedEvent != null)
+                SamplingRateChangedEvent(this, null);
+        }
     }
 }

@@ -49,8 +49,7 @@ namespace RX_FFT
         bool processPaused;
         bool ThreadActive;
         Thread ReadThread;
-        SampleSource SampleSource;
-        USBRXDevice USBRX;
+        DeviceControl Device;
         double LastSamplingRate = 48000;
 
         double[] DecimatedInputI = new double[0];
@@ -69,6 +68,7 @@ namespace RX_FFT
         public MainScreen()
         {
             InitializeComponent();
+
             FFTDisplay.UserEventCallback = UserEventCallbackFunc;
 
             FFTSize = 2048;
@@ -82,6 +82,8 @@ namespace RX_FFT
             txtAverageSamples.Text = FFTDisplay.SamplesToAverage.ToString();
         }
 
+
+
         int FFTSize
         {
             get { return FFTDisplay.FFTSize; }
@@ -89,6 +91,8 @@ namespace RX_FFT
             {
                 lock (SpinLock)
                 {
+                    if (Device != null)
+                        Device.SamplesPerBlock = value * (int)Math.Max(1,FFTDisplay.SamplesToAverage);
                     FFTDisplay.FFTSize = value;
                 }
             }
@@ -107,7 +111,16 @@ namespace RX_FFT
                 //double relative = (param / FFTDisplay.Width) - 1;
                 double relative = FFTDisplay.RelativeCursrorXPos;
 
-                DemodOptions.DemodulationDownmixer.TimeStep = -relative * (2*Math.PI);
+                DemodOptions.DemodulationDownmixer.TimeStep = -relative * (2 * Math.PI);
+            }
+            else if (evt == eUserEvent.MouseClickRight)
+            {
+                if (Device != null)
+                {
+                    long freq = FFTDisplay.Frequency;
+                    Device.SetFrequency(freq);
+                    FFTDisplay.CenterFrequency = freq;
+                }
             }
         }
 
@@ -133,16 +146,16 @@ namespace RX_FFT
                     PerformanceCounters.CounterRuntime.Update();
 
                     PerformanceCounters.CounterReading.Start();
-                    double rate = SampleSource.InputSamplingRate;
-                    lock (SampleSource)
+                    double rate = Device.SampleSource.InputSamplingRate;
+                    lock (Device.SampleSource)
                     {
-                        SampleSource.Read();
+                        Device.SampleSource.Read();
                         PerformanceCounters.CounterReading.Stop();
 
                         PerformanceCounters.CounterProcessing.Start();
 
-                        inputI = SampleSource.SourceSamplesI;
-                        inputQ = SampleSource.SourceSamplesQ;
+                        inputI = Device.SampleSource.SourceSamplesI;
+                        inputQ = Device.SampleSource.SourceSamplesQ;
 
                         lock (DemodOptions)
                         {
@@ -298,14 +311,18 @@ namespace RX_FFT
 
         private void btnOpen_Click(object sender, EventArgs e)
         {
-            if (SampleSource != null)
+            if (Device != null)
             {
-                ThreadActive = false;
-                Thread.Sleep(10);
-                ReadThread.Abort();
+                if (ReadThread != null)
+                {
+                    ThreadActive = false;
+                    Thread.Sleep(10);
 
-                SampleSource.Close();
-                SampleSource = null;
+                    ReadThread.Abort();
+                }
+
+                Device.Close();
+                Device = null;
 
                 lock (DemodOptions)
                 {
@@ -317,32 +334,46 @@ namespace RX_FFT
             }
             else
             {
-                /*
-                USBRX = new USBRXDevice();
-
-                USBRX.Init();
-                USBRX.ShowConsole(true);
-                USBRX.StartStream();
-
-                USBRX.AD6636.setFilter(new FilterFile("C:\\temp\\2M Pass.f36"));
-//                USBRX.Atmel.setFilter(USBRX.Atmel.getFilterLast());
-                USBRX.Tuner.setFrequency(103000000.0f);
-                */
-                SampleSource = new ShmemSampleSource("FFT Display", 1, LastSamplingRate);
-
-                lock (DemodOptions)
+                Device = new USBRXDeviceControl();
+                if (Device.Connected)
                 {
-                    DemodOptions.SoundDevice = new DXSoundDevice(Handle);
+                    Device.FrequencyChanged += new EventHandler(Device_FrequencyChanged);
+                    Device.SampleSource.SamplingRateChangedEvent += new EventHandler(SampleSource_SamplingRateChangedEvent);
+
+                    Device.SetFrequency(103000000);
+                    Device.StartRead();
+
+
+                    lock (DemodOptions)
+                    {
+                        DemodOptions.SoundDevice = new DXSoundDevice(Handle);
+                    }
+
+                    ThreadActive = true;
+                    ReadThread = new Thread(new ThreadStart(FFTReadFunc));
+                    ReadThread.Name = "MainScreen Data Read Thread";
+
+                    ReadThread.Start();
+
+                    btnOpen.Text = "Close";
                 }
-
-                ThreadActive = true;
-                ReadThread = new Thread(new ThreadStart(FFTReadFunc));
-                ReadThread.Name = "MainScreen Data Read Thread";
-
-                ReadThread.Start();
-
-                btnOpen.Text = "Close";
+                else
+                {
+                    Device.Close();
+                    Device = null;
+                }
             }
+        }
+
+        void Device_FrequencyChanged(object sender, EventArgs e)
+        {
+            double freq = Device.GetFrequency();
+            FFTDisplay.CenterFrequency = freq;
+        }
+
+        void SampleSource_SamplingRateChangedEvent(object sender, EventArgs e)
+        {
+
         }
 
         private void btnPause_Click(object sender, EventArgs e)
@@ -380,11 +411,11 @@ namespace RX_FFT
             if (!int.TryParse(cmbFFTSize.Text, out size))
                 return;
 
-            if (SampleSource != null)
+            if (Device != null)
             {
-                lock (SampleSource)
+                lock (Device.SampleSource)
                 {
-                    SampleSource.SamplesPerBlock = size;
+                    Device.SampleSource.SamplesPerBlock = size;
                 }
             }
             FFTSize = size;
@@ -402,8 +433,8 @@ namespace RX_FFT
 
             lock (DemodOptions)
             {
-                if (SampleSource != null)
-                    SampleSource.InputSamplingRate = rate;
+                if (Device.SampleSource != null)
+                    Device.SampleSource.InputSamplingRate = rate;
                 DemodOptions.InputRate = rate;
                 DemodOptions.AudioRate = rate / DemodOptions.AudioDecimation / DemodOptions.InputSignalDecimation;
                 if (DemodOptions.SoundDevice != null)
@@ -434,6 +465,8 @@ namespace RX_FFT
                 return;
 
             FFTDisplay.SamplesToAverage = samples;
+            if (Device != null)
+                Device.SamplesPerBlock = FFTSize * (int)Math.Max(1, FFTDisplay.SamplesToAverage);
         }
 
         private void chkRecording_CheckedChanged(object sender, EventArgs e)
@@ -473,5 +506,6 @@ namespace RX_FFT
                 StatsDialog.Show();
             }
         }
+
     }
 }

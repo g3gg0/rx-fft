@@ -2,30 +2,41 @@
 using System.Windows.Forms;
 using LibRXFFT.Libraries.USB_RX.Interfaces;
 using LibRXFFT.Libraries.USB_RX.Tuners;
+using LibRXFFT.Libraries.Timers;
 
 namespace LibRXFFT.Libraries.USB_RX.Devices
 {
     public class USBRXDevice : I2CInterface, SPIInterface
     {
-
-
-        int devNum = 0;
+        int DevNum = 0;
         public Tuner Tuner;
         public Atmel Atmel;
         public AD6636 AD6636;
 
+        public uint ReadBlockSize = 4096;
+
+        private AccurateTimer ReadTimer;
+
         public USBRXDevice()
         {
+            ReadTimer = new AccurateTimer();
+            ReadTimer.Interval = 50;
+            ReadTimer.Timer += new EventHandler(ReadTimer_Timer);
+        }
+
+        void ReadTimer_Timer(object sender, EventArgs e)
+        {
+            USBRXDeviceNative.UsbSetControlledTransfer(DevNum, ReadBlockSize, ReadBlockSize);
         }
 
         public bool Init()
         {
             try
             {
-                if (USBRXDeviceNative.UsbInit(devNum))
+                if (USBRXDeviceNative.UsbInit(DevNum))
                 {
                     Atmel = new Atmel(this);
-                    AD6636 = new AD6636(Atmel, Atmel.getTCXOFreq());
+                    AD6636 = new AD6636(Atmel, Atmel.TCXOFreq);
 
                     TunerMT2131 mt2131 = new TunerMT2131(this);
 
@@ -38,6 +49,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                         Tuner = new TunerStack(AD6636, mt2131, mt2131.IFFreq, mt2131.IFStepSize);
                     }
 
+                    return true;
                 }
             }
             catch (DllNotFoundException e)
@@ -52,14 +64,25 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             return false;
         }
 
+        public void StartRead()
+        {
+            USBRXDeviceNative.UsbSetGPIFMode(DevNum);
+            ReadTimer.Start();
+        }
+
+        public void StopRead()
+        {
+            ReadTimer.Stop();
+        }
+
         public void Close()
         {
-            USBRXDeviceNative.UsbClose(devNum);
+            USBRXDeviceNative.UsbClose(DevNum);
         }
 
         public bool Read(byte[] data)
         {
-            return USBRXDeviceNative.UsbParIn(devNum, data, (uint)data.Length);
+            return USBRXDeviceNative.UsbParIn(DevNum, data, (uint)data.Length);
         }
 
         #region Transfer
@@ -70,27 +93,27 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
         public bool I2CWriteByte(int busID, byte data)
         {
-            return USBRXDeviceNative.UsbI2CWriteByte(devNum, busID, data);
+            return USBRXDeviceNative.UsbI2CWriteByte(DevNum, busID, data);
         }
 
         public bool I2CWriteBytes(int busID, byte[] data)
         {
-            return USBRXDeviceNative.UsbI2CWriteBytes(devNum, busID, (ushort)data.Length, data);
+            return USBRXDeviceNative.UsbI2CWriteBytes(DevNum, busID, (ushort)data.Length, data);
         }
 
         public bool I2CReadByte(int busID, byte[] data)
         {
-            return USBRXDeviceNative.UsbI2CReadByte(devNum, busID, data);
+            return USBRXDeviceNative.UsbI2CReadByte(DevNum, busID, data);
         }
 
         public bool I2CReadBytes(int busID, byte[] data)
         {
-            return USBRXDeviceNative.UsbI2CReadBytes(devNum, busID, (ushort)data.Length, data);
+            return USBRXDeviceNative.UsbI2CReadBytes(DevNum, busID, (ushort)data.Length, data);
         }
 
         public bool I2CDeviceAck(int busID)
         {
-            return USBRXDeviceNative.UsbI2CReadBytes(devNum, busID, 0, null);
+            return USBRXDeviceNative.UsbI2CReadBytes(DevNum, busID, 0, null);
         }
 
         #endregion
@@ -99,13 +122,13 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
         public void SPIInit()
         {
-            USBRXDeviceNative.UsbSetIODir(devNum, USBRXDeviceNative.PIN_SPI_RESET, USBRXDeviceNative.PIN_DIR_OUT); // RESET
-            USBRXDeviceNative.UsbSetIODir(devNum, USBRXDeviceNative.PIN_SPI_SDO, USBRXDeviceNative.PIN_DIR_OUT); // SDO
-            USBRXDeviceNative.UsbSetIODir(devNum, USBRXDeviceNative.PIN_SPI_CLK, USBRXDeviceNative.PIN_DIR_OUT); // CLK
-            USBRXDeviceNative.UsbSetIODir(devNum, USBRXDeviceNative.PIN_SPI_SDI, USBRXDeviceNative.PIN_DIR_IN); // SDI
-            USBRXDeviceNative.UsbSetIODir(devNum, USBRXDeviceNative.PIN_SPI_LED_IN, USBRXDeviceNative.PIN_DIR_IN); // LED pin
+            USBRXDeviceNative.UsbSetIODir(DevNum, USBRXDeviceNative.PIN_SPI_RESET, USBRXDeviceNative.PIN_DIR_OUT); // RESET
+            USBRXDeviceNative.UsbSetIODir(DevNum, USBRXDeviceNative.PIN_SPI_SDO, USBRXDeviceNative.PIN_DIR_OUT); // SDO
+            USBRXDeviceNative.UsbSetIODir(DevNum, USBRXDeviceNative.PIN_SPI_CLK, USBRXDeviceNative.PIN_DIR_OUT); // CLK
+            USBRXDeviceNative.UsbSetIODir(DevNum, USBRXDeviceNative.PIN_SPI_SDI, USBRXDeviceNative.PIN_DIR_IN); // SDI
+            USBRXDeviceNative.UsbSetIODir(DevNum, USBRXDeviceNative.PIN_SPI_LED_IN, USBRXDeviceNative.PIN_DIR_IN); // LED pin
 
-            USBRXDeviceNative.UsbSetIOState(devNum, USBRXDeviceNative.PIN_SPI_RESET, USBRXDeviceNative.PIN_STATE_HIGH); // RESET inactive
+            USBRXDeviceNative.UsbSetIOState(DevNum, USBRXDeviceNative.PIN_SPI_RESET, USBRXDeviceNative.PIN_STATE_HIGH); // RESET inactive
         }
 
         public bool SPIResetDevice()
@@ -115,24 +138,24 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
         public bool SPITransfer(byte[] dataWrite, byte[] dataRead)
         {
-            return USBRXDeviceNative.UsbSpiTransfer(devNum, dataWrite, dataRead, (ushort)dataWrite.Length);
+            return USBRXDeviceNative.UsbSpiTransfer(DevNum, dataWrite, dataRead, (ushort)dataWrite.Length);
         }
 
         public bool SPIReset(int state)
         {
             if (state > 0)
-                return USBRXDeviceNative.UsbSetIOState(devNum, USBRXDeviceNative.PIN_SPI_RESET, USBRXDeviceNative.PIN_STATE_LOW);
+                return USBRXDeviceNative.UsbSetIOState(DevNum, USBRXDeviceNative.PIN_SPI_RESET, USBRXDeviceNative.PIN_STATE_LOW);
             else
-                return USBRXDeviceNative.UsbSetIOState(devNum, USBRXDeviceNative.PIN_SPI_RESET, USBRXDeviceNative.PIN_STATE_HIGH);
+                return USBRXDeviceNative.UsbSetIOState(DevNum, USBRXDeviceNative.PIN_SPI_RESET, USBRXDeviceNative.PIN_STATE_HIGH);
         }
 
         #endregion
 
-        public void StartStream()
+        public void StartStreamRead()
         {
-            USBRXDeviceNative.UsbSetGPIFMode(devNum);
-            USBRXDeviceNative.UsbSetControlledTransfer(devNum, 8192*8192, 0);
-            USBRXDeviceNative.UsbSetControlledTransfer(devNum, 0, 0);
+            USBRXDeviceNative.UsbSetGPIFMode(DevNum);
+            USBRXDeviceNative.UsbSetControlledTransfer(DevNum, 8192*8192, 0);
+            USBRXDeviceNative.UsbSetControlledTransfer(DevNum, 0, 0);
         }
 
         public void ShowConsole(bool show)

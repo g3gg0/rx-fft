@@ -1,6 +1,7 @@
 ﻿using LibRXFFT.Libraries.GMSK;
 using LibRXFFT.Libraries.ShmemChain;
 using LibRXFFT.Libraries.SignalProcessing;
+using System;
 
 namespace LibRXFFT.Libraries.SampleSources
 {
@@ -54,8 +55,7 @@ namespace LibRXFFT.Libraries.SampleSources
             /* when the rate has changed */
             if (ShmemChannel.Rate != 0 && InputSamplingRate != ShmemChannel.Rate / 2)
             {
-                SamplingRateChanged = true;
-                InputSamplingRate = (ShmemChannel.Rate / 2);
+                ForceInputRate(ShmemChannel.Rate / 2);
             }
 
             int read = ShmemChannel.Read(InBuffer, 0, InBuffer.Length);

@@ -9,11 +9,11 @@ namespace LibRXFFT.Libraries.USB_RX.Tuners
     {
 	    Tuner tunerDevice;
 	    Tuner tunerMain;
-	    double tunerMainCenterFreq;
-	    double tunerMainOffsetFreq;
+        long tunerMainCenterFreq;
+        long tunerMainOffsetFreq;
 
         public TunerStack(Tuner tunerDevice, Tuner tunerMain,
-                double tunerMainCenterFreq, double tunerMainOffsetFreq)
+                long tunerMainCenterFreq, long tunerMainOffsetFreq)
         {
             this.tunerDevice = tunerDevice;
             this.tunerMain = tunerMain;
@@ -21,12 +21,13 @@ namespace LibRXFFT.Libraries.USB_RX.Tuners
             this.tunerMainOffsetFreq = tunerMainOffsetFreq;
         }
 
-	    public override double getFrequency() {
-		    double frequency;
-		    double freqDevice = this.tunerDevice.getFrequency();
-		    double freqMain = this.tunerMain.getFrequency();
+        public long GetFrequency()
+        {
+            long frequency;
+            long freqDevice = this.tunerDevice.GetFrequency();
+            long freqMain = this.tunerMain.GetFrequency();
     		
-		    if (tunerMain.isSpectrumInverted() != tunerDevice.isSpectrumInverted())
+		    if (tunerMain.InvertedSpectrum != tunerDevice.InvertedSpectrum)
 			    frequency = tunerMainCenterFreq - freqDevice + freqMain;
 		    else
 			    frequency = tunerMainCenterFreq - freqDevice - freqMain;
@@ -34,40 +35,49 @@ namespace LibRXFFT.Libraries.USB_RX.Tuners
 		    return frequency;
 	    }
 
-        public override bool setFrequency(double frequency)
+        public bool SetFrequency(long frequency)
         {
-		    double freqMain = ((int)frequency / (int)tunerMainOffsetFreq) * (int)tunerMainOffsetFreq;
-		    double freqDevice;
+            long freqMain = (frequency / tunerMainOffsetFreq) * tunerMainOffsetFreq;
+            long freqDevice;
     		
-		    if (tunerMain.isSpectrumInverted() != tunerDevice.isSpectrumInverted())
+		    if (tunerMain.InvertedSpectrum != tunerDevice.InvertedSpectrum)
 			    freqDevice = tunerMainCenterFreq - (frequency - freqMain) ;
 		    else
 			    freqDevice = tunerMainCenterFreq + (frequency - freqMain) ;
     		
-		    tunerDevice.setFrequency(freqDevice);
-		    tunerMain.setFrequency(freqMain);
+		    if (!tunerDevice.SetFrequency(freqDevice))
+                return false;
+            if (!tunerMain.SetFrequency(freqMain))
+                return false;
     		
-		    return false;
+		    return true;
 	    }
 
-        public override bool isSpectrumInverted()
+        public bool InvertedSpectrum
         {
-            return tunerMain.isSpectrumInverted() != tunerDevice.isSpectrumInverted();
+            get
+            {
+                return tunerMain.InvertedSpectrum != tunerDevice.InvertedSpectrum;
+            }
         }
 
-	    public double getTunerMainCenterFreq() {
+        public long getTunerMainCenterFreq()
+        {
 		    return tunerMainCenterFreq;
 	    }
 
-	    public void setTunerMainCenterFreq(double tunerMainCenterFreq) {
+        public void setTunerMainCenterFreq(long tunerMainCenterFreq)
+        {
 		    this.tunerMainCenterFreq = tunerMainCenterFreq;
 	    }
 
-	    public double getTunerMainOffsetFreq() {
+        public long getTunerMainOffsetFreq()
+        {
 		    return tunerMainOffsetFreq;
 	    }
 
-	    public void setTunerMainOffsetFreq(double tunerMainOffsetFreq) {
+        public void setTunerMainOffsetFreq(long tunerMainOffsetFreq)
+        {
 		    this.tunerMainOffsetFreq = tunerMainOffsetFreq;
 	    }
 

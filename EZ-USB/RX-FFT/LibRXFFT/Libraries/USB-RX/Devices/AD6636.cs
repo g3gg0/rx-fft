@@ -10,10 +10,10 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 {
     public class AD6636 : Tuner
     {
+        private AD6636Interface Device;
+        private long _NCOFreq;
+        private double _NCOMul;
 
-        private AD6636Interface device;
-        private long ncoFreq;
-        private double ncoMul;
         private static int AD6636_REG_NCOFREQ = 0x70;
         private static int AD6636_REG_NCOFREQ_L = 4;
         private static int AD6636_REG_IOAC = 0x02;
@@ -93,15 +93,15 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
         public AD6636(AD6636Interface device, long ncoFreq)
         {
-            this.device = device;
-            setNcoFreq(ncoFreq);
+            this.Device = device;
+            NCOFreq = ncoFreq;
 
             Init();
         }
 
         public AD6636(AD6636Interface device)
         {
-            this.device = device;
+            this.Device = device;
 
             Init();
         }
@@ -111,88 +111,98 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             int pos = 0;
             while (initTable[pos, 0] != -1)
             {
-                this.device.ad6636WriteReg(initTable[pos, 0], initTable[pos, 1], initTable[pos, 2]);
+                this.Device.AD6636WriteReg(initTable[pos, 0], initTable[pos, 1], initTable[pos, 2]);
                 pos++;
             }
         }
 
-        public long getNcoFreq()
+        public long NCOFreq
         {
-            return ncoFreq;
+
+            get
+            {
+                return _NCOFreq;
+            }
+
+            set
+            {
+                this._NCOFreq = value;
+                this._NCOMul = Math.Pow(2, 32) / ((double)value);
+            }
         }
 
-        public void setNcoFreq(long ncoFreq)
+
+        public long GetFrequency()
         {
-            this.ncoFreq = ncoFreq;
-            this.ncoMul = Math.Pow(2, 32) / ((double)ncoFreq);
+            return (long)((double)this.Device.AD6636ReadReg(AD6636_REG_NCOFREQ, AD6636_REG_NCOFREQ_L) / this._NCOMul);
         }
 
-        public override bool setFrequency(double frequency)
+        public bool SetFrequency(long frequency)
         {
-            double regValue = frequency * this.ncoMul;
+            double regValue = frequency * this._NCOMul;
 
-            this.device.ad6636WriteReg(AD6636_REG_IOAC, AD6636_REG_IOAC_L, 0x0F);
-            this.device.ad6636WriteReg(AD6636_REG_NCOFREQ, AD6636_REG_NCOFREQ_L, (long)Math.Round(regValue));
-            this.device.ad6636WriteReg(AD6636_REG_SOFTSYNC, AD6636_REG_SOFTSYNC_L, 0x00);
-            this.device.ad6636WriteReg(AD6636_REG_SOFTSYNC, AD6636_REG_SOFTSYNC_L, 0xCF);
-            this.device.ad6636WriteReg(AD6636_REG_SOFTSYNC, AD6636_REG_SOFTSYNC_L, 0xCF);
+            this.Device.AD6636WriteReg(AD6636_REG_IOAC, AD6636_REG_IOAC_L, 0x0F);
+            this.Device.AD6636WriteReg(AD6636_REG_NCOFREQ, AD6636_REG_NCOFREQ_L, (long)Math.Round(regValue));
+            this.Device.AD6636WriteReg(AD6636_REG_SOFTSYNC, AD6636_REG_SOFTSYNC_L, 0x00);
+            this.Device.AD6636WriteReg(AD6636_REG_SOFTSYNC, AD6636_REG_SOFTSYNC_L, 0xCF);
+            this.Device.AD6636WriteReg(AD6636_REG_SOFTSYNC, AD6636_REG_SOFTSYNC_L, 0xCF);
             return true;
         }
 
-        public bool setMGCValue(int value)
+        public bool SetMGCValue(int value)
         {
-            this.device.ad6636WriteReg(AD6636_REG_IOAC, AD6636_REG_IOAC_L, 0x0B);
+            this.Device.AD6636WriteReg(AD6636_REG_IOAC, AD6636_REG_IOAC_L, 0x0B);
 
             if (value > 0)
             {
                 int mgcFactor = (int)(4095 - (value - 1) * 41.36);
-                this.device.ad6636WriteReg(AD6636_REG_AGCLG + 0, AD6636_REG_AGCLG_L, 0);
-                this.device.ad6636WriteReg(AD6636_REG_AGCLG + 1, AD6636_REG_AGCLG_L, 0);
-                this.device.ad6636WriteReg(AD6636_REG_AGCCR, AD6636_REG_AGCCR_L, 0x040C);
-                this.device.ad6636WriteReg(AD6636_REG_AGCSGR, AD6636_REG_AGCSGR_L, mgcFactor);
+                this.Device.AD6636WriteReg(AD6636_REG_AGCLG + 0, AD6636_REG_AGCLG_L, 0);
+                this.Device.AD6636WriteReg(AD6636_REG_AGCLG + 1, AD6636_REG_AGCLG_L, 0);
+                this.Device.AD6636WriteReg(AD6636_REG_AGCCR, AD6636_REG_AGCCR_L, 0x040C);
+                this.Device.AD6636WriteReg(AD6636_REG_AGCSGR, AD6636_REG_AGCSGR_L, mgcFactor);
             }
             else
-                this.device.ad6636WriteReg(AD6636_REG_AGCCR, AD6636_REG_AGCCR_L, 0x040D);
+                this.Device.AD6636WriteReg(AD6636_REG_AGCCR, AD6636_REG_AGCCR_L, 0x040D);
 
-            this.device.ad6636WriteReg(AD6636_REG_SOFTSYNC, AD6636_REG_SOFTSYNC_L, 0x00);
-            this.device.ad6636WriteReg(AD6636_REG_SOFTSYNC, AD6636_REG_SOFTSYNC_L, 0xCF);
-            this.device.ad6636WriteReg(AD6636_REG_SOFTSYNC, AD6636_REG_SOFTSYNC_L, 0xCF);
-
-            return true;
-        }
-
-        public bool setAGC()
-        {
-            this.device.ad6636WriteReg(AD6636_REG_IOAC, AD6636_REG_IOAC_L, 0x0B);
-
-            this.device.ad6636WriteReg(AD6636_REG_AGCCR, AD6636_REG_AGCCR_L, 0x040C);
-            this.device.ad6636WriteReg(AD6636_REG_AGCSGR, AD6636_REG_AGCSGR_L, 128);
-            this.device.ad6636WriteReg(AD6636_REG_AGCUD, AD6636_REG_AGCUD_L, 16);
-            this.device.ad6636WriteReg(AD6636_REG_AGCPL, AD6636_REG_AGCPL_L, 4);
-            this.device.ad6636WriteReg(AD6636_REG_AGCAS, AD6636_REG_AGCAS_L, 2);
-            this.device.ad6636WriteReg(AD6636_REG_AGCET, AD6636_REG_AGCET_L, 64);
-            this.device.ad6636WriteReg(AD6636_REG_AGCLG + 0, AD6636_REG_AGCLG_L, 16);
-            this.device.ad6636WriteReg(AD6636_REG_AGCLG + 1, AD6636_REG_AGCLG_L, 8);
-            this.device.ad6636WriteReg(AD6636_REG_AGCLG + 2, AD6636_REG_AGCLG_L, 6);
-
-            this.device.ad6636WriteReg(AD6636_REG_SOFTSYNC, AD6636_REG_SOFTSYNC_L, 0x00);
-            this.device.ad6636WriteReg(AD6636_REG_SOFTSYNC, AD6636_REG_SOFTSYNC_L, 0xCF);
-            this.device.ad6636WriteReg(AD6636_REG_SOFTSYNC, AD6636_REG_SOFTSYNC_L, 0xCF);
+            this.Device.AD6636WriteReg(AD6636_REG_SOFTSYNC, AD6636_REG_SOFTSYNC_L, 0x00);
+            this.Device.AD6636WriteReg(AD6636_REG_SOFTSYNC, AD6636_REG_SOFTSYNC_L, 0xCF);
+            this.Device.AD6636WriteReg(AD6636_REG_SOFTSYNC, AD6636_REG_SOFTSYNC_L, 0xCF);
 
             return true;
         }
 
-        public bool setFilter(FilterFile filter)
+        public bool SetAGC()
+        {
+            this.Device.AD6636WriteReg(AD6636_REG_IOAC, AD6636_REG_IOAC_L, 0x0B);
+
+            this.Device.AD6636WriteReg(AD6636_REG_AGCCR, AD6636_REG_AGCCR_L, 0x040C);
+            this.Device.AD6636WriteReg(AD6636_REG_AGCSGR, AD6636_REG_AGCSGR_L, 128);
+            this.Device.AD6636WriteReg(AD6636_REG_AGCUD, AD6636_REG_AGCUD_L, 16);
+            this.Device.AD6636WriteReg(AD6636_REG_AGCPL, AD6636_REG_AGCPL_L, 4);
+            this.Device.AD6636WriteReg(AD6636_REG_AGCAS, AD6636_REG_AGCAS_L, 2);
+            this.Device.AD6636WriteReg(AD6636_REG_AGCET, AD6636_REG_AGCET_L, 64);
+            this.Device.AD6636WriteReg(AD6636_REG_AGCLG + 0, AD6636_REG_AGCLG_L, 16);
+            this.Device.AD6636WriteReg(AD6636_REG_AGCLG + 1, AD6636_REG_AGCLG_L, 8);
+            this.Device.AD6636WriteReg(AD6636_REG_AGCLG + 2, AD6636_REG_AGCLG_L, 6);
+
+            this.Device.AD6636WriteReg(AD6636_REG_SOFTSYNC, AD6636_REG_SOFTSYNC_L, 0x00);
+            this.Device.AD6636WriteReg(AD6636_REG_SOFTSYNC, AD6636_REG_SOFTSYNC_L, 0xCF);
+            this.Device.AD6636WriteReg(AD6636_REG_SOFTSYNC, AD6636_REG_SOFTSYNC_L, 0xCF);
+
+            return true;
+        }
+
+        public bool SetFilter(FilterFile filter)
         {
 
-            this.device.ad6636WriteReg(AD6636_REG_IOAC, AD6636_REG_IOAC_L, 0x01);
-            this.device.ad6636WriteReg(124, 2, 13);
+            this.Device.AD6636WriteReg(AD6636_REG_IOAC, AD6636_REG_IOAC_L, 0x01);
+            this.Device.AD6636WriteReg(124, 2, 13);
 
-            this.device.ad6636WriteReg(104, 2, 0);
-            this.device.ad6636WriteReg(108, 2, 5);
-            this.device.ad6636WriteReg(110, 2, 5);
+            this.Device.AD6636WriteReg(104, 2, 0);
+            this.Device.AD6636WriteReg(108, 2, 5);
+            this.Device.AD6636WriteReg(110, 2, 5);
 
-            this.device.ad6636WriteReg(116, 2, 0);
+            this.Device.AD6636WriteReg(116, 2, 0);
 
             int filterFlags = 0;
             if (filter.HB2)
@@ -203,51 +213,51 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                 filterFlags |= 0x04;
             if (filter.FIR1)
                 filterFlags |= 0x08;
-            this.device.ad6636WriteReg(120, 1, filterFlags);
+            this.Device.AD6636WriteReg(120, 1, filterFlags);
 
-            this.device.ad6636WriteReg(121, 1, filter.CIC5Scale);
-            this.device.ad6636WriteReg(122, 1, filter.CIC5Decimation - 1);
+            this.Device.AD6636WriteReg(121, 1, filter.CIC5Scale);
+            this.Device.AD6636WriteReg(122, 1, filter.CIC5Decimation - 1);
 
             if (filter.CIC5)
-                this.device.ad6636WriteReg(123, 1, 0);
+                this.Device.AD6636WriteReg(123, 1, 0);
             else
-                this.device.ad6636WriteReg(123, 1, 1);
+                this.Device.AD6636WriteReg(123, 1, 1);
 
-            this.device.ad6636WriteReg(136, 1, filter.DRCFNTaps - 1);
-            this.device.ad6636WriteReg(137, 1, (long)(64 - filter.DRCFNTaps / 2));
-            this.device.ad6636WriteReg(138, 2, 0x700 | (filter.DRCFDecimation - 1) << 4);
+            this.Device.AD6636WriteReg(136, 1, filter.DRCFNTaps - 1);
+            this.Device.AD6636WriteReg(137, 1, (long)(64 - filter.DRCFNTaps / 2));
+            this.Device.AD6636WriteReg(138, 2, 0x700 | (filter.DRCFDecimation - 1) << 4);
 
-            this.device.ad6636WriteReg(148, 1, filter.CRCFNTaps - 1);
-            this.device.ad6636WriteReg(149, 1, (long)(64 - filter.CRCFNTaps / 2));
-            this.device.ad6636WriteReg(150, 2, 0x700 | (filter.CRCFDecimation - 1) << 4);
+            this.Device.AD6636WriteReg(148, 1, filter.CRCFNTaps - 1);
+            this.Device.AD6636WriteReg(149, 1, (long)(64 - filter.CRCFNTaps / 2));
+            this.Device.AD6636WriteReg(150, 2, 0x700 | (filter.CRCFDecimation - 1) << 4);
 
-            this.device.ad6636WriteReg(184, 2, 0);
+            this.Device.AD6636WriteReg(184, 2, 0);
 
             int DRCFEntries = (int)((filter.DRCFNTaps + 1) / 2);
-            this.device.ad6636WriteReg(140, 1, 0);
-            this.device.ad6636WriteReg(141, 1, DRCFEntries - 1);
+            this.Device.AD6636WriteReg(140, 1, 0);
+            this.Device.AD6636WriteReg(141, 1, DRCFEntries - 1);
             for (int pos = 0; pos < DRCFEntries; pos++)
-                this.device.ad6636WriteReg(144, 2, filter.DRCFTaps[DRCFEntries - 1 + pos]);
+                this.Device.AD6636WriteReg(144, 2, filter.DRCFTaps[DRCFEntries - 1 + pos]);
 
             int CRCFEntries = (int)((filter.CRCFNTaps + 1) / 2);
-            this.device.ad6636WriteReg(152, 1, 0);
-            this.device.ad6636WriteReg(153, 1, CRCFEntries - 1);
+            this.Device.AD6636WriteReg(152, 1, 0);
+            this.Device.AD6636WriteReg(153, 1, CRCFEntries - 1);
             for (int pos = 0; pos < CRCFEntries; pos++)
-                this.device.ad6636WriteReg(156, 3, filter.CRCFTaps[CRCFEntries - 1 + pos]);
+                this.Device.AD6636WriteReg(156, 3, filter.CRCFTaps[CRCFEntries - 1 + pos]);
 
-            this.device.ad6636WriteReg(184, 2, 0);
+            this.Device.AD6636WriteReg(184, 2, 0);
 
-            this.device.ad6636WriteReg(3, 1, 0);
-            this.device.ad6636WriteReg(3, 1, 1);
-            this.device.ad6636WriteReg(188, 3, 1);
-            this.device.ad6636WriteReg(5, 1, 0);
-            this.device.ad6636WriteReg(5, 1, 207);
-            this.device.ad6636WriteReg(5, 1, 207);
+            this.Device.AD6636WriteReg(3, 1, 0);
+            this.Device.AD6636WriteReg(3, 1, 1);
+            this.Device.AD6636WriteReg(188, 3, 1);
+            this.Device.AD6636WriteReg(5, 1, 0);
+            this.Device.AD6636WriteReg(5, 1, 207);
+            this.Device.AD6636WriteReg(5, 1, 207);
 
             return true;
         }
 
-        public bool muteOutput()
+        public bool MuteOutput()
         {
             /*
             // first read the value to make sure its in the cache
@@ -257,16 +267,16 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             this.device.ad6636WriteReg(AD6636_REG_OPC, AD6636_REG_OPC_L, 0, false );
             */
 
-            cachedRegister = this.device.ad6636ReadReg(AD6636_REG_PPOC, AD6636_REG_PPOC_L);
+            cachedRegister = this.Device.AD6636ReadReg(AD6636_REG_PPOC, AD6636_REG_PPOC_L);
 
             // then disable all outputs
-            this.device.ad6636WriteReg(AD6636_REG_PPOC, AD6636_REG_PPOC_L, 0, false);
+            this.Device.AD6636WriteReg(AD6636_REG_PPOC, AD6636_REG_PPOC_L, 0, false);
 
 
             return true;
         }
 
-        public bool unmuteOutput()
+        public bool UnmuteOutput()
         {
             /*
             // read the cached value from cache
@@ -280,7 +290,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             //long cached = this.device.ad6636ReadReg(AD6636_REG_PPOC, AD6636_REG_PPOC_L, true);
 
             // write back value from cache
-            this.device.ad6636WriteReg(AD6636_REG_PPOC, AD6636_REG_PPOC_L, cachedRegister);
+            this.Device.AD6636WriteReg(AD6636_REG_PPOC, AD6636_REG_PPOC_L, cachedRegister);
 
             //this.device.ad6636WriteReg(AD6636_REG_IOAC, AD6636_REG_IOAC_L, 0x0B );
 
@@ -288,15 +298,12 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             return true;
         }
 
-        public override double getFrequency()
+        public bool InvertedSpectrum
         {
-            return (double)this.device.ad6636ReadReg(AD6636_REG_NCOFREQ, AD6636_REG_NCOFREQ_L) / this.ncoMul;
+            get
+            {
+                return false;
+            }
         }
-
-        public override bool isSpectrumInverted()
-        {
-            return false;
-        }
-
     }
 }

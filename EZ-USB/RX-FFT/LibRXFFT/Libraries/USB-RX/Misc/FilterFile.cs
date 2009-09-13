@@ -50,6 +50,8 @@ namespace LibRXFFT.Libraries.USB_RX.Misc
 
         public bool LHB;
 
+        public bool Valid = false;
+
         private ArrayList fileContent;
 
         internal class NoSuchFieldException : Exception
@@ -92,6 +94,7 @@ namespace LibRXFFT.Libraries.USB_RX.Misc
             try
             {
                 ParseFile();
+                Valid = true;
             }
             catch (NoSuchFieldException e)
             {

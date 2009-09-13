@@ -14,7 +14,7 @@ namespace LibRXFFT.Libraries.USB_RX.Tuners
 
         private I2CInterface i2cDevice;
         private int busID;
-        private double currentFrequency;
+        private long currentFrequency;
 
         private readonly byte defaultBusID = 0x60;
         public readonly byte[] mt2131_config1 = { 0x50, 0x00, 0x50, 0x80, 0x00, 0x49,
@@ -45,13 +45,13 @@ namespace LibRXFFT.Libraries.USB_RX.Tuners
             {
                 return;
             }
-            double oldFreq = getFrequency();
+            long oldFreq = GetFrequency();
             init();
-            setFrequency(oldFreq);
+            SetFrequency(oldFreq);
 
         }
 
-        public override double getFrequency()
+        public long GetFrequency()
         {
             double f_lo1, f_lo2;
             double div1, num1, div2, num2;
@@ -69,7 +69,7 @@ namespace LibRXFFT.Libraries.USB_RX.Tuners
             num2 = Math.Round(div2) * 0x2000 + num2;
             f_lo2 = num2 * (MT2131_FREF / 128.0) / 64.0;
 
-            currentFrequency = (f_lo1 - f_lo2 - MT2131_IF2) * 1000;
+            currentFrequency = (long)((f_lo1 - f_lo2 - MT2131_IF2) * 1000);
             /*
                     System.out.printf("READ PLL [0..5]: %2x %2x %2x %2x %2x %2x\n", (int) b[0],
                             (int) b[1], (int) b[2], (int) b[3], (int) b[4], (int) b[5]);
@@ -79,13 +79,17 @@ namespace LibRXFFT.Libraries.USB_RX.Tuners
             return currentFrequency;
         }
 
-        public override bool setFrequency(double frequency)
+        public bool SetFrequency(long frequency)
         {
-            double freq;
+            long freq;
             byte if_band_center;
             double f_lo1, f_lo2;
             double div1, num1, div2, num2;
             byte[] b = new byte[6];
+
+            /* more than 1 GHz not possible */
+            if (frequency > 1000000000)
+                return false;
 
             freq = frequency / 1000; // Hz -> kHz
 
@@ -93,7 +97,7 @@ namespace LibRXFFT.Libraries.USB_RX.Tuners
             f_lo1 = (f_lo1 / 250) * 250;
             f_lo2 = f_lo1 - freq - MT2131_IF2;
 
-            currentFrequency = (f_lo1 - f_lo2 - MT2131_IF2) * 1000;
+            currentFrequency = (long)( (f_lo1 - f_lo2 - MT2131_IF2) * 1000);
 
             /* Frequency LO1 = 16MHz * (DIV1 + NUM1/8192 ) */
             num1 = f_lo1 * 64 / (MT2131_FREF / 128);
@@ -174,7 +178,7 @@ namespace LibRXFFT.Libraries.USB_RX.Tuners
              */
 
             /* Wait for lock */
-            int i = 0;
+            int i = 20;
             do
             {
                 readReg(MT2131_REG_LOCK, b);
@@ -184,10 +188,14 @@ namespace LibRXFFT.Libraries.USB_RX.Tuners
                 {
                     Thread.Sleep(5);
                 }
-                catch (ThreadAbortException e) { }
-                i++;
-            } while (i < 500);
+                catch (ThreadAbortException e) 
+                { 
+                }
+                i--;
+            } while (i > 0);
 
+            if (i == 0)
+                return false;
 
             return true;
         }
@@ -243,9 +251,12 @@ namespace LibRXFFT.Libraries.USB_RX.Tuners
             return true;
         }
 
-        public override bool isSpectrumInverted()
+        public bool InvertedSpectrum
         {
-            return true;
+            get
+            {
+                return true;
+            }
         }
     }
 }

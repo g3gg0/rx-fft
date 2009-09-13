@@ -9,14 +9,14 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 {
     public class Atmel : AD6636Interface
     {
-        private I2CInterface i2cDevice;
-        private int busID;
-        private static int defaultBusID = 0x20;
+        private I2CInterface I2CDevice;
+        private int BusID;
+        private static int DefaultBusID = 0x20;
 
-        private long filterClock;
-        private long filterWidth;
-        private long agcCorrectionOffset;
-        private long agcCorrectionGain;
+        private long FilterClock;
+        private long FilterWidth;
+        private long AGCCorrectionOffset;
+        private long AGCCorrectionGain;
 
         public static int AGC_OFF = 0; // 50
         public static int AGC_SLOW = 1; // 51
@@ -30,29 +30,29 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             internal long value;
         }
 
-        private ad6636RegCacheEntry[] ad6636RegCache = null;
+        private ad6636RegCacheEntry[] AD6636RegCache = null;
 
 
         public Atmel(I2CInterface device)
-            : this(device, defaultBusID)
+            : this(device, DefaultBusID)
         {
         }
 
         public Atmel(I2CInterface device, int busID)
         {
-            this.i2cDevice = device;
-            this.busID = busID;
+            this.I2CDevice = device;
+            this.BusID = busID;
 
         }
 
         // Select bandpass
-        public bool setBP(int index)
+        public bool SetBP(int index)
         {
             if (index < 0 || index > 3)
                 return false;
-            waitMs(10);
-            bool ret = i2cDevice.I2CWriteByte(busID, (byte)(0x19 + index));
-            waitMs(10);
+            WaitMs(10);
+            bool ret = I2CDevice.I2CWriteByte(BusID, (byte)(0x19 + index));
+            WaitMs(10);
 
             return ret;
         }
@@ -61,54 +61,54 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         // FIFO Functions
         public bool FIFOReset(bool state)
         {
-            waitMs(10);
+            WaitMs(10);
             bool ret;
             if (state)
-                ret = i2cDevice.I2CWriteByte(busID, 0x28);
+                ret = I2CDevice.I2CWriteByte(BusID, 0x28);
             else
-                ret = i2cDevice.I2CWriteByte(busID, 0x29);
-            waitMs(10);
+                ret = I2CDevice.I2CWriteByte(BusID, 0x29);
+            WaitMs(10);
 
             return ret;
         }
 
         public bool FIFOReset()
         {
-            return i2cDevice.I2CWriteByte(busID, 0x0d);
+            return I2CDevice.I2CWriteByte(BusID, 0x0d);
         }
 
         // Filter stuff
-        public int getFilterCount()
+        public int GetFilterCount()
         {
             byte[] buf = new byte[1];
 
-            waitMs(10);
-            if (!i2cDevice.I2CWriteByte(busID, 0x64))
+            WaitMs(10);
+            if (!I2CDevice.I2CWriteByte(BusID, 0x64))
                 return 0;
 
-            waitMs(10);
-            if (!i2cDevice.I2CReadByte(busID, buf))
+            WaitMs(10);
+            if (!I2CDevice.I2CReadByte(BusID, buf))
                 return 0;
 
             return (int)buf[0];
         }
 
-        public int getFilterLast()
+        public int GetLastFilter()
         {
             byte[] buf = new byte[1];
 
-            waitMs(10);
-            if (!i2cDevice.I2CWriteByte(busID, 0x10))
+            WaitMs(10);
+            if (!I2CDevice.I2CWriteByte(BusID, 0x10))
                 return 0;
 
-            waitMs(10);
-            if (!i2cDevice.I2CReadByte(busID, buf))
+            WaitMs(10);
+            if (!I2CDevice.I2CReadByte(BusID, buf))
                 return 0;
 
             return (int)buf[0];
         }
 
-        public bool setFilter(int index)
+        public bool SetFilter(int index)
         {
             if (index < 0 || index > 98)
                 return false;
@@ -118,22 +118,22 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             cmd[0] = (byte)(0x65 + index);
             cmd[1] = 1;
 
-            waitMs(10);
-            if (!i2cDevice.I2CWriteBytes(busID, cmd))
+            WaitMs(10);
+            if (!I2CDevice.I2CWriteBytes(BusID, cmd))
                 return false;
 
             byte[] buf = new byte[9];
-            waitMs(150);
-            if (!i2cDevice.I2CReadBytes(busID, buf))
+            WaitMs(150);
+            if (!I2CDevice.I2CReadBytes(BusID, buf))
                 return false;
 
-            this.filterClock = buf[5] + buf[6] * 0x100 + buf[7] * 0x10000 + buf[8] * 0x1000000;
-            this.filterWidth = buf[1] + buf[2] * 0x100 + buf[3] * 0x10000 + buf[4] * 0x1000000;
+            this.FilterClock = buf[5] + buf[6] * 0x100 + buf[7] * 0x10000 + buf[8] * 0x1000000;
+            this.FilterWidth = buf[1] + buf[2] * 0x100 + buf[3] * 0x10000 + buf[4] * 0x1000000;
 
             return true;
         }
 
-        private void waitMs(int ms)
+        private void WaitMs(int ms)
         {
             try
             {
@@ -144,7 +144,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             }
         }
 
-        public bool readFilter(int index)
+        public bool ReadFilter(int index)
         {
             if (index < 0 || index > 98)
                 return false;
@@ -154,90 +154,95 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             cmd[0] = (byte)(0x65 + index);
             cmd[1] = 0;
 
-            waitMs(10);
-            if (!i2cDevice.I2CWriteBytes(busID, cmd))
+            WaitMs(10);
+            if (!I2CDevice.I2CWriteBytes(BusID, cmd))
                 return false;
 
             byte[] buf = new byte[9];
-            waitMs(150);
-            if (!i2cDevice.I2CReadBytes(busID, buf))
+            WaitMs(150);
+            if (!I2CDevice.I2CReadBytes(BusID, buf))
                 return false;
 
-            this.filterClock = buf[5] + buf[6] * 0x100 + buf[7] * 0x10000 + buf[8] * 0x1000000;
-            this.filterWidth = buf[1] + buf[2] * 0x100 + buf[3] * 0x10000 + buf[4] * 0x1000000;
+            this.FilterClock = buf[5] + buf[6] * 0x100 + buf[7] * 0x10000 + buf[8] * 0x1000000;
+            this.FilterWidth = buf[1] + buf[2] * 0x100 + buf[3] * 0x10000 + buf[4] * 0x1000000;
 
             return true;
         }
 
-        public long getFilterClock()
+        public long GetFilterClock()
         {
-            return filterClock;
+            return FilterClock;
         }
 
-        public long getFilterWidth()
+        public long GetFilterWidth()
         {
-            return filterWidth;
+            return FilterWidth;
         }
 
-        public int getTCXOFreq()
+        public int TCXOFreq
+        {
+            get
+            {
+                byte[] buf = new byte[4];
+
+                WaitMs(10);
+                if (!I2CDevice.I2CWriteByte(BusID, 0xC8))
+                    return 0;
+
+                WaitMs(20);
+                if (!I2CDevice.I2CReadBytes(BusID, buf))
+                    return 0;
+
+                int value = buf[3];
+                value *= 256;
+                value += buf[2];
+                value *= 256;
+                value += buf[1];
+                value *= 256;
+                value += buf[0];
+
+                return value;
+            }
+
+            set
+            {
+                byte[] buf = new byte[5];
+
+                buf[0] = 0xC9;
+                buf[1] = (byte)(value % 256);
+                value /= 256;
+                buf[2] = (byte)(value % 256);
+                value /= 256;
+                buf[3] = (byte)(value % 256);
+                value /= 256;
+                buf[4] = (byte)(value % 256);
+
+                WaitMs(10);
+                if (!I2CDevice.I2CWriteBytes(BusID, buf))
+                    return;
+                WaitMs(20);
+
+                return;
+            }
+
+        }
+
+
+        public int GetRBW()
         {
             byte[] buf = new byte[4];
 
-            waitMs(10);
-            if (!i2cDevice.I2CWriteByte(busID, 0xC8))
+            WaitMs(10);
+            if (!I2CDevice.I2CWriteByte(BusID, 0xCC))
                 return 0;
-
-            waitMs(20);
-            if (!i2cDevice.I2CReadBytes(busID, buf))
-                return 0;
-
-            int value = buf[3];
-            value *= 256;
-            value += buf[2];
-            value *= 256;
-            value += buf[1];
-            value *= 256;
-            value += buf[0];
-
-            return value;
-        }
-
-        public bool setTCXOFreq(int value)
-        {
-            byte[] buf = new byte[5];
-
-            buf[0] = 0xC9;
-            buf[1] = (byte)(value % 256);
-            value /= 256;
-            buf[2] = (byte)(value % 256);
-            value /= 256;
-            buf[3] = (byte)(value % 256);
-            value /= 256;
-            buf[4] = (byte)(value % 256);
-
-            waitMs(10);
-            if (!i2cDevice.I2CWriteBytes(busID, buf))
-                return false;
-            waitMs(20);
-
-            return true;
-        }
-
-        public int getRBW()
-        {
-            byte[] buf = new byte[4];
-
-            waitMs(10);
-            if (!i2cDevice.I2CWriteByte(busID, 0xCC))
-                return 0;
-            waitMs(20);
-            if (!i2cDevice.I2CReadBytes(busID, buf))
+            WaitMs(20);
+            if (!I2CDevice.I2CReadBytes(BusID, buf))
                 return 0;
 
             return (buf[3] << 24) | (buf[2] << 16) | (buf[1] << 8) | buf[0];
         }
 
-        public bool setRBW(int value)
+        public bool SetRBW(int value)
         {
             byte[] buf = new byte[5];
 
@@ -247,82 +252,84 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             buf[3] = (byte)((value >> 16) & 0xFF);
             buf[4] = (byte)((value >> 24) & 0xFF);
 
-            waitMs(10);
-            if (!i2cDevice.I2CWriteBytes(busID, buf))
+            WaitMs(10);
+            if (!I2CDevice.I2CWriteBytes(BusID, buf))
                 return false;
-            waitMs(10);
+            WaitMs(10);
 
             return true;
         }
 
-        public bool setSerial(String serial)
+        public string SerialNumber
         {
-            char[] array = serial.ToCharArray();
-            byte[] buffer = new byte[2 + array.Length];
+            get
+            {
+                byte[] buf = new byte[34];
 
-            buffer[0] = 0x08;
-            buffer[1] = (byte)array.Length;
+                WaitMs(10);
+                if (I2CDevice.I2CWriteByte(BusID, 0x07) != true)
+                    return null;
+                WaitMs(30);
+                if (I2CDevice.I2CReadBytes(BusID, buf) != true)
+                    return null;
 
-            for (int i = 0; i < array.Length; i++)
-                buffer[2 + i] = (byte)array[i];
+                int length = buf[0];
+                if (length > 32)
+                    length = 0;
 
-            waitMs(10);
-            if (!i2cDevice.I2CWriteBytes(busID, buffer))
-                return false;
-            waitMs(30);
+                char[] array = new char[length];
+                for (int i = 0; i < length; i++)
+                    array[i] = (char)buf[1 + i];
 
-            return true;
+                return new string(array);
+            }
+
+            set
+            {
+                char[] array = value.ToCharArray();
+                byte[] buffer = new byte[2 + array.Length];
+
+                buffer[0] = 0x08;
+                buffer[1] = (byte)array.Length;
+
+                for (int i = 0; i < array.Length; i++)
+                    buffer[2 + i] = (byte)array[i];
+
+                WaitMs(10);
+                if (!I2CDevice.I2CWriteBytes(BusID, buffer))
+                    return;
+                WaitMs(30);
+            }
         }
 
-        public String getSerial()
+
+        public bool SetATT(bool state)
         {
-            byte[] buf = new byte[34];
-
-            waitMs(10);
-            if (i2cDevice.I2CWriteByte(busID, 0x07) != true)
-                return null;
-            waitMs(30);
-            if (i2cDevice.I2CReadBytes(busID, buf) != true)
-                return null;
-
-            int length = buf[0];
-            if (length > 32)
-                length = 0;
-
-            char[] array = new char[length];
-            for (int i = 0; i < length; i++)
-                array[i] = (char)buf[1 + i];
-
-            return new String(array);
-        }
-
-        public bool setATT(bool state)
-        {
-            waitMs(10);
+            WaitMs(10);
             bool ret;
             if (state)
-                ret = i2cDevice.I2CWriteByte(busID, 0x15);
+                ret = I2CDevice.I2CWriteByte(BusID, 0x15);
             else
-                ret = i2cDevice.I2CWriteByte(busID, 0x16);
-            waitMs(10);
+                ret = I2CDevice.I2CWriteByte(BusID, 0x16);
+            WaitMs(10);
 
             return ret;
         }
 
-        public bool setPreAmp(bool state)
+        public bool SetPreAmp(bool state)
         {
-            waitMs(10);
+            WaitMs(10);
             bool ret;
             if (state)
-                ret = i2cDevice.I2CWriteByte(busID, 0x17);
+                ret = I2CDevice.I2CWriteByte(BusID, 0x17);
             else
-                ret = i2cDevice.I2CWriteByte(busID, 0x18);
-            waitMs(10);
+                ret = I2CDevice.I2CWriteByte(BusID, 0x18);
+            WaitMs(10);
 
             return ret;
         }
 
-        public bool setMGC(int dB)
+        public bool SetMGC(int dB)
         {
             if (dB < 0 || dB > 96)
                 return false;
@@ -332,28 +339,28 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             cmd[0] = 0x32;
             cmd[1] = (byte)dB;
 
-            waitMs(10);
-            if (!i2cDevice.I2CWriteBytes(busID, cmd))
+            WaitMs(10);
+            if (!I2CDevice.I2CWriteBytes(BusID, cmd))
                 return false;
-            waitMs(10);
+            WaitMs(10);
 
             return true;
         }
 
-        public bool setAGC(int state)
+        public bool SetAGC(int state)
         {
             if (state < AGC_OFF || state > AGC_MANUAL)
                 return false;
 
-            waitMs(10);
-            if (!i2cDevice.I2CWriteByte(busID, (byte)(0x32 + state)))
+            WaitMs(10);
+            if (!I2CDevice.I2CWriteByte(BusID, (byte)(0x32 + state)))
                 return false;
-            waitMs(10);
+            WaitMs(10);
 
             return true;
         }
 
-        public bool setAGCCorrection(bool state, int offset, int gain)
+        public bool SetAGCCorrection(bool state, int offset, int gain)
         {
             byte[] cmd = new byte[4];
 
@@ -365,57 +372,57 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             cmd[2] = (byte)(gain & 0xFF);
             cmd[3] = (byte)((gain >> 8) & 0xFF);
 
-            waitMs(10);
-            if (!i2cDevice.I2CWriteBytes(busID, cmd))
+            WaitMs(10);
+            if (!I2CDevice.I2CWriteBytes(BusID, cmd))
                 return false;
-            waitMs(10);
+            WaitMs(10);
 
             return true;
         }
 
-        public bool readAGCCorrection()
+        public bool ReadAGCCorrection()
         {
-            waitMs(10);
-            if (!i2cDevice.I2CWriteByte(busID, 0x39))
+            WaitMs(10);
+            if (!I2CDevice.I2CWriteByte(BusID, 0x39))
                 return false;
 
             byte[] buffer = new byte[3];
-            waitMs(20);
-            if (!i2cDevice.I2CReadBytes(busID, buffer))
+            WaitMs(20);
+            if (!I2CDevice.I2CReadBytes(BusID, buffer))
                 return false;
 
-            this.agcCorrectionOffset = buffer[0];
-            this.agcCorrectionGain = (buffer[2] << 8) | buffer[1];
+            this.AGCCorrectionOffset = buffer[0];
+            this.AGCCorrectionGain = (buffer[2] << 8) | buffer[1];
 
             return true;
         }
 
 
-        public long getAGCCorrectionOffset()
+        public long GetAGCCorrectionOffset()
         {
-            return this.agcCorrectionOffset;
+            return this.AGCCorrectionOffset;
         }
 
-        public long getAGCCorrectionGain()
+        public long GetAGCCorrectionGain()
         {
-            return this.agcCorrectionGain;
+            return this.AGCCorrectionGain;
         }
 
 
         // AD6636 Functions
-        public bool ad6636Reset()
+        public bool AD6636Reset()
         {
-            waitMs(10);
-            return i2cDevice.I2CWriteByte(busID, 0x05);
+            WaitMs(10);
+            return I2CDevice.I2CWriteByte(BusID, 0x05);
         }
 
 
-        public long ad6636ReadReg(int address, int bytes)
+        public long AD6636ReadReg(int address, int bytes)
         {
-            return ad6636ReadReg(address, bytes, false);
+            return AD6636ReadReg(address, bytes, false);
         }
 
-        public long ad6636ReadReg(int address, int bytes, bool cache)
+        public long AD6636ReadReg(int address, int bytes, bool cache)
         {
 
             if (bytes < 1 || bytes > 4)
@@ -424,10 +431,10 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             // read from cache only
             if (cache)
             {
-                if (ad6636RegCache != null && address < ad6636RegCache.Length)
+                if (AD6636RegCache != null && address < AD6636RegCache.Length)
                 {
-                    if (ad6636RegCache[address].bytes == bytes)
-                        return ad6636RegCache[address].value;
+                    if (AD6636RegCache[address].bytes == bytes)
+                        return AD6636RegCache[address].value;
                 }
             }
 
@@ -437,13 +444,13 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             cmd[1] = (byte)address;
             cmd[2] = (byte)(bytes | 0x80);
 
-            waitMs(10);
-            if (!i2cDevice.I2CWriteBytes(busID, cmd))
+            WaitMs(10);
+            if (!I2CDevice.I2CWriteBytes(BusID, cmd))
                 return 0;
 
             byte[] buffer = new byte[bytes];
-            waitMs(10);
-            if (!i2cDevice.I2CReadBytes(busID, buffer))
+            WaitMs(10);
+            if (!I2CDevice.I2CReadBytes(BusID, buffer))
                 return 0;
 
             long value = 0;
@@ -454,20 +461,20 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             }
 
             // cache the read value
-            if (ad6636RegCache != null && address < ad6636RegCache.Length)
+            if (AD6636RegCache != null && address < AD6636RegCache.Length)
             {
-                if (ad6636RegCache[address].bytes == bytes)
-                    ad6636RegCache[address].value = value;
+                if (AD6636RegCache[address].bytes == bytes)
+                    AD6636RegCache[address].value = value;
             }
             return value;
         }
 
-        public bool ad6636WriteReg(int address, int bytes, long value)
+        public bool AD6636WriteReg(int address, int bytes, long value)
         {
-            return ad6636WriteReg(address, bytes, value, true);
+            return AD6636WriteReg(address, bytes, value, true);
         }
 
-        public bool ad6636WriteReg(int address, int bytes, long value, bool cache)
+        public bool AD6636WriteReg(int address, int bytes, long value, bool cache)
         {
 
             if (bytes < 1 || bytes > 4)
@@ -475,17 +482,17 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
             if (cache)
             {
-                if (ad6636RegCache == null)
+                if (AD6636RegCache == null)
                 {
-                    ad6636RegCache = new ad6636RegCacheEntry[0x100];
-                    for (int pos = 0; pos < ad6636RegCache.Length; pos++)
-                        ad6636RegCache[pos] = new ad6636RegCacheEntry();
+                    AD6636RegCache = new ad6636RegCacheEntry[0x100];
+                    for (int pos = 0; pos < AD6636RegCache.Length; pos++)
+                        AD6636RegCache[pos] = new ad6636RegCacheEntry();
                 }
 
-                if (address < ad6636RegCache.Length)
+                if (address < AD6636RegCache.Length)
                 {
-                    ad6636RegCache[address].bytes = bytes;
-                    ad6636RegCache[address].value = value;
+                    AD6636RegCache[address].bytes = bytes;
+                    AD6636RegCache[address].value = value;
                 }
             }
 
@@ -503,7 +510,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             }
 
             //waitMs(10);
-            if (!i2cDevice.I2CWriteBytes(busID, cmd))
+            if (!I2CDevice.I2CWriteBytes(BusID, cmd))
                 return false;
             //waitMs(10);
 

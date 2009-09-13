@@ -54,6 +54,7 @@ namespace LibRXFFT.Components.DirectX
         public double Averaging = 1;
 
         public double SamplingRate = 100;
+        public double CenterFrequency = 0;
 
         public double UpdateRate
         {
@@ -514,16 +515,16 @@ namespace LibRXFFT.Components.DirectX
         {
             /* offset (-0.5 ... 0.5) */
             double offset = ((DisplayXOffset + xPos) / (XZoomFactor * DirectXWidth)) - 0.5f - XAxisSampleOffset;
-            double frequency = offset * SamplingRate;
+            double frequency = CenterFrequency + offset * SamplingRate;
 
             return FrequencyFormatter.FreqToString(frequency);
         }
 
-        public double FrequencyFromCursorPos()
+        public long FrequencyFromCursorPos()
         {
             /* offset (-0.5 ... 0.5) */
             double offset = ((DisplayXOffset + LastMousePos.X) / (XZoomFactor * DirectXWidth)) - 0.5f - XAxisSampleOffset;
-            double frequency = offset * SamplingRate;
+            long frequency = (long)(CenterFrequency + offset * SamplingRate);
 
             return frequency;
         }
@@ -532,7 +533,7 @@ namespace LibRXFFT.Components.DirectX
         {
             /* offset (-0.5 ... 0.5) */
             double offset = pos / DirectXWidth - 0.5f;
-            double frequency = offset * SamplingRate;
+            double frequency = CenterFrequency + offset * SamplingRate;
 
             return FrequencyFormatter.FreqToString(frequency);
         }

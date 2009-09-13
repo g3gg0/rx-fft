@@ -134,43 +134,55 @@ namespace LibRXFFT.Components.DirectX
                     {
                         SaveImage = false;
 
-
-                        /* build an image from the texture */
-                        SaveImageLock.WaitOne();
-                        DataStream saveImageStream = Texture.ToStream(SaveImageThreadContext, ImageFileFormat.Png);
-                        SaveImageLock.ReleaseMutex();
-
-                        Image curImage = Image.FromStream(saveImageStream);
-
-
-                        /* and create a new image with the new size */
-                        Image newImage;
-                        if (SavedImage != null && SavedImage.Width == curImage.Width)
-                            newImage = new Bitmap(curImage.Width, SavedImage.Height + curImage.Height / 2);
-                        else
-                            newImage = new Bitmap(curImage.Width, curImage.Height / 2);
-
-                        /* draw last image and the current texture into the new image */
-                        Graphics g = Graphics.FromImage(newImage);
-                        g.DrawImage(curImage, 0, -(curImage.Height / 2));
-                        if (SavedImage != null)
-                            g.DrawImage(SavedImage, 0, curImage.Height / 2);
-
-                        /* and save it to disk */
                         try
                         {
-                            newImage.Save(SavingName, System.Drawing.Imaging.ImageFormat.Png);
+                            /* build an image from the texture */
+                            SaveImageLock.WaitOne();
+                            DataStream saveImageStream = Texture.ToStream(SaveImageThreadContext, ImageFileFormat.Png);
+                            SaveImageLock.ReleaseMutex();
+
+                            Image curImage = Image.FromStream(saveImageStream);
+
+
+                            /* and create a new image with the new size */
+                            Image newImage;
+                            if (SavedImage != null && SavedImage.Width == curImage.Width)
+                                newImage = new Bitmap(curImage.Width, SavedImage.Height + curImage.Height / 2);
+                            else
+                                newImage = new Bitmap(curImage.Width, curImage.Height / 2);
+
+                            /* draw last image and the current texture into the new image */
+                            Graphics g = Graphics.FromImage(newImage);
+                            g.DrawImage(curImage, 0, -(curImage.Height / 2));
+                            if (SavedImage != null)
+                                g.DrawImage(SavedImage, 0, curImage.Height / 2);
+
+                            /* and save it to disk */
+                            try
+                            {
+                                newImage.Save(SavingName, System.Drawing.Imaging.ImageFormat.Png);
+                            }
+                            catch (Exception e)
+                            {
+                            }
+
+                            /* dispose old image */
+                            if (SavedImage != null)
+                                SavedImage.Dispose();
+
+                            /* and keep for the next time */
+                            SavedImage = newImage;
                         }
                         catch (Exception e)
                         {
+                            /* clear current image and save to a new file
+                             * TODO: correct filename ;)
+                             */
+                            SavingName = "_" + SavingName;
+                            if (SavedImage != null)
+                                SavedImage.Dispose();
+                            SavedImage = null;
                         }
-
-                        /* dispose old image */
-                        if (SavedImage != null)
-                            SavedImage.Dispose();
-
-                        /* and keep for the next time */
-                        SavedImage = newImage;
                     }
                 }
             }

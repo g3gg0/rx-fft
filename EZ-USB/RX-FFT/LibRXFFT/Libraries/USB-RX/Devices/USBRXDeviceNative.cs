@@ -2,7 +2,7 @@
 
 namespace LibRXFFT.Libraries.USB_RX.Devices
 {
-    class USBRXDeviceNative
+    public class USBRXDeviceNative
     {
         public static int MODE_IDLE = 0;
         public static int MODE_GPIF = 1;
@@ -36,6 +36,12 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         [DllImport("usb2.dll", CallingConvention = CallingConvention.StdCall)]
         public static extern bool UsbSetControlledTransfer (int DevNum, uint bytes, uint blocksize );
 	
+        [DllImport("usb2.dll", CallingConvention = CallingConvention.StdCall)]
+        public static extern int GetNumDevices ();
+        [DllImport("usb2.dll", CallingConvention = CallingConvention.StdCall)]
+        public static extern int GetDeviceDesc(int DevNum, byte[] PTxtbuf, int TxtbufLen);
+
+ 
         [DllImport("usb2.dll", CallingConvention = CallingConvention.StdCall)]
         public static extern bool UsbSetTimeout(int DevNum, ushort timeout);
         [DllImport("usb2.dll", CallingConvention = CallingConvention.StdCall)]

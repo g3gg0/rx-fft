@@ -5,21 +5,10 @@ using System.Text;
 
 namespace LibRXFFT.Libraries.USB_RX.Tuners
 {
-    public class Tuner
+    public interface Tuner
     {
-        public virtual bool setFrequency(double frequency)
-        {
-            throw new NotImplementedException();
-        }
-
-        public virtual double getFrequency()
-        {
-            throw new NotImplementedException();
-        }
-
-        public virtual bool isSpectrumInverted()
-        {
-            throw new NotImplementedException();
-        }
+        bool SetFrequency(long frequency);
+        long GetFrequency();
+        bool InvertedSpectrum { get; }
     }
 }

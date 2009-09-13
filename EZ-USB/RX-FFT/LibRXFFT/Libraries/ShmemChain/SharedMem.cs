@@ -20,6 +20,7 @@ namespace LibRXFFT.Libraries.ShmemChain
         protected eReadMode readMode = eReadMode.Blocking;
         protected int readTimeout = 100;
 
+
         public SharedMem()
         {
             this.srcChan = -1;

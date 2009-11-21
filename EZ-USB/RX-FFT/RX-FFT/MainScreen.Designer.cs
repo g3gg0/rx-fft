@@ -25,9 +25,16 @@ namespace RX_FFT
 
             if (ReadThread != null && ReadThread.IsAlive)
             {
-                ThreadActive = false;
+                ReadThreadRun = false;
                 ReadThread.Abort();
                 ReadThread.Join();
+            }
+
+            if (AudioThread != null && AudioThread.IsAlive)
+            {
+                AudioThreadRun = false;
+                AudioThread.Abort();
+                AudioThread.Join();
             }
 
             if (Device != null)

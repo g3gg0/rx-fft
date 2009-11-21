@@ -12,6 +12,7 @@ using LibRXFFT.Components.DirectX;
 using System.Threading;
 using LibRXFFT.Libraries.USB_RX.Devices;
 using LibRXFFT.Libraries.USB_RX.Misc;
+using LibRXFFT.Libraries.Misc;
 
 
 namespace RX_FFT
@@ -47,16 +48,19 @@ namespace RX_FFT
         }
 
         bool processPaused;
-        bool ThreadActive;
+        bool ReadThreadRun;
+        bool AudioThreadRun;
         Thread ReadThread;
+        Thread AudioThread;
         DeviceControl Device;
         double LastSamplingRate = 48000;
 
+        ShmemSampleSource AudioShmem;
         double[] DecimatedInputI = new double[0];
         double[] DecimatedInputQ = new double[0];
         double[] AudioSampleBuffer = new double[0];
         double[] AudioSampleBufferDecim = new double[0];
-        Object SpinLock = new Object();
+        Object FFTSizeSpinLock = new Object();
 
         Demodulation DemodOptions = new Demodulation();
         DemodulationDialog DemodDialog;
@@ -89,17 +93,17 @@ namespace RX_FFT
             get { return FFTDisplay.FFTSize; }
             set
             {
-                lock (SpinLock)
+                lock (FFTSizeSpinLock)
                 {
                     if (Device != null)
-                        Device.SamplesPerBlock = value * (int)Math.Max(1,FFTDisplay.SamplesToAverage);
+                        Device.SamplesPerBlock = value * (int)Math.Max(1, FFTDisplay.SamplesToAverage);
                     FFTDisplay.FFTSize = value;
                 }
             }
         }
 
         delegate void setRateDelegate(double rate);
-        void setRate(double rate)
+        void setRateTextbox(double rate)
         {
             txtSamplingRate.Text = rate.ToString();
         }
@@ -113,7 +117,7 @@ namespace RX_FFT
 
                 DemodOptions.DemodulationDownmixer.TimeStep = -relative * (2 * Math.PI);
             }
-            else if (evt == eUserEvent.MouseClickRight)
+            else if (evt == eUserEvent.MouseDoubleClickLeft)
             {
                 if (Device != null)
                 {
@@ -122,11 +126,30 @@ namespace RX_FFT
                     FFTDisplay.CenterFrequency = freq;
                 }
             }
+            else if (evt == eUserEvent.MouseClickRight)
+            {
+                long freq = FFTDisplay.Frequency;
+
+                ContextMenu contextMenu = new ContextMenu();
+                MenuItem menuItem1 = new MenuItem();
+                MenuItem menuItem2 = new MenuItem();
+                MenuItem menuItem3 = new MenuItem();
+
+                contextMenu.MenuItems.AddRange(new MenuItem[] { menuItem1, menuItem2, menuItem3 });
+                menuItem1.Index = 0;
+                menuItem1.Text = "Frequency: " + FrequencyFormatter.FreqToStringAccurate(freq);
+                menuItem2.Index = 1;
+                menuItem2.Text = "Send to Locator";
+                menuItem3.Index = 2;
+                menuItem3.Text = "Add Notes...";
+
+                contextMenu.Show(this, this.PointToClient(MousePosition));
+            }
         }
 
-        void FFTReadFunc()
+        void AudioReadFunc()
         {
-            double lastRate = 0;
+            double rate = 0;
             int lastAudioDecim = 1;
             int lastInputDecim = 1;
             bool lastCursorWinEnabled = false;
@@ -138,167 +161,139 @@ namespace RX_FFT
 
             PerformanceCounters.CounterRuntime.Start();
 
-            while (ThreadActive)
+            while (AudioThreadRun)
             {
                 //dev.Read(inBuffer);
-                lock (SpinLock)
+                PerformanceCounters.CounterRuntime.Update();
+
+                PerformanceCounters.CounterReading.Start();
+                lock (AudioShmem)
                 {
-                    PerformanceCounters.CounterRuntime.Update();
+                    AudioShmem.Read();
+                    PerformanceCounters.CounterReading.Stop();
 
-                    PerformanceCounters.CounterReading.Start();
-                    double rate = Device.SampleSource.InputSamplingRate;
-                    lock (Device.SampleSource)
+                    PerformanceCounters.CounterProcessing.Start();
+
+                    inputI = AudioShmem.SourceSamplesI;
+                    inputQ = AudioShmem.SourceSamplesQ;
+
+                    lock (DemodOptions)
                     {
-                        Device.SampleSource.Read();
-                        PerformanceCounters.CounterReading.Stop();
+                        bool blockSizeChanged = AudioSampleBuffer.Length != (inputI.Length / lastInputDecim);
+                        bool rateChanged = Math.Abs(rate - LastSamplingRate) > 0;
+                        lastCursorWinEnabled = DemodOptions.CursorPositionWindowEnabled;
 
-                        PerformanceCounters.CounterProcessing.Start();
+                        if (blockSizeChanged || DemodOptions.ReinitSound || rateChanged)
+                        {
+                            rate = LastSamplingRate;
 
-                        inputI = Device.SampleSource.SourceSamplesI;
-                        inputQ = Device.SampleSource.SourceSamplesQ;
+                            DemodOptions.ReinitSound = false;
+                            DemodOptions.SoundDevice.SetRate((int)DemodOptions.AudioRate);
 
+                            lastAudioDecim = DemodOptions.AudioDecimation;
+                            lastInputDecim = DemodOptions.InputSignalDecimation;
+
+                            AudioSampleBuffer = new double[inputI.Length / lastInputDecim];
+                            AudioSampleBufferDecim = new double[inputI.Length / lastAudioDecim / lastInputDecim];
+
+                            DecimatedInputI = new double[inputI.Length / lastInputDecim];
+                            DecimatedInputQ = new double[inputQ.Length / lastInputDecim];
+                        }
+                    }
+
+                    if (!processPaused)
+                    {
                         lock (DemodOptions)
                         {
-                            bool blockSizeChanged = AudioSampleBuffer.Length != (inputI.Length / lastInputDecim);
-                            bool rateChanged = Math.Abs(lastRate - rate) > 0;
-                            lastCursorWinEnabled = DemodOptions.CursorPositionWindowEnabled;
-
-                            if (blockSizeChanged || DemodOptions.ReinitSound || rateChanged)
+                            if (DemodOptions.DemodulationEnabled)
                             {
-                                DemodOptions.ReinitSound = false;
-
-                                FFTDisplay.SamplingRate = rate;
-                                DemodOptions.InputRate = rate;
-                                DemodOptions.AudioRate = rate / DemodOptions.AudioDecimation / DemodOptions.InputSignalDecimation;
-                                DemodOptions.SoundDevice.SetRate((int)DemodOptions.AudioRate);
-
-                                if (DemodDialog != null && DemodDialog.Visible)
-                                    DemodDialog.UpdateInformation();
-
-                                LastSamplingRate = rate;
-
-                                try
+                                if (lastCursorWinEnabled)
                                 {
-                                    this.BeginInvoke(new setRateDelegate(setRate), rate);
-                                }
-                                catch (Exception)
-                                {
-                                }
+                                    /* frequency translation */
+                                    PerformanceCounters.CounterXlat.Start();
+                                    DemodOptions.DemodulationDownmixer.ProcessData(inputI, inputQ, inputI, inputQ);
+                                    PerformanceCounters.CounterXlat.Stop();
 
-                                lastRate = rate;
-                                lastAudioDecim = DemodOptions.AudioDecimation;
-                                lastInputDecim = DemodOptions.InputSignalDecimation;
-
-                                AudioSampleBuffer = new double[inputI.Length / lastInputDecim];
-                                AudioSampleBufferDecim = new double[inputI.Length / lastAudioDecim / lastInputDecim];
-
-                                DecimatedInputI = new double[inputI.Length / lastInputDecim];
-                                DecimatedInputQ = new double[inputQ.Length / lastInputDecim];
-                            }
-                        }
-
-                        if (!processPaused)
-                        {
-                            /* first display on screen */
-                            if (!DemodOptions.DisplayDemodulationSignal)
-                            {
-                                PerformanceCounters.CounterVisualization.Start();
-                                FFTDisplay.ProcessData(inputI, inputQ);
-                                PerformanceCounters.CounterVisualization.Stop();
-                            }
-
-                            lock (DemodOptions)
-                            {
-                                if (DemodOptions.DemodulationEnabled)
-                                {
-                                    if (lastCursorWinEnabled)
-                                    {
-                                        /* frequency translation */
-                                        PerformanceCounters.CounterXlat.Start();
-                                        DemodOptions.DemodulationDownmixer.ProcessData(inputI, inputQ, inputI, inputQ);
-                                        PerformanceCounters.CounterXlat.Stop();
-
-                                        /* lowpass */
-                                        PerformanceCounters.CounterXlatLowpass.Start();
+                                    /* lowpass */
+                                    PerformanceCounters.CounterXlatLowpass.Start();
 #if false
                                     // 51% CPU time with 79% CPU load
                                     DemodOptions.CursorWindowFilterI.Process(inputI, inputI);
                                     DemodOptions.CursorWindowFilterQ.Process(inputQ, inputQ);
 #else
-                                        // 43% (with 53% CPU load)
-                                        DemodOptions.CursorWindowFilterThreadI.Process(inputI, inputI);
-                                        DemodOptions.CursorWindowFilterThreadQ.Process(inputQ, inputQ);
-                                        WaitHandle.WaitAll(DemodOptions.CursorWindowFilterEvents);
+                                    // 43% (with 53% CPU load)
+                                    DemodOptions.CursorWindowFilterThreadI.Process(inputI, inputI);
+                                    DemodOptions.CursorWindowFilterThreadQ.Process(inputQ, inputQ);
+                                    WaitHandle.WaitAll(DemodOptions.CursorWindowFilterEvents);
 #endif
-                                        PerformanceCounters.CounterXlatLowpass.Stop();
+                                    PerformanceCounters.CounterXlatLowpass.Stop();
 
-                                        /* decimate input signal */
-                                        PerformanceCounters.CounterXlatDecimate.Start();
-                                        if (lastInputDecim > 1)
-                                        {
-                                            for (int pos = 0; pos < DecimatedInputI.Length; pos++)
-                                            {
-                                                DecimatedInputI[pos] = inputI[pos * lastInputDecim];
-                                                DecimatedInputQ[pos] = inputQ[pos * lastInputDecim];
-                                            }
-
-                                            inputI = DecimatedInputI;
-                                            inputQ = DecimatedInputQ;
-                                        }
-                                        PerformanceCounters.CounterXlatDecimate.Stop();
-                                    }
-
-                                    /* demodulate signal */
-                                    PerformanceCounters.CounterDemod.Start();
-                                    DemodOptions.Demod.ProcessData(inputI, inputQ, AudioSampleBuffer);
-                                    PerformanceCounters.CounterDemod.Stop();
-
-                                    if (DemodOptions.AudioLowPassEnabled)
+                                    /* decimate input signal */
+                                    PerformanceCounters.CounterXlatDecimate.Start();
+                                    if (lastInputDecim > 1)
                                     {
-                                        PerformanceCounters.CounterDemodLowpass.Start();
-                                        DemodOptions.AudioLowPass.Process(AudioSampleBuffer, AudioSampleBuffer);
-                                        PerformanceCounters.CounterDemodLowpass.Stop();
-                                    }
-
-                                    /* audio decimation */
-                                    if (lastAudioDecim > 1)
-                                    {
-                                        PerformanceCounters.CounterDemodDecimate.Start();
-                                        double ampl = 1;
-                                        if (DemodOptions.AudioAmplificationEnabled)
-                                            ampl = DemodOptions.AudioAmplification;
-
-                                        for (int pos = 0; pos < AudioSampleBufferDecim.Length; pos++)
+                                        for (int pos = 0; pos < DecimatedInputI.Length; pos++)
                                         {
-                                            AudioSampleBufferDecim[pos] = ampl * AudioSampleBuffer[pos * lastAudioDecim];
+                                            DecimatedInputI[pos] = inputI[pos * lastInputDecim];
+                                            DecimatedInputQ[pos] = inputQ[pos * lastInputDecim];
                                         }
-                                        PerformanceCounters.CounterDemodDecimate.Stop();
 
-                                        DemodOptions.SoundDevice.Write(AudioSampleBufferDecim);
+                                        inputI = DecimatedInputI;
+                                        inputQ = DecimatedInputQ;
                                     }
-                                    else
+                                    PerformanceCounters.CounterXlatDecimate.Stop();
+                                }
+
+                                /* demodulate signal */
+                                PerformanceCounters.CounterDemod.Start();
+                                DemodOptions.Demod.ProcessData(inputI, inputQ, AudioSampleBuffer);
+                                PerformanceCounters.CounterDemod.Stop();
+
+                                if (DemodOptions.AudioLowPassEnabled)
+                                {
+                                    PerformanceCounters.CounterDemodLowpass.Start();
+                                    DemodOptions.AudioLowPass.Process(AudioSampleBuffer, AudioSampleBuffer);
+                                    PerformanceCounters.CounterDemodLowpass.Stop();
+                                }
+
+                                /* audio decimation */
+                                if (lastAudioDecim > 1)
+                                {
+                                    PerformanceCounters.CounterDemodDecimate.Start();
+                                    double ampl = 1;
+                                    if (DemodOptions.AudioAmplificationEnabled)
+                                        ampl = DemodOptions.AudioAmplification;
+
+                                    for (int pos = 0; pos < AudioSampleBufferDecim.Length; pos++)
                                     {
-                                        if (DemodOptions.AudioAmplificationEnabled)
-                                        {
-                                            for (int pos = 0; pos < AudioSampleBuffer.Length; pos++)
-                                            {
-                                                AudioSampleBuffer[pos] *= DemodOptions.AudioAmplification;
-                                            }
-                                        }
-                                        DemodOptions.SoundDevice.Write(AudioSampleBuffer);
+                                        AudioSampleBufferDecim[pos] = ampl * AudioSampleBuffer[pos * lastAudioDecim];
                                     }
+                                    PerformanceCounters.CounterDemodDecimate.Stop();
+
+                                    DemodOptions.SoundDevice.Write(AudioSampleBufferDecim);
+                                }
+                                else
+                                {
+                                    if (DemodOptions.AudioAmplificationEnabled)
+                                    {
+                                        for (int pos = 0; pos < AudioSampleBuffer.Length; pos++)
+                                        {
+                                            AudioSampleBuffer[pos] *= DemodOptions.AudioAmplification;
+                                        }
+                                    }
+                                    DemodOptions.SoundDevice.Write(AudioSampleBuffer);
                                 }
                             }
-
-                            if (DemodOptions.DisplayDemodulationSignal)
-                            {
-                                PerformanceCounters.CounterVisualization.Start();
-                                FFTDisplay.ProcessData(inputI, inputQ);
-                                PerformanceCounters.CounterVisualization.Stop();
-                            }
                         }
-                        PerformanceCounters.CounterProcessing.Stop();
+
+                        if (DemodOptions.DisplayDemodulationSignal)
+                        {
+                            PerformanceCounters.CounterVisualization.Start();
+                            FFTDisplay.ProcessData(inputI, inputQ);
+                            PerformanceCounters.CounterVisualization.Stop();
+                        }
                     }
+                    PerformanceCounters.CounterProcessing.Stop();
                 }
             }
 
@@ -309,17 +304,87 @@ namespace RX_FFT
 
         }
 
+        void FFTReadFunc()
+        {
+            double lastRate = 0;
+
+            double[] inputI;
+            double[] inputQ;
+
+            while (ReadThreadRun)
+            {
+                lock (FFTSizeSpinLock)
+                {
+                    double rate = Device.SampleSource.InputSamplingRate;
+                    bool rateChanged = Math.Abs(lastRate - rate) > 0;
+
+                    lock (Device.SampleSource)
+                    {
+                        if (!processPaused)
+                        {
+                            Device.SampleSource.Read();
+
+                            inputI = Device.SampleSource.SourceSamplesI;
+                            inputQ = Device.SampleSource.SourceSamplesQ;
+
+                            if (rateChanged)
+                            {
+                                lock (DemodOptions)
+                                {
+                                    LastSamplingRate = rate;
+
+                                    FFTDisplay.SamplingRate = rate;
+
+                                    DemodOptions.InputRate = rate;
+                                    DemodOptions.AudioRate = rate / DemodOptions.AudioDecimation / DemodOptions.InputSignalDecimation;
+                                    DemodOptions.ReinitSound = true;
+
+                                    if (DemodDialog != null && DemodDialog.Visible)
+                                        DemodDialog.UpdateInformation();
+                                }
+
+                                try
+                                {
+                                    this.BeginInvoke(new setRateDelegate(setRateTextbox), rate);
+                                }
+                                catch (Exception)
+                                {
+                                }
+
+                                lastRate = rate;
+                            }
+
+                            if (!DemodOptions.DisplayDemodulationSignal)
+                            {
+                                PerformanceCounters.CounterVisualization.Start();
+                                FFTDisplay.ProcessData(inputI, inputQ);
+                                PerformanceCounters.CounterVisualization.Stop();
+                            }
+                        }
+                        else
+                        {
+                            Thread.Sleep(100);
+                        }
+                    }
+                }
+            }
+        }
+
         private void btnOpen_Click(object sender, EventArgs e)
         {
             if (Device != null)
             {
-                if (ReadThread != null)
-                {
-                    ThreadActive = false;
-                    Thread.Sleep(10);
+                ReadThreadRun = false;
+                AudioThreadRun = false;
+                Thread.Sleep(10);
 
+                if (ReadThread != null)
                     ReadThread.Abort();
-                }
+                if (AudioThread != null)
+                    AudioThread.Abort();
+
+                AudioShmem.Close();
+                AudioShmem = null;
 
                 Device.Close();
                 Device = null;
@@ -334,33 +399,42 @@ namespace RX_FFT
             }
             else
             {
-                Device = new USBRXDeviceControl();
-                if (Device.Connected)
+                USBRXDeviceControl dev = new USBRXDeviceControl();
+                if (dev.Connected)
                 {
-                    Device.FrequencyChanged += new EventHandler(Device_FrequencyChanged);
-                    Device.SampleSource.SamplingRateChangedEvent += new EventHandler(SampleSource_SamplingRateChangedEvent);
+                    Device = dev;
 
-                    Device.SetFrequency(103000000);
-                    Device.StartRead();
+                    AudioShmem = new ShmemSampleSource("RX-FFT Audio Decoder", dev.ShmemChannel, 1, 0);
+                    AudioShmem.InvertedSpectrum = dev.SampleSource.InvertedSpectrum;
 
+                    dev.FrequencyChanged += new EventHandler(Device_FrequencyChanged);
+                    dev.SampleSource.SamplingRateChangedEvent += new EventHandler(SampleSource_SamplingRateChangedEvent);
+
+                    dev.SetFrequency(103000000);
+                    //dev.StartStreamRead();
+                    //dev.StartRead();
 
                     lock (DemodOptions)
                     {
                         DemodOptions.SoundDevice = new DXSoundDevice(Handle);
                     }
-
-                    ThreadActive = true;
+                    ReadThreadRun = true;
                     ReadThread = new Thread(new ThreadStart(FFTReadFunc));
                     ReadThread.Name = "MainScreen Data Read Thread";
-
                     ReadThread.Start();
+
+                    AudioThreadRun = true;
+                    AudioThread = new Thread(new ThreadStart(AudioReadFunc));
+                    AudioThread.Name = "Audio Decoder Thread";
+                    AudioThread.Start();
 
                     btnOpen.Text = "Close";
                 }
                 else
                 {
-                    Device.Close();
-                    Device = null;
+                    dev.Close();
+                    dev = null;
+                    MessageBox.Show("Could not find any compatible USB device.");
                 }
             }
         }

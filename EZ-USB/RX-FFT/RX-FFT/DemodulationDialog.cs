@@ -11,6 +11,7 @@ using LibRXFFT.Libraries.Filters;
 using LibRXFFT.Libraries.Misc;
 using LibRXFFT.Libraries.SignalProcessing;
 using LibRXFFT.Libraries;
+using LibRXFFT.Libraries.FFTW;
 
 namespace RX_FFT
 {
@@ -149,6 +150,8 @@ namespace RX_FFT
 
         private void UpdateInformationInternal()
         {
+            Demod.AudioRate = Demod.InputRate / Demod.AudioDecimation / Demod.InputSignalDecimation;
+
             if (Demod.SoundDevice == null)
                 txtStatus.Text = "No Device opened";
             else 
@@ -508,6 +511,8 @@ namespace RX_FFT
             Demodulator.UseNative = chkNative.Checked;
             Downmixer.UseNative = chkNative.Checked;
             ByteUtil.UseNative = chkNative.Checked;
+
+            FFTTransformer.UseFFTW = !chkNative.Checked;
         }
     }
 }

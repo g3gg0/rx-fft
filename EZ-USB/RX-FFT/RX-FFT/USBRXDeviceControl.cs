@@ -21,6 +21,10 @@ namespace RX_FFT
         private bool ClosingAllowed = false;
 
         public bool _Connected = false;
+        public int ShmemChannel
+        {
+            get { return USBRX.ShmemChannel; }
+        }
 
         public USBRXDeviceControl()
         {
@@ -33,27 +37,26 @@ namespace RX_FFT
             InitializeComponent();
 
             USBRX = new USBRXDevice();
-            _SampleSource = new ShmemSampleSource("FFT Display", 1, 0);
+            USBRX.ShowConsole(false);
 
             if (USBRX.Init())
             {
-                USBRX.ShowConsole(true);
-
-                aD6636FilterList1.UpdateFilters("D:\\cygwin\\home\\g3gg0\\EZ-USB\\CD\\HyperFFT Dream 8\\Filter", USBRX.Atmel.TCXOFreq);
+//                aD6636FilterList1.UpdateFilters("D:\\cygwin\\home\\g3gg0\\EZ-USB\\CD\\HyperFFT Dream 8\\Filter", USBRX.Atmel.TCXOFreq);
+                aD6636FilterList1.UpdateFilters("..\\..\\..\\Filter", USBRX.Atmel.TCXOFreq);
                 aD6636FilterList1.FilterSelected += new EventHandler(aD6636FilterList1_FilterSelected);
 
+                _SampleSource = new ShmemSampleSource("FFT Display", USBRX.ShmemChannel, 1, 0);
                 _SampleSource.InvertedSpectrum = InvertedSpectrum;
 
                 _Connected = true;
-            }
-            else
-            {
-                BackColor = Color.Red;
+                Show();
             }
 
             /* close wait dialog and show ours */
             waitDlg.Close();
-            Show();
+
+            radioAcqOff.Checked = true;
+            radioAcqOff_CheckedChanged(null, null);
         }
 
         void aD6636FilterList1_FilterSelected(object sender, EventArgs e)
@@ -102,6 +105,17 @@ namespace RX_FFT
                 FrequencyChanged(this, null);
         }
 
+        private void btnFilterSelectDir_Click(object sender, EventArgs e)
+        {
+            FolderBrowserDialog d = new FolderBrowserDialog();
+            DialogResult result = d.ShowDialog();
+            if (result == DialogResult.OK)
+            {
+                string folderName = d.SelectedPath;
+                aD6636FilterList1.UpdateFilters(folderName);
+            }
+        }
+
         #region DeviceControl Member
 
         public event EventHandler FrequencyChanged;
@@ -123,11 +137,24 @@ namespace RX_FFT
             }
         }
 
+        
+        delegate void setFreqDelegate(double freq);
+        void setFreqTextbox(double freq)
+        {
+            frequencySelector1.Frequency = (long)freq;
+        }
+
         public bool SetFrequency(long frequency)
         {
             if (!_Connected)
                 return false;
-            return USBRX.Tuner.SetFrequency(frequency);
+            if (USBRX.Tuner.SetFrequency(frequency))
+            {
+                this.BeginInvoke(new setFreqDelegate(setFreqTextbox), frequency);
+                return true;
+            }
+
+            return false;
         }
 
         public long GetFrequency()
@@ -175,7 +202,15 @@ namespace RX_FFT
 
             USBRX.StartRead();
         }
+        
+        public void StopRead()
+        {
+            if (!_Connected)
+                return;
 
+            USBRX.StopRead();
+        }
+        
         public void StartStreamRead()
         {
             if (!_Connected)
@@ -184,18 +219,32 @@ namespace RX_FFT
             USBRX.StartStreamRead();
         }
 
-        public void StopRead()
+        public void StopStreamRead()
         {
             if (!_Connected)
                 return;
 
-            USBRX.StopRead();
+            USBRX.StopStreamRead();
         }
 
         #endregion
 
+        private void radioAcqOff_CheckedChanged(object sender, EventArgs e)
+        {
+            StopRead();
+            StopStreamRead();
+        }
 
+        private void radioAcqBlock_CheckedChanged(object sender, EventArgs e)
+        {
+            StopRead();
+            StartRead();
+        }
 
-
+        private void radioAcqStream_CheckedChanged(object sender, EventArgs e)
+        {
+            StopRead();
+            StartStreamRead();
+        }
     }
 }

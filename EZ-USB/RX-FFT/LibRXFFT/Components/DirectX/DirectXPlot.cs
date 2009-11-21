@@ -79,56 +79,11 @@ namespace LibRXFFT.Components.DirectX
         protected bool OverviewMode;
         protected bool OverviewModeEnabled = true;
 
+        public Dictionary<eUserEvent, eUserAction> EventActions = new Dictionary<eUserEvent, eUserAction>();
 
-        public eUserAction ActionMousePosX = eUserAction.XPos;
-        public eUserAction ActionMousePosY = eUserAction.YPos;
 
-        public eUserAction ActionMouseWheelUp = eUserAction.YZoomIn;
-        public eUserAction ActionMouseWheelUpShift = eUserAction.XZoomIn;
-        public eUserAction ActionMouseWheelUpControl = eUserAction.None;
-        public eUserAction ActionMouseWheelUpAlt = eUserAction.None;
 
-        public eUserAction ActionMouseWheelDown = eUserAction.YZoomOut;
-        public eUserAction ActionMouseWheelDownShift = eUserAction.XZoomOut;
-        public eUserAction ActionMouseWheelDownControl = eUserAction.None;
-        public eUserAction ActionMouseWheelDownAlt = eUserAction.None;
 
-        public eUserAction ActionMouseDragX = eUserAction.XOffset;
-        public eUserAction ActionMouseDragXShift = eUserAction.XOffsetOverview;
-        public eUserAction ActionMouseDragXControl = eUserAction.XOffset;
-        public eUserAction ActionMouseDragXAlt = eUserAction.XOffset;
-
-        public eUserAction ActionMouseDragY = eUserAction.YOffset;
-        public eUserAction ActionMouseDragYShift = eUserAction.None;
-        public eUserAction ActionMouseDragYControl = eUserAction.None;
-        public eUserAction ActionMouseDragYAlt = eUserAction.None;
-
-        /* mouse click actions */
-        public eUserAction ActionMouseClickLeft = eUserAction.None;
-        public eUserAction ActionMouseClickLeftShift = eUserAction.None;
-        public eUserAction ActionMouseClickLeftControl = eUserAction.None;
-        public eUserAction ActionMouseClickLeftAlt = eUserAction.None;
-        public eUserAction ActionMouseClickMiddle = eUserAction.None;
-        public eUserAction ActionMouseClickMiddleShift = eUserAction.None;
-        public eUserAction ActionMouseClickMiddleControl = eUserAction.None;
-        public eUserAction ActionMouseClickMiddleAlt = eUserAction.None;
-        public eUserAction ActionMouseClickRight = eUserAction.None;
-        public eUserAction ActionMouseClickRightShift = eUserAction.None;
-        public eUserAction ActionMouseClickRightControl = eUserAction.None;
-        public eUserAction ActionMouseClickRightAlt = eUserAction.None;
-
-        public eUserAction ActionMouseDoubleClickLeft = eUserAction.None;
-        public eUserAction ActionMouseDoubleClickLeftShift = eUserAction.None;
-        public eUserAction ActionMouseDoubleClickLeftControl = eUserAction.None;
-        public eUserAction ActionMouseDoubleClickLeftAlt = eUserAction.None;
-        public eUserAction ActionMouseDoubleClickMiddle = eUserAction.None;
-        public eUserAction ActionMouseDoubleClickMiddleShift = eUserAction.None;
-        public eUserAction ActionMouseDoubleClickMiddleControl = eUserAction.None;
-        public eUserAction ActionMouseDoubleClickMiddleAlt = eUserAction.None;
-        public eUserAction ActionMouseDoubleClickRight = eUserAction.None;
-        public eUserAction ActionMouseDoubleClickRightShift = eUserAction.None;
-        public eUserAction ActionMouseDoubleClickRightControl = eUserAction.None;
-        public eUserAction ActionMouseDoubleClickRightAlt = eUserAction.None;
 
         /* values are in pixels and set by the DragX/Y functions */
         protected double DisplayXOffset = 0;
@@ -162,6 +117,8 @@ namespace LibRXFFT.Components.DirectX
 
         public DirectXPlot(bool slaveMode)
         {
+            SetDefaultActions();
+
             ColorOverview = Color.Red;
             ColorFont = Color.DarkCyan;
             ColorFG = Color.Cyan;
@@ -176,6 +133,25 @@ namespace LibRXFFT.Components.DirectX
             {
                 MessageBox.Show("Failed initializing DirectX." + Environment.NewLine + e.ToString());
             }
+        }
+
+        void SetDefaultActions()
+        {
+            EventActions[eUserEvent.MousePosX] = eUserAction.XPos;
+            EventActions[eUserEvent.MousePosY] = eUserAction.YPos;
+
+            EventActions[eUserEvent.MouseWheelUp] = eUserAction.YZoomIn;
+            EventActions[eUserEvent.MouseWheelUpShift] = eUserAction.XZoomIn;
+
+            EventActions[eUserEvent.MouseWheelDown] = eUserAction.YZoomOut;
+            EventActions[eUserEvent.MouseWheelDownShift] = eUserAction.XZoomOut;
+
+            EventActions[eUserEvent.MouseDragX] = eUserAction.XOffset;
+            EventActions[eUserEvent.MouseDragXShift] = eUserAction.XOffsetOverview;
+            EventActions[eUserEvent.MouseDragXControl] = eUserAction.XOffset;
+            EventActions[eUserEvent.MouseDragXAlt] = eUserAction.XOffset;
+
+            EventActions[eUserEvent.MouseDragY] = eUserAction.YOffset;
         }
 
         protected void CreateVertexBufferForPoints(Point[] points)
@@ -755,145 +731,8 @@ namespace LibRXFFT.Components.DirectX
         {
             eUserAction action = eUserAction.None;
 
-            switch (evt)
-            {
-                case eUserEvent.MousePosX:
-                    action = ActionMousePosX;
-                    break;
-                case eUserEvent.MousePosY:
-                    action = ActionMousePosY;
-                    break;
-
-                case eUserEvent.MouseWheelUp:
-                    action = ActionMouseWheelUp;
-                    break;
-                case eUserEvent.MouseWheelUpShift:
-                    action = ActionMouseWheelUpShift;
-                    break;
-                case eUserEvent.MouseWheelUpControl:
-                    action = ActionMouseWheelUpControl;
-                    break;
-                case eUserEvent.MouseWheelUpAlt:
-                    action = ActionMouseWheelUpAlt;
-                    break;
-
-                case eUserEvent.MouseWheelDown:
-                    action = ActionMouseWheelDown;
-                    break;
-                case eUserEvent.MouseWheelDownShift:
-                    action = ActionMouseWheelDownShift;
-                    break;
-                case eUserEvent.MouseWheelDownControl:
-                    action = ActionMouseWheelDownControl;
-                    break;
-                case eUserEvent.MouseWheelDownAlt:
-                    action = ActionMouseWheelDownAlt;
-                    break;
-
-                case eUserEvent.MouseDragX:
-                    action = ActionMouseDragX;
-                    break;
-                case eUserEvent.MouseDragXShift:
-                    action = ActionMouseDragXShift;
-                    break;
-                case eUserEvent.MouseDragXControl:
-                    action = ActionMouseDragXControl;
-                    break;
-                case eUserEvent.MouseDragXAlt:
-                    action = ActionMouseDragXAlt;
-                    break;
-
-                case eUserEvent.MouseDragY:
-                    action = ActionMouseDragY;
-                    break;
-                case eUserEvent.MouseDragYShift:
-                    action = ActionMouseDragYShift;
-                    break;
-                case eUserEvent.MouseDragYControl:
-                    action = ActionMouseDragYControl;
-                    break;
-                case eUserEvent.MouseDragYAlt:
-                    action = ActionMouseDragYAlt;
-                    break;
-
-                case eUserEvent.MouseClickLeft:
-                    action = ActionMouseClickLeft;
-                    break;
-                case eUserEvent.MouseClickLeftShift:
-                    action = ActionMouseClickLeftShift;
-                    break;
-                case eUserEvent.MouseClickLeftControl:
-                    action = ActionMouseClickLeftControl;
-                    break;
-                case eUserEvent.MouseClickLeftAlt:
-                    action = ActionMouseClickLeftAlt;
-                    break;
-
-                case eUserEvent.MouseClickMiddle:
-                    action = ActionMouseClickMiddle;
-                    break;
-                case eUserEvent.MouseClickMiddleShift:
-                    action = ActionMouseClickMiddleShift;
-                    break;
-                case eUserEvent.MouseClickMiddleControl:
-                    action = ActionMouseClickMiddleControl;
-                    break;
-                case eUserEvent.MouseClickMiddleAlt:
-                    action = ActionMouseClickMiddleAlt;
-                    break;
-
-                case eUserEvent.MouseClickRight:
-                    action = ActionMouseClickRight;
-                    break;
-                case eUserEvent.MouseClickRightShift:
-                    action = ActionMouseClickRightShift;
-                    break;
-                case eUserEvent.MouseClickRightControl:
-                    action = ActionMouseClickRightControl;
-                    break;
-                case eUserEvent.MouseClickRightAlt:
-                    action = ActionMouseClickRightAlt;
-                    break;
-
-                case eUserEvent.MouseDoubleClickLeft:
-                    action = ActionMouseDoubleClickLeft;
-                    break;
-                case eUserEvent.MouseDoubleClickLeftShift:
-                    action = ActionMouseDoubleClickLeftShift;
-                    break;
-                case eUserEvent.MouseDoubleClickLeftControl:
-                    action = ActionMouseDoubleClickLeftControl;
-                    break;
-                case eUserEvent.MouseDoubleClickLeftAlt:
-                    action = ActionMouseDoubleClickLeftAlt;
-                    break;
-
-                case eUserEvent.MouseDoubleClickMiddle:
-                    action = ActionMouseDoubleClickMiddle;
-                    break;
-                case eUserEvent.MouseDoubleClickMiddleShift:
-                    action = ActionMouseDoubleClickMiddleShift;
-                    break;
-                case eUserEvent.MouseDoubleClickMiddleControl:
-                    action = ActionMouseDoubleClickMiddleControl;
-                    break;
-                case eUserEvent.MouseDoubleClickMiddleAlt:
-                    action = ActionMouseDoubleClickMiddleAlt;
-                    break;
-
-                case eUserEvent.MouseDoubleClickRight:
-                    action = ActionMouseDoubleClickRight;
-                    break;
-                case eUserEvent.MouseDoubleClickRightShift:
-                    action = ActionMouseDoubleClickRightShift;
-                    break;
-                case eUserEvent.MouseDoubleClickRightControl:
-                    action = ActionMouseDoubleClickRightControl;
-                    break;
-                case eUserEvent.MouseDoubleClickRightAlt:
-                    action = ActionMouseDoubleClickRightAlt;
-                    break;
-            }
+            if (EventActions.ContainsKey(evt))
+                action = EventActions[evt];
 
             if (action == eUserAction.UserCallback)
                 UserEventCallback(evt, param);

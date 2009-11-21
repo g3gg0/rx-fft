@@ -31,24 +31,25 @@ namespace LibRXFFT.Components.DirectX
             FFTDisplay.UserEventCallback = UserEventCallbackFunc;
             WaterfallDisplay.UserEventCallback = UserEventCallbackFunc;
 
-            FFTDisplay.ActionMouseClickRight = eUserAction.UserCallback;
-            FFTDisplay.ActionMousePosX = eUserAction.UserCallback;
-            FFTDisplay.ActionMouseDragX = eUserAction.UserCallback;
-            FFTDisplay.ActionMouseDragY = eUserAction.YOffset;
-            FFTDisplay.ActionMouseDragXShift = eUserAction.UserCallback;
-            FFTDisplay.ActionMouseDragYShift = eUserAction.YOffset;
-            FFTDisplay.ActionMouseWheelUp = eUserAction.UserCallback;
-            FFTDisplay.ActionMouseWheelDown = eUserAction.UserCallback;
-            FFTDisplay.ActionMouseWheelUpShift = eUserAction.UserCallback;
-            FFTDisplay.ActionMouseWheelDownShift = eUserAction.UserCallback;
+            FFTDisplay.EventActions[eUserEvent.MouseDoubleClickLeft] = eUserAction.UserCallback;
+            FFTDisplay.EventActions[eUserEvent.MouseClickRight] = eUserAction.UserCallback;
+            FFTDisplay.EventActions[eUserEvent.MousePosX] = eUserAction.UserCallback;
+            FFTDisplay.EventActions[eUserEvent.MouseDragX] = eUserAction.UserCallback;
+            FFTDisplay.EventActions[eUserEvent.MouseDragY] = eUserAction.YOffset;
+            FFTDisplay.EventActions[eUserEvent.MouseDragXShift] = eUserAction.UserCallback;
+            FFTDisplay.EventActions[eUserEvent.MouseDragYShift] = eUserAction.YOffset;
+            FFTDisplay.EventActions[eUserEvent.MouseWheelUp] = eUserAction.UserCallback;
+            FFTDisplay.EventActions[eUserEvent.MouseWheelDown] = eUserAction.UserCallback;
+            FFTDisplay.EventActions[eUserEvent.MouseWheelUpShift] = eUserAction.UserCallback;
+            FFTDisplay.EventActions[eUserEvent.MouseWheelDownShift] = eUserAction.UserCallback;
 
-            WaterfallDisplay.ActionMouseDoubleClickLeft = eUserAction.UserCallback;
-            WaterfallDisplay.ActionMouseClickRight = eUserAction.UserCallback;
-            WaterfallDisplay.ActionMousePosX = eUserAction.UserCallback;
-            WaterfallDisplay.ActionMouseDragX = eUserAction.UserCallback;
-            WaterfallDisplay.ActionMouseDragXShift = eUserAction.UserCallback;
-            WaterfallDisplay.ActionMouseWheelUpAlt = eUserAction.UserCallback;
-            WaterfallDisplay.ActionMouseWheelDownAlt = eUserAction.UserCallback;
+            WaterfallDisplay.EventActions[eUserEvent.MouseDoubleClickLeft] = eUserAction.UserCallback;
+            WaterfallDisplay.EventActions[eUserEvent.MouseClickRight] = eUserAction.UserCallback;
+            WaterfallDisplay.EventActions[eUserEvent.MousePosX] = eUserAction.UserCallback;
+            WaterfallDisplay.EventActions[eUserEvent.MouseDragX] = eUserAction.UserCallback;
+            WaterfallDisplay.EventActions[eUserEvent.MouseDragXShift] = eUserAction.UserCallback;
+            WaterfallDisplay.EventActions[eUserEvent.MouseWheelUpAlt] = eUserAction.UserCallback;
+            WaterfallDisplay.EventActions[eUserEvent.MouseWheelDownAlt] = eUserAction.UserCallback;
         }
 
         /* return a value between -0.5 to 0.5 that indicates the cursor position relative to the center */

@@ -92,13 +92,13 @@ namespace LibRXFFT.Components.DirectX
             YZoomFactor = 0.01f;
             XZoomFactor = 1.0f;
 
-            ActionMouseDragY = eUserAction.None;
-            ActionMouseWheelUp = eUserAction.None;
-            ActionMouseWheelDown = eUserAction.None;
-            ActionMouseWheelUpShift = eUserAction.YOffset;
-            ActionMouseWheelDownShift = eUserAction.YOffset;
-            ActionMouseWheelUpControl = eUserAction.YZoomIn;
-            ActionMouseWheelDownControl = eUserAction.YZoomOut;
+            EventActions[eUserEvent.MouseDragY] = eUserAction.None;
+            EventActions[eUserEvent.MouseWheelUp] = eUserAction.None;
+            EventActions[eUserEvent.MouseWheelDown] = eUserAction.None;
+            EventActions[eUserEvent.MouseWheelUpShift] = eUserAction.YOffset;
+            EventActions[eUserEvent.MouseWheelDownShift] = eUserAction.YOffset;
+            EventActions[eUserEvent.MouseWheelUpControl] = eUserAction.YZoomIn;
+            EventActions[eUserEvent.MouseWheelDownControl] = eUserAction.YZoomOut;
 
             /* thats not possible with this display */
             OverviewModeEnabled = false;

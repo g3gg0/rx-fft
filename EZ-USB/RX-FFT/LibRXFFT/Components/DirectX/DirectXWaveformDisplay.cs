@@ -29,7 +29,7 @@ namespace LibRXFFT.Components.DirectX
             ColorBG = Color.Black;
             ColorFont = Color.DarkCyan;
 
-            ActionMouseDragY = eUserAction.None;
+            EventActions[eUserEvent.MouseDragY] = eUserAction.None;
 
             InitializeComponent();
             try

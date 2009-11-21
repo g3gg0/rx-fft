@@ -71,12 +71,12 @@ namespace GSM_Analyzer
             SampleDisplay.UserEventCallback = UserEventCallback;
             StrengthDisplay.UserEventCallback = UserEventCallback;
 
-            SampleDisplay.ActionMouseDragX = eUserAction.UserCallback;
-            SampleDisplay.ActionMouseWheelUpShift = eUserAction.UserCallback;
-            SampleDisplay.ActionMouseWheelDownShift = eUserAction.UserCallback;
-            StrengthDisplay.ActionMouseDragX = eUserAction.UserCallback;
-            StrengthDisplay.ActionMouseWheelUpShift = eUserAction.UserCallback;
-            StrengthDisplay.ActionMouseWheelDownShift = eUserAction.UserCallback;
+            SampleDisplay.EventActions[eUserEvent.MouseDragX] = eUserAction.UserCallback;
+            SampleDisplay.EventActions[eUserEvent.MouseWheelUpShift] = eUserAction.UserCallback;
+            SampleDisplay.EventActions[eUserEvent.MouseWheelDownShift] = eUserAction.UserCallback;
+            StrengthDisplay.EventActions[eUserEvent.MouseDragX] = eUserAction.UserCallback;
+            StrengthDisplay.EventActions[eUserEvent.MouseWheelUpShift] = eUserAction.UserCallback;
+            StrengthDisplay.EventActions[eUserEvent.MouseWheelDownShift] = eUserAction.UserCallback;
         }
 
         public void ProcessBurst(double[] signal, double[] strength)

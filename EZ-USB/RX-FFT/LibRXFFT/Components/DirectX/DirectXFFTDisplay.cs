@@ -88,11 +88,11 @@ namespace LibRXFFT.Components.DirectX
             YZoomFactor = 1.0f;
             XZoomFactor = 1.0f;
 
-            ActionMouseDragX = eUserAction.XOffset;
-            ActionMouseWheelUp = eUserAction.YZoomIn;
-            ActionMouseWheelDown = eUserAction.YZoomOut;
-            ActionMouseWheelUpShift = eUserAction.XZoomIn;
-            ActionMouseWheelDownShift = eUserAction.XZoomOut;
+            EventActions[eUserEvent.MouseDragX] = eUserAction.XOffset;
+            EventActions[eUserEvent.MouseWheelUp] = eUserAction.YZoomIn;
+            EventActions[eUserEvent.MouseWheelDown] = eUserAction.YZoomOut;
+            EventActions[eUserEvent.MouseWheelUpShift] = eUserAction.XZoomIn;
+            EventActions[eUserEvent.MouseWheelDownShift] = eUserAction.XZoomOut;
 
             InitializeComponent();
             try
@@ -476,7 +476,7 @@ namespace LibRXFFT.Components.DirectX
                 CursorVertexesHor[2].Color = color & 0x00FFFFFF;
             }
 
-            if (MouseHovering && !ShiftPressed)
+            if (MouseHovering /*&& !ShiftPressed*/)
             {
                 Device.DrawUserPrimitives(PrimitiveType.LineStrip, 3, CursorVertexesVert);
                 Device.DrawUserPrimitives(PrimitiveType.LineStrip, 2, CursorVertexesHor);

@@ -30,6 +30,9 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         [DllImport("usb2.dll", CallingConvention = CallingConvention.StdCall)]
         public static extern uint UsbGetShmemID(int DevNum);
         [DllImport("usb2.dll", CallingConvention = CallingConvention.StdCall)]
+        public static extern int UsbGetShmemChannel(int DevNum);
+
+        [DllImport("usb2.dll", CallingConvention = CallingConvention.StdCall)]
         public static extern bool UsbSetGPIFMode (int DevNum );
         [DllImport("usb2.dll", CallingConvention = CallingConvention.StdCall)]
         public static extern bool UsbSetIdleMode (int DevNum );

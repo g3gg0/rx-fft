@@ -5,8 +5,32 @@
 #include "math.h"
 #include "LibRXFFT_native.h"
 
+#include "kiss_fft.h"
+
+
 #define MAX(a,b) (((a)>=(b))?(a):(b))
 #define MIN(a,b) (((a)<=(b))?(a):(b))
+
+
+LIBRXFFT_NATIVE_API int *FFTInit(int size, kiss_fft_cpx *inData, kiss_fft_cpx *outData)
+{
+	int pos = 0;
+	kiss_fft_cfg ctx = kiss_fft_alloc_buffered(size,0,NULL,NULL, inData, outData);
+
+
+	return (int *)ctx;
+}
+
+LIBRXFFT_NATIVE_API void FFTFree(int *ctx)
+{
+	kiss_fft_free(ctx);
+}
+
+LIBRXFFT_NATIVE_API void FFTProcess(int *ctx)
+{
+	kiss_fft_buffered((kiss_fft_cfg)ctx);
+}
+
 
 LIBRXFFT_NATIVE_API int *FIRInit(double *coeff, int entries)
 {

@@ -30,9 +30,14 @@ namespace LibRXFFT.Libraries.SampleSources
         }
 
         public ShmemSampleSource(string name, int oversampling, double samplingRate)
+            : this(name, 0, oversampling, samplingRate)
+        {
+        }
+
+        public ShmemSampleSource(string name, int srcChan, int oversampling, double samplingRate)
             : base(oversampling)
         {
-            ShmemChannel = new SharedMem(0, -1, name, 256 * 1024 * 1024);
+            ShmemChannel = new SharedMem(srcChan, -1, name, 256 * 1024 * 1024);
             ShmemChannel.ReadTimeout = 100;
             ShmemChannel.ReadMode = eReadMode.TimeLimited;
 

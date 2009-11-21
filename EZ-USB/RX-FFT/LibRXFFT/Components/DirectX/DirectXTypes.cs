@@ -43,6 +43,7 @@ namespace LibRXFFT.Components.DirectX
         MouseWheelDownShift,
         MouseWheelDownAlt,
         MouseWheelDownControl,
+
         MouseClickLeft,
         MouseClickLeftShift,
         MouseClickLeftAlt,
@@ -55,6 +56,19 @@ namespace LibRXFFT.Components.DirectX
         MouseClickRightShift,
         MouseClickRightAlt,
         MouseClickRightControl,
+
+        MouseDoubleClickLeft,
+        MouseDoubleClickLeftShift,
+        MouseDoubleClickLeftAlt,
+        MouseDoubleClickLeftControl,
+        MouseDoubleClickMiddle,
+        MouseDoubleClickMiddleShift,
+        MouseDoubleClickMiddleAlt,
+        MouseDoubleClickMiddleControl,
+        MouseDoubleClickRight,
+        MouseDoubleClickRightShift,
+        MouseDoubleClickRightAlt,
+        MouseDoubleClickRightControl,
         RenderOverlay
     }
 

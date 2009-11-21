@@ -79,6 +79,7 @@ namespace LibRXFFT.Components.DirectX
         protected bool OverviewMode;
         protected bool OverviewModeEnabled = true;
 
+
         public eUserAction ActionMousePosX = eUserAction.XPos;
         public eUserAction ActionMousePosY = eUserAction.YPos;
 
@@ -115,6 +116,19 @@ namespace LibRXFFT.Components.DirectX
         public eUserAction ActionMouseClickRightShift = eUserAction.None;
         public eUserAction ActionMouseClickRightControl = eUserAction.None;
         public eUserAction ActionMouseClickRightAlt = eUserAction.None;
+
+        public eUserAction ActionMouseDoubleClickLeft = eUserAction.None;
+        public eUserAction ActionMouseDoubleClickLeftShift = eUserAction.None;
+        public eUserAction ActionMouseDoubleClickLeftControl = eUserAction.None;
+        public eUserAction ActionMouseDoubleClickLeftAlt = eUserAction.None;
+        public eUserAction ActionMouseDoubleClickMiddle = eUserAction.None;
+        public eUserAction ActionMouseDoubleClickMiddleShift = eUserAction.None;
+        public eUserAction ActionMouseDoubleClickMiddleControl = eUserAction.None;
+        public eUserAction ActionMouseDoubleClickMiddleAlt = eUserAction.None;
+        public eUserAction ActionMouseDoubleClickRight = eUserAction.None;
+        public eUserAction ActionMouseDoubleClickRightShift = eUserAction.None;
+        public eUserAction ActionMouseDoubleClickRightControl = eUserAction.None;
+        public eUserAction ActionMouseDoubleClickRightAlt = eUserAction.None;
 
         /* values are in pixels and set by the DragX/Y functions */
         protected double DisplayXOffset = 0;
@@ -840,6 +854,45 @@ namespace LibRXFFT.Components.DirectX
                 case eUserEvent.MouseClickRightAlt:
                     action = ActionMouseClickRightAlt;
                     break;
+
+                case eUserEvent.MouseDoubleClickLeft:
+                    action = ActionMouseDoubleClickLeft;
+                    break;
+                case eUserEvent.MouseDoubleClickLeftShift:
+                    action = ActionMouseDoubleClickLeftShift;
+                    break;
+                case eUserEvent.MouseDoubleClickLeftControl:
+                    action = ActionMouseDoubleClickLeftControl;
+                    break;
+                case eUserEvent.MouseDoubleClickLeftAlt:
+                    action = ActionMouseDoubleClickLeftAlt;
+                    break;
+
+                case eUserEvent.MouseDoubleClickMiddle:
+                    action = ActionMouseDoubleClickMiddle;
+                    break;
+                case eUserEvent.MouseDoubleClickMiddleShift:
+                    action = ActionMouseDoubleClickMiddleShift;
+                    break;
+                case eUserEvent.MouseDoubleClickMiddleControl:
+                    action = ActionMouseDoubleClickMiddleControl;
+                    break;
+                case eUserEvent.MouseDoubleClickMiddleAlt:
+                    action = ActionMouseDoubleClickMiddleAlt;
+                    break;
+
+                case eUserEvent.MouseDoubleClickRight:
+                    action = ActionMouseDoubleClickRight;
+                    break;
+                case eUserEvent.MouseDoubleClickRightShift:
+                    action = ActionMouseDoubleClickRightShift;
+                    break;
+                case eUserEvent.MouseDoubleClickRightControl:
+                    action = ActionMouseDoubleClickRightControl;
+                    break;
+                case eUserEvent.MouseDoubleClickRightAlt:
+                    action = ActionMouseDoubleClickRightAlt;
+                    break;
             }
 
             if (action == eUserAction.UserCallback)
@@ -1054,6 +1107,45 @@ namespace LibRXFFT.Components.DirectX
         {
             MouseHovering = false;
             UpdateAxis = true;
+        }
+
+        protected override void OnMouseDoubleClick(MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+                if (AltPressed)
+                    ProcessUserEvent(eUserEvent.MouseDoubleClickRightAlt, 0);
+                else if (ControlPressed)
+                    ProcessUserEvent(eUserEvent.MouseDoubleClickRightControl, 0);
+                else if (ShiftPressed)
+                    ProcessUserEvent(eUserEvent.MouseDoubleClickRightShift, 0);
+                else
+                    ProcessUserEvent(eUserEvent.MouseDoubleClickRight, 0);
+            }
+
+            if (e.Button == MouseButtons.Left)
+            {
+                if (AltPressed)
+                    ProcessUserEvent(eUserEvent.MouseDoubleClickLeftAlt, 0);
+                else if (ControlPressed)
+                    ProcessUserEvent(eUserEvent.MouseDoubleClickLeftControl, 0);
+                else if (ShiftPressed)
+                    ProcessUserEvent(eUserEvent.MouseDoubleClickLeftShift, 0);
+                else
+                    ProcessUserEvent(eUserEvent.MouseDoubleClickLeft, 0);
+            }
+
+            if (e.Button == MouseButtons.Middle)
+            {
+                if (AltPressed)
+                    ProcessUserEvent(eUserEvent.MouseDoubleClickMiddleAlt, 0);
+                else if (ControlPressed)
+                    ProcessUserEvent(eUserEvent.MouseDoubleClickMiddleControl, 0);
+                else if (ShiftPressed)
+                    ProcessUserEvent(eUserEvent.MouseDoubleClickMiddleShift, 0);
+                else
+                    ProcessUserEvent(eUserEvent.MouseDoubleClickMiddle, 0);
+            }
         }
 
         protected override void OnMouseClick(MouseEventArgs e)

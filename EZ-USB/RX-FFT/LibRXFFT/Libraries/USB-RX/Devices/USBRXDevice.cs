@@ -13,7 +13,23 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         public Atmel Atmel;
         public AD6636 AD6636;
 
-        public uint ReadBlockSize = 4096;
+        public uint _ReadBlockSize = 4096;
+        public uint ReadBlockSize 
+        {
+            get { return _ReadBlockSize; }
+            set 
+            {
+                _ReadBlockSize = value;
+                USBRXDeviceNative.UsbSetControlledTransfer(DevNum, 0, ReadBlockSize);
+            }
+        }
+        public int ShmemChannel
+        {
+            get
+            {
+                return USBRXDeviceNative.UsbGetShmemChannel(DevNum);
+            }
+        }
 
         private AccurateTimer ReadTimer;
 
@@ -54,14 +70,25 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             }
             catch (DllNotFoundException e)
             {
-                MessageBox.Show("Was not able to load the driver. The DLL was not found:" + Environment.NewLine + e.Message);
+                MessageBox.Show("Was not able to load the driver. The driver DLL was not found." + Environment.NewLine + Environment.NewLine + e.Message);
             }
             catch (Exception e)
             {
-                MessageBox.Show("Was not able to load the driver: " + Environment.NewLine + e.Message);
+                MessageBox.Show("Was not able to load the driver:" + Environment.NewLine + Environment.NewLine + e.Message);
             }
 
             return false;
+        }
+
+        public void StartStreamRead()
+        {
+            USBRXDeviceNative.UsbSetGPIFMode(DevNum);
+            USBRXDeviceNative.UsbSetControlledTransfer(DevNum, 0, ReadBlockSize);
+        }
+
+        public void StopStreamRead()
+        {
+            USBRXDeviceNative.UsbSetGPIFMode(DevNum);
         }
 
         public void StartRead()
@@ -151,12 +178,6 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
         #endregion
 
-        public void StartStreamRead()
-        {
-            USBRXDeviceNative.UsbSetGPIFMode(DevNum);
-            USBRXDeviceNative.UsbSetControlledTransfer(DevNum, 8192*8192, 0);
-            USBRXDeviceNative.UsbSetControlledTransfer(DevNum, 0, 0);
-        }
 
         public void ShowConsole(bool show)
         {

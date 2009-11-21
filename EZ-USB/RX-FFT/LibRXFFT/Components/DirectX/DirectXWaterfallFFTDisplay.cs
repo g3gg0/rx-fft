@@ -42,6 +42,7 @@ namespace LibRXFFT.Components.DirectX
             FFTDisplay.ActionMouseWheelUpShift = eUserAction.UserCallback;
             FFTDisplay.ActionMouseWheelDownShift = eUserAction.UserCallback;
 
+            WaterfallDisplay.ActionMouseDoubleClickLeft = eUserAction.UserCallback;
             WaterfallDisplay.ActionMouseClickRight = eUserAction.UserCallback;
             WaterfallDisplay.ActionMousePosX = eUserAction.UserCallback;
             WaterfallDisplay.ActionMouseDragX = eUserAction.UserCallback;

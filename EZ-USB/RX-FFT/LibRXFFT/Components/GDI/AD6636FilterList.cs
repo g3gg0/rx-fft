@@ -15,9 +15,13 @@ namespace LibRXFFT.Components.GDI
 {
     public partial class AD6636FilterList : UserControl
     {
-        ArrayList FilterFiles = new ArrayList();
-
+        public long NCOFreq = 0;
         public event EventHandler FilterSelected;
+
+        private ArrayList FilterFiles = new ArrayList();
+        private Button LastButton = null;
+        private Color LastButtonColor;
+
 
         public AD6636FilterList()
         {
@@ -26,12 +30,12 @@ namespace LibRXFFT.Components.GDI
 
         public AD6636FilterList(string path, long NCOFreq)
         {
+            this.NCOFreq = NCOFreq;
             InitializeComponent();
             UpdateFilters(path, NCOFreq);
         }
         
-
-        public void UpdateFilters(string path, long NCOFreq)
+        public void UpdateFilters(string path)
         {
             flowLayout.Controls.Clear();
             FilterFiles.Clear();
@@ -54,6 +58,12 @@ namespace LibRXFFT.Components.GDI
             }
         }
 
+        public void UpdateFilters(string path, long NCOFreq)
+        {
+            this.NCOFreq = NCOFreq;
+            UpdateFilters(path);
+        }
+
         void AddFilter(FilterFile filter)
         {
             Button btn = new Button();
@@ -64,6 +74,12 @@ namespace LibRXFFT.Components.GDI
             btn.FlatStyle = FlatStyle.Popup;
             btn.Click += new EventHandler(delegate(object sender, EventArgs e)
             {
+                if (LastButton != null)
+                    LastButton.ForeColor = LastButtonColor;
+
+                LastButton = btn;
+                LastButtonColor = LastButton.ForeColor;
+                LastButton.ForeColor = Color.Red;
                 if (FilterSelected != null)
                     FilterSelected(filter, null);
             });

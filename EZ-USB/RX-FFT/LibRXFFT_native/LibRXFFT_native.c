@@ -1,8 +1,11 @@
 // LibRXFFT_native.cpp : Definiert die exportierten Funktionen für die DLL-Anwendung.
 //
 
-#include "stdlib.h"
-#include "math.h"
+
+#include <stdlib.h>
+#include <math.h>
+#include <omp.h>
+
 #include "LibRXFFT_native.h"
 
 #include "kiss_fft.h"
@@ -16,7 +19,6 @@ LIBRXFFT_NATIVE_API int *FFTInit(int size, kiss_fft_cpx *inData, kiss_fft_cpx *o
 {
 	int pos = 0;
 	kiss_fft_cfg ctx = kiss_fft_alloc_buffered(size,0,NULL,NULL, inData, outData);
-
 
 	return (int *)ctx;
 }
@@ -118,7 +120,6 @@ LIBRXFFT_NATIVE_API int *IIRInit(double gain, int section, double *num, double *
 	return (int *)state;
 }
 
-
 LIBRXFFT_NATIVE_API void IIRFree(int *ctx)
 {
 	IIRState *state = (IIRState *)ctx;
@@ -186,6 +187,7 @@ LIBRXFFT_NATIVE_API void FMDemodProcess(int *ctx, double *iDataIn, double *qData
 	FMDemodState *state = (FMDemodState *)ctx;
 	int pos = 0;
 
+#pragma omp parallel for
 	for(pos = 0; pos < samples; pos++)
 	{
 		double iData = iDataIn[pos];
@@ -218,6 +220,8 @@ LIBRXFFT_NATIVE_API void AMDemodFree(int *ctx)
 LIBRXFFT_NATIVE_API void AMDemodProcess(int *ctx, double *iDataIn, double *qDataIn, double *outData, int samples)
 {
 	int pos = 0;
+
+#pragma omp parallel for
 
 	for(pos = 0; pos < samples; pos++)
 	{
@@ -267,19 +271,21 @@ LIBRXFFT_NATIVE_API void DownmixProcess(int *ctx, double *iDataIn, double *qData
 	double *cosTable = state->CosTable;
 	double *sinTable = state->SinTable;
 
+#pragma omp parallel for
 	for(pos = 0; pos < samples; pos++)
 	{
+		/* keep timePos local for parallel processing */
+		int localTimePos = (timePos + pos) % length;
 		double iData = iDataIn[pos];
 		double qData = qDataIn[pos];
-
 		
-        iDataOut[pos] = cosTable[timePos] * iData - sinTable[timePos] * qData;
-        qDataOut[pos] = cosTable[timePos] * qData + sinTable[timePos] * iData;
-
-        timePos++;
-        timePos %= length;
+        iDataOut[pos] = cosTable[localTimePos] * iData - sinTable[localTimePos] * qData;
+        qDataOut[pos] = cosTable[localTimePos] * qData + sinTable[localTimePos] * iData;
 	}
-	
+
+    timePos += samples;
+    timePos %= length;
+
 	state->TimePos = timePos;
 }
 
@@ -336,10 +342,13 @@ LIBRXFFT_NATIVE_API void SamplesFromBinary(unsigned char *dataBuffer, int bytesR
     samplePos = 0;
     samplePairs = bytesRead / bytesPerSamplePair;
 
+#pragma omp parallel for
+
     for (pos = 0; pos < samplePairs; pos++)
     {
         double I;
         double Q;
+
         switch (dataFormat)
         {
             case 0:
@@ -358,7 +367,7 @@ LIBRXFFT_NATIVE_API void SamplesFromBinary(unsigned char *dataBuffer, int bytesR
                 break;
 
             default:
-                return;
+                break;
         }
 
         if (invertedSpectrum)

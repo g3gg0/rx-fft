@@ -134,10 +134,10 @@ LIBRXFFT_NATIVE_API void IIRFree(int *ctx)
 LIBRXFFT_NATIVE_API void IIRProcess(int *ctx, double *inData, double *outData, int samples)
 {
 	IIRState *state = (IIRState *)ctx;
-    double *m1 = state->m1;
-    double *m2 = state->m2;
-    double *localDen = state->Den;
-    double *localNum = state->Num;
+	double *m1 = state->m1;
+	double *m2 = state->m2;
+	double *localDen = state->Den;
+	double *localNum = state->Num;
 	double Gain = state->Gain;
 	int Section = state->Section;
 	int pos = 0;
@@ -145,22 +145,22 @@ LIBRXFFT_NATIVE_API void IIRProcess(int *ctx, double *inData, double *outData, i
 	for(pos = 0; pos < samples; pos++)
 	{
 		int i = 0;
-        int arrayPos = 0;
-        double s0 = 0;
-        double s1 = 0;
+		int arrayPos = 0;
+		double s0 = 0;
+		double s1 = 0;
 
-        s0 = Gain * inData[pos];
+		s0 = Gain * inData[pos];
 
-        for (i = 0; i < Section; i++)
-        {
-            s1 = (s0 * localNum[arrayPos + 0] + m1[i]) / localDen[arrayPos + 0];
-            m1[i] = m2[i] + s0 * localNum[arrayPos + 1] - s1 * localDen[arrayPos + 1];
-            m2[i] = s0 * localNum[arrayPos + 2] - s1 * localDen[arrayPos + 2];
-            s0 = s1;
-            arrayPos += 3;
-        }
+		for (i = 0; i < Section; i++)
+		{
+			s1 = (s0 * localNum[arrayPos + 0] + m1[i]) / localDen[arrayPos + 0];
+			m1[i] = m2[i] + s0 * localNum[arrayPos + 1] - s1 * localDen[arrayPos + 1];
+			m2[i] = s0 * localNum[arrayPos + 2] - s1 * localDen[arrayPos + 2];
+			s0 = s1;
+			arrayPos += 3;
+		}
 
-        outData[pos] = s1;
+		outData[pos] = s1;
 	}
 }
 
@@ -193,16 +193,16 @@ LIBRXFFT_NATIVE_API void FMDemodProcess(int *ctx, double *iDataIn, double *qData
 		double iData = iDataIn[pos];
 		double qData = qDataIn[pos];
 
-        double norm = (iData * iData + qData * qData) * 4;
-        double deltaI = iData - state->LastI;
-        double deltaQ = qData - state->LastQ;
+		double norm = (iData * iData + qData * qData) * 4;
+		double deltaI = iData - state->LastI;
+		double deltaQ = qData - state->LastQ;
 
-        double sampleValue = (iData * deltaQ - qData * deltaI) / norm;
+		double sampleValue = (iData * deltaQ - qData * deltaI) / norm;
 
-        state->LastI = iData;
-        state->LastQ = qData;
+		state->LastI = iData;
+		state->LastQ = qData;
 
-        outData[pos] = sampleValue;
+		outData[pos] = sampleValue;
 	}
 }
 
@@ -228,7 +228,7 @@ LIBRXFFT_NATIVE_API void AMDemodProcess(int *ctx, double *iDataIn, double *qData
 		double iData = iDataIn[pos];
 		double qData = qDataIn[pos];
 
-        outData[pos] = sqrt(iData * iData + qData * qData);
+		outData[pos] = sqrt(iData * iData + qData * qData);
 	}
 }
 
@@ -278,13 +278,13 @@ LIBRXFFT_NATIVE_API void DownmixProcess(int *ctx, double *iDataIn, double *qData
 		int localTimePos = (timePos + pos) % length;
 		double iData = iDataIn[pos];
 		double qData = qDataIn[pos];
-		
-        iDataOut[pos] = cosTable[localTimePos] * iData - sinTable[localTimePos] * qData;
-        qDataOut[pos] = cosTable[localTimePos] * qData + sinTable[localTimePos] * iData;
+
+		iDataOut[pos] = cosTable[localTimePos] * iData - sinTable[localTimePos] * qData;
+		qDataOut[pos] = cosTable[localTimePos] * qData + sinTable[localTimePos] * iData;
 	}
 
-    timePos += samples;
-    timePos %= length;
+	timePos += samples;
+	timePos %= length;
 
 	state->TimePos = timePos;
 }
@@ -292,90 +292,90 @@ LIBRXFFT_NATIVE_API void DownmixProcess(int *ctx, double *iDataIn, double *qData
 int getIntFromBytes(unsigned char *readBuffer, int pos)
 {
 	int value = 0;
-    if (readBuffer == NULL)
-        return 0;
+	if (readBuffer == NULL)
+		return 0;
 
-    value = (readBuffer[pos + 1] << 8) | readBuffer[pos];
+	value = (readBuffer[pos + 1] << 8) | readBuffer[pos];
 
-    if (value > 0x7FFF)
-        value = value - 0x10000;
+	if (value > 0x7FFF)
+		value = value - 0x10000;
 
-    value = MAX(value, -0x7FFF);
-    value = MIN(value, 0x7FFF);
+	value = MAX(value, -0x7FFF);
+	value = MIN(value, 0x7FFF);
 
-    return value;
+	return value;
 }
 
 __inline double getDoubleFromBytes(unsigned char *readBuffer, int pos)
 {
-    return (double)(((short*)readBuffer)[pos/sizeof(short)]) / 0x7FFF;
-    //return (double)getIntFromBytes(readBuffer, pos) / 0x7FFF;
+	return (double)(((short*)readBuffer)[pos/sizeof(short)]) / 0x7FFF;
+	//return (double)getIntFromBytes(readBuffer, pos) / 0x7FFF;
 }
 
 LIBRXFFT_NATIVE_API void SamplesFromBinary(unsigned char *dataBuffer, int bytesRead, double *samplesI, double *samplesQ, int dataFormat, int invertedSpectrum)
 {
-    int bytesPerSample = 0;
-    int bytesPerSamplePair = 0;
-    int samplePos = 0;
-    int samplePairs = 0;
+	int bytesPerSample = 0;
+	int bytesPerSamplePair = 0;
+	int samplePos = 0;
+	int samplePairs = 0;
 	int pos = 0;
 
-    switch (dataFormat)
-    {
-        case 0:
-            bytesPerSamplePair = 4;
-            bytesPerSample = 2;
-            break;
+	switch (dataFormat)
+	{
+		case 0:
+			bytesPerSamplePair = 4;
+			bytesPerSample = 2;
+			break;
 
-        case 1:
-        case 2:
-            bytesPerSamplePair = 8;
-            bytesPerSample = 4;
-            break;
+		case 1:
+		case 2:
+			bytesPerSamplePair = 8;
+			bytesPerSample = 4;
+			break;
 
-        default:
-            bytesPerSamplePair = 0;
-            bytesPerSample = 0;
-            break;
-    }
+		default:
+			bytesPerSamplePair = 0;
+			bytesPerSample = 0;
+			break;
+	}
 
-    samplePos = 0;
-    samplePairs = bytesRead / bytesPerSamplePair;
+	samplePos = 0;
+	samplePairs = bytesRead / bytesPerSamplePair;
 
 #pragma omp parallel for
 
-    for (pos = 0; pos < samplePairs; pos++)
-    {
-        double I;
-        double Q;
+	for (pos = 0; pos < samplePairs; pos++)
+	{
+		double I;
+		double Q;
 
-        switch (dataFormat)
-        {
-            case 0:
-                I = getDoubleFromBytes(dataBuffer, bytesPerSamplePair * pos);
-                Q = getDoubleFromBytes(dataBuffer, bytesPerSamplePair * pos + bytesPerSample);
-                break;
+		switch (dataFormat)
+		{
+			case 0:
+				I = getDoubleFromBytes(dataBuffer, bytesPerSamplePair * pos);
+				Q = getDoubleFromBytes(dataBuffer, bytesPerSamplePair * pos + bytesPerSample);
+				break;
 
-            case 1:
-                I = ((float*)dataBuffer)[2 * pos];
-                Q = ((float*)dataBuffer)[2 * pos + 1];
-                break;
+			case 1:
+				I = ((float*)dataBuffer)[2 * pos];
+				Q = ((float*)dataBuffer)[2 * pos + 1];
+				break;
 
-            case 2:
-                I = ((float*)dataBuffer)[2 * pos] / 65536;
-                Q = ((float*)dataBuffer)[2 * pos + 1] / 65536;
-                break;
+			case 2:
+				I = ((float*)dataBuffer)[2 * pos] / 65536;
+				Q = ((float*)dataBuffer)[2 * pos + 1] / 65536;
+				break;
 
-            default:
-                break;
-        }
+			default:
+				break;
+		}
 
-        if (invertedSpectrum)
-            I = -I;
+		if (invertedSpectrum)
+			I = -I;
 
-        samplesI[pos] = I;
-        samplesQ[pos] = Q;
-    }
+		samplesI[pos] = I;
+		samplesQ[pos] = Q;
+	}
 
-    return;
+	return;
 }

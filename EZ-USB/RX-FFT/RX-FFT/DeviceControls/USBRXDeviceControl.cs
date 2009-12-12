@@ -89,12 +89,12 @@ namespace RX_FFT.DeviceControls
 
         void aD6636FilterList1_FilterSelected(object sender, EventArgs e)
         {
-            if (!_Connected)
+            if (!Connected)
                 return;
 
             if (USBRX != null)
             {
-                USBRX.AD6636.SetFilter((AD6636FilterFile)sender);
+                USBRX.SetFilter((AD6636FilterFile)sender);
             }
         }
 
@@ -106,7 +106,7 @@ namespace RX_FFT.DeviceControls
                 return;
             }
 
-            if (_Connected)
+            if (Connected)
             {
                 USBRX.StopRead();
                 USBRX.Close();
@@ -116,7 +116,7 @@ namespace RX_FFT.DeviceControls
 
         private void frequencySelector1_FrequencyChanged(object sender, EventArgs e)
         {
-            if (!_Connected)
+            if (!Connected)
                 return;
             long freq = frequencySelector1.Frequency;
 
@@ -199,14 +199,14 @@ namespace RX_FFT.DeviceControls
         {
             set
             {
-                if (!_Connected)
+                if (!Connected)
                     return;
                 USBRX.ReadBlockSize = (uint)(value * BytesPerSamplePair);
                 _SampleSource.SamplesPerBlock = value;
             }
             get
             {
-                if (!_Connected)
+                if (!Connected)
                     return 0;
                 return (int)(USBRX.ReadBlockSize / BytesPerSamplePair);
             }
@@ -221,7 +221,7 @@ namespace RX_FFT.DeviceControls
 
         public bool SetFrequency(long frequency)
         {
-            if (!_Connected)
+            if (!Connected)
                 return false;
             if (USBRX.Tuner.SetFrequency(frequency))
             {
@@ -234,14 +234,14 @@ namespace RX_FFT.DeviceControls
 
         public long GetFrequency()
         {
-            if (!_Connected)
+            if (!Connected)
                 return 0;
             return USBRX.Tuner.GetFrequency();
         }
 
         public long GetRate()
         {
-            if (!_Connected)
+            if (!Connected)
                 return 0;
             return USBRX.Tuner.GetFrequency();
         }
@@ -279,7 +279,7 @@ namespace RX_FFT.DeviceControls
 
         public void StartRead()
         {
-            if (!_Connected)
+            if (!Connected)
                 return;
 
             USBRX.StartRead();
@@ -287,7 +287,7 @@ namespace RX_FFT.DeviceControls
         
         public void StopRead()
         {
-            if (!_Connected)
+            if (!Connected)
                 return;
 
             USBRX.StopRead();
@@ -295,7 +295,7 @@ namespace RX_FFT.DeviceControls
         
         public void StartStreamRead()
         {
-            if (!_Connected)
+            if (!Connected)
                 return;
 
             USBRX.StartStreamRead();
@@ -303,7 +303,7 @@ namespace RX_FFT.DeviceControls
 
         public void StopStreamRead()
         {
-            if (!_Connected)
+            if (!Connected)
                 return;
 
             USBRX.StopStreamRead();

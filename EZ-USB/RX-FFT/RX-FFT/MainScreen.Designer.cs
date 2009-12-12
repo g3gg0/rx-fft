@@ -301,18 +301,18 @@ namespace RX_FFT
             // FFTDisplay
             // 
             this.FFTDisplay.Averaging = 1;
+            this.FFTDisplay.SamplesToAverage = 1;
+            this.FFTDisplay.UpdateRate = 10;
             this.FFTDisplay.CenterFrequency = 0;
-            this.FFTDisplay.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.FFTDisplay.FFTSize = 256;
-            this.FFTDisplay.Location = new System.Drawing.Point(0, 0);
-            this.FFTDisplay.Name = "FFTDisplay";
-            this.FFTDisplay.SamplesToAverage = ((long)(0));
-            this.FFTDisplay.SamplingRate = 100;
+            this.FFTDisplay.FFTSize = 2048;
+            this.FFTDisplay.SamplingRate = 0;
             this.FFTDisplay.SavingEnabled = false;
             this.FFTDisplay.SavingName = "waterfall.png";
+            this.FFTDisplay.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.FFTDisplay.Location = new System.Drawing.Point(0, 0);
+            this.FFTDisplay.Name = "FFTDisplay";
             this.FFTDisplay.Size = new System.Drawing.Size(1002, 539);
             this.FFTDisplay.TabIndex = 0;
-            this.FFTDisplay.UpdateRate = 25;
             this.FFTDisplay.WindowingFunction = LibRXFFT.Libraries.FFTW.FFTTransformer.eWindowingFunction.BlackmanHarris;
             // 
             // btnGSM

@@ -86,8 +86,6 @@ namespace RX_FFT
 
             FFTDisplay.UserEventCallback = UserEventCallbackFunc;
 
-            FFTSize = 2048;
-
             string[] windowingTypes = Enum.GetNames(typeof(FFTTransformer.eWindowingFunction));
             cmbWindowFunc.Items.AddRange(windowingTypes);
             cmbWindowFunc.Text = FFTDisplay.WindowingFunction.ToString();

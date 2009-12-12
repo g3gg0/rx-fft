@@ -90,7 +90,7 @@
       <DependentUpon>DemodulationDialog.cs</DependentUpon>
     </Compile>
     <Compile Include="Demodulation.cs" />
-    <Compile Include="DeviceControl.cs" />
+    <Compile Include="DeviceControls\DeviceControl.cs" />
     <Compile Include="Dialogs\MarkerDetailsDialog.cs">
       <SubType>Form</SubType>
     </Compile>

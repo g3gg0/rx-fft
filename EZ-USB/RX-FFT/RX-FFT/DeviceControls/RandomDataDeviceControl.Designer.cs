@@ -1,6 +1,6 @@
-﻿namespace RX_FFT
+﻿namespace RX_FFT.DeviceControls
 {
-    partial class SharedMemDeviceControl
+    partial class RandomDataDeviceControl
     {
         /// <summary>
         /// Required designer variable.
@@ -30,7 +30,7 @@
         {
             this.components = new System.ComponentModel.Container();
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Text = "SharedMemDeviceControl";
+            this.Text = "RandomDataDeviceControl";
         }
 
         #endregion

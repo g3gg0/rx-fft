@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 
-namespace RX_FFT
+namespace RX_FFT.Dialogs
 {
     public partial class WaitDialog : Form
     {

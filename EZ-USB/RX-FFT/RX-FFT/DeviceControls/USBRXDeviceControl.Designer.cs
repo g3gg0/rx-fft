@@ -1,4 +1,4 @@
-﻿namespace RX_FFT
+﻿namespace RX_FFT.DeviceControls
 {
     partial class USBRXDeviceControl
     {

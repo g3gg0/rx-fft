@@ -1,6 +1,6 @@
-﻿namespace RX_FFT
+﻿namespace RX_FFT.Dialogs
 {
-    partial class PerformaceStatsWindow
+    partial class PerformaceStatsDialog
     {
         /// <summary>
         /// Required designer variable.

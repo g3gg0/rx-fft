@@ -11,8 +11,9 @@ using LibRXFFT.Libraries.USB_RX.Tuners;
 using LibRXFFT.Libraries.SampleSources;
 using LibRXFFT.Libraries.USB_RX.Misc;
 using LibRXFFT.Libraries.Misc;
+using RX_FFT.Dialogs;
 
-namespace RX_FFT
+namespace RX_FFT.DeviceControls
 {
     public partial class USBRXDeviceControl : Form, DeviceControl
     {

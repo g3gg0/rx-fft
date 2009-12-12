@@ -16,6 +16,7 @@ using LibRXFFT.Libraries.Misc;
 using System.Collections.Generic;
 using RX_FFT.Dialogs;
 using GSM_Analyzer;
+using RX_FFT.DeviceControls;
 
 
 namespace RX_FFT
@@ -71,7 +72,7 @@ namespace RX_FFT
 
         Demodulation DemodOptions = new Demodulation();
         DemodulationDialog DemodDialog;
-        PerformaceStatsWindow StatsDialog;
+        PerformaceStatsDialog StatsDialog;
 
         PerformanceEnvelope PerformanceCounters = new PerformanceEnvelope();
 
@@ -753,7 +754,7 @@ namespace RX_FFT
             }
             else
             {
-                StatsDialog = new PerformaceStatsWindow(PerformanceCounters);
+                StatsDialog = new PerformaceStatsDialog(PerformanceCounters);
                 StatsDialog.Show();
             }
         }

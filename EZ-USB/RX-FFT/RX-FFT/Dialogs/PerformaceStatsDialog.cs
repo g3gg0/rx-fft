@@ -8,15 +8,15 @@ using System.Text;
 using System.Windows.Forms;
 using LibRXFFT.Libraries.Timers;
 
-namespace RX_FFT
+namespace RX_FFT.Dialogs
 {
-    public partial class PerformaceStatsWindow : Form
+    public partial class PerformaceStatsDialog : Form
     {
         private MainScreen.PerformanceEnvelope Envelope;
         private Timer RefreshTimer;
         private ListViewItem[] ListItems;
 
-        public PerformaceStatsWindow(MainScreen.PerformanceEnvelope envelope)
+        public PerformaceStatsDialog(MainScreen.PerformanceEnvelope envelope)
         {
             Envelope = envelope;
             InitializeComponent();

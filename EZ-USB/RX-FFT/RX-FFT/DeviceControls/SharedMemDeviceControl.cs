@@ -8,7 +8,7 @@ using System.Text;
 using System.Windows.Forms;
 using LibRXFFT.Libraries.SampleSources;
 
-namespace RX_FFT
+namespace RX_FFT.DeviceControls
 {
     public partial class SharedMemDeviceControl : Form, DeviceControl
     {

@@ -13,7 +13,7 @@ using LibRXFFT.Libraries.SignalProcessing;
 using LibRXFFT.Libraries;
 using LibRXFFT.Libraries.FFTW;
 
-namespace RX_FFT
+namespace RX_FFT.Dialogs
 {
     public partial class DemodulationDialog : Form
     {

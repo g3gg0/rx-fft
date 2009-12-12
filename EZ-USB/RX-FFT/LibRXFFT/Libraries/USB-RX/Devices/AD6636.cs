@@ -174,7 +174,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         }
 
 
-        public bool SetFilter(FilterFile filter)
+        public bool SetFilter(AD6636FilterFile filter)
         {
             FilterRate = filter.OutputFrequency;
             _FilterWidth = filter.Width;

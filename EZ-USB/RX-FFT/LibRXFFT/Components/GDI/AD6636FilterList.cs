@@ -45,14 +45,14 @@ namespace LibRXFFT.Components.GDI
 
             foreach (FileInfo fi in files)
             {
-                FilterFile filter = new FilterFile(fi.FullName);
+                AD6636FilterFile filter = new AD6636FilterFile(fi.FullName);
                 if (filter.Valid && filter.InputFrequency == NCOFreq)
                 {
                     FilterFiles.Add(filter);
                 }
             }
 
-            foreach (FilterFile filter in FilterFiles)
+            foreach (AD6636FilterFile filter in FilterFiles)
             {
                 AddFilter(filter);
             }
@@ -64,7 +64,7 @@ namespace LibRXFFT.Components.GDI
             UpdateFilters(path);
         }
 
-        void AddFilter(FilterFile filter)
+        void AddFilter(AD6636FilterFile filter)
         {
             Button btn = new Button();
 

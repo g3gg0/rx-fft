@@ -256,7 +256,7 @@
     <Compile Include="Libraries\USB-RX\Interfaces\AD6636Interface.cs" />
     <Compile Include="Libraries\USB-RX\Interfaces\I2CInterface.cs" />
     <Compile Include="Libraries\USB-RX\Interfaces\SPIInterface.cs" />
-    <Compile Include="Libraries\USB-RX\Misc\FilterFile.cs" />
+    <Compile Include="Libraries\USB-RX\Misc\AD6636FilterFile.cs" />
     <Compile Include="Libraries\USB-RX\Tuners\DigitalTuner.cs" />
     <Compile Include="Libraries\USB-RX\Tuners\Tuner.cs" />
     <Compile Include="Libraries\USB-RX\Devices\MT2131.cs" />

@@ -93,7 +93,7 @@ namespace RX_FFT
 
             if (USBRX != null)
             {
-                USBRX.AD6636.SetFilter((FilterFile)sender);
+                USBRX.AD6636.SetFilter((AD6636FilterFile)sender);
             }
         }
 

@@ -8,7 +8,7 @@ using System.Collections;
 namespace LibRXFFT.Libraries.USB_RX.Misc
 {
 
-    public class FilterFile
+    public class AD6636FilterFile
     {
         public String ProgramVersion;
         public String DeviceName;
@@ -62,7 +62,7 @@ namespace LibRXFFT.Libraries.USB_RX.Misc
             }
         }
 
-        public FilterFile(String fileName)
+        public AD6636FilterFile(String fileName)
         {
             try
             {

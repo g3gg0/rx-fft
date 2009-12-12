@@ -41,7 +41,20 @@ namespace LibRXFFT.Components.DirectX
         public double TimeStampEveryMiliseconds = 1000;
 
         /* waterfall saving related */
-        public string SavingName = "waterfall.png";
+        public string _SavingName = "waterfall.png";
+        private string SavingNameExtended = "waterfall.png";
+        private int SavingNamePostfix = 0;
+        public string SavingName
+        {
+            get { return _SavingName; }
+            set
+            {
+                _SavingName = value;
+                SavingNameExtended = value;
+                SavingNamePostfix = 0;
+            }
+        }
+
         protected bool _SavingEnabled = false;
         public bool SavingEnabled
         {
@@ -58,7 +71,7 @@ namespace LibRXFFT.Components.DirectX
 
         public bool LevelBarActive = false;
 
-        protected bool SaveImage;
+        protected bool SaveImageAvailable;
         protected Mutex SaveImageLock = new Mutex();
         protected Semaphore SaveBufferTrigger = new Semaphore(0, 1);
         protected PresentParameters SaveParameters;
@@ -132,18 +145,17 @@ namespace LibRXFFT.Components.DirectX
                     }
 
                     /* if there is a new texture to save */
-                    if (SaveImage)
+                    if (SaveImageAvailable)
                     {
-                        SaveImage = false;
+                        SaveImageAvailable = false;
 
                         try
                         {
                             /* build an image from the texture */
                             SaveImageLock.WaitOne();
                             DataStream saveImageStream = Texture.ToStream(SaveImageThreadContext, ImageFileFormat.Png);
-                            SaveImageLock.ReleaseMutex();
-
                             Image curImage = Image.FromStream(saveImageStream);
+                            SaveImageLock.ReleaseMutex();
 
 
                             /* and create a new image with the new size */
@@ -162,7 +174,7 @@ namespace LibRXFFT.Components.DirectX
                             /* and save it to disk */
                             try
                             {
-                                newImage.Save(SavingName, System.Drawing.Imaging.ImageFormat.Png);
+                                newImage.Save(SavingNameExtended, System.Drawing.Imaging.ImageFormat.Png);
                             }
                             catch (Exception e)
                             {
@@ -180,7 +192,25 @@ namespace LibRXFFT.Components.DirectX
                             /* clear current image and save to a new file
                              * TODO: correct filename ;)
                              */
-                            SavingName = "_" + SavingName;
+                            SavingNamePostfix++;
+                            string savingName = "";
+
+                            string[] parts = _SavingName.Split('.');
+                            if (parts.Length > 1)
+                            {
+                                for (int part = 0; part < parts.Length - 1; part++)
+                                {
+                                    savingName += parts[part] + ".";
+                                }
+                                savingName += "_" + SavingNamePostfix + "." + parts[parts.Length - 1];
+                            }
+                            else
+                            {
+                                savingName = _SavingName + "_" + SavingNamePostfix;
+                            }
+
+                            SavingNameExtended = savingName;
+
                             if (SavedImage != null)
                                 SavedImage.Dispose();
                             SavedImage = null;
@@ -215,6 +245,8 @@ namespace LibRXFFT.Components.DirectX
 
         internal virtual void RenderOverlay()
         {
+            uint colorCursor = (uint)ColorCursor.ToArgb();
+
             /* draw white/black bar */
             uint color = (uint)ColorFaderBG.ToArgb();
             uint colorBarUpper = (uint)Color.White.ToArgb();
@@ -398,50 +430,55 @@ namespace LibRXFFT.Components.DirectX
                 CursorVertexesVert[0].PositionRhw.Y = 0;
                 CursorVertexesVert[0].PositionRhw.Z = 0.5f;
                 CursorVertexesVert[0].PositionRhw.W = 1;
-                CursorVertexesVert[0].Color = 0x00FF3030;
+                CursorVertexesVert[0].Color = colorCursor;
 
                 CursorVertexesVert[1].PositionRhw.Y = stubLength;
                 CursorVertexesVert[1].PositionRhw.Z = 0.5f;
                 CursorVertexesVert[1].PositionRhw.W = 1;
-                CursorVertexesVert[1].Color = 0xFFFF3030;
+                CursorVertexesVert[1].Color = colorCursor;
 
                 CursorVertexesVert[2].PositionRhw.Y = DirectXHeight - stubLength;
                 CursorVertexesVert[2].PositionRhw.Z = 0.5f;
                 CursorVertexesVert[2].PositionRhw.W = 1;
-                CursorVertexesVert[2].Color = 0xFFFF3030;
+                CursorVertexesVert[2].Color = colorCursor;
 
                 CursorVertexesVert[3].PositionRhw.Y = DirectXHeight;
                 CursorVertexesVert[3].PositionRhw.Z = 0.5f;
                 CursorVertexesVert[3].PositionRhw.W = 1;
-                CursorVertexesVert[3].Color = 0x00FF3030;
+                CursorVertexesVert[3].Color = colorCursor & 0x00FFFFFF;
 
                 CursorVertexesHor[0].PositionRhw.Z = 0.5f;
                 CursorVertexesHor[0].PositionRhw.W = 1;
-                CursorVertexesHor[0].Color = color & 0x00FFFFFF;
+                CursorVertexesHor[0].Color = colorCursor & 0x00FFFFFF;
 
                 CursorVertexesHor[1].PositionRhw.Z = 0.5f;
                 CursorVertexesHor[1].PositionRhw.W = 1;
-                CursorVertexesHor[1].Color = color;
+                CursorVertexesHor[1].Color = colorCursor;
 
                 CursorVertexesHor[2].PositionRhw.Z = 0.5f;
                 CursorVertexesHor[2].PositionRhw.W = 1;
-                CursorVertexesHor[2].Color = color & 0x00FFFFFF;
+                CursorVertexesHor[2].Color = colorCursor & 0x00FFFFFF;
             }
 
 
 
-            if (MouseHovering)
+            if (MouseHovering || ShowVerticalCursor)
             {
-                Device.DrawUserPrimitives(PrimitiveType.LineStrip, 2, CursorVertexesHor);
                 Device.DrawUserPrimitives(PrimitiveType.LineStrip, 3, CursorVertexesVert);
 
-                /* draw the horizontal position (preliminary) */
-                string label = XLabelFromCursorPos(xPos);
+                if (MouseHovering)
+                {
+                    Device.DrawUserPrimitives(PrimitiveType.LineStrip, 2, CursorVertexesHor);
 
-                if (xPos > DirectXWidth / 2)
-                    SmallFont.DrawString(null, label, (int)xPos - 40, (int)yPos, ColorFG.ToArgb());
-                else
-                    SmallFont.DrawString(null, label, (int)xPos + 20, (int)yPos, ColorFG.ToArgb());
+                    /* draw the horizontal position (preliminary) 
+                    string label = XLabelFromCursorPos(xPos);
+
+                    if (xPos > DirectXWidth / 2)
+                        SmallFont.DrawString(null, label, (int)xPos - 40, (int)yPos, ColorFG.ToArgb());
+                    else
+                        SmallFont.DrawString(null, label, (int)xPos + 20, (int)yPos, ColorFG.ToArgb());
+                    */
+                }
             }
         }
 
@@ -1001,7 +1038,7 @@ namespace LibRXFFT.Components.DirectX
 
                         try
                         {
-                            SaveImage = true;
+                            SaveImageAvailable = true;
                             SaveBufferTrigger.Release(1);
                         }
                         catch (SemaphoreFullException e)
@@ -1014,6 +1051,7 @@ namespace LibRXFFT.Components.DirectX
             }
 
             #region build overlay 
+            Device.VertexFormat = VertexFormat.PositionRhw | VertexFormat.Diffuse;
             Device.SetRenderTarget(0, TempWaterfallTexture.GetSurfaceLevel(0));
             Device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.Transparent, 1.0f, 0);
 

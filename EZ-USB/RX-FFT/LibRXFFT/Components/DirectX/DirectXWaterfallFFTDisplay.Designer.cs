@@ -55,7 +55,7 @@ namespace LibRXFFT.Components.DirectX
             this.splitContainer.Panel2.Controls.Add(this.WaterfallDisplay);
             this.splitContainer.Size = new System.Drawing.Size(537, 377);
             this.splitContainer.SplitterDistance = 179;
-            this.splitContainer.SplitterWidth = 2;
+            this.splitContainer.SplitterWidth = 1;
             this.splitContainer.TabIndex = 0;
             // 
             // fftDisplay

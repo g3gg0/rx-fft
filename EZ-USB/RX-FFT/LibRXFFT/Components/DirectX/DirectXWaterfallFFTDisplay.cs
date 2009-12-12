@@ -40,6 +40,8 @@ namespace LibRXFFT.Components.DirectX
             FFTDisplay.UserEventCallback = UserEventCallbackFunc;
             WaterfallDisplay.UserEventCallback = UserEventCallbackFunc;
 
+            FFTDisplay.EventActions[eUserEvent.MouseEnter] = eUserAction.UserCallback;
+            FFTDisplay.EventActions[eUserEvent.MouseLeave] = eUserAction.UserCallback;
             FFTDisplay.EventActions[eUserEvent.MouseDoubleClickLeft] = eUserAction.UserCallback;
             FFTDisplay.EventActions[eUserEvent.MouseClickRight] = eUserAction.UserCallback;
             FFTDisplay.EventActions[eUserEvent.MousePosX] = eUserAction.UserCallback;
@@ -52,6 +54,8 @@ namespace LibRXFFT.Components.DirectX
             FFTDisplay.EventActions[eUserEvent.MouseWheelUpShift] = eUserAction.UserCallback;
             FFTDisplay.EventActions[eUserEvent.MouseWheelDownShift] = eUserAction.UserCallback;
 
+            WaterfallDisplay.EventActions[eUserEvent.MouseEnter] = eUserAction.UserCallback;
+            WaterfallDisplay.EventActions[eUserEvent.MouseLeave] = eUserAction.UserCallback;
             WaterfallDisplay.EventActions[eUserEvent.MouseDoubleClickLeft] = eUserAction.UserCallback;
             WaterfallDisplay.EventActions[eUserEvent.MouseClickRight] = eUserAction.UserCallback;
             WaterfallDisplay.EventActions[eUserEvent.MousePosX] = eUserAction.UserCallback;
@@ -114,8 +118,8 @@ namespace LibRXFFT.Components.DirectX
 
         public string SavingName
         {
-            get { return WaterfallDisplay.SavingName; }
-            set { WaterfallDisplay.SavingName = value; }
+            get { return WaterfallDisplay._SavingName; }
+            set { WaterfallDisplay._SavingName = value; }
         }
 
         public double Averaging
@@ -163,6 +167,16 @@ namespace LibRXFFT.Components.DirectX
 
             switch (evt)
             {
+                case eUserEvent.MouseEnter:
+                    FFTDisplay.ShowVerticalCursor = true;
+                    WaterfallDisplay.ShowVerticalCursor = true;
+                    break;
+
+                case eUserEvent.MouseLeave:
+                    FFTDisplay.ShowVerticalCursor = false;
+                    WaterfallDisplay.ShowVerticalCursor = false;
+                    break;
+
                 case eUserEvent.StatusUpdated:
                     if (!WaterfallDisplay.LevelBarActive && LevelBarActive)
                     {

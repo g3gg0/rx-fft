@@ -79,6 +79,7 @@ namespace LibRXFFT.Components.DirectX
         protected bool AltPressed;
         protected bool ControlPressed;
         protected bool MouseHovering;
+        public bool ShowVerticalCursor;
 
         protected bool OverviewMode;
         protected bool OverviewModeEnabled = true;
@@ -946,12 +947,14 @@ namespace LibRXFFT.Components.DirectX
         {
             MouseHovering = true;
             UpdateAxis = true;
+            ProcessUserEvent(eUserEvent.MouseEnter, 0);
         }
 
         protected override void OnMouseLeave(EventArgs e)
         {
             MouseHovering = false;
             UpdateAxis = true;
+            ProcessUserEvent(eUserEvent.MouseLeave, 0);
         }
 
         protected override void OnMouseDoubleClick(MouseEventArgs e)

@@ -25,6 +25,9 @@ namespace LibRXFFT.Components.DirectX
     public enum eUserEvent
     {
         None,
+
+        MouseEnter,
+        MouseLeave,
         MousePosX,
         MousePosY,
         MouseDragX,

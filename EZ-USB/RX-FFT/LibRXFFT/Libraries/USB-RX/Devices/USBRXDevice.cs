@@ -3,6 +3,7 @@ using System.Windows.Forms;
 using LibRXFFT.Libraries.USB_RX.Interfaces;
 using LibRXFFT.Libraries.USB_RX.Tuners;
 using LibRXFFT.Libraries.Timers;
+using LibRXFFT.Libraries.USB_RX.Misc;
 
 namespace LibRXFFT.Libraries.USB_RX.Devices
 {
@@ -11,7 +12,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         int DevNum = 0;
         public DigitalTuner Tuner;
         public Atmel Atmel;
-        public AD6636 AD6636;
+        private AD6636 AD6636;
 
         public uint _ReadBlockSize = 4096;
         public uint ReadBlockSize 
@@ -83,6 +84,17 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
             USBRXDeviceNative.UsbSetTimeout(0x80, mode);
         }
+
+        #region Abstraction
+
+        public bool SetFilter(AD6636FilterFile filter)
+        {
+            if (AD6636 == null)
+                return false;
+
+            return AD6636.SetFilter(filter);
+        }
+        #endregion
 
         #region Transfer
 

@@ -4,20 +4,29 @@ using LibRXFFT.Libraries;
 using LibRXFFT.Libraries.FFTW;
 using System;
 using LibRXFFT.Libraries.GSM.Misc;
+using System.Drawing;
+using System.Collections.Generic;
 
 namespace LibRXFFT.Components.DirectX
 {
     public partial class DirectXWaterfallFFTDisplay : UserControl
     {
-        Mutex FFTLock = new Mutex();
+        public UserEventCallbackDelegate UserEventCallback;
+
+        private Color MarkerColor = Color.LightGreen;
+
+        private Mutex FFTLock = new Mutex();
         private FFTTransformer FFT = new FFTTransformer(256);
         private int _FFTSize = 256;
         private double[] FFTResult = new double[256];
 
-        public UserEventCallbackDelegate UserEventCallback;
+        private bool LevelBarActive = false;
+        private LabelledLine LevelBarUpper = new LabelledLine("Waterfall upper limit", 0, Color.BlueViolet);
+        private LabelledLine LevelBarLower = new LabelledLine("Waterfall lower limit", 0, Color.BlueViolet);
 
-        double IMax = -100;
-        double IMin = 100;
+
+        private double IMax = -100;
+        private double IMin = 100;
 
         public DirectXWaterfallFFTDisplay()
         {
@@ -34,7 +43,7 @@ namespace LibRXFFT.Components.DirectX
             FFTDisplay.EventActions[eUserEvent.MouseDoubleClickLeft] = eUserAction.UserCallback;
             FFTDisplay.EventActions[eUserEvent.MouseClickRight] = eUserAction.UserCallback;
             FFTDisplay.EventActions[eUserEvent.MousePosX] = eUserAction.UserCallback;
-            FFTDisplay.EventActions[eUserEvent.MouseDragX] = eUserAction.UserCallback;
+            FFTDisplay.EventActions[eUserEvent.MouseDragXControl] = eUserAction.UserCallback;
             FFTDisplay.EventActions[eUserEvent.MouseDragY] = eUserAction.YOffset;
             FFTDisplay.EventActions[eUserEvent.MouseDragXShift] = eUserAction.UserCallback;
             FFTDisplay.EventActions[eUserEvent.MouseDragYShift] = eUserAction.YOffset;
@@ -53,7 +62,7 @@ namespace LibRXFFT.Components.DirectX
         }
 
         /* return a value between -0.5 to 0.5 that indicates the cursor position relative to the center */
-        public double RelativeCursrorXPos
+        public double RelativeCursorXPos
         {
             get
             {
@@ -61,6 +70,10 @@ namespace LibRXFFT.Components.DirectX
             }
         }
 
+        public long FrequencyFromCursorPosOffset(double xOffset)
+        {
+            return FFTDisplay.FrequencyFromCursorPosOffset(xOffset);
+        }
 
         public double SamplingRate
         {
@@ -150,6 +163,28 @@ namespace LibRXFFT.Components.DirectX
 
             switch (evt)
             {
+                case eUserEvent.StatusUpdated:
+                    if (!WaterfallDisplay.LevelBarActive && LevelBarActive)
+                    {
+                        FFTDisplay.LabelledHorLines.Remove(LevelBarLower);
+                        FFTDisplay.LabelledHorLines.Remove(LevelBarUpper);
+
+                        FFTDisplay.LabelledVertLines.AddLast(new LabelledLine("Test", 100000000, Color.Green));
+                        LevelBarActive = false;
+                    }
+
+                    if (WaterfallDisplay.LevelBarActive && !LevelBarActive)
+                    {
+                        FFTDisplay.LabelledHorLines.AddLast(LevelBarLower);
+                        FFTDisplay.LabelledHorLines.AddLast(LevelBarUpper);
+                        LevelBarActive = true;
+                    }
+
+                    LevelBarLower.Position = WaterfallDisplay.LeveldBBlack;
+                    LevelBarUpper.Position = WaterfallDisplay.LeveldBWhite;
+                    FFTDisplay.UpdateOverlays = true;
+                    break;
+
                 case eUserEvent.MouseClickRight:
                     break;
 
@@ -295,6 +330,21 @@ namespace LibRXFFT.Components.DirectX
                     FFTDisplay.ProcessFFTData(FFTResult);
                     WaterfallDisplay.ProcessFFTData(FFTResult);
                 }
+            }
+        }
+
+        public LinkedList<FrequencyMarker> Markers
+        {
+            set
+            {
+                FFTDisplay.LabelledVertLines.Clear();
+
+                foreach (FrequencyMarker marker in value)
+                {
+                    FFTDisplay.LabelledVertLines.AddLast(new LabelledLine(marker.Label, marker.Frequency, MarkerColor));
+                }
+
+                FFTDisplay.UpdateOverlays = true;
             }
         }
     }

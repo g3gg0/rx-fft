@@ -107,8 +107,7 @@ namespace LibRXFFT.Libraries.USB_RX.Misc
             ProgramVersion = ReadSectionFieldString("Filter Design", "Version");
             DeviceName = ReadSectionFieldString("Device", "Name");
 
-
-            Width = ReadSectionFieldLong("Ideal Response", "Frequency");
+            Width = 2 * ReadSectionFieldLong("Ideal Response", "Frequency");
 
             InputFrequency = (long)ReadSectionFieldDouble(DeviceName, "Input Frequency");
             OutputFrequency = (long)ReadSectionFieldDouble(DeviceName, "Output Frequency");

@@ -81,10 +81,12 @@
             // 
             // txtFilterRate
             // 
-            this.txtFilterRate.Location = new System.Drawing.Point(72, 75);
+            this.txtFilterRate.Location = new System.Drawing.Point(110, 71);
             this.txtFilterRate.Name = "txtFilterRate";
-            this.txtFilterRate.Size = new System.Drawing.Size(76, 20);
+            this.txtFilterRate.ReadOnly = true;
+            this.txtFilterRate.Size = new System.Drawing.Size(101, 20);
             this.txtFilterRate.TabIndex = 5;
+            this.txtFilterRate.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             // 
             // label3
             // 
@@ -97,10 +99,12 @@
             // 
             // txtFilterWidth
             // 
-            this.txtFilterWidth.Location = new System.Drawing.Point(72, 49);
+            this.txtFilterWidth.Location = new System.Drawing.Point(110, 49);
             this.txtFilterWidth.Name = "txtFilterWidth";
-            this.txtFilterWidth.Size = new System.Drawing.Size(76, 20);
+            this.txtFilterWidth.ReadOnly = true;
+            this.txtFilterWidth.Size = new System.Drawing.Size(101, 20);
             this.txtFilterWidth.TabIndex = 3;
+            this.txtFilterWidth.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             // 
             // label2
             // 
@@ -114,13 +118,13 @@
             // frequencySelector1
             // 
             this.frequencySelector1.Frequency = ((long)(0));
-            this.frequencySelector1.Location = new System.Drawing.Point(72, 22);
+            this.frequencySelector1.Location = new System.Drawing.Point(110, 22);
             this.frequencySelector1.Name = "frequencySelector1";
-            this.frequencySelector1.Size = new System.Drawing.Size(139, 20);
+            this.frequencySelector1.Size = new System.Drawing.Size(101, 20);
             this.frequencySelector1.TabIndex = 0;
             this.frequencySelector1.Text = "0 Hz";
             this.frequencySelector1.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.frequencySelector1.TextChanged += new System.EventHandler(this.frequencySelector1_TextChanged);
+            this.frequencySelector1.FrequencyChanged += new System.EventHandler(this.frequencySelector1_FrequencyChanged);
             // 
             // groupBox2
             // 

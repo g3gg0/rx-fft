@@ -14,7 +14,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         private static int DefaultBusID = 0x20;
 
         private long FilterClock;
-        private long FilterWidth;
+        private long _FilterWidth;
         private long AGCCorrectionOffset;
         private long AGCCorrectionGain;
 
@@ -128,7 +128,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                 return false;
 
             this.FilterClock = buf[5] + buf[6] * 0x100 + buf[7] * 0x10000 + buf[8] * 0x1000000;
-            this.FilterWidth = buf[1] + buf[2] * 0x100 + buf[3] * 0x10000 + buf[4] * 0x1000000;
+            this._FilterWidth = buf[1] + buf[2] * 0x100 + buf[3] * 0x10000 + buf[4] * 0x1000000;
 
             return true;
         }
@@ -164,7 +164,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                 return false;
 
             this.FilterClock = buf[5] + buf[6] * 0x100 + buf[7] * 0x10000 + buf[8] * 0x1000000;
-            this.FilterWidth = buf[1] + buf[2] * 0x100 + buf[3] * 0x10000 + buf[4] * 0x1000000;
+            this._FilterWidth = buf[1] + buf[2] * 0x100 + buf[3] * 0x10000 + buf[4] * 0x1000000;
 
             return true;
         }
@@ -176,7 +176,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
         public long GetFilterWidth()
         {
-            return FilterWidth;
+            return _FilterWidth;
         }
 
         public int TCXOFreq

@@ -56,6 +56,8 @@ namespace LibRXFFT.Components.DirectX
             }
         }
 
+        public bool LevelBarActive = false;
+
         protected bool SaveImage;
         protected Mutex SaveImageLock = new Mutex();
         protected Semaphore SaveBufferTrigger = new Semaphore(0, 1);
@@ -625,6 +627,10 @@ namespace LibRXFFT.Components.DirectX
                 MainTextPrev = MainText;
                 MainText = "Change Upper Limit (White)";
                 UpdateOverlays = true;
+                LevelBarActive = true;
+
+                if (UserEventCallback != null)
+                    UserEventCallback(eUserEvent.StatusUpdated, 0);
             }
 
             if (key == Keys.Control)
@@ -632,6 +638,10 @@ namespace LibRXFFT.Components.DirectX
                 MainTextPrev = MainText;
                 MainText = "Change Lower Limit (Black)";
                 UpdateOverlays = true;
+                LevelBarActive = true;
+
+                if (UserEventCallback != null)
+                    UserEventCallback(eUserEvent.StatusUpdated, 0);
             }
         }
 
@@ -643,6 +653,10 @@ namespace LibRXFFT.Components.DirectX
                 MainText = MainTextPrev;
                 MainTextPrev = "";
                 UpdateOverlays = true;
+                LevelBarActive = false;
+
+                if (UserEventCallback != null)
+                    UserEventCallback(eUserEvent.StatusUpdated, 0);
             }
 
             if (key == Keys.Control)
@@ -650,6 +664,10 @@ namespace LibRXFFT.Components.DirectX
                 MainText = MainTextPrev;
                 MainTextPrev = "";
                 UpdateOverlays = true;
+                LevelBarActive = false;
+
+                if (UserEventCallback != null)
+                    UserEventCallback(eUserEvent.StatusUpdated, 0);
             }
         }
 
@@ -660,16 +678,28 @@ namespace LibRXFFT.Components.DirectX
                 case eUserAction.YOffset:
                     LeveldBWhite = Math.Max(LeveldBBlack, Math.Min(0, LeveldBWhite + 2 * Math.Sign(param)));
                     UpdateAxis = true;
+
+                    /* inform that smth has changed */
+                    if (UserEventCallback != null)
+                        UserEventCallback(eUserEvent.StatusUpdated, 0); 
                     break;
 
                 case eUserAction.YZoomIn:
                     LeveldBBlack = Math.Max(LeveldBMax, Math.Min(LeveldBWhite, LeveldBBlack + 2));
                     UpdateAxis = true;
+
+                    /* inform that smth has changed */
+                    if (UserEventCallback != null)
+                        UserEventCallback(eUserEvent.StatusUpdated, 0);
                     break;
 
                 case eUserAction.YZoomOut:
                     LeveldBBlack = Math.Max(LeveldBMax, Math.Min(LeveldBWhite, LeveldBBlack - 2));
                     UpdateAxis = true;
+
+                    /* inform that smth has changed */
+                    if (UserEventCallback != null)
+                        UserEventCallback(eUserEvent.StatusUpdated, 0);
                     break;
 
                 default:

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+#warning "This file contains GPLv2 code (DecodeViterbi). This code must be rewritten from scratch."
+
 namespace LibRXFFT.Libraries.GMSK
 {
     public class ConvolutionalCoder

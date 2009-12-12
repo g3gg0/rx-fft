@@ -9,7 +9,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
     public class USBRXDevice : I2CInterface, SPIInterface
     {
         int DevNum = 0;
-        public Tuner Tuner;
+        public DigitalTuner Tuner;
         public Atmel Atmel;
         public AD6636 AD6636;
 
@@ -31,18 +31,12 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             }
         }
 
-        private AccurateTimer ReadTimer;
 
         public USBRXDevice()
         {
             ReadTimer = new AccurateTimer();
             ReadTimer.Interval = 50;
             ReadTimer.Timer += new EventHandler(ReadTimer_Timer);
-        }
-
-        void ReadTimer_Timer(object sender, EventArgs e)
-        {
-            USBRXDeviceNative.UsbSetControlledTransfer(DevNum, ReadBlockSize, ReadBlockSize);
         }
 
         public bool Init()
@@ -54,7 +48,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                     Atmel = new Atmel(this);
                     AD6636 = new AD6636(Atmel, Atmel.TCXOFreq);
 
-                    TunerMT2131 mt2131 = new TunerMT2131(this);
+                    MT2131 mt2131 = new MT2131(this);
 
                     if (!mt2131.exists())
                     {
@@ -62,7 +56,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                     }
                     else
                     {
-                        Tuner = new TunerStack(AD6636, mt2131, mt2131.IFFreq, mt2131.IFStepSize);
+                        Tuner = new TunerStack(mt2131, AD6636, mt2131.IFFrequency, mt2131.IFStepSize);
                     }
 
                     return true;
@@ -78,6 +72,25 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             }
 
             return false;
+        }
+
+        public void ShowConsole(bool show)
+        {
+            ushort mode = (ushort)(USBRXDeviceNative.MODE_NORMAL | USBRXDeviceNative.MODE_FASTI2C);
+
+            if (show)
+                mode |= USBRXDeviceNative.MODE_CONSOLE;
+
+            USBRXDeviceNative.UsbSetTimeout(0x80, mode);
+        }
+
+        #region Transfer
+
+        private AccurateTimer ReadTimer;
+
+        void ReadTimer_Timer(object sender, EventArgs e)
+        {
+            USBRXDeviceNative.UsbSetControlledTransfer(DevNum, ReadBlockSize, ReadBlockSize);
         }
 
         public void StartStreamRead()
@@ -111,8 +124,6 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         {
             return USBRXDeviceNative.UsbParIn(DevNum, data, (uint)data.Length);
         }
-
-        #region Transfer
 
         #endregion
 
@@ -179,15 +190,6 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         #endregion
 
 
-        public void ShowConsole(bool show)
-        {
-            ushort mode = (ushort)(USBRXDeviceNative.MODE_NORMAL | USBRXDeviceNative.MODE_FASTI2C);
-
-            if (show)
-                mode |= USBRXDeviceNative.MODE_CONSOLE;
-
-            USBRXDeviceNative.UsbSetTimeout(0x80, mode);
-        }
 
     }
 }

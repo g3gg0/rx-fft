@@ -186,24 +186,26 @@ LIBRXFFT_NATIVE_API void FMDemodProcess(int *ctx, double *iDataIn, double *qData
 {
 	FMDemodState *state = (FMDemodState *)ctx;
 	int pos = 0;
+	double lastI = state->LastI;
+	double lastQ = state->LastQ;
 
-#pragma omp parallel for
 	for(pos = 0; pos < samples; pos++)
 	{
 		double iData = iDataIn[pos];
 		double qData = qDataIn[pos];
-
 		double norm = (iData * iData + qData * qData) * 4;
+
 		double deltaI = iData - state->LastI;
 		double deltaQ = qData - state->LastQ;
 
-		double sampleValue = (iData * deltaQ - qData * deltaI) / norm;
+		outData[pos] = (iData * deltaQ - qData * deltaI) / norm;
 
-		state->LastI = iData;
-		state->LastQ = qData;
-
-		outData[pos] = sampleValue;
+		lastI = iData;
+		lastQ = qData;
 	}
+
+	state->LastI = lastI;
+	state->LastQ = lastQ;
 }
 
 

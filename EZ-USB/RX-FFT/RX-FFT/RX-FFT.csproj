@@ -91,6 +91,12 @@
     </Compile>
     <Compile Include="Demodulation.cs" />
     <Compile Include="DeviceControl.cs" />
+    <Compile Include="Dialogs\MarkerDetailsDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\MarkerDetailsDialog.Designer.cs">
+      <DependentUpon>MarkerDetailsDialog.cs</DependentUpon>
+    </Compile>
     <Compile Include="MainScreen.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -108,6 +114,9 @@
     <EmbeddedResource Include="DemodulationDialog.resx">
       <DependentUpon>DemodulationDialog.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\MarkerDetailsDialog.resx">
+      <DependentUpon>MarkerDetailsDialog.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MainScreen.resx">
       <DependentUpon>MainScreen.cs</DependentUpon>
@@ -142,6 +151,18 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <Compile Include="RandomDataDeviceControl.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="RandomDataDeviceControl.Designer.cs">
+      <DependentUpon>RandomDataDeviceControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SharedMemDeviceControl.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SharedMemDeviceControl.Designer.cs">
+      <DependentUpon>SharedMemDeviceControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="USBRXDeviceControl.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -156,6 +177,10 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\GSM Analyzer\GSM Analyzer.csproj">
+      <Project>{45BC713D-FD06-448C-982A-B4470586AAC7}</Project>
+      <Name>GSM Analyzer</Name>
+    </ProjectReference>
     <ProjectReference Include="..\LibRXFFT\LibRXFFT.csproj">
       <Project>{76F54DCE-B3C0-45E0-9C6F-492F396F3924}</Project>
       <Name>LibRXFFT</Name>

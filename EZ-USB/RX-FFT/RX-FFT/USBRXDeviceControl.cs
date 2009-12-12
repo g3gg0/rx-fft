@@ -10,6 +10,7 @@ using LibRXFFT.Libraries.USB_RX.Devices;
 using LibRXFFT.Libraries.USB_RX.Tuners;
 using LibRXFFT.Libraries.SampleSources;
 using LibRXFFT.Libraries.USB_RX.Misc;
+using LibRXFFT.Libraries.Misc;
 
 namespace RX_FFT
 {
@@ -45,6 +46,9 @@ namespace RX_FFT
                 aD6636FilterList1.UpdateFilters("..\\..\\..\\Filter", USBRX.Atmel.TCXOFreq);
                 aD6636FilterList1.FilterSelected += new EventHandler(aD6636FilterList1_FilterSelected);
 
+                USBRX.Tuner.SamplingRateChanged += new EventHandler(AD6636_FilterRateChanged);
+                USBRX.Tuner.FilterWidthChanged += new EventHandler(AD6636_FilterWidthChanged);
+
                 _SampleSource = new ShmemSampleSource("FFT Display", USBRX.ShmemChannel, 1, 0);
                 _SampleSource.InvertedSpectrum = InvertedSpectrum;
 
@@ -59,18 +63,38 @@ namespace RX_FFT
             radioAcqOff_CheckedChanged(null, null);
         }
 
+        void AD6636_FilterWidthChanged(object sender, EventArgs e)
+        {
+            /* update UI */
+            txtFilterWidth.Text = FrequencyFormatter.FreqToStringAccurate(FilterWidth);
+
+            /* inform listeners */
+            if (FilterWidthChanged != null)
+                FilterWidthChanged(this, null);
+        }
+
+        void AD6636_FilterRateChanged(object sender, EventArgs e)
+        {
+            /* update UI */
+            txtFilterRate.Text = FrequencyFormatter.FreqToStringAccurate(SamplingRate);
+
+            /* set sample source frequency */
+            _SampleSource.ForceInputRate(SamplingRate);
+
+            /* inform listeners */
+            if (SamplingRateChanged != null)
+                SamplingRateChanged(this, null);
+        }
+
         void aD6636FilterList1_FilterSelected(object sender, EventArgs e)
         {
             if (!_Connected)
                 return;
 
-            FilterFile filter = (FilterFile)sender;
             if (USBRX != null)
             {
-                USBRX.AD6636.SetFilter(filter);
+                USBRX.AD6636.SetFilter((FilterFile)sender);
             }
-            txtFilterRate.Text = (filter.OutputFrequency).ToString();
-            _SampleSource.ForceInputRate(filter.OutputFrequency);
         }
 
         protected override void OnClosing(CancelEventArgs e)
@@ -89,7 +113,7 @@ namespace RX_FFT
             }
         }
 
-        private void frequencySelector1_TextChanged(object sender, EventArgs e)
+        private void frequencySelector1_FrequencyChanged(object sender, EventArgs e)
         {
             if (!_Connected)
                 return;
@@ -116,9 +140,59 @@ namespace RX_FFT
             }
         }
 
+
+        #region DigitalTuner Member
+
+        public event EventHandler SamplingRateChanged;
+
+        public long SamplingRate
+        {
+            get
+            {
+                return USBRX.Tuner.SamplingRate;
+            }
+        }
+
+        #endregion
+
+        #region Tuner Member
+
+        public event EventHandler FrequencyChanged; 
+        public event EventHandler FilterWidthChanged;
+        public event EventHandler InvertedSpectrumChanged;
+
+        public long LowestFrequency
+        {
+            get { return USBRX.Tuner.LowestFrequency; }
+        }
+
+        public long HighestFrequency
+        {
+            get { return USBRX.Tuner.HighestFrequency; }
+        }
+
+        public long UpperFilterMargin
+        {
+            get { return USBRX.Tuner.UpperFilterMargin; }
+        }
+
+        public long LowerFilterMargin
+        {
+            get { return USBRX.Tuner.LowerFilterMargin; }
+        }
+
+        public long FilterWidth
+        {
+            get
+            {
+                return USBRX.Tuner.FilterWidth;
+            }
+        }
+
+        #endregion
+
         #region DeviceControl Member
 
-        public event EventHandler FrequencyChanged;
 
         public int SamplesPerBlock
         {
@@ -158,6 +232,13 @@ namespace RX_FFT
         }
 
         public long GetFrequency()
+        {
+            if (!_Connected)
+                return 0;
+            return USBRX.Tuner.GetFrequency();
+        }
+
+        public long GetRate()
         {
             if (!_Connected)
                 return 0;
@@ -246,5 +327,6 @@ namespace RX_FFT
             StopRead();
             StartStreamRead();
         }
+
     }
 }

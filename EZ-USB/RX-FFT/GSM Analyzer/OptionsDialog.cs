@@ -125,7 +125,7 @@ namespace GSM_Analyzer
                 if (rate != Analyzer.Source.InputSamplingRate)
                 {
                     Analyzer.Source.InputSamplingRate = rate;
-                    Analyzer.Source.SamplingRateChanged = true;
+                    Analyzer.Source.SamplingRateHasChanged = true;
                 }
             }
             else

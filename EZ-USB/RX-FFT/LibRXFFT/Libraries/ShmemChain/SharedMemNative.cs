@@ -15,6 +15,8 @@ namespace LibRXFFT.Libraries.ShmemChain
         public const int MODE_CRITICAL = 0x20000000;	// less sleep delay (obsolete!)
         public const int MODE_MASK = 0x000000FF;  // internal
 
+        public const int MAX_NAME_LENGTH = 128;
+
         [DllImport("shmemchain.dll",CallingConvention=CallingConvention.StdCall)]
         public static extern int shmemchain_register_node(int src_chan, int dst_chan);
         [DllImport("shmemchain.dll", CallingConvention = CallingConvention.StdCall)]
@@ -32,14 +34,18 @@ namespace LibRXFFT.Libraries.ShmemChain
         public static extern uint shmemchain_read_data(int node_id, byte[] buffer, uint bytes, int read_mode);
 
         [DllImport("shmemchain.dll", CallingConvention = CallingConvention.StdCall)]
-        public static extern int shmemchain_get_infos(int node_id, byte[] name, int[] data);
+        public static extern int shmemchain_get_infos(int node_id, byte[] name, long[] data);
+        [DllImport("shmemchain.dll", CallingConvention = CallingConvention.StdCall)]
+        public static extern int shmemchain_get_all_nodes(int[] node_ids, int max_nodes);
         [DllImport("shmemchain.dll", CallingConvention = CallingConvention.StdCall)]
         public static extern int shmemchain_update_node_name(int node_id, byte[] name);
 
         [DllImport("shmemchain.dll", CallingConvention = CallingConvention.StdCall)]
-        public static extern int shmemchain_get_rate(int node_id);
+        public static extern int shmemchain_get_last_error();
         [DllImport("shmemchain.dll", CallingConvention = CallingConvention.StdCall)]
-        public static extern int shmemchain_set_rate(int node_id, int rate);
+        public static extern long shmemchain_get_rate(int node_id);
+        [DllImport("shmemchain.dll", CallingConvention = CallingConvention.StdCall)]
+        public static extern int shmemchain_set_rate(int node_id, long rate);
         [DllImport("shmemchain.dll", CallingConvention = CallingConvention.StdCall)]
         public static extern int shmemchain_get_blocksize(int node_id);
         [DllImport("shmemchain.dll", CallingConvention = CallingConvention.StdCall)]

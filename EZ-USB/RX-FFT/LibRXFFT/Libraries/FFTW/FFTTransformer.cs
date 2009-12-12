@@ -399,6 +399,5 @@ namespace LibRXFFT.Libraries.FFTW
                 ResultAvailable = true;
             }
         }
-
     }
 }

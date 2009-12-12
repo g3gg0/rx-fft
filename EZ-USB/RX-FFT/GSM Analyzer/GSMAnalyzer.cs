@@ -386,9 +386,9 @@ namespace GSM_Analyzer
             }
         }
 
-        private void btnOpen_SharedMemory(object sender, EventArgs e)
+        public void OpenSharedMem(int srcChan)
         {
-            Source = new ShmemSampleSource("GSM Analyzer", InternalOversampling, DefaultSamplingRate);
+            Source = new ShmemSampleSource("GSM Analyzer", srcChan, InternalOversampling, DefaultSamplingRate);
 
             txtLog.Clear();
             ThreadActive = true;
@@ -396,6 +396,49 @@ namespace GSM_Analyzer
             ReadThread.Start();
 
             btnOpen.Text = "Close";
+        }
+
+        private MenuItem btnOpen_SharedMemoryCreateMenuItem(string name, int srcChan)
+        {
+            MenuItem item;
+
+            if (srcChan < 0)
+            {
+                item = new MenuItem("No data from <" + name + ">");
+                item.Enabled = false;
+            }
+            else
+            {
+                item = new MenuItem("Channel " + srcChan + " from <" + name + ">",
+                new EventHandler(delegate(object sender, EventArgs e)
+                {
+                    OpenSharedMem(srcChan);
+                }));
+            }
+
+            return item;
+        }
+
+        private void btnOpen_SharedMemory(object sender, EventArgs e)
+        {
+            ContextMenu menu = new ContextMenu();
+            NodeInfo[] infos = SharedMem.GetNodeInfos();
+
+            foreach (NodeInfo info in infos)
+            {
+                MenuItem item = btnOpen_SharedMemoryCreateMenuItem(info.name, info.dstChan);
+                menu.MenuItems.Add(item);
+            }
+
+            if (infos.Length == 0)
+            {
+                MenuItem item = new MenuItem("(No nodes found)");
+                item.Enabled = false;
+                menu.MenuItems.Add(item);
+            }
+
+            btnOpen.ContextMenu = menu;
+            btnOpen.ContextMenu.Show(btnOpen, new System.Drawing.Point(10, 10));
         }
 
         void SampleReadFunc()
@@ -443,9 +486,9 @@ namespace GSM_Analyzer
                         Demodulator.ProcessData(Source.SourceSamplesI, Source.SourceSamplesQ, sourceSignal, sourceStrength);
 
                         /* to allow external rate change */
-                        if (Source.SamplingRateChanged)
+                        if (Source.SamplingRateHasChanged)
                         {
-                            Source.SamplingRateChanged = false;
+                            Source.SamplingRateHasChanged = false;
 
                             if (Oversampling > 1)
                             {

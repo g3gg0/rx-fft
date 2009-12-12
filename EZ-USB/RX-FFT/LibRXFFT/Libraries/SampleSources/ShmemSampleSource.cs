@@ -7,7 +7,7 @@ namespace LibRXFFT.Libraries.SampleSources
 {
     public class ShmemSampleSource : SampleSource
     {
-        private SharedMem ShmemChannel;
+        public SharedMem ShmemChannel;
 
         public override int SamplesPerBlock
         {

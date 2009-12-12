@@ -13,6 +13,9 @@ using System.Threading;
 using LibRXFFT.Libraries.USB_RX.Devices;
 using LibRXFFT.Libraries.USB_RX.Misc;
 using LibRXFFT.Libraries.Misc;
+using System.Collections.Generic;
+using RX_FFT.Dialogs;
+using GSM_Analyzer;
 
 
 namespace RX_FFT
@@ -55,6 +58,10 @@ namespace RX_FFT
         DeviceControl Device;
         double LastSamplingRate = 48000;
 
+        private LinkedList<FrequencyMarker> Markers = new LinkedList<FrequencyMarker>();
+        private FrequencyMarker UpperFilterMarginMarker = new FrequencyMarker("Upper Limit", "Upper Frequency Limit", 0);
+        private FrequencyMarker LowerFilterMarginMarker = new FrequencyMarker("Lower Limit", "Lower Frequency Limit", 0);
+
         ShmemSampleSource AudioShmem;
         double[] DecimatedInputI = new double[0];
         double[] DecimatedInputQ = new double[0];
@@ -72,6 +79,9 @@ namespace RX_FFT
         public MainScreen()
         {
             InitializeComponent();
+
+            Markers.AddLast(UpperFilterMarginMarker);
+            Markers.AddLast(LowerFilterMarginMarker);
 
             FFTDisplay.UserEventCallback = UserEventCallbackFunc;
 
@@ -112,10 +122,19 @@ namespace RX_FFT
         {
             if (evt == eUserEvent.MousePosX)
             {
-                //double relative = (param / FFTDisplay.Width) - 1;
-                double relative = FFTDisplay.RelativeCursrorXPos;
+                double relative = FFTDisplay.RelativeCursorXPos;
 
                 DemodOptions.DemodulationDownmixer.TimeStep = -relative * (2 * Math.PI);
+            }
+            else if (evt == eUserEvent.MouseDragXControl)
+            {
+                long mouseFreq = FFTDisplay.Frequency;
+                long prevMouseFreq = FFTDisplay.FrequencyFromCursorPosOffset(param);
+                long currentFreq = Device.GetFrequency();
+                long newFreq = currentFreq - (mouseFreq - prevMouseFreq);
+
+                Device.SetFrequency(newFreq);
+                //FFTDisplay.CenterFrequency = newFreq;
             }
             else if (evt == eUserEvent.MouseDoubleClickLeft)
             {
@@ -141,10 +160,28 @@ namespace RX_FFT
                 menuItem2.Index = 1;
                 menuItem2.Text = "Send to Locator";
                 menuItem3.Index = 2;
-                menuItem3.Text = "Add Notes...";
+                menuItem3.Text = "Add Marker...";
+                menuItem3.Click += new EventHandler(delegate(object sender, EventArgs e)
+                {
+                    AddMarker(freq);
+                });
 
                 contextMenu.Show(this, this.PointToClient(MousePosition));
             }
+        }
+
+        private void AddMarker(long freq)
+        {
+            FrequencyMarker marker = new FrequencyMarker("test", "This is a test", freq);
+            MarkerDetailsDialog dlg = new MarkerDetailsDialog("Add Marker...", marker);
+
+            if (dlg.ShowDialog() != DialogResult.OK)
+            {
+                return;
+            }
+
+            Markers.AddLast(marker);
+            FFTDisplay.Markers = Markers;
         }
 
         void AudioReadFunc()
@@ -374,6 +411,18 @@ namespace RX_FFT
         {
             if (Device != null)
             {
+                lock (DemodOptions)
+                {
+                    DemodOptions.SoundDevice.Close();
+                    DemodOptions.SoundDevice = null;
+                }
+
+                if (DemodDialog != null)
+                {
+                    DemodDialog.Close();
+                    DemodDialog = null;
+                }
+
                 ReadThreadRun = false;
                 AudioThreadRun = false;
                 Thread.Sleep(10);
@@ -383,71 +432,199 @@ namespace RX_FFT
                 if (AudioThread != null)
                     AudioThread.Abort();
 
-                AudioShmem.Close();
-                AudioShmem = null;
+                if (AudioShmem != null)
+                {
+                    AudioShmem.Close();
+                    AudioShmem = null;
+                }
 
                 Device.Close();
                 Device = null;
-
-                lock (DemodOptions)
-                {
-                    DemodOptions.SoundDevice.Close();
-                    DemodOptions.SoundDevice = null;
-                }
 
                 btnOpen.Text = "Open";
             }
             else
             {
-                USBRXDeviceControl dev = new USBRXDeviceControl();
-                if (dev.Connected)
-                {
-                    Device = dev;
+                ContextMenu menu = new ContextMenu();
 
-                    AudioShmem = new ShmemSampleSource("RX-FFT Audio Decoder", dev.ShmemChannel, 1, 0);
-                    AudioShmem.InvertedSpectrum = dev.SampleSource.InvertedSpectrum;
-
-                    dev.FrequencyChanged += new EventHandler(Device_FrequencyChanged);
-                    dev.SampleSource.SamplingRateChangedEvent += new EventHandler(SampleSource_SamplingRateChangedEvent);
-
-                    dev.SetFrequency(103000000);
-                    //dev.StartStreamRead();
-                    //dev.StartRead();
-
-                    lock (DemodOptions)
-                    {
-                        DemodOptions.SoundDevice = new DXSoundDevice(Handle);
-                    }
-                    ReadThreadRun = true;
-                    ReadThread = new Thread(new ThreadStart(FFTReadFunc));
-                    ReadThread.Name = "MainScreen Data Read Thread";
-                    ReadThread.Start();
-
-                    AudioThreadRun = true;
-                    AudioThread = new Thread(new ThreadStart(AudioReadFunc));
-                    AudioThread.Name = "Audio Decoder Thread";
-                    AudioThread.Start();
-
-                    btnOpen.Text = "Close";
-                }
-                else
-                {
-                    dev.Close();
-                    dev = null;
-                    MessageBox.Show("Could not find any compatible USB device.");
-                }
+                menu.MenuItems.Add(new MenuItem("Open BO-35digi", new EventHandler(btnOpen_OpenBO35)));
+                menu.MenuItems.Add(new MenuItem("Shared Memory", new EventHandler(btnOpen_SharedMemory)));
+                menu.MenuItems.Add(new MenuItem("Random Data", new EventHandler(btnOpen_RandomData)));
+                btnOpen.ContextMenu = menu;
+                btnOpen.ContextMenu.Show(btnOpen, new System.Drawing.Point(10, 10));
             }
+        }
+
+        private void btnOpen_OpenBO35(object sender, EventArgs e)
+        {
+            USBRXDeviceControl dev = new USBRXDeviceControl();
+            if (dev.Connected)
+            {
+                Device = dev;
+
+                /* create an extra shmem channel for audio decoding */
+                AudioShmem = new ShmemSampleSource("RX-FFT Audio Decoder", dev.ShmemChannel, 1, 0);
+                AudioShmem.InvertedSpectrum = dev.SampleSource.InvertedSpectrum;
+
+                dev.FrequencyChanged += new EventHandler(Device_FrequencyChanged);
+                dev.SamplingRateChanged += new EventHandler(Device_RateChanged);
+                dev.FilterWidthChanged += new EventHandler(Device_FilterWidthChanged);
+                dev.SampleSource.SamplingRateChanged += new EventHandler(SampleSource_SamplingRateChangedEvent);
+
+                dev.SetFrequency(103200000);
+
+                lock (DemodOptions)
+                {
+                    DemodOptions.SoundDevice = new DXSoundDevice(Handle);
+                }
+
+                ReadThreadRun = true;
+                ReadThread = new Thread(new ThreadStart(FFTReadFunc));
+                ReadThread.Name = "MainScreen Data Read Thread";
+                ReadThread.Start();
+
+                AudioThreadRun = true;
+                AudioThread = new Thread(new ThreadStart(AudioReadFunc));
+                AudioThread.Name = "Audio Decoder Thread";
+                AudioThread.Start();
+
+                btnOpen.Text = "Close";
+            }
+            else
+            {
+                dev.Close();
+                dev = null;
+                MessageBox.Show("Could not find any compatible USB device.");
+            }
+        }
+
+        public void OpenSharedMem(int srcChan)
+        {
+            SharedMemDeviceControl dev = new SharedMemDeviceControl(srcChan);
+            Device = dev;
+
+            /* create an extra shmem channel for audio decoding */
+            AudioShmem = new ShmemSampleSource("RX-FFT Audio Decoder", dev.ShmemChannel, 1, 0);
+            AudioShmem.InvertedSpectrum = dev.SampleSource.InvertedSpectrum;
+
+            dev.FrequencyChanged += new EventHandler(Device_FrequencyChanged);
+            dev.SamplingRateChanged += new EventHandler(Device_RateChanged);
+            dev.FilterWidthChanged += new EventHandler(Device_FilterWidthChanged);
+            dev.SampleSource.SamplingRateChanged += new EventHandler(SampleSource_SamplingRateChangedEvent);
+
+            dev.SetFrequency(103200000);
+
+            lock (DemodOptions)
+            {
+                DemodOptions.SoundDevice = new DXSoundDevice(Handle);
+            }
+
+            ReadThreadRun = true;
+            ReadThread = new Thread(new ThreadStart(FFTReadFunc));
+            ReadThread.Name = "MainScreen Data Read Thread";
+            ReadThread.Start();
+
+            AudioThreadRun = true;
+            AudioThread = new Thread(new ThreadStart(AudioReadFunc));
+            AudioThread.Name = "Audio Decoder Thread";
+            AudioThread.Start();
+
+            btnOpen.Text = "Close";
+        }
+
+        private MenuItem btnOpen_SharedMemoryCreateMenuItem(string name, int srcChan)
+        {
+            MenuItem item;
+
+            if (srcChan < 0)
+            {
+                item = new MenuItem("No data from <" + name + ">");
+                item.Enabled = false;
+            }
+            else
+            {
+                item = new MenuItem("Channel " + srcChan + " from <" + name + ">",
+                new EventHandler(delegate(object sender, EventArgs e)
+                {
+                    OpenSharedMem(srcChan);
+                }));
+            }
+
+            return item;
+        }
+
+        private void btnOpen_SharedMemory(object sender, EventArgs e)
+        {
+            ContextMenu menu = new ContextMenu();
+            NodeInfo[] infos = SharedMem.GetNodeInfos();
+
+            foreach (NodeInfo info in infos)
+            {
+                MenuItem item = btnOpen_SharedMemoryCreateMenuItem(info.name, info.dstChan);
+                menu.MenuItems.Add(item);
+            }
+
+            if (infos.Length == 0)
+            {
+                MenuItem item = new MenuItem("(No nodes found)");
+                item.Enabled = false;
+                menu.MenuItems.Add(item);
+            }
+
+            btnOpen.ContextMenu = menu;
+            btnOpen.ContextMenu.Show(btnOpen, new System.Drawing.Point(10, 10));
+        }
+
+        private void btnOpen_RandomData(object sender, EventArgs e)
+        {
+            RandomDataDeviceControl dev = new RandomDataDeviceControl();
+            Device = dev;
+
+            dev.FrequencyChanged += new EventHandler(Device_FrequencyChanged);
+            dev.SamplingRateChanged += new EventHandler(Device_RateChanged);
+            dev.FilterWidthChanged += new EventHandler(Device_FilterWidthChanged);
+            dev.SampleSource.SamplingRateChanged += new EventHandler(SampleSource_SamplingRateChangedEvent);
+
+            lock (DemodOptions)
+            {
+                DemodOptions.SoundDevice = new DXSoundDevice(Handle);
+            }
+
+            ReadThreadRun = true;
+            ReadThread = new Thread(new ThreadStart(FFTReadFunc));
+            ReadThread.Name = "MainScreen Data Read Thread";
+            ReadThread.Start();
+
+            btnOpen.Text = "Close";
+        }
+
+        void Device_FilterWidthChanged(object sender, EventArgs e)
+        {
+        }
+
+        void Device_RateChanged(object sender, EventArgs e)
+        {
+            double rate = Device.SamplingRate;
+            FFTDisplay.SamplingRate = rate;
         }
 
         void Device_FrequencyChanged(object sender, EventArgs e)
         {
             double freq = Device.GetFrequency();
+
+            LowerFilterMarginMarker.Frequency = Device.LowerFilterMargin;
+            UpperFilterMarginMarker.Frequency = Device.UpperFilterMargin;
+
             FFTDisplay.CenterFrequency = freq;
+            FFTDisplay.Markers = Markers;
         }
 
         void SampleSource_SamplingRateChangedEvent(object sender, EventArgs e)
         {
+            LowerFilterMarginMarker.Frequency = Device.LowerFilterMargin;
+            UpperFilterMarginMarker.Frequency = Device.UpperFilterMargin;
 
+            FFTDisplay.Markers = Markers;
         }
 
         private void btnPause_Click(object sender, EventArgs e)
@@ -581,5 +758,15 @@ namespace RX_FFT
             }
         }
 
+        private void btnGSM_Click(object sender, EventArgs e)
+        {
+            GSMAnalyzer analyzer = new GSMAnalyzer();
+
+            analyzer.Show();
+            if (Device != null)
+            {
+                analyzer.OpenSharedMem(((USBRXDeviceControl)Device).ShmemChannel);
+            }
+        }
     }
 }

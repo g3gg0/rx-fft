@@ -7,13 +7,13 @@ using LibRXFFT.Libraries.SampleSources;
 
 namespace RX_FFT
 {
-    public interface DeviceControl : Tuner
+    public interface DeviceControl : DigitalTuner
     {
         int SamplesPerBlock { get; set ;}
         SampleSource SampleSource { get; }
         bool Connected { get; }
 
-        event EventHandler FrequencyChanged;
+
 
         void Close();
         void StartRead();

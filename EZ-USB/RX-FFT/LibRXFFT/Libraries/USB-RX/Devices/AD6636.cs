@@ -8,11 +8,16 @@ using LibRXFFT.Libraries.USB_RX.Misc;
 
 namespace LibRXFFT.Libraries.USB_RX.Devices
 {
-    public class AD6636 : Tuner
+    public class AD6636 : DigitalTuner
     {
+        private long FilterRate = 0;
+        private long _FilterWidth = 0;
+        private long CurrentFrequency;
+
         private AD6636Interface Device;
+        private double NCOMul;
         private long _NCOFreq;
-        private double _NCOMul;
+        private long CachedRegister = 0;
 
         private static int AD6636_REG_NCOFREQ = 0x70;
         private static int AD6636_REG_NCOFREQ_L = 4;
@@ -41,84 +46,77 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         private static int AD6636_REG_OPC = 0xC0;
         private static int AD6636_REG_OPC_L = 2;
 
-        private int[,] initTable = new[,]
-	{
-		{1, 1, 0},
-		{2, 1, 0},
-		{3, 1, 15},
-		{4, 1, 0},
-		{6, 2, 1536},
-		{10, 2, 0},
-		{12, 4, 33591296},
-		{16, 2, 72},
-		{20, 2, 0},
-		{22, 2, 0},
-		{24, 2, 0},
-		{26, 2, 0},
-		{28, 2, 0},
-		{30, 2, 0},
-		{32, 2, 0},
-		{34, 2, 0},
-		{36, 2, 0},
-		{38, 2, 0},
-		{40, 3, 0},
-		{43, 1, 0},
-		{44, 3, 4096},
-		{51, 1, 25},
-		{52, 2, 0},
-		{54, 2, 0},
-		{56, 3, 0},
-		{59, 1, 0},
-		{60, 3, 0},
-		{67, 1, 0},
-		{68, 2, 0},
-		{70, 2, 0},
-		{72, 3, 0},
-		{75, 1, 0},
-		{76, 3, 0},
-		{83, 1, 0},
-		{84, 2, 0},
-		{86, 2, 0},
-		{88, 3, 0},
-		{91, 1, 0},
-		{92, 3, 0},
-		{99, 1, 0},
-		{100, 2, 0},
-		{102, 2, 0},
-		{192, 2, 655},
-        {-1, -1, -1}
-	};
+        private int[,] RegisterInitTable = new[,]
+	    {
+		    {1, 1, 0},
+		    {2, 1, 0},
+		    {3, 1, 15},
+		    {4, 1, 0},
+		    {6, 2, 1536},
+		    {10, 2, 0},
+		    {12, 4, 33591296},
+		    {16, 2, 72},
+		    {20, 2, 0},
+		    {22, 2, 0},
+		    {24, 2, 0},
+		    {26, 2, 0},
+		    {28, 2, 0},
+		    {30, 2, 0},
+		    {32, 2, 0},
+		    {34, 2, 0},
+		    {36, 2, 0},
+		    {38, 2, 0},
+		    {40, 3, 0},
+		    {43, 1, 0},
+		    {44, 3, 4096},
+		    {51, 1, 25},
+		    {52, 2, 0},
+		    {54, 2, 0},
+		    {56, 3, 0},
+		    {59, 1, 0},
+		    {60, 3, 0},
+		    {67, 1, 0},
+		    {68, 2, 0},
+		    {70, 2, 0},
+		    {72, 3, 0},
+		    {75, 1, 0},
+		    {76, 3, 0},
+		    {83, 1, 0},
+		    {84, 2, 0},
+		    {86, 2, 0},
+		    {88, 3, 0},
+		    {91, 1, 0},
+		    {92, 3, 0},
+		    {99, 1, 0},
+		    {100, 2, 0},
+		    {102, 2, 0},
+		    {192, 2, 655},
+            {-1, -1, -1}
+	    };
 
-        private long cachedRegister = 0;
+
+        public AD6636(AD6636Interface device) : this(device, 44000000) { }
 
         public AD6636(AD6636Interface device, long ncoFreq)
         {
             this.Device = device;
             NCOFreq = ncoFreq;
 
-            Init();
+            InitRegisters();
         }
 
-        public AD6636(AD6636Interface device)
-        {
-            this.Device = device;
-
-            Init();
-        }
-
-        public void Init()
+        public void InitRegisters()
         {
             int pos = 0;
-            while (initTable[pos, 0] != -1)
+            while (RegisterInitTable[pos, 0] != -1)
             {
-                this.Device.AD6636WriteReg(initTable[pos, 0], initTable[pos, 1], initTable[pos, 2]);
+                Device.AD6636WriteReg(RegisterInitTable[pos, 0], RegisterInitTable[pos, 1], RegisterInitTable[pos, 2]);
                 pos++;
             }
         }
 
         public long NCOFreq
         {
-
             get
             {
                 return _NCOFreq;
@@ -126,28 +124,11 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
             set
             {
-                this._NCOFreq = value;
-                this._NCOMul = Math.Pow(2, 32) / ((double)value);
+                _NCOFreq = value;
+                NCOMul = Math.Pow(2, 32) / ((double)value);
             }
         }
 
-
-        public long GetFrequency()
-        {
-            return (long)((double)this.Device.AD6636ReadReg(AD6636_REG_NCOFREQ, AD6636_REG_NCOFREQ_L) / this._NCOMul);
-        }
-
-        public bool SetFrequency(long frequency)
-        {
-            double regValue = frequency * this._NCOMul;
-
-            this.Device.AD6636WriteReg(AD6636_REG_IOAC, AD6636_REG_IOAC_L, 0x0F);
-            this.Device.AD6636WriteReg(AD6636_REG_NCOFREQ, AD6636_REG_NCOFREQ_L, (long)Math.Round(regValue));
-            this.Device.AD6636WriteReg(AD6636_REG_SOFTSYNC, AD6636_REG_SOFTSYNC_L, 0x00);
-            this.Device.AD6636WriteReg(AD6636_REG_SOFTSYNC, AD6636_REG_SOFTSYNC_L, 0xCF);
-            this.Device.AD6636WriteReg(AD6636_REG_SOFTSYNC, AD6636_REG_SOFTSYNC_L, 0xCF);
-            return true;
-        }
 
         public bool SetMGCValue(int value)
         {
@@ -192,8 +173,11 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             return true;
         }
 
+
         public bool SetFilter(FilterFile filter)
         {
+            FilterRate = filter.OutputFrequency;
+            _FilterWidth = filter.Width;
 
             this.Device.AD6636WriteReg(AD6636_REG_IOAC, AD6636_REG_IOAC_L, 0x01);
             this.Device.AD6636WriteReg(124, 2, 13);
@@ -213,8 +197,8 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                 filterFlags |= 0x04;
             if (filter.FIR1)
                 filterFlags |= 0x08;
-            this.Device.AD6636WriteReg(120, 1, filterFlags);
 
+            this.Device.AD6636WriteReg(120, 1, filterFlags);
             this.Device.AD6636WriteReg(121, 1, filter.CIC5Scale);
             this.Device.AD6636WriteReg(122, 1, filter.CIC5Decimation - 1);
 
@@ -254,6 +238,12 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             this.Device.AD6636WriteReg(5, 1, 207);
             this.Device.AD6636WriteReg(5, 1, 207);
 
+            /* inform listeners */
+            if (SamplingRateChanged != null)
+                SamplingRateChanged(this, null);
+            if (FilterWidthChanged != null)
+                FilterWidthChanged(this, null);
+
             return true;
         }
 
@@ -267,7 +257,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             this.device.ad6636WriteReg(AD6636_REG_OPC, AD6636_REG_OPC_L, 0, false );
             */
 
-            cachedRegister = this.Device.AD6636ReadReg(AD6636_REG_PPOC, AD6636_REG_PPOC_L);
+            CachedRegister = this.Device.AD6636ReadReg(AD6636_REG_PPOC, AD6636_REG_PPOC_L);
 
             // then disable all outputs
             this.Device.AD6636WriteReg(AD6636_REG_PPOC, AD6636_REG_PPOC_L, 0, false);
@@ -290,11 +280,63 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             //long cached = this.device.ad6636ReadReg(AD6636_REG_PPOC, AD6636_REG_PPOC_L, true);
 
             // write back value from cache
-            this.Device.AD6636WriteReg(AD6636_REG_PPOC, AD6636_REG_PPOC_L, cachedRegister);
+            this.Device.AD6636WriteReg(AD6636_REG_PPOC, AD6636_REG_PPOC_L, CachedRegister);
 
             //this.device.ad6636WriteReg(AD6636_REG_IOAC, AD6636_REG_IOAC_L, 0x0B );
 
 
+            return true;
+        }
+
+        #region Tuner Members
+
+        public event EventHandler FrequencyChanged;
+        public event EventHandler FilterWidthChanged;
+        public event EventHandler InvertedSpectrumChanged;
+
+        public long LowestFrequency
+        {
+            get { return 0; }
+        }
+
+        public long HighestFrequency
+        {
+            get { return NCOFreq / 2; }
+        }
+
+        public long UpperFilterMargin
+        {
+            get { return CurrentFrequency + FilterWidth / 2; }
+        }
+
+        public long LowerFilterMargin
+        {
+            get { return CurrentFrequency - FilterWidth / 2; }
+        }
+
+        public long GetFrequency()
+        {
+            long frequency = (long)((double)this.Device.AD6636ReadReg(AD6636_REG_NCOFREQ, AD6636_REG_NCOFREQ_L) / this.NCOMul);
+
+            CurrentFrequency = frequency;
+
+            return frequency;
+        }
+
+        public bool SetFrequency(long frequency)
+        {
+            double regValue = frequency * this.NCOMul;
+
+            this.Device.AD6636WriteReg(AD6636_REG_IOAC, AD6636_REG_IOAC_L, 0x0F);
+            this.Device.AD6636WriteReg(AD6636_REG_NCOFREQ, AD6636_REG_NCOFREQ_L, (long)Math.Round(regValue));
+            this.Device.AD6636WriteReg(AD6636_REG_SOFTSYNC, AD6636_REG_SOFTSYNC_L, 0x00);
+            this.Device.AD6636WriteReg(AD6636_REG_SOFTSYNC, AD6636_REG_SOFTSYNC_L, 0xCF);
+            this.Device.AD6636WriteReg(AD6636_REG_SOFTSYNC, AD6636_REG_SOFTSYNC_L, 0xCF);
+
+            CurrentFrequency = frequency;
+
+            if (FrequencyChanged != null)
+                FrequencyChanged(this, null);
             return true;
         }
 
@@ -305,5 +347,31 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                 return false;
             }
         }
+
+        public long FilterWidth
+        {
+            get
+            {
+                return _FilterWidth;
+            }
+        }
+
+        #endregion
+
+
+        #region DigitalTuner Members
+
+        public event EventHandler SamplingRateChanged;
+
+        public long SamplingRate
+        {
+            get
+            {
+                return FilterRate;
+            }
+        }
+
+        #endregion
+
     }
 }

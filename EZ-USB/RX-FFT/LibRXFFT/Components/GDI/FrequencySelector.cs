@@ -15,6 +15,11 @@ namespace LibRXFFT.Components.GDI
         public long LowerLimit = 0;
         public long UpperLimit = 8000000000;
 
+        public bool FrequencyValid = false;
+        public long CurrentFrequency = 0;
+
+        public event EventHandler FrequencyChanged;
+
         public FrequencySelector()
             : base()
         {
@@ -26,80 +31,18 @@ namespace LibRXFFT.Components.GDI
         {
             if (e.KeyChar == 0x0D)
             {
-                int oldSelStart = SelectionStart;
-                Frequency = Frequency;
-                SelectionStart = oldSelStart;
-            }
-        }
+                ParseFrequency();
+                /* reformat frequency */
+                Frequency = CurrentFrequency;
 
-        public long FrequencyUnitFactor
-        {
-            get
-            {
-                long factor = 1;
-
-                switch (FrequencyUnitString)
+                if (FrequencyValid)
                 {
-                    case "Hz":
-                        return 1;
-                    case "kHz":
-                        return 1000;
-                    case "MHz":
-                        return 1000000;
-                    case "GHz":
-                        return 1000000000;
-                    default:
-                        return 1;
+                    ForeColor = Color.Black;
                 }
-            }
-        }
-
-
-        public string FrequencyUnitString
-        {
-            get
-            {
-                string[] parts = Text.Split(' ');
-
-                if (parts.Length != 2)
+                else
                 {
-                    return "Hz";
+                    ForeColor = Color.Red;
                 }
-
-                return parts[1];
-            }
-        }
-
-        public long Frequency
-        {
-            get
-            {
-                long factor = FrequencyUnitFactor;
-                string[] parts = Text.Split(' ');
-
-                if (parts.Length < 1)
-                {
-                    return 0;
-                }
-
-
-                string freqString = parts[0].Replace(".", "");
-                decimal freqValue = 0;
-
-                if (!decimal.TryParse(freqString, out freqValue))
-                {
-                    return 0;
-                }
-
-                long frequency = (long)(freqValue * factor);
-                return frequency;
-            }
-
-            set
-            {
-                if (Text != "")
-                    Text = FrequencyFormatter.FreqToStringAccurate(value);
-
             }
         }
 
@@ -131,6 +74,139 @@ namespace LibRXFFT.Components.GDI
             int newSelStart = oldSelectionStart + (Text.Length - origText.Length);
             if (newSelStart >= 0)
                 SelectionStart = newSelStart;
+
+            if (FrequencyValid)
+            {
+                ForeColor = Color.Black;
+            }
+            else
+            {
+                ForeColor = Color.Red;
+            }
+        }
+
+        public void ParseFrequency()
+        {
+            long factor = FrequencyUnitFactor;
+            string trimmedText = Text.Trim();
+            string[] parts = trimmedText.Split(' ');
+            string freqString;
+
+            /* found two parts, so the first should be the number to parse */
+            if (parts.Length == 2)
+            {
+                freqString = parts[0];
+            }
+            else
+            {
+                /* first strategy did not work, maybe unit is added without space like "100,2MHz" */
+
+                /* skip the digits and commas */
+                int pos = 0;
+
+                while (pos < trimmedText.Length && (char.IsDigit(trimmedText[pos]) || trimmedText[pos] == ',' || trimmedText[pos] == '.'))
+                {
+                    pos++;
+                }
+
+                /* if not reached the end, the rest string is the unit */
+                if (pos < Text.Length)
+                {
+                    freqString = trimmedText.Substring(0, pos);
+                }
+                else
+                {
+                    /* try our best with the string we have */
+                    freqString = trimmedText;
+                }
+            }
+
+            /* remove dots. "1.208,5 MHz" is possible that way */
+            freqString = freqString.Replace(".", "");
+            decimal freqValue = 0;
+
+            if (!decimal.TryParse(freqString, out freqValue))
+            {
+                FrequencyValid = false;
+                return;
+            }
+
+            long newFrequency = (long)(freqValue * factor);
+            long oldFrequency = CurrentFrequency;
+
+            FrequencyValid = true;
+            CurrentFrequency = newFrequency;
+
+            if (newFrequency != oldFrequency && FrequencyChanged != null)
+                FrequencyChanged(this, null);
+        }
+
+        public long FrequencyUnitFactor
+        {
+            get
+            {
+                long factor = 1;
+
+                switch (FrequencyUnitString.ToLower())
+                {
+                    case "hz":
+                        return 1;
+                    case "khz":
+                        return 1000;
+                    case "mhz":
+                        return 1000000;
+                    case "ghz":
+                        return 1000000000;
+                    default:
+                        return 1;
+                }
+            }
+        }
+
+
+        public string FrequencyUnitString
+        {
+            get
+            {
+                string[] parts = Text.Split(' ');
+
+                /* the string was split into two strings. so the second part must be the unit */
+                if (parts.Length == 2)
+                {
+                    return parts[1];
+                }
+
+                /* skip the digits and commas */
+                int pos = 0;
+
+                while (pos < Text.Length && (char.IsDigit(Text[pos]) || Text[pos] == ',' || Text[pos] == '.'))
+                {
+                    pos++;
+                }
+
+                /* if not reached the end, return the rest string */
+                if(pos < Text.Length)
+                {
+                    return Text.Substring(pos);
+                }
+
+                return "Hz";
+            }
+        }
+
+
+
+        public long Frequency
+        {
+            get
+            {
+                return CurrentFrequency;
+            }
+            set
+            {
+                Text = FrequencyFormatter.FreqToStringAccurate(value);
+                ParseFrequency();
+            }
         }
     }
 }

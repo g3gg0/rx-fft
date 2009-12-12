@@ -69,8 +69,9 @@
     <WarningLevel>1</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="SlimDX, Version=2.0.7.41, Culture=neutral, PublicKeyToken=b1b0c32fd1ffe4f9, processorArchitecture=AMD64">
-      <Private>True</Private>
+    <Reference Include="SlimDX, Version=2.0.8.42, Culture=neutral, PublicKeyToken=b1b0c32fd1ffe4f9, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\SlimDX SDK (August 2009)\Bin\x64\SlimDX.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core, Version=3.5.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
@@ -100,6 +101,7 @@
       <DependentUpon>DirectXPhaseDisplay.cs</DependentUpon>
     </Compile>
     <Compile Include="Components\DirectX\DirectXTypes.cs" />
+    <Compile Include="Components\DirectX\DrawableObject.cs" />
     <Compile Include="Components\GDI\AD6636FilterList.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -191,6 +193,7 @@
     <Compile Include="Libraries\Filters\FilterThread.cs" />
     <Compile Include="Libraries\Filters\IIRCoefficients.cs" />
     <Compile Include="Libraries\Filters\IIRFilter.cs" />
+    <Compile Include="Libraries\SampleSources\RandomSampleSource.cs" />
     <Compile Include="Libraries\SignalProcessing\Downmixer.cs" />
     <Compile Include="Libraries\Demodulators\FMDemodulator.cs" />
     <Compile Include="Libraries\FFTW\complexarray.cs" />
@@ -254,8 +257,9 @@
     <Compile Include="Libraries\USB-RX\Interfaces\I2CInterface.cs" />
     <Compile Include="Libraries\USB-RX\Interfaces\SPIInterface.cs" />
     <Compile Include="Libraries\USB-RX\Misc\FilterFile.cs" />
+    <Compile Include="Libraries\USB-RX\Tuners\DigitalTuner.cs" />
     <Compile Include="Libraries\USB-RX\Tuners\Tuner.cs" />
-    <Compile Include="Libraries\USB-RX\Tuners\TunerMT2131.cs" />
+    <Compile Include="Libraries\USB-RX\Devices\MT2131.cs" />
     <Compile Include="Libraries\USB-RX\Tuners\TunerStack.cs" />
     <Compile Include="Libraries\USB-RX\Devices\USBRXDevice.cs" />
     <Compile Include="Libraries\USB-RX\Devices\USBRXDeviceNative.cs" />

@@ -69,7 +69,9 @@ namespace LibRXFFT.Components.DirectX
         MouseDoubleClickRightShift,
         MouseDoubleClickRightAlt,
         MouseDoubleClickRightControl,
-        RenderOverlay
+
+        RenderOverlay,
+        StatusUpdated
     }
 
     public struct Point

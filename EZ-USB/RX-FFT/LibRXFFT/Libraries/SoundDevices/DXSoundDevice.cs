@@ -14,10 +14,14 @@ public class DXSoundDevice
     private SoundManager Manager;
     private SecondarySoundBuffer Secondary;
 
-    private int SampleBufferPos = 0;
-    private int PacketsPlayed = 0;
+    private int CurrentWritePosition = 0;
+    private int BytesWritten = 0;
+    private bool PlayingStarted = false;
     private int SamplingRate = 48000;
     private int BufferSize = 0;
+    private int PrebufferBytes = 0;
+
+    private const double SecondsToBuffer = 2.0f;
 
     public DXSoundDevice(IntPtr Handle)
     {
@@ -77,11 +81,12 @@ public class DXSoundDevice
         description.Format.FormatTag = WaveFormatTag.Pcm;
         description.Format.SamplesPerSecond = SamplingRate;
         description.Format.AverageBytesPerSecond = SamplingRate * 2;
-        description.SizeInBytes = description.Format.AverageBytesPerSecond / 8;
+        description.SizeInBytes = (int)(description.Format.AverageBytesPerSecond * SecondsToBuffer);
         description.Flags = BufferFlags.GlobalFocus | BufferFlags.GetCurrentPosition2;
 
         BufferSize = description.SizeInBytes;
-        SampleBufferPos = 0;
+        PrebufferBytes = BufferSize / 16;
+        CurrentWritePosition = 0;
 
         try
         {
@@ -119,8 +124,9 @@ public class DXSoundDevice
             Secondary.Stop();
             Secondary.CurrentPlayPosition = 0;
         }
-        SampleBufferPos = 0;
-        PacketsPlayed = 0;
+        CurrentWritePosition = 0;
+        BytesWritten = 0;
+        PlayingStarted = false;
     }
 
 
@@ -137,53 +143,65 @@ public class DXSoundDevice
         Write(buff);
     }
 
-    public void Write(short[] data)
+    public void Write(short[] sampleBuffer)
     {
         if (Secondary == null)
             return;
 
+
         try
         {
+            int samplesToWrite = sampleBuffer.Length;
+            int bytesToWrite = samplesToWrite * Secondary.Format.BlockAlignment;
+            int currentPlayPosition = Secondary.CurrentPlayPosition;
+
+
+            /* get the number of samples that we are able to write total */
+            int bytesUsed = CurrentWritePosition - currentPlayPosition;
+            if(bytesUsed < 0)
+                bytesUsed += BufferSize;
+
+            /* keep one sample free */
+            int bytesFree = BufferSize - bytesUsed;
+            int samplesFree = bytesFree / Secondary.Format.BlockAlignment;
+            
+            int maxSamples = Math.Min(samplesFree, samplesToWrite);
+            if (maxSamples == 0)
+            {
+                CurrentWritePosition = 0;
+                maxSamples = samplesToWrite;
+            }
+
             if (Secondary.Status == BufferStatus.BufferLost)
                 Secondary.Restore();
 
-            int maxSamples = (BufferSize - SampleBufferPos) / Secondary.Format.BlockAlignment;
-            if (maxSamples == 0)
+            /* can be written at once? or must be written in two steps? */
+            if (CurrentWritePosition + maxSamples > BufferSize)
             {
-                SampleBufferPos = 0;
-                maxSamples = data.Length;
-            }
+                int samplesFirst = BufferSize - CurrentWritePosition;
+                int samplesSecond = maxSamples - samplesFirst;
 
-            if (maxSamples < data.Length)
-            {
-                short[] tmpBuff;
+                Secondary.Write(sampleBuffer, 0, samplesFirst, CurrentWritePosition, LockFlags.None);
 
-                tmpBuff = new short[maxSamples];
-                Array.Copy(data, 0, tmpBuff, 0, tmpBuff.Length);
-                Secondary.Write(tmpBuff, SampleBufferPos, LockFlags.None);
-
-                tmpBuff = new short[data.Length - maxSamples];
-                Array.Copy(data, maxSamples, tmpBuff, 0, tmpBuff.Length);
-                Secondary.Write(tmpBuff, 0, LockFlags.None);
+                /* write the second block at position 0 */
+                Secondary.Write(sampleBuffer, samplesFirst, samplesSecond, 0, LockFlags.None);
             }
             else
             {
-                Secondary.Write(data, SampleBufferPos, LockFlags.None);
+                Secondary.Write(sampleBuffer, 0, maxSamples, CurrentWritePosition, LockFlags.None);
             }
-            /*
-            int sampleDistance = SampleBufferPos - Secondary.CurrentPlayPosition;
-            if (sampleDistance < 0)
-                sampleDistance += BufferSize;
 
-            if (sampleDistance > data.Length * 2)
-                PacketsPlayed = 0;
-            */
+            /* whole data was written, increment position */
+            CurrentWritePosition += bytesToWrite;
+            CurrentWritePosition %= BufferSize;
 
-            SampleBufferPos += data.Length * Secondary.Format.BlockAlignment;
-            SampleBufferPos %= BufferSize;
+            BytesWritten += bytesToWrite;
 
-            if (PacketsPlayed++ == 2)
+
+            /* start playing when n packets were buffered */
+            if (!PlayingStarted && BytesWritten > PrebufferBytes)
             {
+                PlayingStarted = true;
                 Secondary.CurrentPlayPosition = 0;
                 Secondary.Play(0, PlayFlags.Looping);
             }
@@ -192,7 +210,7 @@ public class DXSoundDevice
         {
             Console.Out.WriteLine("Exception: " + e.ToString());
             Secondary.Stop();
-            PacketsPlayed = 0;
+            BytesWritten = 0;
         }
     }
 

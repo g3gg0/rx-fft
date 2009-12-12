@@ -1,0 +1,111 @@
+# Name: AD6636
+# Date: 11-01-2007
+# Comments: 98,304 4M Pass 4,9152M Stop 8,192M Out 
+#           Fi 01d
+
+[Filter Design]
+Version=2.5.0
+
+[Device]
+Name=AD6636
+
+[AD6636]
+Input Frequency=98304000
+Output Frequency=8192000
+Decimation=12
+PLL Multiplier=4
+PLL Divider=2
+Overall Setup=CRCF=1, DRCF=2, HB2=2, HB1=1, CIC5=3
+
+[CIC5 Filter]
+Enabled=True
+Order=5
+Decimation=3
+Scale=3
+
+[FIR 1 Filter]
+Enabled=True
+
+[HB 1 Filter]
+Enabled=False
+
+[FIR 2 Filter]
+Enabled=True
+
+[HB 2 Filter]
+Enabled=True
+
+[MRCF Filter]
+Enabled=False
+Symmetric=True
+NTaps=0
+
+[DRCF Filter]
+Enabled=True
+Decimation=2
+Symmetric=True
+NTaps=23
+49
+288
+463
+177
+-291
+-148
+389
+143
+-680
+-144
+2112
+3478
+2112
+-144
+-680
+143
+389
+-148
+-291
+177
+463
+288
+49
+
+[CRCF Filter]
+Enabled=True
+Decimation=1
+Symmetric=True
+NTaps=23
+-11558
+9792
+-2047
+4322
+-8078
+16294
+-60244
+-6655
+800
+7297
+-29010
+524287
+-29010
+7297
+800
+-6655
+-60244
+16294
+-8078
+4322
+-2047
+9792
+-11558
+
+[LHB Filter]
+Enabled=False
+
+[Ideal Response]
+Type=ER
+Frequency=4000000
+Alpha=0
+Ripple=0,1
+NStopBands=1
+4915200
+-80

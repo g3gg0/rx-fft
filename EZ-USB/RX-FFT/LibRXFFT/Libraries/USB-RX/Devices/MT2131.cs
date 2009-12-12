@@ -2,19 +2,21 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using LibRXFFT.Libraries.USB_RX.Interfaces;
 using System.Threading;
+using LibRXFFT.Libraries.USB_RX.Interfaces;
+using LibRXFFT.Libraries.USB_RX.Tuners;
 
-namespace LibRXFFT.Libraries.USB_RX.Tuners
+namespace LibRXFFT.Libraries.USB_RX.Devices
 {
-    class TunerMT2131 : Tuner
+    class MT2131 : Tuner
     {
-        public long IFFreq = 43998658;
+        public long IFFrequency = 43998658;
         public long IFStepSize = 50000;
 
-        private I2CInterface i2cDevice;
-        private int busID;
-        private long currentFrequency;
+        private I2CInterface I2cDevice;
+        private int BusID;
+        private long CurrentFrequency;
+
 
         private readonly byte defaultBusID = 0x60;
         public readonly byte[] mt2131_config1 = { 0x50, 0x00, 0x50, 0x80, 0x00, 0x49,
@@ -36,10 +38,10 @@ namespace LibRXFFT.Libraries.USB_RX.Tuners
         public readonly int MT2131_FREF = 16000;
 
 
-        public TunerMT2131(I2CInterface device)
+        public MT2131(I2CInterface device)
         {
-            i2cDevice = device;
-            busID = defaultBusID;
+            I2cDevice = device;
+            BusID = defaultBusID;
 
             if (!exists())
             {
@@ -49,6 +51,48 @@ namespace LibRXFFT.Libraries.USB_RX.Tuners
             init();
             SetFrequency(oldFreq);
 
+        }
+
+        #region Tuner Members
+
+        public event EventHandler FrequencyChanged;
+        public event EventHandler InvertedSpectrumChanged; 
+        public event EventHandler FilterWidthChanged;
+
+        public long LowestFrequency
+        {
+            get { return 0; }
+        }
+
+        public long HighestFrequency
+        {
+            get { return 1000000000; }
+        }
+
+        public long UpperFilterMargin
+        {
+            get { return CurrentFrequency + FilterWidth/2; }
+        }
+
+        public long LowerFilterMargin
+        {
+            get { return CurrentFrequency - FilterWidth / 2; }
+        }
+
+        public bool InvertedSpectrum
+        {
+            get
+            {
+                return true;
+            }
+        }
+
+        public long FilterWidth
+        {
+            get
+            {
+                return 8000000;
+            }
         }
 
         public long GetFrequency()
@@ -69,14 +113,9 @@ namespace LibRXFFT.Libraries.USB_RX.Tuners
             num2 = Math.Round(div2) * 0x2000 + num2;
             f_lo2 = num2 * (MT2131_FREF / 128.0) / 64.0;
 
-            currentFrequency = (long)((f_lo1 - f_lo2 - MT2131_IF2) * 1000);
-            /*
-                    System.out.printf("READ PLL [0..5]: %2x %2x %2x %2x %2x %2x\n", (int) b[0],
-                            (int) b[1], (int) b[2], (int) b[3], (int) b[4], (int) b[5]);
-    		
-                    System.out.println ( "=> "+(int) currentFrequency );
-            */
-            return currentFrequency;
+            CurrentFrequency = (long)((f_lo1 - f_lo2 - MT2131_IF2) * 1000);
+
+            return CurrentFrequency;
         }
 
         public bool SetFrequency(long frequency)
@@ -97,7 +136,7 @@ namespace LibRXFFT.Libraries.USB_RX.Tuners
             f_lo1 = (f_lo1 / 250) * 250;
             f_lo2 = f_lo1 - freq - MT2131_IF2;
 
-            currentFrequency = (long)( (f_lo1 - f_lo2 - MT2131_IF2) * 1000);
+            CurrentFrequency = (long)( (f_lo1 - f_lo2 - MT2131_IF2) * 1000);
 
             /* Frequency LO1 = 16MHz * (DIV1 + NUM1/8192 ) */
             num1 = f_lo1 * 64 / (MT2131_FREF / 128);
@@ -200,10 +239,12 @@ namespace LibRXFFT.Libraries.USB_RX.Tuners
             return true;
         }
 
+        #endregion
+
         public void readReg(byte register, byte[] buf)
         {
-            this.i2cDevice.I2CWriteByte(busID, register);
-            this.i2cDevice.I2CReadBytes(busID, buf);
+            this.I2cDevice.I2CWriteByte(BusID, register);
+            this.I2cDevice.I2CReadBytes(BusID, buf);
         }
 
         public bool writeReg(byte register, byte[] data)
@@ -214,7 +255,7 @@ namespace LibRXFFT.Libraries.USB_RX.Tuners
             for (int pos = 0; pos < data.Length; pos++)
                 buf[1 + pos] = data[pos];
 
-            return this.i2cDevice.I2CWriteBytes(busID, buf);
+            return this.I2cDevice.I2CWriteBytes(BusID, buf);
         }
 
         public bool writeReg(byte register, byte data)
@@ -224,7 +265,7 @@ namespace LibRXFFT.Libraries.USB_RX.Tuners
             buf[0] = register;
             buf[1] = data;
 
-            return this.i2cDevice.I2CWriteByte(busID, register);
+            return this.I2cDevice.I2CWriteByte(BusID, register);
         }
 
         public void init()
@@ -249,14 +290,6 @@ namespace LibRXFFT.Libraries.USB_RX.Tuners
                 return false;
 
             return true;
-        }
-
-        public bool InvertedSpectrum
-        {
-            get
-            {
-                return true;
-            }
         }
     }
 }

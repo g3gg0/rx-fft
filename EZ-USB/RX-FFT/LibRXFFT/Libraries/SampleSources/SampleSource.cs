@@ -92,15 +92,15 @@ namespace LibRXFFT.Libraries.SampleSources
             }
         }
 
-        public bool SamplingRateChanged;
-        public event EventHandler SamplingRateChangedEvent;
+        public bool SamplingRateHasChanged;
+        public event EventHandler SamplingRateChanged;
 
         protected SampleSource(int oversampling)
         {
             DataFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPoint;
-            SamplesPerBlock = 1024;
 
             InternalOversampling = oversampling;
+            SamplesPerBlock = 1024;
 
             IOversampler = new Oversampler(InternalOversampling);
             IOversampler.Type = DefaultOversamplingType;
@@ -110,7 +110,7 @@ namespace LibRXFFT.Libraries.SampleSources
             QOversampler.Type = DefaultOversamplingType;
             QOversampler.SinXDepth = DefaultSinXDepth;
 
-            SamplingRateChanged = true;
+            SamplingRateHasChanged = true;
         }
 
         protected void AllocateBuffers()
@@ -132,10 +132,10 @@ namespace LibRXFFT.Libraries.SampleSources
 
         public virtual void ForceInputRate(double rate)
         {
-            SamplingRateChanged = true;
+            SamplingRateHasChanged = true;
             InputSamplingRate = rate;
-            if (SamplingRateChangedEvent != null)
-                SamplingRateChangedEvent(this, null);
+            if (SamplingRateChanged != null)
+                SamplingRateChanged(this, null);
         }
     }
 }

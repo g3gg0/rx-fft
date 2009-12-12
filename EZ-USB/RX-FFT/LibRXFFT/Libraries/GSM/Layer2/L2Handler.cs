@@ -152,7 +152,9 @@ namespace LibRXFFT.Libraries.GSM.Layer2
                     LastNS = -1;
                 }
                 else if (L3Handler.ExceptFieldsEnabled || ShowMessage)
+                {
                     StatusMessage += "(packet " + NumPackets + ")" + Environment.NewLine;
+                }
             }
 
             if (DumpRawData && (L3Handler.ExceptFieldsEnabled || ShowMessage))

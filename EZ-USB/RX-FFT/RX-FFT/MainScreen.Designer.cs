@@ -71,6 +71,7 @@ namespace RX_FFT
             this.cmbWindowFunc = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
             this.FFTDisplay = new LibRXFFT.Components.DirectX.DirectXWaterfallFFTDisplay();
+            this.btnGSM = new System.Windows.Forms.Button();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -106,6 +107,7 @@ namespace RX_FFT
             // 
             // splitContainer1.Panel1
             // 
+            this.splitContainer1.Panel1.Controls.Add(this.btnGSM);
             this.splitContainer1.Panel1.Controls.Add(this.btnStats);
             this.splitContainer1.Panel1.Controls.Add(this.btnDemod);
             this.splitContainer1.Panel1.Controls.Add(this.txtFileName);
@@ -313,6 +315,16 @@ namespace RX_FFT
             this.FFTDisplay.UpdateRate = 25;
             this.FFTDisplay.WindowingFunction = LibRXFFT.Libraries.FFTW.FFTTransformer.eWindowingFunction.BlackmanHarris;
             // 
+            // btnGSM
+            // 
+            this.btnGSM.Location = new System.Drawing.Point(762, 26);
+            this.btnGSM.Name = "btnGSM";
+            this.btnGSM.Size = new System.Drawing.Size(41, 23);
+            this.btnGSM.TabIndex = 20;
+            this.btnGSM.Text = "GSM";
+            this.btnGSM.UseVisualStyleBackColor = true;
+            this.btnGSM.Click += new System.EventHandler(this.btnGSM_Click);
+            // 
             // MainScreen
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -352,6 +364,7 @@ namespace RX_FFT
         private System.Windows.Forms.Button btnDemod;
         private System.Windows.Forms.Button btnStats;
         private LibRXFFT.Components.GDI.FrequencySelector freqSelector;
+        private System.Windows.Forms.Button btnGSM;
     }
 }
 

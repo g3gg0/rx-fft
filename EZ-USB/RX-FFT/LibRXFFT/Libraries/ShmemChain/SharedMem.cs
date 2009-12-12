@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Collections;
 
 namespace LibRXFFT.Libraries.ShmemChain
 {
@@ -10,6 +11,19 @@ namespace LibRXFFT.Libraries.ShmemChain
         TimeLimited = SharedMemNative.MODE_BLOCKING_TIME,
         Partial = SharedMemNative.MODE_PARTIAL
     };
+
+    public class NodeInfo
+    {
+        public int shmemID;
+        public int srcChan;
+        public int dstChan;
+        public long bytesRead;
+        public long bytesWritten;
+        public int bufferSize;
+        public int bufferUsed;
+        public int pct;
+        public string name;
+    }
 
     public class SharedMem : Stream
     {
@@ -26,6 +40,9 @@ namespace LibRXFFT.Libraries.ShmemChain
             this.srcChan = -1;
             this.dstChan = -1;
             shmemID = SharedMemNative.shmemchain_register_node(srcChan, dstChan);
+
+            if (shmemID < 0)
+                throw new NotSupportedException("Failed to register shmem node. Error code #" + SharedMemNative.shmemchain_get_last_error());
         }
 
         public SharedMem(string name)
@@ -37,6 +54,9 @@ namespace LibRXFFT.Libraries.ShmemChain
             System.Text.ASCIIEncoding enc = new System.Text.ASCIIEncoding();
 
             shmemID = SharedMemNative.shmemchain_register_node_special(srcChan, dstChan, defaultBufferSize, enc.GetBytes(name));
+
+            if (shmemID < 0)
+                throw new NotSupportedException("Failed to register shmem node. Error code #" + SharedMemNative.shmemchain_get_last_error());
         }
 
         public SharedMem(int srcChan, int dstChan)
@@ -44,6 +64,9 @@ namespace LibRXFFT.Libraries.ShmemChain
             this.srcChan = srcChan;
             this.dstChan = dstChan;
             shmemID = SharedMemNative.shmemchain_register_node(srcChan, dstChan);
+
+            if (shmemID < 0)
+                throw new NotSupportedException("Failed to register shmem node. Error code #" + SharedMemNative.shmemchain_get_last_error());
         }
 
         public SharedMem(int srcChan, int dstChan, string name)
@@ -55,6 +78,9 @@ namespace LibRXFFT.Libraries.ShmemChain
             System.Text.ASCIIEncoding enc = new System.Text.ASCIIEncoding();
 
             shmemID = SharedMemNative.shmemchain_register_node_special(srcChan, dstChan, defaultBufferSize, enc.GetBytes(name));
+
+            if (shmemID < 0)
+                throw new NotSupportedException("Failed to register shmem node. Error code #" + SharedMemNative.shmemchain_get_last_error());
         }
 
         public SharedMem(int srcChan, int dstChan, string name, int bufferSize)
@@ -66,6 +92,45 @@ namespace LibRXFFT.Libraries.ShmemChain
             System.Text.ASCIIEncoding enc = new System.Text.ASCIIEncoding();
 
             shmemID = SharedMemNative.shmemchain_register_node_special(srcChan, dstChan, bufferSize, enc.GetBytes(name));
+
+            if (shmemID < 0)
+                throw new NotSupportedException("Failed to register shmem node. Error code #" + SharedMemNative.shmemchain_get_last_error());
+        }
+
+        public static NodeInfo[] GetNodeInfos()
+        {
+            ArrayList nodes = new ArrayList();
+            int[] nodeIds = new int[64];
+            int used = SharedMemNative.shmemchain_get_all_nodes(nodeIds, nodeIds.Length);
+
+            for (int pos = 0; pos < used; pos++)
+            {
+                byte[] name = new byte[SharedMemNative.MAX_NAME_LENGTH];
+                long[] data = new long[7];
+
+                SharedMemNative.shmemchain_get_infos(nodeIds[pos], name, data);
+
+                int stringLength = 0;
+                while (name[stringLength] != (byte)0)
+                {
+                    stringLength++;
+                }
+
+                NodeInfo info = new NodeInfo();
+                info.name = new System.Text.ASCIIEncoding().GetString(name, 0, stringLength);
+                info.shmemID = nodeIds[pos];
+                info.srcChan = (int)data[0];
+                info.dstChan = (int)data[1];
+                info.bytesRead = data[2];
+                info.bytesWritten = data[3];
+                info.bufferSize = (int)data[4];
+                info.bufferUsed = (int)data[5];
+                info.pct = (int)data[6];
+
+                nodes.Add(info);
+            }
+
+            return (NodeInfo[])nodes.ToArray(typeof(NodeInfo));
         }
 
         public int SrcChan
@@ -94,7 +159,7 @@ namespace LibRXFFT.Libraries.ShmemChain
             set { SharedMemNative.shmemchain_set_blocksize(shmemID, value); }
         }
 
-        public int Rate
+        public long Rate
         {
             get { return SharedMemNative.shmemchain_get_rate(shmemID); }
             set { SharedMemNative.shmemchain_set_rate(shmemID, value); }

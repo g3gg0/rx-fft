@@ -56,7 +56,11 @@ namespace LibRXFFT.Components.DirectX
         protected Vertex[] YAxisVerts = new Vertex[0];
         protected Vertex[] OverviewVertexes = new Vertex[100];
         protected int OverviewVertexCount = 0;
-        
+
+        public LinkedList<LabelledLine> LabelledVertLines = new LinkedList<LabelledLine>();
+        public LinkedList<LabelledLine> LabelledHorLines = new LinkedList<LabelledLine>();
+        public LinkedList<StringLabel> TextLabels = new LinkedList<StringLabel>();
+
 
         protected Point[] LinePoints;
         protected Object LinePointsLock = new Object();
@@ -891,6 +895,7 @@ namespace LibRXFFT.Components.DirectX
                 if (ShiftPressed && !OverviewMode)
                 {
                     OverviewMode = true;
+                    UpdateOverlays = true;
                     MainTextPrev = MainText;
                     MainText = "Zoom Selection";
                 }
@@ -930,6 +935,7 @@ namespace LibRXFFT.Components.DirectX
                 if (!ShiftPressed && OverviewMode)
                 {
                     OverviewMode = false;
+                    UpdateOverlays = true;
                     MainText = MainTextPrev;
                     MainTextPrev = "";
                 }

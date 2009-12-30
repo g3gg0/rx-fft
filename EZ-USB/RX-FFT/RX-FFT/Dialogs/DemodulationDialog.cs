@@ -29,10 +29,10 @@ namespace RX_FFT.Dialogs
             chkEnableCursorWin.Checked = Demod.CursorPositionWindowEnabled;
             chkAmplify.Checked = Demod.AudioAmplificationEnabled;
             chkNative.Checked = FIRFilter.UseNative;
-
-
+            
             txtAmplify.Text = Demod.AudioAmplification.ToString();
             txtDecim.Text = Demod.AudioDecimation.ToString();
+            txtSquelchLimit.Text = Demod.SquelchLowerLimit.ToString();
 
             radioAM.Checked = false;
             radioFMFast.Checked = false;
@@ -123,7 +123,14 @@ namespace RX_FFT.Dialogs
                     break;
             }
 
+            chkEnableSquelch.Checked = Demod.SquelchEnabled;
+            if (!Demod.SquelchEnabled)
+            {
+                Demod.SquelchAverage = -50;
+            }
+
             UpdateInformationInternal();
+            UpdatePowerBarInternal();
 
             UpdateTimer = new Timer();
             UpdateTimer.Tick += new EventHandler(UpdateTimer_Tick);
@@ -147,6 +154,23 @@ namespace RX_FFT.Dialogs
             }
         }
 
+        public void UpdatePowerBar()
+        {
+            try
+            {
+                BeginInvoke(new MethodInvoker(UpdatePowerBarInternal));
+            }
+            catch (Exception e)
+            {
+            }
+        }
+
+        private void UpdatePowerBarInternal()
+        {
+            barSquelchPower.Amplitude = (Demod.SquelchAverage + 100) / 100;
+            barSquelchPower.LinePosition = (Demod.SquelchLowerLimit + 100) / 100;
+            barSquelchPower.Invalidate();
+        }
 
         private void UpdateInformationInternal()
         {
@@ -207,6 +231,10 @@ namespace RX_FFT.Dialogs
                 radioLowPass128.Text = "/128";
                 radioLowPass256.Text = "/256";
             }
+
+            txtSquelchAvg.Text = String.Format("{0:0.00}", Demod.SquelchAverage);
+            txtSquelchMax.Text = String.Format("{0:0.00}", Demod.SquelchMax);
+
 
         }
 
@@ -512,7 +540,27 @@ namespace RX_FFT.Dialogs
             Downmixer.UseNative = chkNative.Checked;
             ByteUtil.UseNative = chkNative.Checked;
 
-            FFTTransformer.UseFFTW = !chkNative.Checked;
+            //FFTTransformer.UseFFTW = !chkNative.Checked;
+        }
+
+        private void chkEnableSquelch_CheckedChanged(object sender, EventArgs e)
+        {
+            Demod.SquelchEnabled = chkEnableSquelch.Checked;
+            if(!Demod.SquelchEnabled)
+            {
+                Demod.SquelchAverage = -50;
+            }
+        }
+
+        private void txtSquelchLimit_TextChanged(object sender, EventArgs e)
+        {
+            double level;
+
+            if (!double.TryParse(txtSquelchLimit.Text, out level))
+                return;
+
+            Demod.SquelchLowerLimit = level;
+            UpdatePowerBarInternal();
         }
     }
 }

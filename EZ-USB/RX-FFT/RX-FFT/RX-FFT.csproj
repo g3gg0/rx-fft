@@ -91,12 +91,28 @@
     </Compile>
     <Compile Include="Demodulation.cs" />
     <Compile Include="DeviceControls\DeviceControl.cs" />
+    <Compile Include="Dialogs\LogWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\LogWindow.Designer.cs">
+      <DependentUpon>LogWindow.cs</DependentUpon>
+    </Compile>
     <Compile Include="Dialogs\MarkerDetailsDialog.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Dialogs\MarkerDetailsDialog.Designer.cs">
       <DependentUpon>MarkerDetailsDialog.cs</DependentUpon>
     </Compile>
+    <Compile Include="Dialogs\MarkerListDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\MarkerListDialog.Designer.cs">
+      <DependentUpon>MarkerListDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\ToolStripForm.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Log.cs" />
     <Compile Include="MainScreen.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -109,14 +125,24 @@
     <Compile Include="Dialogs\PerformaceStatsDialog.Designer.cs">
       <DependentUpon>PerformaceStatsDialog.cs</DependentUpon>
     </Compile>
+    <Compile Include="MainScreen.MenuCallbacks.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Dialogs\DemodulationDialog.resx">
       <DependentUpon>DemodulationDialog.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\LogWindow.resx">
+      <DependentUpon>LogWindow.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Dialogs\MarkerDetailsDialog.resx">
       <DependentUpon>MarkerDetailsDialog.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\MarkerListDialog.resx">
+      <DependentUpon>MarkerListDialog.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="MainScreen.resx">
@@ -177,6 +203,7 @@
     <Compile Include="Dialogs\WaitDialog.Designer.cs">
       <DependentUpon>WaitDialog.cs</DependentUpon>
     </Compile>
+    <Compile Include="Settings.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\GSM Analyzer\GSM Analyzer.csproj">

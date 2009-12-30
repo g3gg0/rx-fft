@@ -28,6 +28,7 @@ namespace LibRXFFT.Components.DirectX
         private double IMax = -100;
         private double IMin = 100;
 
+
         public DirectXWaterfallFFTDisplay()
         {
             InitializeComponent();
@@ -36,33 +37,39 @@ namespace LibRXFFT.Components.DirectX
             FFTDisplay.SquaredFFTData = true;
             WaterfallDisplay.SquaredFFTData = true;
 
-            /* handle X Zoom and X Offset ourselves */
+            /* handle some actions ourselves */
             FFTDisplay.UserEventCallback = UserEventCallbackFunc;
             WaterfallDisplay.UserEventCallback = UserEventCallbackFunc;
 
-            FFTDisplay.EventActions[eUserEvent.MouseEnter] = eUserAction.UserCallback;
-            FFTDisplay.EventActions[eUserEvent.MouseLeave] = eUserAction.UserCallback;
-            FFTDisplay.EventActions[eUserEvent.MouseDoubleClickLeft] = eUserAction.UserCallback;
-            FFTDisplay.EventActions[eUserEvent.MouseClickRight] = eUserAction.UserCallback;
-            FFTDisplay.EventActions[eUserEvent.MousePosX] = eUserAction.UserCallback;
-            FFTDisplay.EventActions[eUserEvent.MouseDragXControl] = eUserAction.UserCallback;
+            /* when dragging in Y-direction in FFTDisplay, update offset */
             FFTDisplay.EventActions[eUserEvent.MouseDragY] = eUserAction.YOffset;
-            FFTDisplay.EventActions[eUserEvent.MouseDragXShift] = eUserAction.UserCallback;
             FFTDisplay.EventActions[eUserEvent.MouseDragYShift] = eUserAction.YOffset;
-            FFTDisplay.EventActions[eUserEvent.MouseWheelUp] = eUserAction.UserCallback;
-            FFTDisplay.EventActions[eUserEvent.MouseWheelDown] = eUserAction.UserCallback;
+
+            /* when zooming in X direction in FFTDisplay, update waterfall view also */
             FFTDisplay.EventActions[eUserEvent.MouseWheelUpShift] = eUserAction.UserCallback;
             FFTDisplay.EventActions[eUserEvent.MouseWheelDownShift] = eUserAction.UserCallback;
 
-            WaterfallDisplay.EventActions[eUserEvent.MouseEnter] = eUserAction.UserCallback;
-            WaterfallDisplay.EventActions[eUserEvent.MouseLeave] = eUserAction.UserCallback;
-            WaterfallDisplay.EventActions[eUserEvent.MouseDoubleClickLeft] = eUserAction.UserCallback;
-            WaterfallDisplay.EventActions[eUserEvent.MouseClickRight] = eUserAction.UserCallback;
-            WaterfallDisplay.EventActions[eUserEvent.MousePosX] = eUserAction.UserCallback;
-            WaterfallDisplay.EventActions[eUserEvent.MouseDragX] = eUserAction.UserCallback;
-            WaterfallDisplay.EventActions[eUserEvent.MouseDragXShift] = eUserAction.UserCallback;
-            WaterfallDisplay.EventActions[eUserEvent.MouseWheelUpAlt] = eUserAction.UserCallback;
-            WaterfallDisplay.EventActions[eUserEvent.MouseWheelDownAlt] = eUserAction.UserCallback;
+            /* to force "show cursor" in other graph */
+            AddUserEventCallback(eUserEvent.MouseEnter);
+            AddUserEventCallback(eUserEvent.MouseLeave);
+
+            /* when dragging, drag other view also */
+            AddUserEventCallback(eUserEvent.MouseDragX);
+            AddUserEventCallback(eUserEvent.MouseDragXShift);
+
+            /* when zooming in? */
+            //FFTDisplay.EventActions[eUserEvent.MouseWheelUp] = eUserAction.UserCallback;
+            //FFTDisplay.EventActions[eUserEvent.MouseWheelDown] = eUserAction.UserCallback;
+
+            /* configure update speed */
+            //WaterfallDisplay.EventActions[eUserEvent.MouseWheelUpAlt] = eUserAction.UserCallback;
+            //WaterfallDisplay.EventActions[eUserEvent.MouseWheelDownAlt] = eUserAction.UserCallback;
+        }
+
+        public void AddUserEventCallback(eUserEvent evt)
+        {
+            FFTDisplay.EventActions[evt] = eUserAction.UserCallback;
+            WaterfallDisplay.EventActions[evt] = eUserAction.UserCallback;
         }
 
         /* return a value between -0.5 to 0.5 that indicates the cursor position relative to the center */
@@ -118,17 +125,17 @@ namespace LibRXFFT.Components.DirectX
 
         public string SavingName
         {
-            get { return WaterfallDisplay._SavingName; }
-            set { WaterfallDisplay._SavingName = value; }
+            get { return WaterfallDisplay.SavingName; }
+            set { WaterfallDisplay.SavingName = value; }
         }
 
-        public double Averaging
+        public double VerticalSmooth
         {
-            get { return FFTDisplay.Averaging; }
+            get { return FFTDisplay.VerticalSmooth; }
             set 
             { 
-                FFTDisplay.Averaging = value;
-                WaterfallDisplay.Averaging = value;
+                FFTDisplay.VerticalSmooth = value;
+                WaterfallDisplay.VerticalSmooth = value;
             }
         }
 
@@ -162,9 +169,6 @@ namespace LibRXFFT.Components.DirectX
 
         public void UserEventCallbackFunc(eUserEvent evt, double param)
         {
-            if (UserEventCallback != null)
-                UserEventCallback(evt, param);
-
             switch (evt)
             {
                 case eUserEvent.MouseEnter:
@@ -177,13 +181,12 @@ namespace LibRXFFT.Components.DirectX
                     WaterfallDisplay.ShowVerticalCursor = false;
                     break;
 
+                /* used to paint waterfall level bars */
                 case eUserEvent.StatusUpdated:
                     if (!WaterfallDisplay.LevelBarActive && LevelBarActive)
                     {
                         FFTDisplay.LabelledHorLines.Remove(LevelBarLower);
                         FFTDisplay.LabelledHorLines.Remove(LevelBarUpper);
-
-                        FFTDisplay.LabelledVertLines.AddLast(new LabelledLine("Test", 100000000, Color.Green));
                         LevelBarActive = false;
                     }
 
@@ -197,9 +200,6 @@ namespace LibRXFFT.Components.DirectX
                     LevelBarLower.Position = WaterfallDisplay.LeveldBBlack;
                     LevelBarUpper.Position = WaterfallDisplay.LeveldBWhite;
                     FFTDisplay.UpdateOverlays = true;
-                    break;
-
-                case eUserEvent.MouseClickRight:
                     break;
 
                 case eUserEvent.MouseWheelUp:
@@ -236,6 +236,7 @@ namespace LibRXFFT.Components.DirectX
                     WaterfallDisplay.ProcessUserAction(eUserAction.XZoomOut, param);
                     break;
 
+                    /*
                 case eUserEvent.MouseWheelUpAlt:
                     if (WaterfallDisplay.UpdateRate < 512)
                     {
@@ -251,6 +252,13 @@ namespace LibRXFFT.Components.DirectX
                         WaterfallDisplay.UpdateRate /= 2;
                     }
                     break;
+                     * */
+            }
+
+            /* finally inform master form about the event */
+            if (UserEventCallback != null)
+            {
+                UserEventCallback(evt, param);
             }
         }
 
@@ -268,6 +276,18 @@ namespace LibRXFFT.Components.DirectX
                     FFTDisplay.FFTSize = value;
                     WaterfallDisplay.FFTSize = value;
                 }
+            }
+        }
+
+        public void FocusHovered()
+        {
+            if (WaterfallDisplay.MouseHovering)
+            {
+                WaterfallDisplay.Focus();
+            }
+            if (FFTDisplay.MouseHovering)
+            {
+                FFTDisplay.Focus();
             }
         }
 
@@ -361,5 +381,6 @@ namespace LibRXFFT.Components.DirectX
                 FFTDisplay.UpdateOverlays = true;
             }
         }
+
     }
 }

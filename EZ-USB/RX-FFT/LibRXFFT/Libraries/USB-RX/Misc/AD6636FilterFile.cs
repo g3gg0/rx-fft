@@ -8,10 +8,11 @@ using System.Collections;
 namespace LibRXFFT.Libraries.USB_RX.Misc
 {
 
-    public class AD6636FilterFile
+    public class AD6636FilterFile : IComparable
     {
         public String ProgramVersion;
         public String DeviceName;
+        public String FileName;
 
         public long Width;
 
@@ -52,7 +53,7 @@ namespace LibRXFFT.Libraries.USB_RX.Misc
 
         public bool Valid = false;
 
-        private ArrayList fileContent;
+        private ArrayList FileContent;
 
         internal class NoSuchFieldException : Exception
         {
@@ -64,10 +65,11 @@ namespace LibRXFFT.Libraries.USB_RX.Misc
 
         public AD6636FilterFile(String fileName)
         {
+            FileName = fileName;
             try
             {
                 TextReader reader = new StreamReader(fileName);
-                fileContent = new ArrayList();
+                FileContent = new ArrayList();
 
                 try
                 {
@@ -76,19 +78,19 @@ namespace LibRXFFT.Libraries.USB_RX.Misc
                     {
                         String line = reader.ReadLine();
                         if (line != null)
-                            fileContent.Add(line);
+                            FileContent.Add(line);
                         else
                             done = true;
                     }
                 }
                 catch (IOException e)
                 {
-                    fileContent = null;
+                    FileContent = null;
                 }
             }
             catch (FileNotFoundException e)
             {
-                fileContent = null;
+                FileContent = null;
             }
 
             try
@@ -281,7 +283,7 @@ namespace LibRXFFT.Libraries.USB_RX.Misc
             bool found = false;
 
 
-            foreach (String line in fileContent)
+            foreach (String line in FileContent)
             {
                 if (line.Equals("[" + sectionName + "]"))
                     found = true;
@@ -292,5 +294,20 @@ namespace LibRXFFT.Libraries.USB_RX.Misc
             }
             return section;
         }
+
+        #region IComparable Member
+
+        public int CompareTo(object obj)
+        {
+            if (obj.GetType() != typeof(AD6636FilterFile))
+            {
+                return -1;
+            }
+            AD6636FilterFile other = (AD6636FilterFile)obj;
+
+            return (Width < other.Width) ? -1 : 1;
+        }
+
+        #endregion
     }
 }

@@ -30,7 +30,6 @@
         {
             this.chkEnableDemod = new System.Windows.Forms.CheckBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.txtDecim = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
             this.radioFMAccurate = new System.Windows.Forms.RadioButton();
             this.radioFMFast = new System.Windows.Forms.RadioButton();
@@ -61,15 +60,26 @@
             this.radioLowPass2 = new System.Windows.Forms.RadioButton();
             this.chkEnableLowpass = new System.Windows.Forms.CheckBox();
             this.groupBox5 = new System.Windows.Forms.GroupBox();
-            this.chkAmplify = new System.Windows.Forms.CheckBox();
-            this.txtAmplify = new System.Windows.Forms.TextBox();
-            this.chkShowDemod = new System.Windows.Forms.CheckBox();
             this.chkNative = new System.Windows.Forms.CheckBox();
+            this.chkAmplify = new System.Windows.Forms.CheckBox();
+            this.chkShowDemod = new System.Windows.Forms.CheckBox();
+            this.groupBox6 = new System.Windows.Forms.GroupBox();
+            this.txtSquelchMax = new System.Windows.Forms.TextBox();
+            this.txtSquelchAvg = new System.Windows.Forms.TextBox();
+            this.chkEnableSquelch = new System.Windows.Forms.CheckBox();
+            this.label5 = new System.Windows.Forms.Label();
+            this.label6 = new System.Windows.Forms.Label();
+            this.label4 = new System.Windows.Forms.Label();
+            this.barSquelchPower = new LibRXFFT.Components.GDI.PowerBar();
+            this.txtSquelchLimit = new LibRXFFT.Components.GDI.TextBoxMouseScroll();
+            this.txtAmplify = new LibRXFFT.Components.GDI.TextBoxMouseScroll();
+            this.txtDecim = new LibRXFFT.Components.GDI.TextBoxMouseScroll();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
             this.groupBox4.SuspendLayout();
             this.groupBox5.SuspendLayout();
+            this.groupBox6.SuspendLayout();
             this.SuspendLayout();
             // 
             // chkEnableDemod
@@ -97,14 +107,6 @@
             this.groupBox1.TabIndex = 1;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Demodulation";
-            // 
-            // txtDecim
-            // 
-            this.txtDecim.Location = new System.Drawing.Point(74, 109);
-            this.txtDecim.Name = "txtDecim";
-            this.txtDecim.Size = new System.Drawing.Size(23, 20);
-            this.txtDecim.TabIndex = 5;
-            this.txtDecim.TextChanged += new System.EventHandler(this.txtDecim_TextChanged);
             // 
             // label3
             // 
@@ -460,6 +462,17 @@
             this.groupBox5.TabStop = false;
             this.groupBox5.Text = "Tweaks";
             // 
+            // chkNative
+            // 
+            this.chkNative.AutoSize = true;
+            this.chkNative.Location = new System.Drawing.Point(6, 66);
+            this.chkNative.Name = "chkNative";
+            this.chkNative.Size = new System.Drawing.Size(106, 17);
+            this.chkNative.TabIndex = 4;
+            this.chkNative.Text = "Native Functions";
+            this.chkNative.UseVisualStyleBackColor = true;
+            this.chkNative.CheckedChanged += new System.EventHandler(this.chkNative_CheckedChanged);
+            // 
             // chkAmplify
             // 
             this.chkAmplify.AutoSize = true;
@@ -470,16 +483,6 @@
             this.chkAmplify.Text = "Amplify:";
             this.chkAmplify.UseVisualStyleBackColor = true;
             this.chkAmplify.CheckedChanged += new System.EventHandler(this.chkAmplify_CheckedChanged);
-            // 
-            // txtAmplify
-            // 
-            this.txtAmplify.Location = new System.Drawing.Point(82, 42);
-            this.txtAmplify.Name = "txtAmplify";
-            this.txtAmplify.Size = new System.Drawing.Size(46, 20);
-            this.txtAmplify.TabIndex = 2;
-            this.txtAmplify.Text = "1,0";
-            this.txtAmplify.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.txtAmplify.TextChanged += new System.EventHandler(this.txtAmplify_TextChanged);
             // 
             // chkShowDemod
             // 
@@ -492,27 +495,142 @@
             this.chkShowDemod.UseVisualStyleBackColor = true;
             this.chkShowDemod.CheckedChanged += new System.EventHandler(this.chkShowDemod_CheckedChanged);
             // 
-            // chkNative
+            // groupBox6
             // 
-            this.chkNative.AutoSize = true;
-            this.chkNative.Location = new System.Drawing.Point(6, 66);
-            this.chkNative.Name = "chkNative";
-            this.chkNative.Size = new System.Drawing.Size(106, 17);
-            this.chkNative.TabIndex = 4;
-            this.chkNative.Text = "Native Functions";
-            this.chkNative.UseVisualStyleBackColor = true;
-            this.chkNative.CheckedChanged += new System.EventHandler(this.chkNative_CheckedChanged);
+            this.groupBox6.Controls.Add(this.barSquelchPower);
+            this.groupBox6.Controls.Add(this.txtSquelchLimit);
+            this.groupBox6.Controls.Add(this.txtSquelchMax);
+            this.groupBox6.Controls.Add(this.txtSquelchAvg);
+            this.groupBox6.Controls.Add(this.chkEnableSquelch);
+            this.groupBox6.Controls.Add(this.label5);
+            this.groupBox6.Controls.Add(this.label6);
+            this.groupBox6.Controls.Add(this.label4);
+            this.groupBox6.Location = new System.Drawing.Point(459, 13);
+            this.groupBox6.Name = "groupBox6";
+            this.groupBox6.Size = new System.Drawing.Size(138, 139);
+            this.groupBox6.TabIndex = 6;
+            this.groupBox6.TabStop = false;
+            this.groupBox6.Text = "Squelch";
+            // 
+            // txtSquelchMax
+            // 
+            this.txtSquelchMax.Location = new System.Drawing.Point(75, 61);
+            this.txtSquelchMax.Name = "txtSquelchMax";
+            this.txtSquelchMax.ReadOnly = true;
+            this.txtSquelchMax.Size = new System.Drawing.Size(57, 20);
+            this.txtSquelchMax.TabIndex = 2;
+            this.txtSquelchMax.Text = "0";
+            this.txtSquelchMax.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            // 
+            // txtSquelchAvg
+            // 
+            this.txtSquelchAvg.Location = new System.Drawing.Point(75, 38);
+            this.txtSquelchAvg.Name = "txtSquelchAvg";
+            this.txtSquelchAvg.ReadOnly = true;
+            this.txtSquelchAvg.Size = new System.Drawing.Size(57, 20);
+            this.txtSquelchAvg.TabIndex = 2;
+            this.txtSquelchAvg.Text = "0";
+            this.txtSquelchAvg.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            // 
+            // chkEnableSquelch
+            // 
+            this.chkEnableSquelch.AutoSize = true;
+            this.chkEnableSquelch.Location = new System.Drawing.Point(6, 18);
+            this.chkEnableSquelch.Name = "chkEnableSquelch";
+            this.chkEnableSquelch.Size = new System.Drawing.Size(59, 17);
+            this.chkEnableSquelch.TabIndex = 1;
+            this.chkEnableSquelch.Text = "Enable";
+            this.chkEnableSquelch.UseVisualStyleBackColor = true;
+            this.chkEnableSquelch.CheckedChanged += new System.EventHandler(this.chkEnableSquelch_CheckedChanged);
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(7, 88);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(51, 13);
+            this.label5.TabIndex = 0;
+            this.label5.Text = "Min Limit:";
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(7, 64);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(63, 13);
+            this.label6.TabIndex = 0;
+            this.label6.Text = "Max Power:";
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(7, 41);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(62, 13);
+            this.label4.TabIndex = 0;
+            this.label4.Text = "Avg Power:";
+            // 
+            // barSquelchPower
+            // 
+            this.barSquelchPower.Amplitude = 0;
+            this.barSquelchPower.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            this.barSquelchPower.LinePosition = 0;
+            this.barSquelchPower.Location = new System.Drawing.Point(10, 111);
+            this.barSquelchPower.Name = "barSquelchPower";
+            this.barSquelchPower.Size = new System.Drawing.Size(122, 17);
+            this.barSquelchPower.TabIndex = 3;
+            this.barSquelchPower.Text = "powerBar1";
+            // 
+            // txtSquelchLimit
+            // 
+            this.txtSquelchLimit.Location = new System.Drawing.Point(75, 84);
+            this.txtSquelchLimit.LowerLimit = ((long)(-100));
+            this.txtSquelchLimit.Name = "txtSquelchLimit";
+            this.txtSquelchLimit.Size = new System.Drawing.Size(57, 20);
+            this.txtSquelchLimit.TabIndex = 2;
+            this.txtSquelchLimit.Text = "-25";
+            this.txtSquelchLimit.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.txtSquelchLimit.UpperLimit = ((long)(0));
+            this.txtSquelchLimit.Value = ((long)(-25));
+            this.txtSquelchLimit.TextChanged += new System.EventHandler(this.txtSquelchLimit_TextChanged);
+            // 
+            // txtAmplify
+            // 
+            this.txtAmplify.Location = new System.Drawing.Point(82, 42);
+            this.txtAmplify.LowerLimit = ((long)(0));
+            this.txtAmplify.Name = "txtAmplify";
+            this.txtAmplify.Size = new System.Drawing.Size(46, 20);
+            this.txtAmplify.TabIndex = 2;
+            this.txtAmplify.Text = "1";
+            this.txtAmplify.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.txtAmplify.UpperLimit = ((long)(100));
+            this.txtAmplify.Value = ((long)(1));
+            this.txtAmplify.TextChanged += new System.EventHandler(this.txtAmplify_TextChanged);
+            // 
+            // txtDecim
+            // 
+            this.txtDecim.Location = new System.Drawing.Point(74, 109);
+            this.txtDecim.LowerLimit = ((long)(1));
+            this.txtDecim.Name = "txtDecim";
+            this.txtDecim.Size = new System.Drawing.Size(23, 20);
+            this.txtDecim.TabIndex = 5;
+            this.txtDecim.Text = "0";
+            this.txtDecim.UpperLimit = ((long)(64));
+            this.txtDecim.Value = ((long)(0));
+            this.txtDecim.TextChanged += new System.EventHandler(this.txtDecim_TextChanged);
             // 
             // DemodulationDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(466, 272);
+            this.ClientSize = new System.Drawing.Size(609, 271);
+            this.Controls.Add(this.groupBox6);
             this.Controls.Add(this.groupBox5);
             this.Controls.Add(this.groupBox4);
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
             this.Name = "DemodulationDialog";
             this.Text = "DemodulationDialog";
             this.groupBox1.ResumeLayout(false);
@@ -525,6 +643,8 @@
             this.groupBox4.PerformLayout();
             this.groupBox5.ResumeLayout(false);
             this.groupBox5.PerformLayout();
+            this.groupBox6.ResumeLayout(false);
+            this.groupBox6.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -557,7 +677,7 @@
         private System.Windows.Forms.CheckBox chkEnableLowpass;
         private System.Windows.Forms.GroupBox groupBox5;
         private System.Windows.Forms.CheckBox chkShowDemod;
-        private System.Windows.Forms.TextBox txtAmplify;
+        private LibRXFFT.Components.GDI.TextBoxMouseScroll txtAmplify;
         private System.Windows.Forms.CheckBox chkAmplify;
         private System.Windows.Forms.RadioButton radioFilter256;
         private System.Windows.Forms.RadioButton radioFilter128;
@@ -565,8 +685,17 @@
         private System.Windows.Forms.RadioButton radioLowPass256;
         private System.Windows.Forms.RadioButton radioLowPass128;
         private System.Windows.Forms.RadioButton radioLowPass64;
-        private System.Windows.Forms.TextBox txtDecim;
+        private LibRXFFT.Components.GDI.TextBoxMouseScroll txtDecim;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.CheckBox chkNative;
+        private System.Windows.Forms.GroupBox groupBox6;
+        private System.Windows.Forms.CheckBox chkEnableSquelch;
+        private System.Windows.Forms.TextBox txtSquelchAvg;
+        private System.Windows.Forms.TextBox txtSquelchMax;
+        private LibRXFFT.Components.GDI.TextBoxMouseScroll txtSquelchLimit;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Label label6;
+        private LibRXFFT.Components.GDI.PowerBar barSquelchPower;
     }
 }

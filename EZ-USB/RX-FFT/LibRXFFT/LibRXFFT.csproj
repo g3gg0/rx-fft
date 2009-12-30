@@ -156,6 +156,15 @@
     <Compile Include="Components\GDI\FrequencySelector.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Components\GDI\PowerBar.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Components\GDI\PowerBar.Designer.cs">
+      <DependentUpon>PowerBar.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Components\GDI\TextBoxMouseScroll.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Components\GDI\StatusLamp.cs">
       <SubType>UserControl</SubType>
     </Compile>

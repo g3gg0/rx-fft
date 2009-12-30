@@ -134,7 +134,7 @@
             this.groupBox2.Location = new System.Drawing.Point(0, 0);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Padding = new System.Windows.Forms.Padding(5);
-            this.groupBox2.Size = new System.Drawing.Size(378, 224);
+            this.groupBox2.Size = new System.Drawing.Size(206, 171);
             this.groupBox2.TabIndex = 4;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Filters";
@@ -155,7 +155,7 @@
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.aD6636FilterList1);
-            this.splitContainer1.Size = new System.Drawing.Size(368, 201);
+            this.splitContainer1.Size = new System.Drawing.Size(196, 148);
             this.splitContainer1.SplitterDistance = 25;
             this.splitContainer1.SplitterWidth = 1;
             this.splitContainer1.TabIndex = 0;
@@ -164,9 +164,9 @@
             // 
             this.btnFilterSelectDir.Location = new System.Drawing.Point(0, 0);
             this.btnFilterSelectDir.Name = "btnFilterSelectDir";
-            this.btnFilterSelectDir.Size = new System.Drawing.Size(99, 23);
+            this.btnFilterSelectDir.Size = new System.Drawing.Size(85, 23);
             this.btnFilterSelectDir.TabIndex = 4;
-            this.btnFilterSelectDir.Text = "Open Directory...";
+            this.btnFilterSelectDir.Text = "Select Filter...";
             this.btnFilterSelectDir.UseVisualStyleBackColor = true;
             this.btnFilterSelectDir.Click += new System.EventHandler(this.btnFilterSelectDir_Click);
             // 
@@ -176,7 +176,7 @@
             this.aD6636FilterList1.Location = new System.Drawing.Point(0, 0);
             this.aD6636FilterList1.Name = "aD6636FilterList1";
             this.aD6636FilterList1.Padding = new System.Windows.Forms.Padding(5);
-            this.aD6636FilterList1.Size = new System.Drawing.Size(368, 175);
+            this.aD6636FilterList1.Size = new System.Drawing.Size(196, 122);
             this.aD6636FilterList1.TabIndex = 3;
             // 
             // splitContainer2
@@ -195,7 +195,7 @@
             // splitContainer2.Panel2
             // 
             this.splitContainer2.Panel2.Controls.Add(this.groupBox2);
-            this.splitContainer2.Size = new System.Drawing.Size(619, 224);
+            this.splitContainer2.Size = new System.Drawing.Size(447, 171);
             this.splitContainer2.SplitterDistance = 237;
             this.splitContainer2.TabIndex = 5;
             // 
@@ -206,10 +206,10 @@
             this.groupBox3.Controls.Add(this.radioAcqOff);
             this.groupBox3.Location = new System.Drawing.Point(3, 116);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(229, 103);
+            this.groupBox3.Size = new System.Drawing.Size(229, 51);
             this.groupBox3.TabIndex = 3;
             this.groupBox3.TabStop = false;
-            this.groupBox3.Text = "Acquisation";
+            this.groupBox3.Text = "Acquisition";
             // 
             // radioAcqStream
             // 
@@ -251,8 +251,10 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(619, 224);
+            this.ClientSize = new System.Drawing.Size(447, 171);
+            this.ControlBox = false;
             this.Controls.Add(this.splitContainer2);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
             this.MinimumSize = new System.Drawing.Size(400, 150);
             this.Name = "USBRXDeviceControl";
             this.Text = "USBRXDeviceControl";

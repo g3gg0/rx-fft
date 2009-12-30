@@ -19,8 +19,6 @@ namespace LibRXFFT.Libraries.Filters
         protected int Section;
         protected double[] Num;
         protected double[] Den;
-
-
         
         [DllImport("libRXFFT_native.dll", EntryPoint = "IIRInit")]
         public static unsafe extern IntPtr IIRInit(double gain, int section, double[] num, double[] den);
@@ -30,10 +28,8 @@ namespace LibRXFFT.Libraries.Filters
         public static unsafe extern void IIRFree(IntPtr ctx);
         
 
-
         public IIRFilter(IIRCoefficients.IIRFilterCoeff coeffs)
         {
-
             Gain = coeffs.Gain;
             Section = coeffs.Section;
             Num = coeffs.Num;

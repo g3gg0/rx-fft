@@ -15,5 +15,11 @@ namespace RX_FFT.Dialogs
         {
             InitializeComponent();
         }
+
+        public string Message
+        {
+            get { return label1.Text; }
+            set { label1.Text = value; }
+        }
     }
 }

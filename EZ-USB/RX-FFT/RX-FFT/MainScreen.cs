@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using RX_FFT.Dialogs;
 using GSM_Analyzer;
 using RX_FFT.DeviceControls;
+using LibRXFFT.Libraries.USB_RX.Tuners;
 
 
 namespace RX_FFT
@@ -51,6 +52,9 @@ namespace RX_FFT
             }
         }
 
+        public delegate DigitalTuner delegateGetTuner();
+
+        bool WindowActivated = true;
         bool processPaused;
         bool ReadThreadRun;
         bool AudioThreadRun;
@@ -58,10 +62,13 @@ namespace RX_FFT
         Thread AudioThread;
         DeviceControl Device;
         double LastSamplingRate = 48000;
+        long MouseDragStartFreq;
 
         private LinkedList<FrequencyMarker> Markers = new LinkedList<FrequencyMarker>();
+        /*
         private FrequencyMarker UpperFilterMarginMarker = new FrequencyMarker("Upper Limit", "Upper Frequency Limit", 0);
         private FrequencyMarker LowerFilterMarginMarker = new FrequencyMarker("Lower Limit", "Lower Frequency Limit", 0);
+        */
 
         ShmemSampleSource AudioShmem;
         double[] DecimatedInputI = new double[0];
@@ -72,8 +79,8 @@ namespace RX_FFT
 
         Demodulation DemodOptions = new Demodulation();
         DemodulationDialog DemodDialog;
+        MarkerListDialog MarkerDialog;
         PerformaceStatsDialog StatsDialog;
-
         PerformanceEnvelope PerformanceCounters = new PerformanceEnvelope();
 
 
@@ -81,21 +88,87 @@ namespace RX_FFT
         {
             InitializeComponent();
 
-            Markers.AddLast(UpperFilterMarginMarker);
-            Markers.AddLast(LowerFilterMarginMarker);
+            this.fftSizeOtherMenu.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.fftSizeOtherMenu_KeyPress);
+            this.updateRateText.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.updateRateText_KeyPress);
+            this.averageSamplesText.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.averageSamplesText_KeyPress);
+            this.verticalSmoothMenuText.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.verticalSmoothMenuText_KeyPress);
 
+            updateRateText_KeyPress(null, null);
+            averageSamplesText_KeyPress(null, null);
+            verticalSmoothMenuText_KeyPress(null, null);
+
+
+            /* register callback functions */
             FFTDisplay.UserEventCallback = UserEventCallbackFunc;
 
-            string[] windowingTypes = Enum.GetNames(typeof(FFTTransformer.eWindowingFunction));
-            cmbWindowFunc.Items.AddRange(windowingTypes);
-            cmbWindowFunc.Text = FFTDisplay.WindowingFunction.ToString();
-            cmbAverage.Text = FFTDisplay.Averaging.ToString();
-            cmbFFTSize.Text = FFTSize.ToString();
-            txtUpdatesPerSecond.Text = FFTDisplay.UpdateRate.ToString();
-            txtAverageSamples.Text = FFTDisplay.SamplesToAverage.ToString();
+            FFTDisplay.AddUserEventCallback(eUserEvent.MouseEnter);
+            /* options menu */
+            FFTDisplay.AddUserEventCallback(eUserEvent.MouseClickRight);
+            /* jump to frequency when doubleclicking */
+            FFTDisplay.AddUserEventCallback(eUserEvent.MouseDoubleClickLeft);
+            /* get feedback when mouse-frequency changed */
+            FFTDisplay.AddUserEventCallback(eUserEvent.MousePosX);
+            /* when starting to drag with control, remember drag start frequency */
+            FFTDisplay.AddUserEventCallback(eUserEvent.MouseDownLeftControl);
+            /* when dragging with CTRL pressed, "move" frequency */
+            FFTDisplay.AddUserEventCallback(eUserEvent.MouseDragXControl);
+
+
+            DeviceOpened = false;
+
+            /*
+            Markers.AddLast(UpperFilterMarginMarker);
+            Markers.AddLast(LowerFilterMarginMarker);
+            */
+
+            /* build the windowing function list dropdown menu */
+            foreach (string windowName in Enum.GetNames(typeof(FFTTransformer.eWindowingFunction)))
+            {
+                ToolStripMenuItem menu = new ToolStripMenuItem();
+                this.windowingFunctionMenu.DropDownItems.Add(menu);
+                this.FormClosing += new FormClosingEventHandler(MainScreen_FormClosing);
+
+                menu.Name = windowName;
+                menu.Text = windowName;
+                menu.Click += new System.EventHandler(delegate(object s, EventArgs e) 
+                    {
+                        ToolStripMenuItem sender = (ToolStripMenuItem)s;
+                        string typeString = sender.Name;
+
+                        try
+                        {
+                            FFTTransformer.eWindowingFunction type = (FFTTransformer.eWindowingFunction)Enum.Parse(typeof(FFTTransformer.eWindowingFunction), typeString);
+                            FFTDisplay.WindowingFunction = type;
+                        }
+                        catch (Exception ex)
+                        {
+                        }
+                    });
+            }
+
+            ToolStripManager.LoadSettings(this);
+
+            Log.Init();
         }
 
+        private void MainScreen_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            ToolStripManager.SaveSettings(this);
+        }
 
+        bool _DeviceOpened = false;
+        bool DeviceOpened
+        {
+            get { return _DeviceOpened; }
+            set 
+            { 
+                _DeviceOpened = value;
+
+                closeMenu.Enabled = DeviceOpened;
+                pauseMenu.Enabled = DeviceOpened;
+                openMenu.Enabled = !DeviceOpened;
+            }
+        }
 
         int FFTSize
         {
@@ -105,73 +178,123 @@ namespace RX_FFT
                 lock (FFTSizeSpinLock)
                 {
                     if (Device != null)
-                        Device.SamplesPerBlock = value * (int)Math.Max(1, FFTDisplay.SamplesToAverage);
+                        Device.SamplesPerBlock = value * Math.Max(1, SamplesToAverage);
                     FFTDisplay.FFTSize = value;
                 }
+            }
+        }
+
+        int SamplesToAverage
+        {
+            get { return (int)FFTDisplay.SamplesToAverage; }
+            set
+            {
+                if (Device != null)
+                    Device.SamplesPerBlock = Math.Max(1, value) * FFTSize;
+                FFTDisplay.SamplesToAverage = value;
             }
         }
 
         delegate void setRateDelegate(double rate);
         void setRateTextbox(double rate)
         {
-            txtSamplingRate.Text = rate.ToString();
+            samplingRateLabel.Text = FrequencyFormatter.FreqToStringAccurate(rate);
+        }
+        protected override void OnActivated(EventArgs e)
+        {
+            base.OnActivated(e);
+            WindowActivated = true;
+        }
+
+        protected override void OnDeactivate(EventArgs e)
+        {
+            base.OnDeactivate(e);
+            WindowActivated = false;
         }
 
         public void UserEventCallbackFunc(eUserEvent evt, double param)
         {
-            if (evt == eUserEvent.MousePosX)
+            switch (evt)
             {
-                double relative = FFTDisplay.RelativeCursorXPos;
+                case eUserEvent.MousePosX:
+                    {
+                        double relative = FFTDisplay.RelativeCursorXPos;
 
-                DemodOptions.DemodulationDownmixer.TimeStep = -relative * (2 * Math.PI);
-            }
-            else if (evt == eUserEvent.MouseDragXControl)
-            {
-                long mouseFreq = FFTDisplay.Frequency;
-                long prevMouseFreq = FFTDisplay.FrequencyFromCursorPosOffset(param);
-                long currentFreq = Device.GetFrequency();
-                long newFreq = currentFreq - (mouseFreq - prevMouseFreq);
+                        DemodOptions.DemodulationDownmixer.TimeStep = -relative * (2 * Math.PI);
+                    }
+                    break;
 
-                Device.SetFrequency(newFreq);
-                //FFTDisplay.CenterFrequency = newFreq;
-            }
-            else if (evt == eUserEvent.MouseDoubleClickLeft)
-            {
-                if (Device != null)
-                {
-                    long freq = FFTDisplay.Frequency;
-                    Device.SetFrequency(freq);
-                    FFTDisplay.CenterFrequency = freq;
-                }
-            }
-            else if (evt == eUserEvent.MouseClickRight)
-            {
-                long freq = FFTDisplay.Frequency;
+                /* when mouse is moved into a plot and we are in foreground, update focus to hovered plot */
+                case eUserEvent.MouseEnter:
+                    if (WindowActivated)
+                    {
+                        FFTDisplay.FocusHovered();
+                    }
+                    break;
 
-                ContextMenu contextMenu = new ContextMenu();
-                MenuItem menuItem1 = new MenuItem();
-                MenuItem menuItem2 = new MenuItem();
-                MenuItem menuItem3 = new MenuItem();
+                /* when mouse is pressed with control down, user eventually starts to drag. save frequency */
+                case eUserEvent.MouseDownLeftControl:
+                    MouseDragStartFreq = FFTDisplay.Frequency;
+                    break;
 
-                contextMenu.MenuItems.AddRange(new MenuItem[] { menuItem1, menuItem2, menuItem3 });
-                menuItem1.Index = 0;
-                menuItem1.Text = "Frequency: " + FrequencyFormatter.FreqToStringAccurate(freq);
-                menuItem2.Index = 1;
-                menuItem2.Text = "Send to Locator";
-                menuItem3.Index = 2;
-                menuItem3.Text = "Add Marker...";
-                menuItem3.Click += new EventHandler(delegate(object sender, EventArgs e)
-                {
-                    AddMarker(freq);
-                });
+                /* dragged with control down. "move" radio band */
+                case eUserEvent.MouseDragXControl:
+                    {
+                        long mouseFreq = FFTDisplay.Frequency;
+                        
+                        long currentFreq = Device.GetFrequency();
+                        long newFreq = currentFreq - (mouseFreq - MouseDragStartFreq);
 
-                contextMenu.Show(this, this.PointToClient(MousePosition));
+                        FFTDisplay.CenterFrequency = newFreq;
+                        Device.SetFrequency(newFreq);
+                    }
+                    break;
+
+                /* jump to frequency under cursor */
+                case eUserEvent.MouseDoubleClickLeft:
+                    if (Device != null)
+                    {
+                        long freq = FFTDisplay.Frequency;
+                        Device.SetFrequency(freq);
+                        //FFTDisplay.CenterFrequency = freq;
+                    }
+                    break;
+
+                /* bring up popup menu. has to be improved */
+                case eUserEvent.MouseClickRight:
+                    {
+                        long freq = FFTDisplay.Frequency;
+
+                        ContextMenu contextMenu = new ContextMenu();
+                        MenuItem menuItem1 = new MenuItem();
+                        MenuItem menuItem2 = new MenuItem();
+                        MenuItem menuItem3 = new MenuItem();
+                        MenuItem menuItem4 = new MenuItem();
+                        menuItem1.Enabled = false;
+
+                        contextMenu.MenuItems.AddRange(new MenuItem[] { menuItem1, menuItem2, menuItem3, menuItem4 });
+                        menuItem1.Index = 0;
+                        menuItem1.Text = "Frequency: " + FrequencyFormatter.FreqToStringAccurate(freq);
+                        menuItem2.Index = 1;
+                        menuItem2.Text = "-";
+                        menuItem3.Index = 2;
+                        menuItem3.Text = "Send to Locator";
+                        menuItem4.Index = 3;
+                        menuItem4.Text = "Add Marker...";
+                        menuItem4.Click += new EventHandler(delegate(object sender, EventArgs e)
+                        {
+                            AddMarker(freq);
+                        });
+
+                        contextMenu.Show(this, this.PointToClient(MousePosition));
+                    }
+                    break;
             }
         }
 
         private void AddMarker(long freq)
         {
-            FrequencyMarker marker = new FrequencyMarker("test", "This is a test", freq);
+            FrequencyMarker marker = new FrequencyMarker(freq);
             MarkerDetailsDialog dlg = new MarkerDetailsDialog("Add Marker...", marker);
 
             if (dlg.ShowDialog() != DialogResult.OK)
@@ -181,6 +304,12 @@ namespace RX_FFT
 
             Markers.AddLast(marker);
             FFTDisplay.Markers = Markers;
+
+            /* notify marker window */
+            if (MarkerDialog != null && !MarkerDialog.IsDisposed)
+            {
+                MarkerDialog.UpdateMarkerList();
+            }
         }
 
         void AudioReadFunc()
@@ -193,6 +322,8 @@ namespace RX_FFT
             double[] inputI;
             double[] inputQ;
 
+            AudioShmem.SamplesPerBlock = 512;
+
             PerformanceCounters.Reset();
 
             PerformanceCounters.CounterRuntime.Start();
@@ -202,9 +333,9 @@ namespace RX_FFT
                 //dev.Read(inBuffer);
                 PerformanceCounters.CounterRuntime.Update();
 
-                PerformanceCounters.CounterReading.Start();
                 lock (AudioShmem)
                 {
+                    PerformanceCounters.CounterReading.Start();
                     AudioShmem.Read();
                     PerformanceCounters.CounterReading.Stop();
 
@@ -280,16 +411,98 @@ namespace RX_FFT
                                     PerformanceCounters.CounterXlatDecimate.Stop();
                                 }
 
-                                /* demodulate signal */
-                                PerformanceCounters.CounterDemod.Start();
-                                DemodOptions.Demod.ProcessData(inputI, inputQ, AudioSampleBuffer);
-                                PerformanceCounters.CounterDemod.Stop();
+                                /* in this block are some samples that can be demodulated. used for squelch */
+                                bool haveSamplesToDemodulate = true;
 
-                                if (DemodOptions.AudioLowPassEnabled)
+                                /* squelch */
+                                if (DemodOptions.SquelchEnabled)
                                 {
-                                    PerformanceCounters.CounterDemodLowpass.Start();
-                                    DemodOptions.AudioLowPass.Process(AudioSampleBuffer, AudioSampleBuffer);
-                                    PerformanceCounters.CounterDemodLowpass.Stop();
+                                    double totalStrength = 0;
+                                    double maxStrength = 0;
+                                    double limit = DBTools.SquaredSampleFromdB(DemodOptions.SquelchLowerLimit);
+
+                                    /* default: nothing to demodulate */
+                                    haveSamplesToDemodulate = false;
+
+                                    for (int pos = 0; pos < inputI.Length; pos++)
+                                    {
+                                        double strength = inputI[pos] * inputI[pos] + inputQ[pos] * inputQ[pos];
+
+                                        totalStrength += strength;
+                                        maxStrength = Math.Max(maxStrength, strength);
+
+                                        if (strength < limit)
+                                        {
+                                            /* below limit, close squelch? */
+                                            if (DemodOptions.SquelchState == Demodulation.eSquelchState.Open)
+                                            {
+                                                DemodOptions.SquelchSampleCounter++;
+                                                if (DemodOptions.SquelchSampleCounter > DemodOptions.SquelchSampleCount)
+                                                {
+                                                    DemodOptions.SquelchSampleCounter = 0;
+                                                    DemodOptions.SquelchState = Demodulation.eSquelchState.Closed;
+                                                }
+                                            }
+                                            else
+                                            {
+                                                DemodOptions.SquelchSampleCounter = 0;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            /* over limit, open squelch? */
+                                            if (DemodOptions.SquelchState == Demodulation.eSquelchState.Closed)
+                                            {
+                                                DemodOptions.SquelchSampleCounter++;
+                                                if (DemodOptions.SquelchSampleCounter > DemodOptions.SquelchSampleCount)
+                                                {
+                                                    DemodOptions.SquelchSampleCounter = 0;
+                                                    DemodOptions.SquelchState = Demodulation.eSquelchState.Open;
+                                                }
+                                            }
+                                            else
+                                            {
+                                                DemodOptions.SquelchSampleCounter = 0;
+                                            }
+                                        }
+
+                                        if (DemodOptions.SquelchState == Demodulation.eSquelchState.Closed)
+                                        {
+                                            inputI[pos] = 0;
+                                            inputQ[pos] = 0;
+                                        }
+                                        else
+                                        {
+                                            /* demodulate this block since there are some usable samples */
+                                            haveSamplesToDemodulate = true;
+                                        }
+                                    }
+
+                                    DemodOptions.SquelchAverage = DBTools.SquaredSampleTodB(totalStrength / inputI.Length);
+                                    DemodOptions.SquelchMax = DBTools.SquaredSampleTodB(maxStrength);
+                                    if (DemodDialog != null)
+                                    {
+                                        DemodDialog.UpdatePowerBar();
+                                    }
+                                }
+
+                                /* demodulate signal */
+                                if (haveSamplesToDemodulate)
+                                {
+                                    PerformanceCounters.CounterDemod.Start();
+                                    DemodOptions.Demod.ProcessData(inputI, inputQ, AudioSampleBuffer);
+                                    PerformanceCounters.CounterDemod.Stop();
+
+                                    if (DemodOptions.AudioLowPassEnabled)
+                                    {
+                                        PerformanceCounters.CounterDemodLowpass.Start();
+                                        DemodOptions.AudioLowPass.Process(AudioSampleBuffer, AudioSampleBuffer);
+                                        PerformanceCounters.CounterDemodLowpass.Stop();
+                                    }
+                                }
+                                else
+                                {
+                                    Array.Clear(AudioSampleBuffer, 0, AudioSampleBuffer.Length);
                                 }
 
                                 /* audio decimation */
@@ -321,6 +534,7 @@ namespace RX_FFT
                                 }
                             }
                         }
+                        PerformanceCounters.CounterProcessing.Stop();
 
                         if (DemodOptions.DisplayDemodulationSignal)
                         {
@@ -329,7 +543,10 @@ namespace RX_FFT
                             PerformanceCounters.CounterVisualization.Stop();
                         }
                     }
-                    PerformanceCounters.CounterProcessing.Stop();
+                    else
+                    {
+                        PerformanceCounters.CounterProcessing.Stop();
+                    }
                 }
             }
 
@@ -347,6 +564,8 @@ namespace RX_FFT
             double[] inputI;
             double[] inputQ;
 
+            //Log.AddMessage("FFTReadFunc: Started");
+
             while (ReadThreadRun)
             {
                 lock (FFTSizeSpinLock)
@@ -362,6 +581,8 @@ namespace RX_FFT
 
                             inputI = Device.SampleSource.SourceSamplesI;
                             inputQ = Device.SampleSource.SourceSamplesQ;
+
+                            //Log.AddMessage("FFTReadFunc: Read " + inputI.Length + " Samples");
 
                             if (rateChanged)
                             {
@@ -406,55 +627,8 @@ namespace RX_FFT
             }
         }
 
-        private void btnOpen_Click(object sender, EventArgs e)
-        {
-            if (Device != null)
-            {
-                lock (DemodOptions)
-                {
-                    DemodOptions.SoundDevice.Close();
-                    DemodOptions.SoundDevice = null;
-                }
 
-                if (DemodDialog != null)
-                {
-                    DemodDialog.Close();
-                    DemodDialog = null;
-                }
-
-                ReadThreadRun = false;
-                AudioThreadRun = false;
-                Thread.Sleep(10);
-
-                if (ReadThread != null)
-                    ReadThread.Abort();
-                if (AudioThread != null)
-                    AudioThread.Abort();
-
-                if (AudioShmem != null)
-                {
-                    AudioShmem.Close();
-                    AudioShmem = null;
-                }
-
-                Device.Close();
-                Device = null;
-
-                btnOpen.Text = "Open";
-            }
-            else
-            {
-                ContextMenu menu = new ContextMenu();
-
-                menu.MenuItems.Add(new MenuItem("Open BO-35digi", new EventHandler(btnOpen_OpenBO35)));
-                menu.MenuItems.Add(new MenuItem("Shared Memory", new EventHandler(btnOpen_SharedMemory)));
-                menu.MenuItems.Add(new MenuItem("Random Data", new EventHandler(btnOpen_RandomData)));
-                btnOpen.ContextMenu = menu;
-                btnOpen.ContextMenu.Show(btnOpen, new System.Drawing.Point(10, 10));
-            }
-        }
-
-        private void btnOpen_OpenBO35(object sender, EventArgs e)
+        private void OpenBO35Device()
         {
             USBRXDeviceControl dev = new USBRXDeviceControl();
             if (dev.Connected)
@@ -470,7 +644,8 @@ namespace RX_FFT
                 dev.FilterWidthChanged += new EventHandler(Device_FilterWidthChanged);
                 dev.SampleSource.SamplingRateChanged += new EventHandler(SampleSource_SamplingRateChangedEvent);
 
-                dev.SetFrequency(103200000);
+                dev.SetFrequency(100200000);
+                dev.SamplesPerBlock = Math.Max(1, SamplesToAverage) * FFTSize;
 
                 lock (DemodOptions)
                 {
@@ -487,7 +662,7 @@ namespace RX_FFT
                 AudioThread.Name = "Audio Decoder Thread";
                 AudioThread.Start();
 
-                btnOpen.Text = "Close";
+                DeviceOpened = true;
             }
             else
             {
@@ -511,7 +686,7 @@ namespace RX_FFT
             dev.FilterWidthChanged += new EventHandler(Device_FilterWidthChanged);
             dev.SampleSource.SamplingRateChanged += new EventHandler(SampleSource_SamplingRateChangedEvent);
 
-            dev.SetFrequency(103200000);
+            dev.SamplesPerBlock = Math.Max(1, SamplesToAverage) * FFTSize;
 
             lock (DemodOptions)
             {
@@ -528,10 +703,10 @@ namespace RX_FFT
             AudioThread.Name = "Audio Decoder Thread";
             AudioThread.Start();
 
-            btnOpen.Text = "Close";
+            DeviceOpened = true;
         }
 
-        private MenuItem btnOpen_SharedMemoryCreateMenuItem(string name, int srcChan)
+        private MenuItem OpenSharedMemoryDeviceCreateMenuItem(string name, int srcChan)
         {
             MenuItem item;
 
@@ -552,14 +727,14 @@ namespace RX_FFT
             return item;
         }
 
-        private void btnOpen_SharedMemory(object sender, EventArgs e)
+        private void OpenSharedMemoryDevice()
         {
             ContextMenu menu = new ContextMenu();
             NodeInfo[] infos = SharedMem.GetNodeInfos();
 
             foreach (NodeInfo info in infos)
             {
-                MenuItem item = btnOpen_SharedMemoryCreateMenuItem(info.name, info.dstChan);
+                MenuItem item = OpenSharedMemoryDeviceCreateMenuItem(info.name, info.dstChan);
                 menu.MenuItems.Add(item);
             }
 
@@ -570,11 +745,11 @@ namespace RX_FFT
                 menu.MenuItems.Add(item);
             }
 
-            btnOpen.ContextMenu = menu;
-            btnOpen.ContextMenu.Show(btnOpen, new System.Drawing.Point(10, 10));
+            mainMenu.ContextMenu = menu;
+            mainMenu.ContextMenu.Show(mainMenu, new System.Drawing.Point(10, 10));
         }
 
-        private void btnOpen_RandomData(object sender, EventArgs e)
+        private void OpenRandomDevice()
         {
             RandomDataDeviceControl dev = new RandomDataDeviceControl();
             Device = dev;
@@ -594,7 +769,7 @@ namespace RX_FFT
             ReadThread.Name = "MainScreen Data Read Thread";
             ReadThread.Start();
 
-            btnOpen.Text = "Close";
+            DeviceOpened = true;
         }
 
         void Device_FilterWidthChanged(object sender, EventArgs e)
@@ -610,162 +785,68 @@ namespace RX_FFT
         void Device_FrequencyChanged(object sender, EventArgs e)
         {
             double freq = Device.GetFrequency();
-
+            /*
             LowerFilterMarginMarker.Frequency = Device.LowerFilterMargin;
             UpperFilterMarginMarker.Frequency = Device.UpperFilterMargin;
-
+            */
             FFTDisplay.CenterFrequency = freq;
             FFTDisplay.Markers = Markers;
         }
 
         void SampleSource_SamplingRateChangedEvent(object sender, EventArgs e)
         {
+            /*
             LowerFilterMarginMarker.Frequency = Device.LowerFilterMargin;
             UpperFilterMarginMarker.Frequency = Device.UpperFilterMargin;
+            */
 
             FFTDisplay.Markers = Markers;
         }
 
-        private void btnPause_Click(object sender, EventArgs e)
+        private void openBO35Menu_Click(object sender, EventArgs e)
         {
-            processPaused = !processPaused;
+            OpenBO35Device();
         }
 
-        private void cmbWindowFunc_TextChanged(object sender, EventArgs e)
+        private void openShMemMenu_Click(object sender, EventArgs e)
         {
-            string typeString = cmbWindowFunc.Text;
+            OpenSharedMemoryDevice();
+        }
 
-            try
+        private void openRandomDataMenu_Click(object sender, EventArgs e)
+        {
+            OpenRandomDevice();
+        }
+
+        private void markersToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (MarkerDialog == null || MarkerDialog.IsDisposed)
             {
-                FFTTransformer.eWindowingFunction type = (FFTTransformer.eWindowingFunction)Enum.Parse(typeof(FFTTransformer.eWindowingFunction), typeString);
-                FFTDisplay.WindowingFunction = type;
-            }
-            catch (Exception ex)
-            {
-            }
-        }
-
-        private void cmbAverage_TextChanged(object sender, EventArgs e)
-        {
-            double avg;
-
-            if (!double.TryParse(cmbAverage.Text, out avg))
-                return;
-            FFTDisplay.Averaging = avg;
-        }
-
-        private void cmbFFTSize_TextChanged(object sender, EventArgs e)
-        {
-            int size;
-
-            if (!int.TryParse(cmbFFTSize.Text, out size))
-                return;
-
-            if (Device != null)
-            {
-                lock (Device.SampleSource)
-                {
-                    Device.SampleSource.SamplesPerBlock = size;
-                }
-            }
-            FFTSize = size;
-            FFTDisplay.FFTSize = size;
-        }
-
-        private void txtSamplingRate_TextChanged(object sender, EventArgs e)
-        {
-            long rate;
-
-            if (!long.TryParse(txtSamplingRate.Text, out rate))
-                return;
-
-            FFTDisplay.SamplingRate = rate;
-
-            lock (DemodOptions)
-            {
-                if (Device.SampleSource != null)
-                    Device.SampleSource.InputSamplingRate = rate;
-                DemodOptions.InputRate = rate;
-                DemodOptions.AudioRate = rate / DemodOptions.AudioDecimation / DemodOptions.InputSignalDecimation;
-                if (DemodOptions.SoundDevice != null)
-                {
-                    DemodOptions.SoundDevice.SetRate((int)DemodOptions.AudioRate);
-                }
-            }
-
-            if (DemodDialog != null)
-                DemodDialog.UpdateInformation();
-        }
-
-        private void txtUpdatesPerSecond_TextChanged(object sender, EventArgs e)
-        {
-            double rate;
-
-            if (!double.TryParse(txtUpdatesPerSecond.Text, out rate))
-                return;
-
-            FFTDisplay.UpdateRate = rate;
-        }
-
-        private void txtAverageSamples_TextChanged(object sender, EventArgs e)
-        {
-            long samples;
-
-            if (!long.TryParse(txtAverageSamples.Text, out samples))
-                return;
-
-            FFTDisplay.SamplesToAverage = samples;
-            if (Device != null)
-                Device.SamplesPerBlock = FFTSize * (int)Math.Max(1, FFTDisplay.SamplesToAverage);
-        }
-
-        private void chkRecording_CheckedChanged(object sender, EventArgs e)
-        {
-            FFTDisplay.SavingEnabled = chkRecording.Checked;
-        }
-
-        private void txtFileName_TextChanged(object sender, EventArgs e)
-        {
-            FFTDisplay.SavingName = txtFileName.Text;
-        }
-
-        private void btnDemod_Click(object sender, EventArgs e)
-        {
-            if (DemodDialog != null)
-            {
-                DemodDialog.Close();
-                DemodDialog = null;
+                MarkerDialog = new MarkerListDialog(Markers);
+                MarkerDialog.GetTuner = MarkerDialog_GetTuner;
+                MarkerDialog.MarkersChanged += new EventHandler(MarkerDialog_MarkersChanged);
+                MarkerDialog.Show();
             }
             else
             {
-                DemodDialog = new DemodulationDialog(DemodOptions);
-                DemodDialog.Show();
+                MarkerDialog.Visible = !MarkerDialog.Visible;
             }
         }
 
-        private void btnStats_Click(object sender, EventArgs e)
+        private DigitalTuner MarkerDialog_GetTuner()
         {
-            if (StatsDialog != null)
-            {
-                StatsDialog.Close();
-                StatsDialog = null;
-            }
-            else
-            {
-                StatsDialog = new PerformaceStatsDialog(PerformanceCounters);
-                StatsDialog.Show();
-            }
+            return Device;
         }
 
-        private void btnGSM_Click(object sender, EventArgs e)
+        private void MarkerDialog_MarkersChanged(object sender, EventArgs e)
         {
-            GSMAnalyzer analyzer = new GSMAnalyzer();
+            /* the markers were changed. update this in FFT */
+            FFTDisplay.Markers = Markers;
+        }
 
-            analyzer.Show();
-            if (Device != null)
-            {
-                analyzer.OpenSharedMem(((USBRXDeviceControl)Device).ShmemChannel);
-            }
+        private void toolStripButton1_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

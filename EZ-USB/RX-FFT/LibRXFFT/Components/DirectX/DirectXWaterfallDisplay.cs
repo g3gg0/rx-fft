@@ -242,191 +242,36 @@ namespace LibRXFFT.Components.DirectX
             }
         }
 
-
-        internal virtual void RenderOverlay()
+        protected override void RenderCursor()
         {
             uint colorCursor = (uint)ColorCursor.ToArgb();
 
-            /* draw white/black bar */
-            uint color = (uint)ColorFaderBG.ToArgb();
-            uint colorBarUpper = (uint)Color.White.ToArgb();
-            uint colorBarLower = (uint)Color.White.ToArgb();
-            int barLength = 50;
-            int barTop = DirectXHeight - barLength - 20;
-            int barBottom = barTop + barLength;
-            int whiteYPos = (int)((LeveldBWhite / LeveldBMax) * barLength);
-            int blackYPos = (int)((LeveldBBlack / LeveldBMax) * barLength);
-
-            if (ShiftPressed)
-                colorBarUpper = (uint)Color.Green.ToArgb();
-            if (ControlPressed)
-                colorBarLower = (uint)Color.Green.ToArgb();
-
-            if (UpdateOverlays)
+            if (UpdateCursor)
             {
-                ScaleVertexesUsed = 0;
+                UpdateCursor = false;
 
-                /* center line */
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = 20;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = barTop;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 1;
-                ScaleVertexes[ScaleVertexesUsed].Color = color & 0x80FFFFFF;
-                ScaleVertexesUsed++;
+                /* draw vertical cursor line */
+                float stubLength = (float)DirectXHeight / 10.0f;
+                float xPos = (float)LastMousePos.X;
+                float yPos = (float)LastMousePos.Y;
 
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = 20;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = barTop + 10;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 2;
-                ScaleVertexes[ScaleVertexesUsed].Color = color;
-                ScaleVertexesUsed++;
+                CursorVertexesVert[0].PositionRhw.X = xPos;
+                CursorVertexesVert[1].PositionRhw.X = xPos;
+                CursorVertexesVert[2].PositionRhw.X = xPos;
+                CursorVertexesVert[3].PositionRhw.X = xPos;
 
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = 20;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = barTop + 10;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 2;
-                ScaleVertexes[ScaleVertexesUsed].Color = color;
-                ScaleVertexesUsed++;
+                /* horizontal line */
+                CursorVertexesHor[0].PositionRhw.X = xPos - 30;
+                CursorVertexesHor[0].PositionRhw.Y = yPos;
 
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = 20;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = barBottom - 10;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 2;
-                ScaleVertexes[ScaleVertexesUsed].Color = color;
-                ScaleVertexesUsed++;
+                CursorVertexesHor[1].PositionRhw.X = xPos;
+                CursorVertexesHor[1].PositionRhw.Y = yPos;
 
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = 20;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = barBottom - 10;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 2;
-                ScaleVertexes[ScaleVertexesUsed].Color = color;
-                ScaleVertexesUsed++;
-
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = 20;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = barBottom;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 1;
-                ScaleVertexes[ScaleVertexesUsed].Color = color & 0x80FFFFFF;
-                ScaleVertexesUsed++;
-
-                /* left line */
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = 19;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = barTop;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 1;
-                ScaleVertexes[ScaleVertexesUsed].Color = color & 0x00FFFFFF;
-                ScaleVertexesUsed++;
-
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = 19;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = (barTop + barBottom) / 2;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 1;
-                ScaleVertexes[ScaleVertexesUsed].Color = color;
-                ScaleVertexesUsed++;
-
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = 19;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = (barTop + barBottom) / 2;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 1;
-                ScaleVertexes[ScaleVertexesUsed].Color = color;
-                ScaleVertexesUsed++;
-
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = 19;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = barBottom;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 1;
-                ScaleVertexes[ScaleVertexesUsed].Color = color & 0x00FFFFFF;
-                ScaleVertexesUsed++;
-
-                /* right line */
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = 21;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = barTop;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 1;
-                ScaleVertexes[ScaleVertexesUsed].Color = color & 0x00FFFFFF;
-                ScaleVertexesUsed++;
-
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = 21;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = (barTop + barBottom) / 2;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 1;
-                ScaleVertexes[ScaleVertexesUsed].Color = color;
-                ScaleVertexesUsed++;
-
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = 21;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = (barTop + barBottom) / 2;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 1;
-                ScaleVertexes[ScaleVertexesUsed].Color = color;
-                ScaleVertexesUsed++;
-
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = 21;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = barBottom;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 1;
-                ScaleVertexes[ScaleVertexesUsed].Color = color & 0x00FFFFFF;
-                ScaleVertexesUsed++;
-
-                /* draw white/black limiter */
-
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = 15;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = barTop + whiteYPos;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 1;
-                ScaleVertexes[ScaleVertexesUsed].Color = colorBarUpper;
-                ScaleVertexesUsed++;
-
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = 25;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = barTop + whiteYPos;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 2;
-                ScaleVertexes[ScaleVertexesUsed].Color = colorBarUpper;
-                ScaleVertexesUsed++;
-
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = 15;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = barTop + blackYPos;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 1;
-                ScaleVertexes[ScaleVertexesUsed].Color = colorBarLower;
-                ScaleVertexesUsed++;
-
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = 25;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = barTop + blackYPos;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
-                ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 2;
-                ScaleVertexes[ScaleVertexesUsed].Color = colorBarLower;
-                ScaleVertexesUsed++;
-            }
-
-            Device.DrawUserPrimitives(PrimitiveType.LineList, ScaleVertexesUsed / 2, ScaleVertexes);
-            SmallFont.DrawString(null, LeveldBWhite + " dB", 27, barTop + whiteYPos - 6, (int)colorBarUpper);
-            SmallFont.DrawString(null, LeveldBBlack + " dB", 27, barTop + blackYPos - 6, (int)colorBarLower);
+                CursorVertexesHor[2].PositionRhw.X = xPos + 30;
+                CursorVertexesHor[2].PositionRhw.Y = yPos;
 
 
-            /* draw vertical cursor line */
-            color = (uint)ColorCursor.ToArgb();
-            float stubLength = (float)DirectXHeight / 10.0f;
-            float xPos = (float)LastMousePos.X;
-            float yPos = (float)LastMousePos.Y;
-
-            CursorVertexesVert[0].PositionRhw.X = xPos;
-            CursorVertexesVert[1].PositionRhw.X = xPos;
-            CursorVertexesVert[2].PositionRhw.X = xPos;
-            CursorVertexesVert[3].PositionRhw.X = xPos;
-
-            /* horizontal line */
-            CursorVertexesHor[0].PositionRhw.X = xPos - 30;
-            CursorVertexesHor[0].PositionRhw.Y = yPos;
-
-            CursorVertexesHor[1].PositionRhw.X = xPos;
-            CursorVertexesHor[1].PositionRhw.Y = yPos;
-
-            CursorVertexesHor[2].PositionRhw.X = xPos + 30;
-            CursorVertexesHor[2].PositionRhw.Y = yPos;
-
-            /* if axis information changed, recalc lines (this is needed just once btw.) */
-            if (UpdateOverlays)
-            {
+                /* recalc lines (this is needed just once btw.) */
                 CursorVertexesVert[0].PositionRhw.Y = 0;
                 CursorVertexesVert[0].PositionRhw.Z = 0.5f;
                 CursorVertexesVert[0].PositionRhw.W = 1;
@@ -460,8 +305,6 @@ namespace LibRXFFT.Components.DirectX
                 CursorVertexesHor[2].Color = colorCursor & 0x00FFFFFF;
             }
 
-
-
             if (MouseHovering || ShowVerticalCursor)
             {
                 Device.DrawUserPrimitives(PrimitiveType.LineStrip, 3, CursorVertexesVert);
@@ -469,17 +312,175 @@ namespace LibRXFFT.Components.DirectX
                 if (MouseHovering)
                 {
                     Device.DrawUserPrimitives(PrimitiveType.LineStrip, 2, CursorVertexesHor);
-
-                    /* draw the horizontal position (preliminary) 
-                    string label = XLabelFromCursorPos(xPos);
-
-                    if (xPos > DirectXWidth / 2)
-                        SmallFont.DrawString(null, label, (int)xPos - 40, (int)yPos, ColorFG.ToArgb());
-                    else
-                        SmallFont.DrawString(null, label, (int)xPos + 20, (int)yPos, ColorFG.ToArgb());
-                    */
                 }
             }
+        }
+
+
+        protected override void RenderAxis()
+        {
+        }
+
+        protected override void RenderOverlay()
+        {
+            uint colorCursor = (uint)ColorCursor.ToArgb();
+
+            /* draw white/black bar */
+            uint color = (uint)ColorFaderBG.ToArgb();
+            uint colorBarUpper = (uint)Color.White.ToArgb();
+            uint colorBarLower = (uint)Color.White.ToArgb();
+            int barLength = 50;
+            int barTop = DirectXHeight - barLength - 20;
+            int barBottom = barTop + barLength;
+            int whiteYPos = (int)((LeveldBWhite / LeveldBMax) * barLength);
+            int blackYPos = (int)((LeveldBBlack / LeveldBMax) * barLength);
+
+            if (ShiftPressed)
+                colorBarUpper = (uint)Color.Green.ToArgb();
+            if (ControlPressed)
+                colorBarLower = (uint)Color.Green.ToArgb();
+
+            if (UpdateOverlays)
+            {
+                UpdateOverlays = false;
+
+                OverlayVertexesUsed = 0;
+
+                /* center line */
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.X = 20;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.Y = barTop;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.Z = 0.5f;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.W = 1;
+                OverlayVertexes[OverlayVertexesUsed].Color = color & 0x80FFFFFF;
+                OverlayVertexesUsed++;
+
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.X = 20;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.Y = barTop + 10;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.Z = 0.5f;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.W = 2;
+                OverlayVertexes[OverlayVertexesUsed].Color = color;
+                OverlayVertexesUsed++;
+
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.X = 20;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.Y = barTop + 10;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.Z = 0.5f;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.W = 2;
+                OverlayVertexes[OverlayVertexesUsed].Color = color;
+                OverlayVertexesUsed++;
+
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.X = 20;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.Y = barBottom - 10;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.Z = 0.5f;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.W = 2;
+                OverlayVertexes[OverlayVertexesUsed].Color = color;
+                OverlayVertexesUsed++;
+
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.X = 20;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.Y = barBottom - 10;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.Z = 0.5f;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.W = 2;
+                OverlayVertexes[OverlayVertexesUsed].Color = color;
+                OverlayVertexesUsed++;
+
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.X = 20;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.Y = barBottom;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.Z = 0.5f;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.W = 1;
+                OverlayVertexes[OverlayVertexesUsed].Color = color & 0x80FFFFFF;
+                OverlayVertexesUsed++;
+
+                /* left line */
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.X = 19;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.Y = barTop;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.Z = 0.5f;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.W = 1;
+                OverlayVertexes[OverlayVertexesUsed].Color = color & 0x00FFFFFF;
+                OverlayVertexesUsed++;
+
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.X = 19;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.Y = (barTop + barBottom) / 2;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.Z = 0.5f;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.W = 1;
+                OverlayVertexes[OverlayVertexesUsed].Color = color;
+                OverlayVertexesUsed++;
+
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.X = 19;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.Y = (barTop + barBottom) / 2;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.Z = 0.5f;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.W = 1;
+                OverlayVertexes[OverlayVertexesUsed].Color = color;
+                OverlayVertexesUsed++;
+
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.X = 19;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.Y = barBottom;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.Z = 0.5f;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.W = 1;
+                OverlayVertexes[OverlayVertexesUsed].Color = color & 0x00FFFFFF;
+                OverlayVertexesUsed++;
+
+                /* right line */
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.X = 21;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.Y = barTop;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.Z = 0.5f;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.W = 1;
+                OverlayVertexes[OverlayVertexesUsed].Color = color & 0x00FFFFFF;
+                OverlayVertexesUsed++;
+
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.X = 21;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.Y = (barTop + barBottom) / 2;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.Z = 0.5f;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.W = 1;
+                OverlayVertexes[OverlayVertexesUsed].Color = color;
+                OverlayVertexesUsed++;
+
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.X = 21;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.Y = (barTop + barBottom) / 2;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.Z = 0.5f;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.W = 1;
+                OverlayVertexes[OverlayVertexesUsed].Color = color;
+                OverlayVertexesUsed++;
+
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.X = 21;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.Y = barBottom;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.Z = 0.5f;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.W = 1;
+                OverlayVertexes[OverlayVertexesUsed].Color = color & 0x00FFFFFF;
+                OverlayVertexesUsed++;
+
+                /* draw white/black limiter */
+
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.X = 15;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.Y = barTop + whiteYPos;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.Z = 0.5f;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.W = 1;
+                OverlayVertexes[OverlayVertexesUsed].Color = colorBarUpper;
+                OverlayVertexesUsed++;
+
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.X = 25;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.Y = barTop + whiteYPos;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.Z = 0.5f;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.W = 2;
+                OverlayVertexes[OverlayVertexesUsed].Color = colorBarUpper;
+                OverlayVertexesUsed++;
+
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.X = 15;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.Y = barTop + blackYPos;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.Z = 0.5f;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.W = 1;
+                OverlayVertexes[OverlayVertexesUsed].Color = colorBarLower;
+                OverlayVertexesUsed++;
+
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.X = 25;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.Y = barTop + blackYPos;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.Z = 0.5f;
+                OverlayVertexes[OverlayVertexesUsed].PositionRhw.W = 2;
+                OverlayVertexes[OverlayVertexesUsed].Color = colorBarLower;
+                OverlayVertexesUsed++;
+            }
+
+            Device.DrawUserPrimitives(PrimitiveType.LineList, OverlayVertexesUsed / 2, OverlayVertexes);
+            SmallFont.DrawString(null, LeveldBWhite + " dB", 27, barTop + whiteYPos - 6, (int)colorBarUpper);
+            SmallFont.DrawString(null, LeveldBBlack + " dB", 27, barTop + blackYPos - 6, (int)colorBarLower);
         }
 
         internal override void PrepareLinePoints()
@@ -508,9 +509,9 @@ namespace LibRXFFT.Components.DirectX
                             /* some simple averaging */
                             unchecked
                             {
-                                LinePoints[pos].Y *= (Averaging - 1);
+                                LinePoints[pos].Y *= (VerticalSmooth - 1);
                                 LinePoints[pos].Y += posY / SampleValuesAveraged;
-                                LinePoints[pos].Y /= Averaging;
+                                LinePoints[pos].Y /= VerticalSmooth;
                             }
 
                             if (double.IsNaN(LinePoints[pos].Y))
@@ -656,6 +657,13 @@ namespace LibRXFFT.Components.DirectX
             XMaximum = DirectXWidth;
         }
 
+        protected override void ResetModifiers()
+        {
+            LevelBarActive = false;
+
+            base.ResetModifiers();
+        }
+
         protected override void KeyPressed(Keys key)
         {
             /* set main text and update overlays so the active bar gets colored */
@@ -714,7 +722,7 @@ namespace LibRXFFT.Components.DirectX
             {
                 case eUserAction.YOffset:
                     LeveldBWhite = Math.Max(LeveldBBlack, Math.Min(0, LeveldBWhite + 2 * Math.Sign(param)));
-                    UpdateAxis = true;
+                    UpdateOverlays = true;
 
                     /* inform that smth has changed */
                     if (UserEventCallback != null)
@@ -723,7 +731,7 @@ namespace LibRXFFT.Components.DirectX
 
                 case eUserAction.YZoomIn:
                     LeveldBBlack = Math.Max(LeveldBMax, Math.Min(LeveldBWhite, LeveldBBlack + 2));
-                    UpdateAxis = true;
+                    UpdateOverlays = true;
 
                     /* inform that smth has changed */
                     if (UserEventCallback != null)
@@ -732,7 +740,7 @@ namespace LibRXFFT.Components.DirectX
 
                 case eUserAction.YZoomOut:
                     LeveldBBlack = Math.Max(LeveldBMax, Math.Min(LeveldBWhite, LeveldBBlack - 2));
-                    UpdateAxis = true;
+                    UpdateOverlays = true;
 
                     /* inform that smth has changed */
                     if (UserEventCallback != null)
@@ -892,13 +900,6 @@ namespace LibRXFFT.Components.DirectX
 
         protected override void RenderCore()
         {
-            if (UpdateAxis)
-            {
-                UpdateAxis = false;
-                UpdateOverlays = true;
-                CreateVertexBufferForAxis();
-            }
-
             if (LinePointsUpdated)
             {
                 LinePointsUpdated = false;
@@ -907,7 +908,6 @@ namespace LibRXFFT.Components.DirectX
                     CreateVertexBufferForPoints(LinePoints, LinePointEntries);
                 }
             }
-
 
             if (PlotVertsEntries > 0)
             {
@@ -1050,22 +1050,20 @@ namespace LibRXFFT.Components.DirectX
                 }
             }
 
-            #region build overlay 
+            #region render axis and overlay
             Device.VertexFormat = VertexFormat.PositionRhw | VertexFormat.Diffuse;
             Device.SetRenderTarget(0, TempWaterfallTexture.GetSurfaceLevel(0));
             Device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.Transparent, 1.0f, 0);
 
             Device.BeginScene();
 
-            if (XAxisVerts.Length > 0)
-                Device.DrawUserPrimitives(PrimitiveType.LineList, XAxisVerts.Length / 2, XAxisVerts);
-            if (YAxisVerts.Length > 0)
-                Device.DrawUserPrimitives(PrimitiveType.LineList, YAxisVerts.Length / 2, YAxisVerts);
+            RenderAxis();
 
             DisplayFont.DrawString(null, MainText, 20, 30, ColorBG);
             DisplayFont.DrawString(null, MainText, 21, 31, ColorFont);
 
             RenderOverlay();
+            RenderCursor();
             Device.EndScene();
             #endregion
 
@@ -1084,8 +1082,6 @@ namespace LibRXFFT.Components.DirectX
             #endregion
 
             Device.Present();
-
-            UpdateOverlays = false;
         }
     }
 }

@@ -142,7 +142,7 @@
             // 
             // FFTDisplay
             // 
-            this.FFTDisplay.Averaging = 1;
+            this.FFTDisplay.VerticalSmooth = 1;
             this.FFTDisplay.Dock = System.Windows.Forms.DockStyle.Fill;
             this.FFTDisplay.FFTSize = 256;
             this.FFTDisplay.Location = new System.Drawing.Point(0, 0);

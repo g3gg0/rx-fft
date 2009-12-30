@@ -10,6 +10,7 @@
 #define LIBRXFFT_NATIVE_API __declspec(dllimport)
 #endif
 
+
 typedef struct 
 {
 	double *Coefficients;

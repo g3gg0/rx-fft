@@ -307,6 +307,7 @@ namespace LibRXFFT.Libraries
 
         public static void SamplesFromBinary(byte[] dataBuffer, int bytesRead, double[] samplesI, double[] samplesQ, eSampleFormat dataFormat, bool invertedSpectrum)
         {
+
             if (UseNative)
             {
                 SamplesFromBinaryNative(dataBuffer, bytesRead, samplesI, samplesQ, (int)dataFormat, invertedSpectrum);
@@ -337,6 +338,9 @@ namespace LibRXFFT.Libraries
 
                 int samplePos = 0;
                 int samplePairs = bytesRead / bytesPerSamplePair;
+
+                if (samplesI.Length < samplePairs || samplesQ.Length < samplePairs)
+                    return;
 
                 for (int pos = 0; pos < samplePairs; pos++)
                 {

@@ -9,10 +9,18 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 {
     public class USBRXDevice : I2CInterface, SPIInterface
     {
-        int DevNum = 0;
+        public enum TransferMode
+        {
+            Stopped,
+            Stream,
+            Block
+        }
+
+        private int DevNum = 0;
+        private AD6636 AD6636;
+        private TransferMode CurrentMode;
         public DigitalTuner Tuner;
         public Atmel Atmel;
-        private AD6636 AD6636;
 
         public uint _ReadBlockSize = 4096;
         public uint ReadBlockSize 
@@ -21,9 +29,13 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             set 
             {
                 _ReadBlockSize = value;
-                USBRXDeviceNative.UsbSetControlledTransfer(DevNum, 0, ReadBlockSize);
+                if (CurrentMode == TransferMode.Block)
+                {
+                    USBRXDeviceNative.UsbSetControlledTransfer(DevNum, 0, ReadBlockSize);
+                }
             }
         }
+
         public int ShmemChannel
         {
             get
@@ -46,6 +58,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             {
                 if (USBRXDeviceNative.UsbInit(DevNum))
                 {
+                    CurrentMode = TransferMode.Stopped;
                     Atmel = new Atmel(this);
                     AD6636 = new AD6636(Atmel, Atmel.TCXOFreq);
 
@@ -102,28 +115,33 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
         void ReadTimer_Timer(object sender, EventArgs e)
         {
+            //USBRXDeviceNative.SetSlaveFifoParams(true, 0, 0);
             USBRXDeviceNative.UsbSetControlledTransfer(DevNum, ReadBlockSize, ReadBlockSize);
         }
 
         public void StartStreamRead()
         {
+            CurrentMode = TransferMode.Stream;
             USBRXDeviceNative.UsbSetGPIFMode(DevNum);
             USBRXDeviceNative.UsbSetControlledTransfer(DevNum, 0, ReadBlockSize);
         }
 
         public void StopStreamRead()
         {
+            CurrentMode = TransferMode.Stopped;
             USBRXDeviceNative.UsbSetGPIFMode(DevNum);
         }
 
         public void StartRead()
         {
+            CurrentMode = TransferMode.Block;
             USBRXDeviceNative.UsbSetGPIFMode(DevNum);
             ReadTimer.Start();
         }
 
         public void StopRead()
         {
+            CurrentMode = TransferMode.Stopped;
             ReadTimer.Stop();
         }
 

@@ -19,8 +19,9 @@ namespace RX_FFT.DeviceControls
     {
         private USBRXDevice USBRX;
         private SampleSource _SampleSource;
-        private int BytesPerSamplePair = 8;
+        private int BytesPerSamplePair = 4;
         private bool ClosingAllowed = false;
+        private long CurrentFrequency = 0;
 
         public bool _Connected = false;
         public int ShmemChannel
@@ -50,8 +51,12 @@ namespace RX_FFT.DeviceControls
                 USBRX.Tuner.SamplingRateChanged += new EventHandler(AD6636_FilterRateChanged);
                 USBRX.Tuner.FilterWidthChanged += new EventHandler(AD6636_FilterWidthChanged);
 
+                CurrentFrequency = USBRX.Tuner.GetFrequency();
+                setFreqTextbox(CurrentFrequency);
+
                 _SampleSource = new ShmemSampleSource("FFT Display", USBRX.ShmemChannel, 1, 0);
                 _SampleSource.InvertedSpectrum = InvertedSpectrum;
+                _SampleSource.DataFormat = LibRXFFT.Libraries.ByteUtil.eSampleFormat.Direct16BitIQFixedPoint;
 
                 _Connected = true;
                 Show();
@@ -62,6 +67,10 @@ namespace RX_FFT.DeviceControls
 
             radioAcqOff.Checked = true;
             radioAcqOff_CheckedChanged(null, null);
+
+            ToolTip ttFreq = new ToolTip();
+            ttFreq.SetToolTip(frequencySelector1, "Min Freq: " + USBRX.Tuner.LowestFrequency + Environment.NewLine + "Max Freq: " + USBRX.Tuner.HighestFrequency);
+            ttFreq.AutomaticDelay = 2000;
         }
 
         void AD6636_FilterWidthChanged(object sender, EventArgs e)
@@ -118,13 +127,12 @@ namespace RX_FFT.DeviceControls
         {
             if (!Connected)
                 return;
-            long freq = frequencySelector1.Frequency;
+            CurrentFrequency = frequencySelector1.Frequency;
 
-            if (!USBRX.Tuner.SetFrequency(freq))
+            if (!USBRX.Tuner.SetFrequency(CurrentFrequency))
                 frequencySelector1.BackColor = Color.Red;
             else
                 frequencySelector1.BackColor = Color.White;
-
 
             if (FrequencyChanged != null)
                 FrequencyChanged(this, null);
@@ -194,7 +202,6 @@ namespace RX_FFT.DeviceControls
 
         #region DeviceControl Member
 
-
         public int SamplesPerBlock
         {
             set
@@ -202,7 +209,7 @@ namespace RX_FFT.DeviceControls
                 if (!Connected)
                     return;
                 USBRX.ReadBlockSize = (uint)(value * BytesPerSamplePair);
-                _SampleSource.SamplesPerBlock = value;
+                SampleSource.SamplesPerBlock = value;
             }
             get
             {
@@ -211,7 +218,6 @@ namespace RX_FFT.DeviceControls
                 return (int)(USBRX.ReadBlockSize / BytesPerSamplePair);
             }
         }
-
         
         delegate void setFreqDelegate(double freq);
         void setFreqTextbox(double freq)
@@ -225,7 +231,10 @@ namespace RX_FFT.DeviceControls
                 return false;
             if (USBRX.Tuner.SetFrequency(frequency))
             {
+                CurrentFrequency = frequency;
                 this.BeginInvoke(new setFreqDelegate(setFreqTextbox), frequency);
+                if (FrequencyChanged != null)
+                    FrequencyChanged(this, null);
                 return true;
             }
 
@@ -236,16 +245,11 @@ namespace RX_FFT.DeviceControls
         {
             if (!Connected)
                 return 0;
-            return USBRX.Tuner.GetFrequency();
-        }
 
-        public long GetRate()
-        {
-            if (!Connected)
-                return 0;
-            return USBRX.Tuner.GetFrequency();
-        }
+            return CurrentFrequency;
 
+            //return USBRX.Tuner.GetFrequency();
+        }
 
         public bool InvertedSpectrum
         {
@@ -328,6 +332,5 @@ namespace RX_FFT.DeviceControls
             StopRead();
             StartStreamRead();
         }
-
     }
 }

@@ -10,8 +10,8 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 {
     class MT2131 : Tuner
     {
-        public long IFFrequency = 43998658;
-        public long IFStepSize = 50000;
+        public long IFFrequency = 43998970;
+        public long IFStepSize = 500000;
 
         private I2CInterface I2cDevice;
         private int BusID;

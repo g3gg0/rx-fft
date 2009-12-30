@@ -28,7 +28,7 @@ namespace GSM_Analyzer
             string[] windowingTypes = Enum.GetNames(typeof(FFTTransformer.eWindowingFunction));
             cmbWindowFunc.Items.AddRange(windowingTypes);
             cmbWindowFunc.Text = FFTDisplay.WindowingFunction.ToString();
-            cmbAverage.Text = FFTDisplay.Averaging.ToString();
+            cmbAverage.Text = FFTDisplay.VerticalSmooth.ToString();
             cmbFFTSize.Text = FFTSize.ToString();
         }
 
@@ -75,7 +75,7 @@ namespace GSM_Analyzer
 
             if (!double.TryParse(cmbAverage.Text, out avg))
                 return;
-            FFTDisplay.Averaging = avg;
+            FFTDisplay.VerticalSmooth = avg;
         }
 
         private void cmbFFTSize_TextChanged(object sender, EventArgs e)

@@ -52,6 +52,8 @@ namespace LibRXFFT.Components.GDI
                 }
             }
 
+            FilterFiles.Sort();
+
             foreach (AD6636FilterFile filter in FilterFiles)
             {
                 AddFilter(filter);
@@ -82,6 +84,30 @@ namespace LibRXFFT.Components.GDI
                 LastButton.ForeColor = Color.Red;
                 if (FilterSelected != null)
                     FilterSelected(filter, null);
+            });
+            btn.MouseUp +=new MouseEventHandler(delegate(object sender, MouseEventArgs e)
+            {
+                if (e.Button == MouseButtons.Right)
+                {
+                    string msg = "";
+
+                    msg += "  Filter details:" + Environment.NewLine;
+                    msg += "-------------------------------------" + Environment.NewLine;
+                    msg += "  Version: " + filter.ProgramVersion + Environment.NewLine;
+                    msg += "  Device : " + filter.DeviceName + Environment.NewLine;
+                    msg += "  Rate   : " + FrequencyFormatter.FreqToStringAccurate(filter.OutputFrequency) + Environment.NewLine;
+                    msg += "  Width  : " + FrequencyFormatter.FreqToStringAccurate(filter.Width) + Environment.NewLine;
+                    string[] nameParts = filter.FileName.Split('\\');
+                    if (nameParts.Length > 0)
+                    {
+                        msg += "  Filename: "  + nameParts[nameParts.Length-1] + Environment.NewLine;
+                    }
+                    else
+                    {
+                        msg += "  Filename: "  + filter.FileName + Environment.NewLine;
+                    }
+                    MessageBox.Show(msg);
+                }
             });
             flowLayout.Controls.Add(btn);
         }

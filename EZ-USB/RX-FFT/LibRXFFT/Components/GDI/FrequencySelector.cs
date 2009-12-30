@@ -29,9 +29,10 @@ namespace LibRXFFT.Components.GDI
 
         void FrequencySelector_KeyPress(object sender, KeyPressEventArgs e)
         {
+            ParseFrequency();
+
             if (e.KeyChar == 0x0D)
-            {
-                ParseFrequency();
+            {                
                 /* reformat frequency */
                 Frequency = CurrentFrequency;
 
@@ -43,6 +44,8 @@ namespace LibRXFFT.Components.GDI
                 {
                     ForeColor = Color.Red;
                 }
+                if (FrequencyChanged != null)
+                    FrequencyChanged(this, null);
             }
         }
 
@@ -83,6 +86,9 @@ namespace LibRXFFT.Components.GDI
             {
                 ForeColor = Color.Red;
             }
+
+            if (FrequencyChanged != null)
+                FrequencyChanged(this, null);
         }
 
         public void ParseFrequency()
@@ -131,14 +137,8 @@ namespace LibRXFFT.Components.GDI
                 return;
             }
 
-            long newFrequency = (long)(freqValue * factor);
-            long oldFrequency = CurrentFrequency;
-
             FrequencyValid = true;
-            CurrentFrequency = newFrequency;
-
-            if (newFrequency != oldFrequency && FrequencyChanged != null)
-                FrequencyChanged(this, null);
+            CurrentFrequency = (long)(freqValue * factor); 
         }
 
         public long FrequencyUnitFactor
@@ -200,6 +200,9 @@ namespace LibRXFFT.Components.GDI
         {
             get
             {
+                /* make sure its already parsed (may be missed when ctrl-v was pressed) */
+                ParseFrequency();
+
                 return CurrentFrequency;
             }
             set

@@ -269,7 +269,7 @@ void kf_work(
         int k;
 
         // execute the p different work units in different threads
-#       pragma omp parallel for
+#pragma omp parallel for
         for (k=0;k<p;++k) 
             kf_work( Fout +k*m, f+ fstride*in_stride*k,fstride*p,in_stride,factors,st);
         // all threads have joined by this point

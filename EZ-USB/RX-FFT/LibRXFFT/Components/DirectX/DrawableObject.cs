@@ -27,6 +27,20 @@ namespace LibRXFFT.Components.DirectX
         public string Description;
         public long Frequency;
 
+        public FrequencyMarker()
+        {
+            this.Label = "<Enter label here>";
+            this.Description = "<Enter description here>";
+            this.Frequency = 0;
+        }
+
+        public FrequencyMarker(long frequency)
+        {
+            this.Label = "<Enter label here>";
+            this.Description = "<Enter description here>";
+            this.Frequency = frequency;
+        }
+
         public FrequencyMarker(string label, string description, long frequency)
         {
             this.Label = label;

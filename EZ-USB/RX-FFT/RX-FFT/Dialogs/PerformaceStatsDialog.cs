@@ -32,15 +32,15 @@ namespace RX_FFT.Dialogs
             if(item.SubItems[0].Text != counter.Name)
                 item.SubItems[0].Text = counter.Name;
 
-            item.SubItems[1].Text = String.Format("{0:0.0} s", counter.TotalTime);
+            item.SubItems[1].Text = String.Format("{0:0.00} s", counter.TotalTime);
 
             if (refTime > 0)
-                item.SubItems[2].Text = String.Format("{0:0.0} %", ((100 * counter.TotalTime) / refTime));
+                item.SubItems[2].Text = String.Format("{0:0.00} %", ((100 * counter.TotalTime) / refTime));
             else
                 item.SubItems[2].Text = "-";
 
             if (refCPUTime > 0)
-                item.SubItems[3].Text = String.Format("{0:0.0} %", ((100 * counter.TotalTime) / refCPUTime));
+                item.SubItems[3].Text = String.Format("{0:0.00} %", ((100 * counter.TotalTime) / refCPUTime));
             else
                 item.SubItems[3].Text = "-";
         }
@@ -59,18 +59,34 @@ namespace RX_FFT.Dialogs
             }
 
             int entry = 0;
+            double processTime = Envelope.CounterProcessing.TotalTime + Envelope.CounterVisualization.TotalTime;
+            HighPerformanceCounter tmpCtr = new HighPerformanceCounter("Processing");
+            tmpCtr.TotalTime = processTime;
+
             UpdateCounter(ListItems[entry++], Envelope.CounterRuntime, 0, 0);
 
             UpdateCounter(ListItems[entry++], Envelope.CounterReading, 0, Envelope.CounterRuntime.TotalTime);
-            UpdateCounter(ListItems[entry++], Envelope.CounterProcessing, 0, Envelope.CounterRuntime.TotalTime);
+            UpdateCounter(ListItems[entry++], tmpCtr, 0, Envelope.CounterRuntime.TotalTime);
 
-            UpdateCounter(ListItems[entry++], Envelope.CounterXlat, Envelope.CounterProcessing.TotalTime, Envelope.CounterRuntime.TotalTime);
-            UpdateCounter(ListItems[entry++], Envelope.CounterXlatLowpass, Envelope.CounterProcessing.TotalTime, Envelope.CounterRuntime.TotalTime);
-            UpdateCounter(ListItems[entry++], Envelope.CounterXlatDecimate, Envelope.CounterProcessing.TotalTime, Envelope.CounterRuntime.TotalTime);
-            UpdateCounter(ListItems[entry++], Envelope.CounterDemod, Envelope.CounterProcessing.TotalTime, Envelope.CounterRuntime.TotalTime);
-            UpdateCounter(ListItems[entry++], Envelope.CounterDemodLowpass, Envelope.CounterProcessing.TotalTime, Envelope.CounterRuntime.TotalTime);
-            UpdateCounter(ListItems[entry++], Envelope.CounterDemodDecimate, Envelope.CounterProcessing.TotalTime, Envelope.CounterRuntime.TotalTime);
-            UpdateCounter(ListItems[entry++], Envelope.CounterVisualization, Envelope.CounterProcessing.TotalTime, Envelope.CounterRuntime.TotalTime);
+
+            UpdateCounter(ListItems[entry++], Envelope.CounterXlat, processTime, Envelope.CounterRuntime.TotalTime);
+            UpdateCounter(ListItems[entry++], Envelope.CounterXlatLowpass, processTime, Envelope.CounterRuntime.TotalTime);
+            UpdateCounter(ListItems[entry++], Envelope.CounterXlatDecimate, processTime, Envelope.CounterRuntime.TotalTime);
+            UpdateCounter(ListItems[entry++], Envelope.CounterDemod, processTime, Envelope.CounterRuntime.TotalTime);
+            UpdateCounter(ListItems[entry++], Envelope.CounterDemodLowpass, processTime, Envelope.CounterRuntime.TotalTime);
+            UpdateCounter(ListItems[entry++], Envelope.CounterDemodDecimate, processTime, Envelope.CounterRuntime.TotalTime);
+            UpdateCounter(ListItems[entry++], Envelope.CounterVisualization, processTime, Envelope.CounterRuntime.TotalTime);
+        }
+
+        private void btnReset_Click(object sender, EventArgs e)
+        {
+            lock (Envelope)
+            {
+                Envelope.Reset();
+                Envelope.CounterRuntime.Start();
+                Envelope.CounterProcessing.Start();
+                Envelope.CounterReading.Start();
+            }
         }
     }
 }

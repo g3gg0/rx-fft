@@ -12,6 +12,11 @@ namespace RX_FFT
 
     public class Demodulation
     {
+        public enum eSquelchState
+        {
+            Open,
+            Closed
+        }
         public bool ReinitSound = false;
         public double InputRate = 0;
         public double AudioRate = 0;
@@ -27,6 +32,14 @@ namespace RX_FFT
         public DXSoundDevice SoundDevice = null;
         public Demodulator Demod = new AMDemodulator();
         public Downmixer DemodulationDownmixer = new Downmixer();
+
+        public bool SquelchEnabled = false;
+        public double SquelchLowerLimit = -25;
+        public double SquelchAverage = -75;
+        public double SquelchMax = -65;
+        public eSquelchState SquelchState = eSquelchState.Open;
+        public long SquelchSampleCounter = 0;
+        public long SquelchSampleCount = 50;
 
         public bool AudioLowPassEnabled = false;
         public int AudioLowPassWidthFract = 2;

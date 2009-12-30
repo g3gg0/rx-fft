@@ -10,7 +10,7 @@ namespace LibRXFFT.Libraries.ShmemChain
         Dynamic = SharedMemNative.MODE_BLOCKING_DYNAMIC,
         TimeLimited = SharedMemNative.MODE_BLOCKING_TIME,
         Partial = SharedMemNative.MODE_PARTIAL
-    };
+    }
 
     public class NodeInfo
     {
@@ -32,7 +32,7 @@ namespace LibRXFFT.Libraries.ShmemChain
         protected int srcChan;
         protected int dstChan;
         protected eReadMode readMode = eReadMode.Blocking;
-        protected int readTimeout = 100;
+        protected int readTimeout = 1000;
 
 
         public SharedMem()

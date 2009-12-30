@@ -10,7 +10,6 @@
 
 #include "kiss_fft.h"
 
-
 #define MAX(a,b) (((a)>=(b))?(a):(b))
 #define MIN(a,b) (((a)<=(b))?(a):(b))
 
@@ -144,23 +143,24 @@ LIBRXFFT_NATIVE_API void IIRProcess(int *ctx, double *inData, double *outData, i
 
 	for(pos = 0; pos < samples; pos++)
 	{
+		double result = 0;
+
 		int i = 0;
 		int arrayPos = 0;
 		double s0 = 0;
-		double s1 = 0;
 
 		s0 = Gain * inData[pos];
 
 		for (i = 0; i < Section; i++)
 		{
-			s1 = (s0 * localNum[arrayPos + 0] + m1[i]) / localDen[arrayPos + 0];
-			m1[i] = m2[i] + s0 * localNum[arrayPos + 1] - s1 * localDen[arrayPos + 1];
-			m2[i] = s0 * localNum[arrayPos + 2] - s1 * localDen[arrayPos + 2];
-			s0 = s1;
+			result = (s0 * localNum[arrayPos + 0] + m1[i]) / localDen[arrayPos + 0];
+			m1[i] = m2[i] + s0 * localNum[arrayPos + 1] - result * localDen[arrayPos + 1];
+			m2[i] = s0 * localNum[arrayPos + 2] - result * localDen[arrayPos + 2];
+			s0 = result;
 			arrayPos += 3;
 		}
 
-		outData[pos] = s1;
+		outData[pos] = result;
 	}
 }
 
@@ -195,8 +195,8 @@ LIBRXFFT_NATIVE_API void FMDemodProcess(int *ctx, double *iDataIn, double *qData
 		double qData = qDataIn[pos];
 		double norm = (iData * iData + qData * qData) * 4;
 
-		double deltaI = iData - state->LastI;
-		double deltaQ = qData - state->LastQ;
+		double deltaI = iData - lastI;
+		double deltaQ = qData - lastQ;
 
 		outData[pos] = (iData * deltaQ - qData * deltaI) / norm;
 
@@ -223,7 +223,7 @@ LIBRXFFT_NATIVE_API void AMDemodProcess(int *ctx, double *iDataIn, double *qData
 {
 	int pos = 0;
 
-#pragma omp parallel for
+//#pragma omp parallel for
 
 	for(pos = 0; pos < samples; pos++)
 	{
@@ -273,7 +273,7 @@ LIBRXFFT_NATIVE_API void DownmixProcess(int *ctx, double *iDataIn, double *qData
 	double *cosTable = state->CosTable;
 	double *sinTable = state->SinTable;
 
-#pragma omp parallel for
+//#pragma omp parallel for
 	for(pos = 0; pos < samples; pos++)
 	{
 		/* keep timePos local for parallel processing */
@@ -344,7 +344,7 @@ LIBRXFFT_NATIVE_API void SamplesFromBinary(unsigned char *dataBuffer, int bytesR
 	samplePos = 0;
 	samplePairs = bytesRead / bytesPerSamplePair;
 
-#pragma omp parallel for
+//#pragma omp parallel for
 
 	for (pos = 0; pos < samplePairs; pos++)
 	{

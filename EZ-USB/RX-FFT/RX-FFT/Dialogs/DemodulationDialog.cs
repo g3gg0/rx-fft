@@ -57,9 +57,10 @@ namespace RX_FFT.Dialogs
 
 
             if (Demod.Demod.GetType() == typeof(AMDemodulator))
+            {
                 radioAM.Checked = true;
-
-            if (Demod.Demod.GetType() == typeof(FMDemodulator))
+            }
+            else if (Demod.Demod.GetType() == typeof(FMDemodulator))
             {
                 if (((FMDemodulator)Demod.Demod).Accurate)
                     radioFMAccurate.Checked = true;
@@ -169,6 +170,7 @@ namespace RX_FFT.Dialogs
         {
             barSquelchPower.Amplitude = (Demod.SquelchAverage + 100) / 100;
             barSquelchPower.LinePosition = (Demod.SquelchLowerLimit + 100) / 100;
+            barSquelchPower.Enabled = Demod.SquelchEnabled;
             barSquelchPower.Invalidate();
         }
 
@@ -234,8 +236,6 @@ namespace RX_FFT.Dialogs
 
             txtSquelchAvg.Text = String.Format("{0:0.00}", Demod.SquelchAverage);
             txtSquelchMax.Text = String.Format("{0:0.00}", Demod.SquelchMax);
-
-
         }
 
         private void chkEnableDemod_CheckedChanged(object sender, EventArgs e)
@@ -263,8 +263,7 @@ namespace RX_FFT.Dialogs
             lock (Demod)
             {
                 Demod.Demod = new AMDemodulator();
-                UpdateInformationInternal();
-                
+                UpdateInformationInternal();                
             }
         }
 
@@ -273,8 +272,7 @@ namespace RX_FFT.Dialogs
             lock (Demod)
             {
                 Demod.Demod = new FMDemodulator();
-                UpdateInformationInternal();
-                
+                UpdateInformationInternal();                
             }
         }
 
@@ -283,12 +281,9 @@ namespace RX_FFT.Dialogs
             lock (Demod)
             {
                 Demod.Demod = new FMDemodulator();
-                UpdateInformationInternal();
-                
+                UpdateInformationInternal();                
             }
         }
-
-
 
         private void radioFilter2_CheckedChanged(object sender, EventArgs e)
         {
@@ -327,8 +322,8 @@ namespace RX_FFT.Dialogs
             lock (Demod)
             {
                 Demod.CursorWindowFilterWidthFract = 8;
-                Demod.CursorWindowFilterI = new IIRFilter(IIRCoefficients.IIRLowPass_8_Low);
-                Demod.CursorWindowFilterQ = new IIRFilter(IIRCoefficients.IIRLowPass_8_Low);
+                Demod.CursorWindowFilterI = new IIRFilter(IIRCoefficients.IIRLowPass_8);
+                Demod.CursorWindowFilterQ = new IIRFilter(IIRCoefficients.IIRLowPass_8);
                 Demod.ReinitSound = true;
                 UpdateInformationInternal();
             }
@@ -415,8 +410,7 @@ namespace RX_FFT.Dialogs
             {
                 Demod.AudioLowPassWidthFract = 2;
                 Demod.AudioLowPass = new FIRFilter(FIRCoefficients.FIRLowPass_2_Low);
-                UpdateInformationInternal();
-                
+                UpdateInformationInternal();                
             }
         }
 
@@ -426,8 +420,7 @@ namespace RX_FFT.Dialogs
             {
                 Demod.AudioLowPassWidthFract = 4;
                 Demod.AudioLowPass = new FIRFilter(FIRCoefficients.FIRLowPass_4_Low);
-                UpdateInformationInternal();
-                
+                UpdateInformationInternal();                
             }
         }
 
@@ -437,8 +430,7 @@ namespace RX_FFT.Dialogs
             {
                 Demod.AudioLowPassWidthFract = 8;
                 Demod.AudioLowPass = new FIRFilter(FIRCoefficients.FIRLowPass_8_Low);
-                UpdateInformationInternal();
-                
+                UpdateInformationInternal();                
             }
         }
 
@@ -448,8 +440,7 @@ namespace RX_FFT.Dialogs
             {
                 Demod.AudioLowPassWidthFract = 16;
                 Demod.AudioLowPass = new FIRFilter(FIRCoefficients.FIRLowPass_16_Low);
-                UpdateInformationInternal();
-                
+                UpdateInformationInternal();                
             }
         }
 
@@ -459,8 +450,7 @@ namespace RX_FFT.Dialogs
             {
                 Demod.AudioLowPassWidthFract = 32;
                 Demod.AudioLowPass = new FIRFilter(FIRCoefficients.FIRLowPass_32_Low);
-                UpdateInformationInternal();
-                
+                UpdateInformationInternal();                
             }
         }
         
@@ -470,8 +460,7 @@ namespace RX_FFT.Dialogs
             {
                 Demod.AudioLowPassWidthFract = 64;
                 Demod.AudioLowPass = new FIRFilter(FIRCoefficients.FIRLowPass_64_Low);
-                UpdateInformationInternal();
-                
+                UpdateInformationInternal();                
             }
         }
 
@@ -481,8 +470,7 @@ namespace RX_FFT.Dialogs
             {
                 Demod.AudioLowPassWidthFract = 128;
                 Demod.AudioLowPass = new FIRFilter(FIRCoefficients.FIRLowPass_128_Low);
-                UpdateInformationInternal();
-                
+                UpdateInformationInternal();                
             }
         }
 
@@ -492,11 +480,9 @@ namespace RX_FFT.Dialogs
             {
                 Demod.AudioLowPassWidthFract = 256;
                 Demod.AudioLowPass = new FIRFilter(FIRCoefficients.FIRLowPass_256_Low);
-                UpdateInformationInternal();
-                
+                UpdateInformationInternal();                
             }
         }
-
 
         private void chkShowDemod_CheckedChanged(object sender, EventArgs e)
         {
@@ -516,7 +502,7 @@ namespace RX_FFT.Dialogs
             if (!double.TryParse(txtAmplify.Text, out ampl))
                 return;
 
-            Demod.AudioAmplification = ampl;
+            Demod.AudioAmplification = ampl / 100;
             UpdateInformationInternal();
         }
 
@@ -546,10 +532,14 @@ namespace RX_FFT.Dialogs
         private void chkEnableSquelch_CheckedChanged(object sender, EventArgs e)
         {
             Demod.SquelchEnabled = chkEnableSquelch.Checked;
+            barSquelchPower.Enabled = chkEnableSquelch.Checked;
+            
             if(!Demod.SquelchEnabled)
             {
                 Demod.SquelchAverage = -50;
             }
+
+            barSquelchPower.Invalidate();
         }
 
         private void txtSquelchLimit_TextChanged(object sender, EventArgs e)

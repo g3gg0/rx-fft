@@ -18,6 +18,8 @@ using RX_FFT.Dialogs;
 using GSM_Analyzer;
 using RX_FFT.DeviceControls;
 using LibRXFFT.Libraries.USB_RX.Tuners;
+using LibRXFFT.Libraries;
+using RX_FFT.Components.GDI;
 
 
 namespace RX_FFT
@@ -54,10 +56,42 @@ namespace RX_FFT
 
         public delegate DigitalTuner delegateGetTuner();
 
+        string BO35DeviceName = "BO-35 Digital Tuner";
         bool WindowActivated = true;
-        bool processPaused;
+        bool ProcessPaused;
         bool ReadThreadRun;
         bool AudioThreadRun;
+
+        bool _ScanFrequenciesEnabled = false;
+        bool ScanFrequenciesEnabled 
+        {
+            get
+            {
+                return _ScanFrequenciesEnabled;
+            }
+            set
+            {
+                _ScanFrequenciesEnabled = value;
+
+                if (ScanFrequenciesEnabled)
+                {
+                    FFTDisplay.SpectParts = ScanFrequencies.Count;
+                    FFTDisplay.ChannelMode = true;
+                }
+                else
+                {
+                    FFTDisplay.SpectParts = 1;
+                    FFTDisplay.ChannelMode = false;
+                }
+            }
+        }
+
+        public FrequencyBand ChannelBandDetails
+        {
+            get { return FFTDisplay.ChannelBandDetails; }
+            set { FFTDisplay.ChannelBandDetails = value; }
+        }
+
         Thread ReadThread;
         Thread AudioThread;
         DeviceControl Device;
@@ -65,6 +99,7 @@ namespace RX_FFT
         long MouseDragStartFreq;
 
         private LinkedList<FrequencyMarker> Markers = new LinkedList<FrequencyMarker>();
+        private LinkedList<FrequencyMarker> ScanFrequencies = new LinkedList<FrequencyMarker>();
         /*
         private FrequencyMarker UpperFilterMarginMarker = new FrequencyMarker("Upper Limit", "Upper Frequency Limit", 0);
         private FrequencyMarker LowerFilterMarginMarker = new FrequencyMarker("Lower Limit", "Lower Frequency Limit", 0);
@@ -87,6 +122,9 @@ namespace RX_FFT
         public MainScreen()
         {
             InitializeComponent();
+            Log.Init();
+
+            this.Icon = System.Drawing.Icon.FromHandle(Icons.imgRhythmbox.GetHicon());
 
             this.fftSizeOtherMenu.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.fftSizeOtherMenu_KeyPress);
             this.updateRateText.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.updateRateText_KeyPress);
@@ -148,7 +186,15 @@ namespace RX_FFT
 
             ToolStripManager.LoadSettings(this);
 
-            Log.Init();
+            ScanFrequencies.AddLast(new FrequencyMarker(0));
+            ScanFrequencies.AddLast(new FrequencyMarker(10000000));
+            ScanFrequencies.AddLast(new FrequencyMarker(20000000));
+        }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            CloseDevice();
+            base.OnFormClosing(e);
         }
 
         private void MainScreen_FormClosing(object sender, FormClosingEventArgs e)
@@ -167,6 +213,18 @@ namespace RX_FFT
                 closeMenu.Enabled = DeviceOpened;
                 pauseMenu.Enabled = DeviceOpened;
                 openMenu.Enabled = !DeviceOpened;
+
+                if (value)
+                {
+                    statusLabel.Text = "Connected";
+                }
+                else
+                {
+                    statusLabel.Text = "Idle";
+                }
+
+                /* update transfer mode string */
+                Device_TransferModeChanged(null, null);
             }
         }
 
@@ -184,6 +242,17 @@ namespace RX_FFT
             }
         }
 
+        double UpdateRate
+        {
+            get { return FFTDisplay.UpdateRate; }
+            set
+            {
+                if (Device != null)
+                    Device.BlocksPerSecond = value;
+                FFTDisplay.UpdateRate = value;
+            }
+        }
+
         int SamplesToAverage
         {
             get { return (int)FFTDisplay.SamplesToAverage; }
@@ -195,11 +264,47 @@ namespace RX_FFT
             }
         }
 
+        bool FitSpectrum
+        {
+            get
+            {
+                return FFTDisplay.FitSpectrumEnabled;
+            }
+            set
+            {
+                FFTDisplay.FitSpectrumEnabled = value;
+                if (value)
+                {
+                    FFTDisplay.LimiterDisplayEnabled = false;
+                }
+            }
+        }
+
+        bool DisplayFilterMargins
+        {
+            get
+            {
+                return FFTDisplay.LimiterDisplayEnabled;
+            }
+            set
+            {
+                /* don't enable this when the spectrum is fit to filter width */
+                if (FitSpectrum)
+                {
+                    FFTDisplay.LimiterDisplayEnabled = false;
+                    return;
+                }
+
+                FFTDisplay.LimiterDisplayEnabled = value;
+            }
+        }
+
         delegate void setRateDelegate(double rate);
         void setRateTextbox(double rate)
         {
             samplingRateLabel.Text = FrequencyFormatter.FreqToStringAccurate(rate);
         }
+
         protected override void OnActivated(EventArgs e)
         {
             base.OnActivated(e);
@@ -245,7 +350,7 @@ namespace RX_FFT
                         long currentFreq = Device.GetFrequency();
                         long newFreq = currentFreq - (mouseFreq - MouseDragStartFreq);
 
-                        FFTDisplay.CenterFrequency = newFreq;
+                        //FFTDisplay.CenterFrequency = newFreq;
                         Device.SetFrequency(newFreq);
                     }
                     break;
@@ -255,6 +360,12 @@ namespace RX_FFT
                     if (Device != null)
                     {
                         long freq = FFTDisplay.Frequency;
+
+                        if (ScanFrequenciesEnabled)
+                        {
+                            ScanFrequenciesEnabled = false;
+                        }
+
                         Device.SetFrequency(freq);
                         //FFTDisplay.CenterFrequency = freq;
                     }
@@ -265,6 +376,7 @@ namespace RX_FFT
                     {
                         long freq = FFTDisplay.Frequency;
 
+                        
                         ContextMenu contextMenu = new ContextMenu();
                         MenuItem menuItem1 = new MenuItem();
                         MenuItem menuItem2 = new MenuItem();
@@ -279,6 +391,7 @@ namespace RX_FFT
                         menuItem2.Text = "-";
                         menuItem3.Index = 2;
                         menuItem3.Text = "Send to Locator";
+
                         menuItem4.Index = 3;
                         menuItem4.Text = "Add Marker...";
                         menuItem4.Click += new EventHandler(delegate(object sender, EventArgs e)
@@ -286,7 +399,11 @@ namespace RX_FFT
                             AddMarker(freq);
                         });
 
-                        contextMenu.Show(this, this.PointToClient(MousePosition));
+                        System.Drawing.Point popupPos = this.PointToClient(MousePosition);
+
+                        popupPos.X -= 20;
+                        popupPos.Y -= 20;
+                        contextMenu.Show(this, popupPos);
                     }
                     break;
             }
@@ -368,7 +485,7 @@ namespace RX_FFT
                         }
                     }
 
-                    if (!processPaused)
+                    if (!ProcessPaused)
                     {
                         lock (DemodOptions)
                         {
@@ -539,7 +656,7 @@ namespace RX_FFT
                         if (DemodOptions.DisplayDemodulationSignal)
                         {
                             PerformanceCounters.CounterVisualization.Start();
-                            FFTDisplay.ProcessData(inputI, inputQ);
+                            FFTDisplay.ProcessData(inputI, inputQ, 0, Device.Amplification);
                             PerformanceCounters.CounterVisualization.Stop();
                         }
                     }
@@ -554,7 +671,6 @@ namespace RX_FFT
                 DemodDialog.UpdateInformation();
 
             PerformanceCounters.CounterRuntime.Stop();
-
         }
 
         void FFTReadFunc()
@@ -563,6 +679,10 @@ namespace RX_FFT
 
             double[] inputI;
             double[] inputQ;
+
+            LinkedListNode<FrequencyMarker> CurrentScanFreq = ScanFrequencies.First;
+            int spectPart = 0;
+            //FFTDisplay.SpectParts = ScanFrequencies.Count;
 
             //Log.AddMessage("FFTReadFunc: Started");
 
@@ -575,9 +695,13 @@ namespace RX_FFT
 
                     lock (Device.SampleSource)
                     {
-                        if (!processPaused)
+                        if (!ProcessPaused)
                         {
-                            Device.SampleSource.Read();
+                            Device.ReadBlock();
+                            if (Device.TransferMode == eTransferMode.Block)
+                            {
+                                Device.SampleSource.Flush();
+                            }
 
                             inputI = Device.SampleSource.SourceSamplesI;
                             inputQ = Device.SampleSource.SourceSamplesQ;
@@ -611,11 +735,33 @@ namespace RX_FFT
                                 lastRate = rate;
                             }
 
-                            if (!DemodOptions.DisplayDemodulationSignal)
+                            if (ScanFrequenciesEnabled)
                             {
                                 PerformanceCounters.CounterVisualization.Start();
-                                FFTDisplay.ProcessData(inputI, inputQ);
+                                FFTDisplay.ProcessData(inputI, inputQ, spectPart, Device.Amplification);
                                 PerformanceCounters.CounterVisualization.Stop();
+
+                                if (CurrentScanFreq.Next != null)
+                                {
+                                    spectPart++;
+                                    CurrentScanFreq = CurrentScanFreq.Next;
+                                }
+                                else
+                                {
+                                    spectPart = 0;
+                                    CurrentScanFreq = ScanFrequencies.First;
+                                }
+
+                                Device.SetFrequency(CurrentScanFreq.Value.Frequency);
+                            }
+                            else
+                            {
+                                if (!DemodOptions.DisplayDemodulationSignal)
+                                {
+                                    PerformanceCounters.CounterVisualization.Start();
+                                    FFTDisplay.ProcessData(inputI, inputQ, 0, Device.Amplification);
+                                    PerformanceCounters.CounterVisualization.Stop();
+                                }
                             }
                         }
                         else
@@ -642,9 +788,9 @@ namespace RX_FFT
                 dev.FrequencyChanged += new EventHandler(Device_FrequencyChanged);
                 dev.SamplingRateChanged += new EventHandler(Device_RateChanged);
                 dev.FilterWidthChanged += new EventHandler(Device_FilterWidthChanged);
-                dev.SampleSource.SamplingRateChanged += new EventHandler(SampleSource_SamplingRateChangedEvent);
+                dev.TransferModeChanged += new EventHandler(Device_TransferModeChanged);
 
-                dev.SetFrequency(100200000);
+                //dev.SetFrequency(100200000);
                 dev.SamplesPerBlock = Math.Max(1, SamplesToAverage) * FFTSize;
 
                 lock (DemodOptions)
@@ -668,7 +814,19 @@ namespace RX_FFT
             {
                 dev.Close();
                 dev = null;
-                MessageBox.Show("Could not find any compatible USB device.");
+                MessageBox.Show("Could not find " + BO35DeviceName + ".");
+            }
+        }
+
+        void Device_TransferModeChanged(object sender, EventArgs e)
+        {
+            statusLabel.Text = statusLabel.Text.Replace(" (" + eTransferMode.Stopped.ToString() + ")", "");
+            statusLabel.Text = statusLabel.Text.Replace(" (" + eTransferMode.Block.ToString() + ")", "");
+            statusLabel.Text = statusLabel.Text.Replace(" (" + eTransferMode.Stream.ToString() + ")", "");
+
+            if (Device != null)
+            {
+                statusLabel.Text += " (" + Device.TransferMode.ToString() + ")";
             }
         }
 
@@ -684,7 +842,6 @@ namespace RX_FFT
             dev.FrequencyChanged += new EventHandler(Device_FrequencyChanged);
             dev.SamplingRateChanged += new EventHandler(Device_RateChanged);
             dev.FilterWidthChanged += new EventHandler(Device_FilterWidthChanged);
-            dev.SampleSource.SamplingRateChanged += new EventHandler(SampleSource_SamplingRateChangedEvent);
 
             dev.SamplesPerBlock = Math.Max(1, SamplesToAverage) * FFTSize;
 
@@ -757,7 +914,8 @@ namespace RX_FFT
             dev.FrequencyChanged += new EventHandler(Device_FrequencyChanged);
             dev.SamplingRateChanged += new EventHandler(Device_RateChanged);
             dev.FilterWidthChanged += new EventHandler(Device_FilterWidthChanged);
-            dev.SampleSource.SamplingRateChanged += new EventHandler(SampleSource_SamplingRateChangedEvent);
+
+            dev.SetFrequency(1000000);
 
             lock (DemodOptions)
             {
@@ -772,39 +930,104 @@ namespace RX_FFT
             DeviceOpened = true;
         }
 
+        private void CloseDevice()
+        {
+            /* pause transfers and finish threads */
+            ProcessPaused = true;
+            ReadThreadRun = false;
+            AudioThreadRun = false;
+
+            lock (DemodOptions)
+            {
+                if (DemodOptions.SoundDevice != null)
+                {
+                    DemodOptions.SoundDevice.Close();
+                    DemodOptions.SoundDevice = null;
+                }
+            }
+
+            if (DemodDialog != null)
+            {
+                DemodDialog.Close();
+                DemodDialog = null;
+            }
+
+            if (ReadThread != null)
+            {
+                ReadThread.Abort();
+                ReadThread = null;
+            }
+            if (AudioThread != null)
+            {
+                AudioThread.Abort();
+                AudioThread = null;
+            }
+
+            if (AudioShmem != null)
+            {
+                AudioShmem.Close();
+                AudioShmem = null;
+            }
+
+            if (DeviceOpened)
+            {
+                Device.Close();
+                Device = null;
+
+                DeviceOpened = false;
+            }
+
+            /* un-pause again */
+            ProcessPaused = false;
+            if (!Disposing)
+            {
+                pauseMenu.Checked = ProcessPaused;
+            }
+        }
+
         void Device_FilterWidthChanged(object sender, EventArgs e)
         {
+            FFTDisplay.FitSpectrumWidth = ((double)Device.FilterWidth / (double)Device.SamplingRate);
+
+            FFTDisplay.LimiterUpperLimit = Device.UpperFilterMargin;
+            FFTDisplay.LimiterLowerLimit = Device.LowerFilterMargin;
+            FFTDisplay.LimiterUpperDescription = Device.UpperFilterMarginDescription;
+            FFTDisplay.LimiterLowerDescription = Device.LowerFilterMarginDescription;
         }
 
         void Device_RateChanged(object sender, EventArgs e)
         {
-            double rate = Device.SamplingRate;
-            FFTDisplay.SamplingRate = rate;
+            FFTDisplay.FitSpectrumWidth = ((double)Device.FilterWidth / (double)Device.SamplingRate);
+            FFTDisplay.SamplingRate = Device.SamplingRate;
+
+            FFTDisplay.LimiterUpperLimit = Device.UpperFilterMargin;
+            FFTDisplay.LimiterLowerLimit = Device.LowerFilterMargin;
+            FFTDisplay.LimiterUpperDescription = Device.UpperFilterMarginDescription;
+            FFTDisplay.LimiterLowerDescription = Device.LowerFilterMarginDescription;
         }
 
         void Device_FrequencyChanged(object sender, EventArgs e)
         {
-            double freq = Device.GetFrequency();
-            /*
-            LowerFilterMarginMarker.Frequency = Device.LowerFilterMargin;
-            UpperFilterMarginMarker.Frequency = Device.UpperFilterMargin;
-            */
-            FFTDisplay.CenterFrequency = freq;
-            FFTDisplay.Markers = Markers;
-        }
+            if (!ScanFrequenciesEnabled)
+            {
+                FFTDisplay.CenterFrequency = Device.GetFrequency();
 
-        void SampleSource_SamplingRateChangedEvent(object sender, EventArgs e)
-        {
-            /*
-            LowerFilterMarginMarker.Frequency = Device.LowerFilterMargin;
-            UpperFilterMarginMarker.Frequency = Device.UpperFilterMargin;
-            */
-
-            FFTDisplay.Markers = Markers;
+                FFTDisplay.LimiterUpperLimit = Device.UpperFilterMargin;
+                FFTDisplay.LimiterLowerLimit = Device.LowerFilterMargin;
+                FFTDisplay.LimiterUpperDescription = Device.UpperFilterMarginDescription;
+                FFTDisplay.LimiterLowerDescription = Device.LowerFilterMarginDescription;
+            }
         }
 
         private void openBO35Menu_Click(object sender, EventArgs e)
         {
+            MT2131.DeviceTypeDisabled = false;
+            OpenBO35Device();
+        }
+
+        private void openBO35PlainMenu_Click(object sender, EventArgs e)
+        {
+            MT2131.DeviceTypeDisabled = true;
             OpenBO35Device();
         }
 
@@ -847,6 +1070,13 @@ namespace RX_FFT
         private void toolStripButton1_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void EnableSaving(string fileName)
+        {
+            Device.SampleSource.SavingFileName = fileName;
+            Device.SampleSource.SavingEnabled = true;
+            saveMenu.Text = "Stop saving";
         }
     }
 }

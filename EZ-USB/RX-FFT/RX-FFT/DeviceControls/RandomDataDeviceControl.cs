@@ -12,7 +12,11 @@ namespace RX_FFT.DeviceControls
 {
     public partial class RandomDataDeviceControl : Form, DeviceControl
     {
+        private long CurrentFrequency = 0;
+        private long CurrentWidth = 1000000;
+        private long CurrentRate = 1024000;
         private RandomSampleSource _SampleSource;
+        private double _BlocksPerSecond = 20;
 
         public RandomDataDeviceControl()
         {
@@ -24,6 +28,19 @@ namespace RX_FFT.DeviceControls
 
         #region DeviceControl Member
 
+        public event EventHandler TransferModeChanged;
+
+        public LibRXFFT.Libraries.eTransferMode TransferMode
+        {
+            get
+            {
+                return LibRXFFT.Libraries.eTransferMode.Stream;
+            }
+            set
+            {
+            }
+        }
+
         public int SamplesPerBlock
         {
             get
@@ -34,6 +51,27 @@ namespace RX_FFT.DeviceControls
             {
                 SampleSource.SamplesPerBlock = value;
             }
+        }
+
+        public double BlocksPerSecond
+        {
+            get
+            {
+                return _BlocksPerSecond;
+            }
+            set 
+            {
+                _BlocksPerSecond = value;
+            }
+        }
+
+        public bool ReadBlock()
+        {
+            bool ret;
+
+            ret = SampleSource.Read();
+
+            return ret;
         }
 
         public SampleSource SampleSource
@@ -69,7 +107,7 @@ namespace RX_FFT.DeviceControls
         {
             get
             {
-                return 0;
+                return CurrentRate;
             }
         }
 
@@ -82,6 +120,11 @@ namespace RX_FFT.DeviceControls
         public event EventHandler FilterWidthChanged;
         public event EventHandler FrequencyChanged;
         public event EventHandler InvertedSpectrumChanged;
+
+        public double Amplification
+        {
+            get { return 0; }
+        }
 
         public long LowestFrequency
         {
@@ -103,21 +146,64 @@ namespace RX_FFT.DeviceControls
             get { return LowestFrequency; }
         }
 
+        public string UpperFilterMarginDescription
+        {
+            get
+            {
+                return "artificial limit";
+            }
+        }
+
+        public string LowerFilterMarginDescription
+        {
+            get
+            {
+                return "artificial limit";
+            }
+        }
+
+        public string FilterWidthDescription
+        {
+            get
+            {
+                return "artificial limit";
+            }
+        }
+
+        public string[] Name
+        {
+            get { return new[] {"Random noise source"}; }
+        }
+
+        public string[] Description
+        {
+            get { return new[] {"(none)"}; }
+        }
+
+        public string[] Details
+        {
+            get { return new[] {"(none)"}; }
+        }
+
         public bool SetFrequency(long frequency)
         {
+            if (SamplingRateChanged != null)
+            {
+                SamplingRateChanged(this, null);
+            }
             return true;
         }
 
         public long GetFrequency()
         {
-            return 0;
+            return CurrentFrequency;
         }
 
         public long FilterWidth
         {
             get
             {
-                return 0;
+                return CurrentWidth;
             }
         }
 

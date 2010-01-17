@@ -22,7 +22,7 @@ namespace RX_FFT.Dialogs
 
             frequencySelector.Frequency = marker.Frequency;
             txtLabel.Text = marker.Label;
-            txtDesc.Text = marker.Description;
+            txtDesc.Text = marker.Description.Replace("\r\n","\n").Replace("\n", "\r\n");
         }
 
         public MarkerDetailsDialog(FrequencyMarker marker) : this("Marker...", marker) {}

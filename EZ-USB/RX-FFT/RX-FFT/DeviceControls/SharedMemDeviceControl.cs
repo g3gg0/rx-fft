@@ -13,6 +13,8 @@ namespace RX_FFT.DeviceControls
     public partial class SharedMemDeviceControl : Form, DeviceControl
     {
         private ShmemSampleSource _SampleSource;
+        private double _BlocksPerSecond = 20;
+
         public int ShmemChannel
         {
             get { return _SampleSource.ShmemChannel.SrcChan; }
@@ -24,9 +26,43 @@ namespace RX_FFT.DeviceControls
 
             _SampleSource = new ShmemSampleSource("FFT Display", srcChan, 1, 0);
             _SampleSource.InvertedSpectrum = false;
+            _SampleSource.SamplingRateChanged += new EventHandler(_SampleSource_SamplingRateChanged);
+        }
+
+        void _SampleSource_SamplingRateChanged(object sender, EventArgs e)
+        {
+            if (SamplingRateChanged != null)
+            {
+                SamplingRateChanged(this, null);
+            }
         }
 
         #region DeviceControl Member
+
+        public event EventHandler TransferModeChanged;
+
+        public LibRXFFT.Libraries.eTransferMode TransferMode
+        {
+            get
+            {
+                return LibRXFFT.Libraries.eTransferMode.Stream;
+            }
+            set
+            {
+            }
+        }
+
+        public double BlocksPerSecond
+        {
+            get
+            {
+                return _BlocksPerSecond;
+            }
+            set
+            {
+                _BlocksPerSecond = value;
+            }
+        }
 
         public int SamplesPerBlock
         {
@@ -43,6 +79,15 @@ namespace RX_FFT.DeviceControls
         public SampleSource SampleSource
         {
             get { return _SampleSource; }
+        }
+
+        public bool ReadBlock()
+        {
+            bool ret;
+
+            ret = SampleSource.Read();
+
+            return ret;
         }
 
         public bool Connected
@@ -73,7 +118,7 @@ namespace RX_FFT.DeviceControls
         {
             get
             {
-                return 0;
+                return (long)SampleSource.OutputSamplingRate;
             }
         }
 
@@ -86,6 +131,11 @@ namespace RX_FFT.DeviceControls
         public event EventHandler FilterWidthChanged;
         public event EventHandler FrequencyChanged;
         public event EventHandler InvertedSpectrumChanged;
+
+        public double Amplification
+        {
+            get { return 0; }
+        }
 
         public long LowestFrequency
         {
@@ -105,6 +155,45 @@ namespace RX_FFT.DeviceControls
         public long LowerFilterMargin
         {
             get { return LowestFrequency; }
+        }
+
+        public string UpperFilterMarginDescription
+        {
+            get
+            {
+                return "artificial limit";
+            }
+        }
+
+        public string LowerFilterMarginDescription
+        {
+            get
+            {
+                return "artificial limit";
+            }
+        }
+
+        public string FilterWidthDescription
+        {
+            get
+            {
+                return "artificial limit";
+            }
+        }
+
+        public string[] Name
+        {
+            get { return new[] {"Shared Memory data source"}; }
+        }
+
+        public string[] Description
+        {
+            get { return new[] {"(none)"}; }
+        }
+
+        public string[] Details
+        {
+            get { return new[] {"(none)"}; }
         }
 
         public bool SetFrequency(long frequency)

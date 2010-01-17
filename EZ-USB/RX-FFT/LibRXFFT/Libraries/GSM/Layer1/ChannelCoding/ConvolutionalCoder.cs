@@ -5,7 +5,7 @@ using System.Text;
 
 #warning "This file contains GPLv2 code (DecodeViterbi). This code must be rewritten from scratch."
 
-namespace LibRXFFT.Libraries.GMSK
+namespace LibRXFFT.Libraries.GSM.Layer1.ChannelCoding
 {
     public class ConvolutionalCoder
     {

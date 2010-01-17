@@ -15,31 +15,6 @@ namespace RX_FFT
         /// <param name="disposing">True, wenn verwaltete Ressourcen gelöscht werden sollen; andernfalls False.</param>
         protected override void Dispose(bool disposing)
         {
-            if (DemodOptions != null)
-                DemodOptions.Dispose();
-
-            if (disposing && (components != null))
-            {
-                components.Dispose();
-            }
-
-            if (ReadThread != null && ReadThread.IsAlive)
-            {
-                ReadThreadRun = false;
-                ReadThread.Abort();
-                ReadThread.Join();
-            }
-
-            if (AudioThread != null && AudioThread.IsAlive)
-            {
-                AudioThreadRun = false;
-                AudioThread.Abort();
-                AudioThread.Join();
-            }
-
-            if (Device != null)
-                Device.Close();
-
             base.Dispose(disposing);
         }
 
@@ -60,14 +35,16 @@ namespace RX_FFT
             this.deviceMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.openMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.openBO35Menu = new System.Windows.Forms.ToolStripMenuItem();
+            this.openBO35PlainMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.openShMemMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.openRandomDataMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.pauseMenu = new System.Windows.Forms.ToolStripMenuItem();
+            this.saveMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.closeMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.demodulationMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.performanceStatisticsMenu = new System.Windows.Forms.ToolStripMenuItem();
-            this.markersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.markersMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.quitMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.optionsMenu = new System.Windows.Forms.ToolStripMenuItem();
@@ -91,13 +68,18 @@ namespace RX_FFT
             this.waterfallRecordingMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.waterfallRecordingEnabledMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.waterfallRecordingSaveAsMenu = new System.Windows.Forms.ToolStripMenuItem();
+            this.dynamicWaterfallMenu = new System.Windows.Forms.ToolStripMenuItem();
+            this.fitSpectrumMenu = new System.Windows.Forms.ToolStripMenuItem();
+            this.displayFilterMarginsMenu = new System.Windows.Forms.ToolStripMenuItem();
+            this.advancedMenu = new System.Windows.Forms.ToolStripMenuItem();
+            this.gsmAnalyzerMenu = new System.Windows.Forms.ToolStripMenuItem();
+            this.digitalDemodulatorsMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.helpMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.deviceInformationMenu = new System.Windows.Forms.ToolStripMenuItem();
-            this.advancedMenu = new System.Windows.Forms.ToolStripMenuItem();
-            this.gmAnalyzerMenu = new System.Windows.Forms.ToolStripMenuItem();
-            this.FFTDisplay = new LibRXFFT.Components.DirectX.DirectXWaterfallFFTDisplay();
             this.toolStripContainer1 = new System.Windows.Forms.ToolStripContainer();
+            this.FFTDisplay = new LibRXFFT.Components.DirectX.DirectXWaterfallFFTDisplay();
+            this.scanBandMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip1.SuspendLayout();
             this.mainMenu.SuspendLayout();
             this.toolStripContainer1.ContentPanel.SuspendLayout();
@@ -158,8 +140,8 @@ namespace RX_FFT
             this.mainMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.deviceMenu,
             this.optionsMenu,
-            this.helpMenu,
-            this.advancedMenu});
+            this.advancedMenu,
+            this.helpMenu});
             this.mainMenu.Location = new System.Drawing.Point(0, 0);
             this.mainMenu.Name = "mainMenu";
             this.mainMenu.Size = new System.Drawing.Size(802, 24);
@@ -171,13 +153,15 @@ namespace RX_FFT
             this.deviceMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.openMenu,
             this.pauseMenu,
+            this.saveMenu,
             this.closeMenu,
             this.toolStripSeparator1,
             this.demodulationMenu,
             this.performanceStatisticsMenu,
-            this.markersToolStripMenuItem,
+            this.markersMenu,
             this.toolStripSeparator2,
-            this.quitMenu});
+            this.quitMenu,
+            this.scanBandMenu});
             this.deviceMenu.Name = "deviceMenu";
             this.deviceMenu.Size = new System.Drawing.Size(54, 20);
             this.deviceMenu.Text = "Device";
@@ -186,6 +170,7 @@ namespace RX_FFT
             // 
             this.openMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.openBO35Menu,
+            this.openBO35PlainMenu,
             this.openShMemMenu,
             this.openRandomDataMenu});
             this.openMenu.Name = "openMenu";
@@ -195,21 +180,28 @@ namespace RX_FFT
             // openBO35Menu
             // 
             this.openBO35Menu.Name = "openBO35Menu";
-            this.openBO35Menu.Size = new System.Drawing.Size(158, 22);
+            this.openBO35Menu.Size = new System.Drawing.Size(214, 22);
             this.openBO35Menu.Text = "BO-35digi";
             this.openBO35Menu.Click += new System.EventHandler(this.openBO35Menu_Click);
+            // 
+            // openBO35PlainMenu
+            // 
+            this.openBO35PlainMenu.Name = "openBO35PlainMenu";
+            this.openBO35PlainMenu.Size = new System.Drawing.Size(214, 22);
+            this.openBO35PlainMenu.Text = "BO-35digi (w/o ext. Tuner)";
+            this.openBO35PlainMenu.Click += new System.EventHandler(this.openBO35PlainMenu_Click);
             // 
             // openShMemMenu
             // 
             this.openShMemMenu.Name = "openShMemMenu";
-            this.openShMemMenu.Size = new System.Drawing.Size(158, 22);
+            this.openShMemMenu.Size = new System.Drawing.Size(214, 22);
             this.openShMemMenu.Text = "Shared Memory";
             this.openShMemMenu.Click += new System.EventHandler(this.openShMemMenu_Click);
             // 
             // openRandomDataMenu
             // 
             this.openRandomDataMenu.Name = "openRandomDataMenu";
-            this.openRandomDataMenu.Size = new System.Drawing.Size(158, 22);
+            this.openRandomDataMenu.Size = new System.Drawing.Size(214, 22);
             this.openRandomDataMenu.Text = "Random Data";
             this.openRandomDataMenu.Click += new System.EventHandler(this.openRandomDataMenu_Click);
             // 
@@ -219,6 +211,13 @@ namespace RX_FFT
             this.pauseMenu.Size = new System.Drawing.Size(191, 22);
             this.pauseMenu.Text = "Pause";
             this.pauseMenu.Click += new System.EventHandler(this.pauseMenu_Click);
+            // 
+            // saveMenu
+            // 
+            this.saveMenu.Name = "saveMenu";
+            this.saveMenu.Size = new System.Drawing.Size(191, 22);
+            this.saveMenu.Text = "Save digital data...";
+            this.saveMenu.Click += new System.EventHandler(this.saveMenu_Click);
             // 
             // closeMenu
             // 
@@ -246,12 +245,12 @@ namespace RX_FFT
             this.performanceStatisticsMenu.Text = "Performance Statistics";
             this.performanceStatisticsMenu.Click += new System.EventHandler(this.performanceStatisticsMenu_Click);
             // 
-            // markersToolStripMenuItem
+            // markersMenu
             // 
-            this.markersToolStripMenuItem.Name = "markersToolStripMenuItem";
-            this.markersToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
-            this.markersToolStripMenuItem.Text = "Markers";
-            this.markersToolStripMenuItem.Click += new System.EventHandler(this.markersToolStripMenuItem_Click);
+            this.markersMenu.Name = "markersMenu";
+            this.markersMenu.Size = new System.Drawing.Size(191, 22);
+            this.markersMenu.Text = "Markers";
+            this.markersMenu.Click += new System.EventHandler(this.markersToolStripMenuItem_Click);
             // 
             // toolStripSeparator2
             // 
@@ -260,9 +259,11 @@ namespace RX_FFT
             // 
             // quitMenu
             // 
+            this.quitMenu.Image = global::RX_FFT.Icons.imgExit;
             this.quitMenu.Name = "quitMenu";
             this.quitMenu.Size = new System.Drawing.Size(191, 22);
             this.quitMenu.Text = "Exit";
+            this.quitMenu.Click += new System.EventHandler(this.quitMenu_Click);
             // 
             // optionsMenu
             // 
@@ -274,7 +275,10 @@ namespace RX_FFT
             this.averageSamplesToolStripMenuItem,
             this.verticalSmoothMenu,
             this.toolStripSeparator4,
-            this.waterfallRecordingMenu});
+            this.waterfallRecordingMenu,
+            this.dynamicWaterfallMenu,
+            this.fitSpectrumMenu,
+            this.displayFilterMarginsMenu});
             this.optionsMenu.Name = "optionsMenu";
             this.optionsMenu.Size = new System.Drawing.Size(61, 20);
             this.optionsMenu.Text = "Options";
@@ -290,7 +294,7 @@ namespace RX_FFT
             this.fftSize16386Menu,
             this.fftSizeOtherMenu});
             this.fftSizeMenu.Name = "fftSizeMenu";
-            this.fftSizeMenu.Size = new System.Drawing.Size(185, 22);
+            this.fftSizeMenu.Size = new System.Drawing.Size(214, 22);
             this.fftSizeMenu.Text = "FFT Size";
             // 
             // fftSize512Menu
@@ -345,20 +349,20 @@ namespace RX_FFT
             // windowingFunctionMenu
             // 
             this.windowingFunctionMenu.Name = "windowingFunctionMenu";
-            this.windowingFunctionMenu.Size = new System.Drawing.Size(185, 22);
+            this.windowingFunctionMenu.Size = new System.Drawing.Size(214, 22);
             this.windowingFunctionMenu.Text = "Windowing Function";
             // 
             // toolStripSeparator3
             // 
             this.toolStripSeparator3.Name = "toolStripSeparator3";
-            this.toolStripSeparator3.Size = new System.Drawing.Size(182, 6);
+            this.toolStripSeparator3.Size = new System.Drawing.Size(211, 6);
             // 
             // updateRateMenu
             // 
             this.updateRateMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.updateRateText});
             this.updateRateMenu.Name = "updateRateMenu";
-            this.updateRateMenu.Size = new System.Drawing.Size(185, 22);
+            this.updateRateMenu.Size = new System.Drawing.Size(214, 22);
             this.updateRateMenu.Text = "Update Rate";
             // 
             // updateRateText
@@ -372,7 +376,7 @@ namespace RX_FFT
             this.averageSamplesToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.averageSamplesText});
             this.averageSamplesToolStripMenuItem.Name = "averageSamplesToolStripMenuItem";
-            this.averageSamplesToolStripMenuItem.Size = new System.Drawing.Size(185, 22);
+            this.averageSamplesToolStripMenuItem.Size = new System.Drawing.Size(214, 22);
             this.averageSamplesToolStripMenuItem.Text = "Average Samples";
             // 
             // averageSamplesText
@@ -386,7 +390,7 @@ namespace RX_FFT
             this.verticalSmoothMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.verticalSmoothMenuText});
             this.verticalSmoothMenu.Name = "verticalSmoothMenu";
-            this.verticalSmoothMenu.Size = new System.Drawing.Size(185, 22);
+            this.verticalSmoothMenu.Size = new System.Drawing.Size(214, 22);
             this.verticalSmoothMenu.Text = "Vertical Smooth";
             // 
             // verticalSmoothMenuText
@@ -398,7 +402,7 @@ namespace RX_FFT
             // toolStripSeparator4
             // 
             this.toolStripSeparator4.Name = "toolStripSeparator4";
-            this.toolStripSeparator4.Size = new System.Drawing.Size(182, 6);
+            this.toolStripSeparator4.Size = new System.Drawing.Size(211, 6);
             // 
             // waterfallRecordingMenu
             // 
@@ -406,7 +410,7 @@ namespace RX_FFT
             this.waterfallRecordingEnabledMenu,
             this.waterfallRecordingSaveAsMenu});
             this.waterfallRecordingMenu.Name = "waterfallRecordingMenu";
-            this.waterfallRecordingMenu.Size = new System.Drawing.Size(185, 22);
+            this.waterfallRecordingMenu.Size = new System.Drawing.Size(214, 22);
             this.waterfallRecordingMenu.Text = "Waterfall Recording";
             // 
             // waterfallRecordingEnabledMenu
@@ -423,6 +427,50 @@ namespace RX_FFT
             this.waterfallRecordingSaveAsMenu.Text = "Save as...";
             this.waterfallRecordingSaveAsMenu.Click += new System.EventHandler(this.waterfallRecordingSaveAsMenu_Click);
             // 
+            // dynamicWaterfallMenu
+            // 
+            this.dynamicWaterfallMenu.Name = "dynamicWaterfallMenu";
+            this.dynamicWaterfallMenu.Size = new System.Drawing.Size(214, 22);
+            this.dynamicWaterfallMenu.Text = "Dynamic Waterfall";
+            this.dynamicWaterfallMenu.Click += new System.EventHandler(this.dynamicWaterfallMenu_Click);
+            // 
+            // fitSpectrumMenu
+            // 
+            this.fitSpectrumMenu.Name = "fitSpectrumMenu";
+            this.fitSpectrumMenu.Size = new System.Drawing.Size(214, 22);
+            this.fitSpectrumMenu.Text = "Fit spectrum to filter width";
+            this.fitSpectrumMenu.Click += new System.EventHandler(this.fitSpectrumMenu_Click);
+            // 
+            // displayFilterMarginsMenu
+            // 
+            this.displayFilterMarginsMenu.Name = "displayFilterMarginsMenu";
+            this.displayFilterMarginsMenu.Size = new System.Drawing.Size(214, 22);
+            this.displayFilterMarginsMenu.Text = "Display filter margins";
+            this.displayFilterMarginsMenu.Click += new System.EventHandler(this.displayFilterMarginsMenu_Click);
+            // 
+            // advancedMenu
+            // 
+            this.advancedMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.gsmAnalyzerMenu,
+            this.digitalDemodulatorsMenu});
+            this.advancedMenu.Name = "advancedMenu";
+            this.advancedMenu.Size = new System.Drawing.Size(72, 20);
+            this.advancedMenu.Text = "Advanced";
+            // 
+            // gsmAnalyzerMenu
+            // 
+            this.gsmAnalyzerMenu.Name = "gsmAnalyzerMenu";
+            this.gsmAnalyzerMenu.Size = new System.Drawing.Size(186, 22);
+            this.gsmAnalyzerMenu.Text = "GSM Analyzer";
+            this.gsmAnalyzerMenu.Click += new System.EventHandler(this.gsmAnalyzerMenu_Click);
+            // 
+            // digitalDemodulatorsMenu
+            // 
+            this.digitalDemodulatorsMenu.Name = "digitalDemodulatorsMenu";
+            this.digitalDemodulatorsMenu.Size = new System.Drawing.Size(186, 22);
+            this.digitalDemodulatorsMenu.Text = "Digital Demodulators";
+            this.digitalDemodulatorsMenu.Click += new System.EventHandler(this.digitalDemodulatorsMenu_Click);
+            // 
             // helpMenu
             // 
             this.helpMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -437,44 +485,14 @@ namespace RX_FFT
             this.aboutMenu.Name = "aboutMenu";
             this.aboutMenu.Size = new System.Drawing.Size(175, 22);
             this.aboutMenu.Text = "About";
+            this.aboutMenu.Click += new System.EventHandler(this.aboutMenu_Click);
             // 
             // deviceInformationMenu
             // 
             this.deviceInformationMenu.Name = "deviceInformationMenu";
             this.deviceInformationMenu.Size = new System.Drawing.Size(175, 22);
             this.deviceInformationMenu.Text = "Device Information";
-            // 
-            // advancedMenu
-            // 
-            this.advancedMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.gmAnalyzerMenu});
-            this.advancedMenu.Name = "advancedMenu";
-            this.advancedMenu.Size = new System.Drawing.Size(72, 20);
-            this.advancedMenu.Text = "Advanced";
-            // 
-            // gmAnalyzerMenu
-            // 
-            this.gmAnalyzerMenu.Name = "gmAnalyzerMenu";
-            this.gmAnalyzerMenu.Size = new System.Drawing.Size(150, 22);
-            this.gmAnalyzerMenu.Text = " GSM Analyzer";
-            this.gmAnalyzerMenu.Click += new System.EventHandler(this.gmAnalyzerMenu_Click);
-            // 
-            // FFTDisplay
-            // 
-            this.FFTDisplay.CenterFrequency = 0;
-            this.FFTDisplay.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.FFTDisplay.FFTSize = 2048;
-            this.FFTDisplay.Location = new System.Drawing.Point(0, 0);
-            this.FFTDisplay.Name = "FFTDisplay";
-            this.FFTDisplay.SamplesToAverage = ((long)(1));
-            this.FFTDisplay.SamplingRate = 0;
-            this.FFTDisplay.SavingEnabled = false;
-            this.FFTDisplay.SavingName = "waterfall.png";
-            this.FFTDisplay.Size = new System.Drawing.Size(802, 358);
-            this.FFTDisplay.TabIndex = 0;
-            this.FFTDisplay.UpdateRate = 10;
-            this.FFTDisplay.VerticalSmooth = 1;
-            this.FFTDisplay.WindowingFunction = LibRXFFT.Libraries.FFTW.FFTTransformer.eWindowingFunction.BlackmanHarris;
+            this.deviceInformationMenu.Click += new System.EventHandler(this.deviceInformationMenu_Click);
             // 
             // toolStripContainer1
             // 
@@ -482,13 +500,45 @@ namespace RX_FFT
             // toolStripContainer1.ContentPanel
             // 
             this.toolStripContainer1.ContentPanel.Controls.Add(this.FFTDisplay);
-            this.toolStripContainer1.ContentPanel.Size = new System.Drawing.Size(802, 358);
+            this.toolStripContainer1.ContentPanel.Size = new System.Drawing.Size(802, 333);
             this.toolStripContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.toolStripContainer1.Location = new System.Drawing.Point(0, 24);
             this.toolStripContainer1.Name = "toolStripContainer1";
             this.toolStripContainer1.Size = new System.Drawing.Size(802, 358);
             this.toolStripContainer1.TabIndex = 8;
             this.toolStripContainer1.Text = "toolStripContainer1";
+            // 
+            // FFTDisplay
+            // 
+            this.FFTDisplay.CenterFrequency = 0;
+            this.FFTDisplay.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.FFTDisplay.DynamicLimits = false;
+            this.FFTDisplay.FFTSize = 2048;
+            this.FFTDisplay.FitSpectrumEnabled = false;
+            this.FFTDisplay.LimiterColor = System.Drawing.Color.Green;
+            this.FFTDisplay.LimiterDisplayEnabled = false;
+            this.FFTDisplay.LimiterLowerDescription = "";
+            this.FFTDisplay.LimiterLowerLimit = 0;
+            this.FFTDisplay.LimiterUpperDescription = "";
+            this.FFTDisplay.LimiterUpperLimit = 0;
+            this.FFTDisplay.Location = new System.Drawing.Point(0, 0);
+            this.FFTDisplay.Name = "FFTDisplay";
+            this.FFTDisplay.SamplesToAverage = ((long)(1));
+            this.FFTDisplay.SamplingRate = 0;
+            this.FFTDisplay.SavingEnabled = false;
+            this.FFTDisplay.SavingName = "waterfall.png";
+            this.FFTDisplay.Size = new System.Drawing.Size(802, 333);
+            this.FFTDisplay.TabIndex = 0;
+            this.FFTDisplay.UpdateRate = 10;
+            this.FFTDisplay.VerticalSmooth = 1;
+            this.FFTDisplay.WindowingFunction = LibRXFFT.Libraries.FFTW.FFTTransformer.eWindowingFunction.BlackmanHarris;
+            // 
+            // scanBandMenu
+            // 
+            this.scanBandMenu.Name = "scanBandMenu";
+            this.scanBandMenu.Size = new System.Drawing.Size(191, 22);
+            this.scanBandMenu.Text = "Scan band";
+            this.scanBandMenu.Click += new System.EventHandler(this.scanBandMenu_Click);
             // 
             // MainScreen
             // 
@@ -519,6 +569,8 @@ namespace RX_FFT
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
         private System.Windows.Forms.ToolStripStatusLabel statusLabel;
+        private LibRXFFT.Components.DirectX.DirectXWaterfallFFTDisplay FFTDisplay;
+
         private System.Windows.Forms.MenuStrip mainMenu;
         private System.Windows.Forms.ToolStripMenuItem deviceMenu;
         private System.Windows.Forms.ToolStripMenuItem openMenu;
@@ -531,7 +583,6 @@ namespace RX_FFT
         private System.Windows.Forms.ToolStripMenuItem helpMenu;
         private System.Windows.Forms.ToolStripMenuItem aboutMenu;
         private System.Windows.Forms.ToolStripMenuItem deviceInformationMenu;
-        private LibRXFFT.Components.DirectX.DirectXWaterfallFFTDisplay FFTDisplay;
         private System.Windows.Forms.ToolStripMenuItem fftSizeMenu;
         private System.Windows.Forms.ToolStripMenuItem fftSize512Menu;
         private System.Windows.Forms.ToolStripMenuItem fftSize1024Menu;
@@ -548,21 +599,29 @@ namespace RX_FFT
         private System.Windows.Forms.ToolStripMenuItem pauseMenu;
         private System.Windows.Forms.ToolStripMenuItem demodulationMenu;
         private System.Windows.Forms.ToolStripMenuItem performanceStatisticsMenu;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
         private System.Windows.Forms.ToolStripMenuItem verticalSmoothMenu;
         private System.Windows.Forms.ToolStripTextBox verticalSmoothMenuText;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
         private System.Windows.Forms.ToolStripMenuItem waterfallRecordingMenu;
         private System.Windows.Forms.ToolStripMenuItem waterfallRecordingEnabledMenu;
         private System.Windows.Forms.ToolStripMenuItem waterfallRecordingSaveAsMenu;
         private System.Windows.Forms.ToolStripMenuItem advancedMenu;
-        private System.Windows.Forms.ToolStripMenuItem gmAnalyzerMenu;
+        private System.Windows.Forms.ToolStripMenuItem gsmAnalyzerMenu;
         private System.Windows.Forms.ToolStripMenuItem openRandomDataMenu;
+        private System.Windows.Forms.ToolStripMenuItem markersMenu;
+        private System.Windows.Forms.ToolStripContainer toolStripContainer1;
+        private System.Windows.Forms.ToolStripMenuItem dynamicWaterfallMenu;
+
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel2;
         private System.Windows.Forms.ToolStripStatusLabel samplingRateLabel;
-        private System.Windows.Forms.ToolStripMenuItem markersToolStripMenuItem;
-        private System.Windows.Forms.ToolStripContainer toolStripContainer1;
+        private System.Windows.Forms.ToolStripMenuItem saveMenu;
+        private System.Windows.Forms.ToolStripMenuItem digitalDemodulatorsMenu;
+        private System.Windows.Forms.ToolStripMenuItem openBO35PlainMenu;
+        private System.Windows.Forms.ToolStripMenuItem fitSpectrumMenu;
+        private System.Windows.Forms.ToolStripMenuItem displayFilterMarginsMenu;
+        private System.Windows.Forms.ToolStripMenuItem scanBandMenu;
     }
 }
 

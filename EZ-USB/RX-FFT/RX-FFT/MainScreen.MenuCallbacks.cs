@@ -5,6 +5,9 @@ using System.Threading;
 using RX_FFT.Dialogs;
 using GSM_Analyzer;
 using RX_FFT.DeviceControls;
+using DemodulatorCollection;
+using LibRXFFT.Components.DirectX;
+using LibRXFFT.Libraries;
 
 namespace RX_FFT
 {
@@ -68,49 +71,21 @@ namespace RX_FFT
         
         private void pauseMenu_Click(object sender, EventArgs e)
         {
-            processPaused = !processPaused;
-            pauseMenu.Checked = processPaused;
+            ProcessPaused = !ProcessPaused;
+            pauseMenu.Checked = ProcessPaused;
+            if (ProcessPaused)
+            {
+                statusLabel.Text += " (Paused)";
+            }
+            else
+            {
+                statusLabel.Text = statusLabel.Text.Replace(" (Paused)", "");
+            }
         }
 
         private void closeMenu_Click(object sender, EventArgs e)
         {
-            /* pause transfers and finish threads */
-            processPaused = true;
-            ReadThreadRun = false;
-            AudioThreadRun = false;
-
-            lock (DemodOptions)
-            {
-                DemodOptions.SoundDevice.Close();
-                DemodOptions.SoundDevice = null;
-            }
-
-            if (DemodDialog != null)
-            {
-                //DemodDialog.Close();
-                DemodDialog = null;
-            }
-
-            if (ReadThread != null)
-                ReadThread.Abort();
-            if (AudioThread != null)
-                AudioThread.Abort();
-
-            if (AudioShmem != null)
-            {
-                AudioShmem.Close();
-                AudioShmem = null;
-            }
-
-            Device.Close();
-            Device = null;
-
-            DeviceOpened = false;
-
-            /* un-pause again */
-            processPaused = false;
-            pauseMenu.Checked = processPaused;
-
+            CloseDevice();
         }
 
         private void performanceStatisticsMenu_Click(object sender, EventArgs e)
@@ -127,6 +102,31 @@ namespace RX_FFT
             }
         }
 
+        private void scanBandMenu_Click(object sender, EventArgs e)
+        {
+            FrequencyBand band = new FrequencyBand();
+            band.BaseFrequency = 935014000;
+            band.ChannelStart = 2;
+            band.ChannelEnd = 124;
+            band.ChannelDistance = 200000;
+
+            FrequencyBandDetailsDialog dlg = new FrequencyBandDetailsDialog(band);
+            if (dlg.ShowDialog() == DialogResult.OK)
+            {
+                ScanFrequencies.Clear();
+                for (long channel = band.ChannelStart; channel <= band.ChannelEnd; channel++)
+                {
+                    ScanFrequencies.AddLast(new FrequencyMarker("Ch. " + channel, "", band.BaseFrequency + (channel - band.ChannelStart) * band.ChannelDistance));
+                }
+                ChannelBandDetails = band;
+                ScanFrequenciesEnabled = true;
+            }
+            else
+            {
+                ScanFrequenciesEnabled = false;
+            }
+        }
+
         private void demodulationMenu_Click(object sender, EventArgs e)
         {
             if (DemodDialog != null)
@@ -139,6 +139,16 @@ namespace RX_FFT
                 DemodDialog = new DemodulationDialog(DemodOptions);
                 DemodDialog.Show();
             }
+        }
+
+
+        private void quitMenu_Click(object sender, EventArgs e)
+        {
+            if (DeviceOpened)
+            {
+                CloseDevice();
+            }
+            Close();
         }
 
         #region Waterfall Recording Options
@@ -270,7 +280,8 @@ namespace RX_FFT
                 double rate = 0;
                 if (TryParseMenuText(updateRateText, out rate))
                 {
-                    FFTDisplay.UpdateRate = rate;
+                    UpdateRate = rate;
+
                     if (e != null)
                     {
                         e.Handled = true;
@@ -281,7 +292,56 @@ namespace RX_FFT
 
         #endregion
 
-        private void gmAnalyzerMenu_Click(object sender, EventArgs e)
+
+        private void dynamicWaterfallMenu_Click(object sender, EventArgs e)
+        {
+            dynamicWaterfallMenu.Checked = !dynamicWaterfallMenu.Checked;
+            FFTDisplay.DynamicLimits = dynamicWaterfallMenu.Checked;
+        }
+
+        private void fitSpectrumMenu_Click(object sender, EventArgs e)
+        {
+            FitSpectrum = !FitSpectrum;
+
+            fitSpectrumMenu.Checked = FitSpectrum;
+            displayFilterMarginsMenu.Checked = DisplayFilterMargins;
+            displayFilterMarginsMenu.Enabled = !FitSpectrum;
+        }
+
+        private void displayFilterMarginsMenu_Click(object sender, EventArgs e)
+        {
+            DisplayFilterMargins = !DisplayFilterMargins;
+
+            fitSpectrumMenu.Checked = FitSpectrum;
+            displayFilterMarginsMenu.Checked = DisplayFilterMargins;
+            displayFilterMarginsMenu.Enabled = !FitSpectrum;
+        }
+
+        private void saveMenu_Click(object sender, EventArgs e)
+        {
+            if (Device.SampleSource.SavingEnabled)
+            {
+                Device.SampleSource.SavingEnabled = false;
+                saveMenu.Text = "Save digital data...";
+            }
+            else
+            {
+                try
+                {
+                    SaveFileDialog dlg = new SaveFileDialog();
+                    dlg.Filter = "Raw complex data files (*.dat)|*.dat|All files (*.*)|*.*";
+                    if (dlg.ShowDialog() == DialogResult.OK)
+                    {
+                        EnableSaving(dlg.FileName);
+                    }
+                }
+                catch (Exception ex)
+                {
+                }
+            }
+        }
+
+        private void gsmAnalyzerMenu_Click(object sender, EventArgs e)
         {
             GSMAnalyzer analyzer = new GSMAnalyzer();
 
@@ -292,5 +352,89 @@ namespace RX_FFT
             }
         }
 
+        private void digitalDemodulatorsMenu_Click(object sender, EventArgs e)
+        {
+            DemodulatorDialog demod = new DemodulatorDialog();
+
+            demod.Show();
+            if (Device != null)
+            {
+                demod.SharedMemoryChannel = ((USBRXDeviceControl)Device).ShmemChannel;
+            }
+        }
+
+        private DateTime RetrieveLinkerTimestamp()
+        {
+            string filePath = System.Reflection.Assembly.GetCallingAssembly().Location;
+            const int c_PeHeaderOffset = 60;
+            const int c_LinkerTimestampOffset = 8;
+            byte[] b = new byte[2048];
+            System.IO.Stream s = null;
+
+            try
+            {
+                s = new System.IO.FileStream(filePath, System.IO.FileMode.Open, System.IO.FileAccess.Read);
+                s.Read(b, 0, 2048);
+            }
+            finally
+            {
+                if (s != null)
+                {
+                    s.Close();
+                }
+            }
+
+            int i = System.BitConverter.ToInt32(b, c_PeHeaderOffset);
+            int secondsSince1970 = System.BitConverter.ToInt32(b, i + c_LinkerTimestampOffset);
+            DateTime dt = new DateTime(1970, 1, 1, 0, 0, 0);
+            dt = dt.AddSeconds(secondsSince1970);
+            dt = dt.AddHours(TimeZone.CurrentTimeZone.GetUtcOffset(dt).Hours);
+            return dt;
+        }
+
+        private void deviceInformationMenu_Click(object sender, EventArgs e)
+        {
+            string msg = "";
+
+            if (DeviceOpened)
+            {
+                msg += " Device details:" + Environment.NewLine;
+                msg += "-------------------" + Environment.NewLine;
+                msg += "    Name:" + Environment.NewLine;
+                foreach (string line in Device.Name)
+                {
+                    msg += "        " + line + Environment.NewLine;
+                }
+                msg += Environment.NewLine;
+
+                msg += "    Description:" + Environment.NewLine;
+                foreach (string line in Device.Description)
+                {
+                    msg += "        " + line + Environment.NewLine;
+                }
+                msg += Environment.NewLine;
+
+                msg += "    Details:" + Environment.NewLine;
+                foreach (string line in Device.Details)
+                {
+                    msg += "        " + line + Environment.NewLine;
+                }
+                msg += Environment.NewLine;
+            }
+
+            msg += " Graphic details:" + Environment.NewLine;
+            msg += "-------------------" + Environment.NewLine;
+            foreach(string line in FFTDisplay.DisplayInformation)
+            {
+                msg += "    " + line + Environment.NewLine;
+            }
+
+            MessageBox.Show(msg);
+        }
+
+        private void aboutMenu_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("RX-FFT Prototype" + Environment.NewLine + "Built: " + RetrieveLinkerTimestamp());
+        }
     }
 }

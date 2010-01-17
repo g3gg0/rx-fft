@@ -70,6 +70,7 @@
             this.label5 = new System.Windows.Forms.Label();
             this.label6 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
+            this.label7 = new System.Windows.Forms.Label();
             this.barSquelchPower = new LibRXFFT.Components.GDI.PowerBar();
             this.txtSquelchLimit = new LibRXFFT.Components.GDI.TextBoxMouseScroll();
             this.txtAmplify = new LibRXFFT.Components.GDI.TextBoxMouseScroll();
@@ -164,7 +165,7 @@
             this.groupBox2.Controls.Add(this.radioFilter4);
             this.groupBox2.Controls.Add(this.radioFilter8);
             this.groupBox2.Controls.Add(this.chkEnableCursorWin);
-            this.groupBox2.Location = new System.Drawing.Point(123, 12);
+            this.groupBox2.Location = new System.Drawing.Point(122, 12);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Size = new System.Drawing.Size(161, 140);
             this.groupBox2.TabIndex = 2;
@@ -174,7 +175,7 @@
             // radioFilter256
             // 
             this.radioFilter256.AutoSize = true;
-            this.radioFilter256.Location = new System.Drawing.Point(82, 111);
+            this.radioFilter256.Location = new System.Drawing.Point(84, 111);
             this.radioFilter256.Name = "radioFilter256";
             this.radioFilter256.Size = new System.Drawing.Size(82, 17);
             this.radioFilter256.TabIndex = 4;
@@ -186,7 +187,7 @@
             // radioFilter128
             // 
             this.radioFilter128.AutoSize = true;
-            this.radioFilter128.Location = new System.Drawing.Point(6, 111);
+            this.radioFilter128.Location = new System.Drawing.Point(8, 111);
             this.radioFilter128.Name = "radioFilter128";
             this.radioFilter128.Size = new System.Drawing.Size(82, 17);
             this.radioFilter128.TabIndex = 3;
@@ -198,7 +199,7 @@
             // radioFilter64
             // 
             this.radioFilter64.AutoSize = true;
-            this.radioFilter64.Location = new System.Drawing.Point(82, 88);
+            this.radioFilter64.Location = new System.Drawing.Point(84, 88);
             this.radioFilter64.Name = "radioFilter64";
             this.radioFilter64.Size = new System.Drawing.Size(76, 17);
             this.radioFilter64.TabIndex = 2;
@@ -210,7 +211,7 @@
             // radioFilter16
             // 
             this.radioFilter16.AutoSize = true;
-            this.radioFilter16.Location = new System.Drawing.Point(82, 65);
+            this.radioFilter16.Location = new System.Drawing.Point(84, 65);
             this.radioFilter16.Name = "radioFilter16";
             this.radioFilter16.Size = new System.Drawing.Size(76, 17);
             this.radioFilter16.TabIndex = 1;
@@ -222,7 +223,7 @@
             // radioFilter32
             // 
             this.radioFilter32.AutoSize = true;
-            this.radioFilter32.Location = new System.Drawing.Point(6, 88);
+            this.radioFilter32.Location = new System.Drawing.Point(8, 88);
             this.radioFilter32.Name = "radioFilter32";
             this.radioFilter32.Size = new System.Drawing.Size(76, 17);
             this.radioFilter32.TabIndex = 1;
@@ -234,7 +235,7 @@
             // radioFilter2
             // 
             this.radioFilter2.AutoSize = true;
-            this.radioFilter2.Location = new System.Drawing.Point(6, 42);
+            this.radioFilter2.Location = new System.Drawing.Point(8, 42);
             this.radioFilter2.Name = "radioFilter2";
             this.radioFilter2.Size = new System.Drawing.Size(70, 17);
             this.radioFilter2.TabIndex = 0;
@@ -245,7 +246,7 @@
             // radioFilter4
             // 
             this.radioFilter4.AutoSize = true;
-            this.radioFilter4.Location = new System.Drawing.Point(82, 42);
+            this.radioFilter4.Location = new System.Drawing.Point(84, 42);
             this.radioFilter4.Name = "radioFilter4";
             this.radioFilter4.Size = new System.Drawing.Size(70, 17);
             this.radioFilter4.TabIndex = 0;
@@ -257,7 +258,7 @@
             // radioFilter8
             // 
             this.radioFilter8.AutoSize = true;
-            this.radioFilter8.Location = new System.Drawing.Point(6, 65);
+            this.radioFilter8.Location = new System.Drawing.Point(8, 65);
             this.radioFilter8.Name = "radioFilter8";
             this.radioFilter8.Size = new System.Drawing.Size(70, 17);
             this.radioFilter8.TabIndex = 0;
@@ -269,7 +270,7 @@
             // chkEnableCursorWin
             // 
             this.chkEnableCursorWin.AutoSize = true;
-            this.chkEnableCursorWin.Location = new System.Drawing.Point(6, 19);
+            this.chkEnableCursorWin.Location = new System.Drawing.Point(8, 19);
             this.chkEnableCursorWin.Name = "chkEnableCursorWin";
             this.chkEnableCursorWin.Size = new System.Drawing.Size(59, 17);
             this.chkEnableCursorWin.TabIndex = 0;
@@ -283,9 +284,9 @@
             this.groupBox3.Controls.Add(this.txtStatus);
             this.groupBox3.Controls.Add(this.txtSamplingRate);
             this.groupBox3.Controls.Add(this.label1);
-            this.groupBox3.Location = new System.Drawing.Point(12, 158);
+            this.groupBox3.Location = new System.Drawing.Point(122, 158);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(272, 102);
+            this.groupBox3.Size = new System.Drawing.Size(161, 91);
             this.groupBox3.TabIndex = 3;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Information";
@@ -301,18 +302,18 @@
             // 
             // txtStatus
             // 
-            this.txtStatus.Location = new System.Drawing.Point(145, 20);
+            this.txtStatus.Location = new System.Drawing.Point(82, 20);
             this.txtStatus.Name = "txtStatus";
             this.txtStatus.ReadOnly = true;
-            this.txtStatus.Size = new System.Drawing.Size(100, 20);
+            this.txtStatus.Size = new System.Drawing.Size(68, 20);
             this.txtStatus.TabIndex = 1;
             // 
             // txtSamplingRate
             // 
-            this.txtSamplingRate.Location = new System.Drawing.Point(145, 46);
+            this.txtSamplingRate.Location = new System.Drawing.Point(82, 46);
             this.txtSamplingRate.Name = "txtSamplingRate";
             this.txtSamplingRate.ReadOnly = true;
-            this.txtSamplingRate.Size = new System.Drawing.Size(100, 20);
+            this.txtSamplingRate.Size = new System.Drawing.Size(68, 20);
             this.txtSamplingRate.TabIndex = 1;
             // 
             // label1
@@ -320,9 +321,9 @@
             this.label1.AutoSize = true;
             this.label1.Location = new System.Drawing.Point(6, 49);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(114, 13);
+            this.label1.Size = new System.Drawing.Size(68, 13);
             this.label1.TabIndex = 0;
-            this.label1.Text = "Output Sampling Rate:";
+            this.label1.Text = "Output Rate:";
             // 
             // groupBox4
             // 
@@ -335,7 +336,7 @@
             this.groupBox4.Controls.Add(this.radioLowPass8);
             this.groupBox4.Controls.Add(this.radioLowPass2);
             this.groupBox4.Controls.Add(this.chkEnableLowpass);
-            this.groupBox4.Location = new System.Drawing.Point(290, 12);
+            this.groupBox4.Location = new System.Drawing.Point(289, 12);
             this.groupBox4.Name = "groupBox4";
             this.groupBox4.Size = new System.Drawing.Size(162, 140);
             this.groupBox4.TabIndex = 4;
@@ -345,7 +346,7 @@
             // radioLowPass256
             // 
             this.radioLowPass256.AutoSize = true;
-            this.radioLowPass256.Location = new System.Drawing.Point(83, 112);
+            this.radioLowPass256.Location = new System.Drawing.Point(84, 112);
             this.radioLowPass256.Name = "radioLowPass256";
             this.radioLowPass256.Size = new System.Drawing.Size(82, 17);
             this.radioLowPass256.TabIndex = 8;
@@ -357,7 +358,7 @@
             // radioLowPass128
             // 
             this.radioLowPass128.AutoSize = true;
-            this.radioLowPass128.Location = new System.Drawing.Point(7, 112);
+            this.radioLowPass128.Location = new System.Drawing.Point(8, 112);
             this.radioLowPass128.Name = "radioLowPass128";
             this.radioLowPass128.Size = new System.Drawing.Size(82, 17);
             this.radioLowPass128.TabIndex = 7;
@@ -369,7 +370,7 @@
             // radioLowPass64
             // 
             this.radioLowPass64.AutoSize = true;
-            this.radioLowPass64.Location = new System.Drawing.Point(83, 89);
+            this.radioLowPass64.Location = new System.Drawing.Point(84, 89);
             this.radioLowPass64.Name = "radioLowPass64";
             this.radioLowPass64.Size = new System.Drawing.Size(76, 17);
             this.radioLowPass64.TabIndex = 6;
@@ -381,7 +382,7 @@
             // radioLowPass16
             // 
             this.radioLowPass16.AutoSize = true;
-            this.radioLowPass16.Location = new System.Drawing.Point(83, 66);
+            this.radioLowPass16.Location = new System.Drawing.Point(84, 66);
             this.radioLowPass16.Name = "radioLowPass16";
             this.radioLowPass16.Size = new System.Drawing.Size(76, 17);
             this.radioLowPass16.TabIndex = 5;
@@ -393,7 +394,7 @@
             // radioLowPass4
             // 
             this.radioLowPass4.AutoSize = true;
-            this.radioLowPass4.Location = new System.Drawing.Point(83, 42);
+            this.radioLowPass4.Location = new System.Drawing.Point(84, 42);
             this.radioLowPass4.Name = "radioLowPass4";
             this.radioLowPass4.Size = new System.Drawing.Size(70, 17);
             this.radioLowPass4.TabIndex = 4;
@@ -405,7 +406,7 @@
             // radioLowPass32
             // 
             this.radioLowPass32.AutoSize = true;
-            this.radioLowPass32.Location = new System.Drawing.Point(7, 89);
+            this.radioLowPass32.Location = new System.Drawing.Point(8, 89);
             this.radioLowPass32.Name = "radioLowPass32";
             this.radioLowPass32.Size = new System.Drawing.Size(76, 17);
             this.radioLowPass32.TabIndex = 3;
@@ -417,7 +418,7 @@
             // radioLowPass8
             // 
             this.radioLowPass8.AutoSize = true;
-            this.radioLowPass8.Location = new System.Drawing.Point(7, 66);
+            this.radioLowPass8.Location = new System.Drawing.Point(8, 66);
             this.radioLowPass8.Name = "radioLowPass8";
             this.radioLowPass8.Size = new System.Drawing.Size(70, 17);
             this.radioLowPass8.TabIndex = 2;
@@ -429,7 +430,7 @@
             // radioLowPass2
             // 
             this.radioLowPass2.AutoSize = true;
-            this.radioLowPass2.Location = new System.Drawing.Point(7, 42);
+            this.radioLowPass2.Location = new System.Drawing.Point(8, 42);
             this.radioLowPass2.Name = "radioLowPass2";
             this.radioLowPass2.Size = new System.Drawing.Size(70, 17);
             this.radioLowPass2.TabIndex = 1;
@@ -441,7 +442,7 @@
             // chkEnableLowpass
             // 
             this.chkEnableLowpass.AutoSize = true;
-            this.chkEnableLowpass.Location = new System.Drawing.Point(7, 20);
+            this.chkEnableLowpass.Location = new System.Drawing.Point(8, 20);
             this.chkEnableLowpass.Name = "chkEnableLowpass";
             this.chkEnableLowpass.Size = new System.Drawing.Size(59, 17);
             this.chkEnableLowpass.TabIndex = 0;
@@ -451,13 +452,14 @@
             // 
             // groupBox5
             // 
+            this.groupBox5.Controls.Add(this.label7);
             this.groupBox5.Controls.Add(this.chkNative);
             this.groupBox5.Controls.Add(this.chkAmplify);
             this.groupBox5.Controls.Add(this.txtAmplify);
             this.groupBox5.Controls.Add(this.chkShowDemod);
-            this.groupBox5.Location = new System.Drawing.Point(290, 158);
+            this.groupBox5.Location = new System.Drawing.Point(289, 158);
             this.groupBox5.Name = "groupBox5";
-            this.groupBox5.Size = new System.Drawing.Size(161, 102);
+            this.groupBox5.Size = new System.Drawing.Size(162, 91);
             this.groupBox5.TabIndex = 5;
             this.groupBox5.TabStop = false;
             this.groupBox5.Text = "Tweaks";
@@ -465,7 +467,7 @@
             // chkNative
             // 
             this.chkNative.AutoSize = true;
-            this.chkNative.Location = new System.Drawing.Point(6, 66);
+            this.chkNative.Location = new System.Drawing.Point(6, 67);
             this.chkNative.Name = "chkNative";
             this.chkNative.Size = new System.Drawing.Size(106, 17);
             this.chkNative.TabIndex = 4;
@@ -505,9 +507,9 @@
             this.groupBox6.Controls.Add(this.label5);
             this.groupBox6.Controls.Add(this.label6);
             this.groupBox6.Controls.Add(this.label4);
-            this.groupBox6.Location = new System.Drawing.Point(459, 13);
+            this.groupBox6.Location = new System.Drawing.Point(457, 12);
             this.groupBox6.Name = "groupBox6";
-            this.groupBox6.Size = new System.Drawing.Size(138, 139);
+            this.groupBox6.Size = new System.Drawing.Size(126, 139);
             this.groupBox6.TabIndex = 6;
             this.groupBox6.TabStop = false;
             this.groupBox6.Text = "Squelch";
@@ -517,7 +519,7 @@
             this.txtSquelchMax.Location = new System.Drawing.Point(75, 61);
             this.txtSquelchMax.Name = "txtSquelchMax";
             this.txtSquelchMax.ReadOnly = true;
-            this.txtSquelchMax.Size = new System.Drawing.Size(57, 20);
+            this.txtSquelchMax.Size = new System.Drawing.Size(39, 20);
             this.txtSquelchMax.TabIndex = 2;
             this.txtSquelchMax.Text = "0";
             this.txtSquelchMax.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
@@ -527,7 +529,7 @@
             this.txtSquelchAvg.Location = new System.Drawing.Point(75, 38);
             this.txtSquelchAvg.Name = "txtSquelchAvg";
             this.txtSquelchAvg.ReadOnly = true;
-            this.txtSquelchAvg.Size = new System.Drawing.Size(57, 20);
+            this.txtSquelchAvg.Size = new System.Drawing.Size(39, 20);
             this.txtSquelchAvg.TabIndex = 2;
             this.txtSquelchAvg.Text = "0";
             this.txtSquelchAvg.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
@@ -570,14 +572,23 @@
             this.label4.TabIndex = 0;
             this.label4.Text = "Avg Power:";
             // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(114, 45);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(15, 13);
+            this.label7.TabIndex = 5;
+            this.label7.Text = "%";
+            // 
             // barSquelchPower
             // 
             this.barSquelchPower.Amplitude = 0;
             this.barSquelchPower.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
             this.barSquelchPower.LinePosition = 0;
-            this.barSquelchPower.Location = new System.Drawing.Point(10, 111);
+            this.barSquelchPower.Location = new System.Drawing.Point(10, 110);
             this.barSquelchPower.Name = "barSquelchPower";
-            this.barSquelchPower.Size = new System.Drawing.Size(122, 17);
+            this.barSquelchPower.Size = new System.Drawing.Size(104, 18);
             this.barSquelchPower.TabIndex = 3;
             this.barSquelchPower.Text = "powerBar1";
             // 
@@ -586,7 +597,7 @@
             this.txtSquelchLimit.Location = new System.Drawing.Point(75, 84);
             this.txtSquelchLimit.LowerLimit = ((long)(-100));
             this.txtSquelchLimit.Name = "txtSquelchLimit";
-            this.txtSquelchLimit.Size = new System.Drawing.Size(57, 20);
+            this.txtSquelchLimit.Size = new System.Drawing.Size(39, 20);
             this.txtSquelchLimit.TabIndex = 2;
             this.txtSquelchLimit.Text = "-25";
             this.txtSquelchLimit.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
@@ -596,15 +607,15 @@
             // 
             // txtAmplify
             // 
-            this.txtAmplify.Location = new System.Drawing.Point(82, 42);
+            this.txtAmplify.Location = new System.Drawing.Point(74, 42);
             this.txtAmplify.LowerLimit = ((long)(0));
             this.txtAmplify.Name = "txtAmplify";
-            this.txtAmplify.Size = new System.Drawing.Size(46, 20);
+            this.txtAmplify.Size = new System.Drawing.Size(38, 20);
             this.txtAmplify.TabIndex = 2;
-            this.txtAmplify.Text = "1";
+            this.txtAmplify.Text = "100";
             this.txtAmplify.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.txtAmplify.UpperLimit = ((long)(100));
-            this.txtAmplify.Value = ((long)(1));
+            this.txtAmplify.UpperLimit = ((long)(10000));
+            this.txtAmplify.Value = ((long)(100));
             this.txtAmplify.TextChanged += new System.EventHandler(this.txtAmplify_TextChanged);
             // 
             // txtDecim
@@ -623,7 +634,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(609, 271);
+            this.ClientSize = new System.Drawing.Size(593, 256);
             this.Controls.Add(this.groupBox6);
             this.Controls.Add(this.groupBox5);
             this.Controls.Add(this.groupBox4);
@@ -697,5 +708,6 @@
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label6;
         private LibRXFFT.Components.GDI.PowerBar barSquelchPower;
+        private System.Windows.Forms.Label label7;
     }
 }

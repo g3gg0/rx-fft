@@ -308,10 +308,31 @@ int getIntFromBytes(unsigned char *readBuffer, int pos)
 	return value;
 }
 
+void putBytesFromInt(unsigned char *writeBuffer, int pos, int value)
+{
+    if (writeBuffer == NULL)
+        return;
+
+    value = MAX(value, -0x7FFF);
+    value = MIN(value, 0x7FFF);
+
+    if (value < 0)
+        value = 0x10000 + value;
+
+    writeBuffer[pos + 0] = (value & 0xFF);
+    writeBuffer[pos + 1] = (value >> 8);
+}
+
 __inline double getDoubleFromBytes(unsigned char *readBuffer, int pos)
 {
 	return (double)(((short*)readBuffer)[pos/sizeof(short)]) / 0x7FFF;
 	//return (double)getIntFromBytes(readBuffer, pos) / 0x7FFF;
+}
+
+__inline void putBytesFromDouble(unsigned char *writeBuffer, int pos, double sampleValue)
+{
+	(((short*)writeBuffer)[pos/sizeof(short)]) = sampleValue * 0x7FFF;
+    //putBytesFromInt(readBuffer, pos, (int)(sampleValue * 0x7FFF));
 }
 
 LIBRXFFT_NATIVE_API void SamplesFromBinary(unsigned char *dataBuffer, int bytesRead, double *samplesI, double *samplesQ, int dataFormat, int invertedSpectrum)
@@ -377,6 +398,69 @@ LIBRXFFT_NATIVE_API void SamplesFromBinary(unsigned char *dataBuffer, int bytesR
 
 		samplesI[pos] = I;
 		samplesQ[pos] = Q;
+	}
+
+	return;
+}
+
+LIBRXFFT_NATIVE_API void SamplesToBinary(unsigned char *dataBuffer, int samplePairs, double *samplesI, double *samplesQ, int dataFormat, int invertedSpectrum)
+{
+	int bytesPerSample = 0;
+	int bytesPerSamplePair = 0;
+	int samplePos = 0;
+	int pos = 0;
+
+	switch (dataFormat)
+	{
+		case 0:
+			bytesPerSamplePair = 4;
+			bytesPerSample = 2;
+			break;
+
+		case 1:
+		case 2:
+			bytesPerSamplePair = 8;
+			bytesPerSample = 4;
+			break;
+
+		default:
+			bytesPerSamplePair = 0;
+			bytesPerSample = 0;
+			break;
+	}
+
+	samplePos = 0;
+
+//#pragma omp parallel for
+
+	for (pos = 0; pos < samplePairs; pos++)
+	{
+		double I = samplesI[pos];
+		double Q = samplesQ[pos];
+
+		if (invertedSpectrum)
+			I = -I;
+
+		switch (dataFormat)
+		{
+			case 0:
+				putBytesFromDouble(dataBuffer, bytesPerSamplePair * pos, I);
+				putBytesFromDouble(dataBuffer, bytesPerSamplePair * pos + bytesPerSample, Q);
+				break;
+
+			case 1:
+				((float*)dataBuffer)[2 * pos] = I;
+				((float*)dataBuffer)[2 * pos + 1] = Q;
+				break;
+
+			case 2:
+				((float*)dataBuffer)[2 * pos] = I * 65536;
+				((float*)dataBuffer)[2 * pos + 1] = I * 65536;
+				break;
+
+			default:
+				break;
+		}
 	}
 
 	return;

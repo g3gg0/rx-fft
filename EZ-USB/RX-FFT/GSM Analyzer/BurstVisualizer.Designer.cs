@@ -34,7 +34,7 @@ namespace GSM_Analyzer
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(BurstVisualizer));
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.SampleDisplay = new LibRXFFT.Components.DirectX.DirectXBurstDisplay();
-            this.StrengthDisplay = new LibRXFFT.Components.DirectX.DirectXWaveformDisplay();
+            this.StrengthDisplay = new LibRXFFT.Components.DirectX.DirectXWaveformDisplayOld();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -108,6 +108,6 @@ namespace GSM_Analyzer
 
         private System.Windows.Forms.SplitContainer splitContainer1;
         public DirectXBurstDisplay SampleDisplay;
-        private DirectXWaveformDisplay StrengthDisplay;
+        private DirectXWaveformDisplayOld StrengthDisplay;
     }
 }

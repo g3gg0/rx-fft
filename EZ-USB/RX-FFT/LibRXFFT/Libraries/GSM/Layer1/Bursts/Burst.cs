@@ -1,5 +1,4 @@
 using System;
-using LibRXFFT.Libraries.GSM.Layer1;
 using LibRXFFT.Libraries.GSM.Layer2;
 using LibRXFFT.Libraries.GSM.Layer3;
 

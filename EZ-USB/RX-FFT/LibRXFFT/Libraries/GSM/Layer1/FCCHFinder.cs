@@ -1,7 +1,6 @@
 ﻿using System;
 using LibRXFFT.Libraries.GSM.Layer1.Bursts;
 
-
 namespace LibRXFFT.Libraries.GSM.Layer1
 {
     public class FCCHFinder

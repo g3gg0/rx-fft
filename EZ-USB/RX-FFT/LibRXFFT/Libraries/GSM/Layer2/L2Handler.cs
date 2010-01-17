@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using LibRXFFT.Libraries.GSM.Layer3;
 using LibRXFFT.Libraries.GSM.Layer1.Bursts;
+using LibRXFFT.Libraries.GSM.Layer3;
 
 namespace LibRXFFT.Libraries.GSM.Layer2
 {

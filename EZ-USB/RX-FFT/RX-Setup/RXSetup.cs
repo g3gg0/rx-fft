@@ -1,14 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using LibRXFFT.Libraries.USB_RX.Devices;
-using RX_FFT.Components.GDI;
 using LibRXFFT.Libraries.USB_RX.Misc;
+using RX_FFT.Components.GDI;
 
 namespace RX_Setup
 {

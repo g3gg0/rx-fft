@@ -1,26 +1,22 @@
-﻿using System;
-using System.Windows.Forms;
-using LibRXFFT.Libraries.ShmemChain;
-using System.Threading;
-using LibRXFFT.Libraries.FFTW;
-using LibRXFFT.Libraries.Demodulators;
-using LibRXFFT.Libraries.Timers;
-using LibRXFFT.Libraries.Filters;
-using LibRXFFT.Libraries.SampleSources;
-using LibRXFFT.Libraries.SignalProcessing;
-using LibRXFFT.Components.DirectX;
-using System.Threading;
-using LibRXFFT.Libraries.USB_RX.Devices;
-using LibRXFFT.Libraries.USB_RX.Misc;
-using LibRXFFT.Libraries.Misc;
+using System;
 using System.Collections.Generic;
-using RX_FFT.Dialogs;
-using GSM_Analyzer;
-using RX_FFT.DeviceControls;
-using LibRXFFT.Libraries.USB_RX.Tuners;
+using System.Drawing;
+using System.Threading;
+using System.Windows.Forms;
+using LibRXFFT.Components.DirectX;
 using LibRXFFT.Libraries;
+using LibRXFFT.Libraries.FFTW;
+using LibRXFFT.Libraries.Misc;
+using LibRXFFT.Libraries.SampleSources;
+using LibRXFFT.Libraries.ShmemChain;
+using LibRXFFT.Libraries.SignalProcessing;
+using LibRXFFT.Libraries.Timers;
+using LibRXFFT.Libraries.USB_RX.Devices;
+using LibRXFFT.Libraries.USB_RX.Tuners;
 using RX_FFT.Components.GDI;
-
+using RX_FFT.DeviceControls;
+using RX_FFT.Dialogs;
+using Point=System.Drawing.Point;
 
 namespace RX_FFT
 {
@@ -124,12 +120,12 @@ namespace RX_FFT
             InitializeComponent();
             Log.Init();
 
-            this.Icon = System.Drawing.Icon.FromHandle(Icons.imgRhythmbox.GetHicon());
+            this.Icon = Icon.FromHandle(Icons.imgRhythmbox.GetHicon());
 
-            this.fftSizeOtherMenu.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.fftSizeOtherMenu_KeyPress);
-            this.updateRateText.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.updateRateText_KeyPress);
-            this.averageSamplesText.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.averageSamplesText_KeyPress);
-            this.verticalSmoothMenuText.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.verticalSmoothMenuText_KeyPress);
+            this.fftSizeOtherMenu.KeyPress += new KeyPressEventHandler(this.fftSizeOtherMenu_KeyPress);
+            this.updateRateText.KeyPress += new KeyPressEventHandler(this.updateRateText_KeyPress);
+            this.averageSamplesText.KeyPress += new KeyPressEventHandler(this.averageSamplesText_KeyPress);
+            this.verticalSmoothMenuText.KeyPress += new KeyPressEventHandler(this.verticalSmoothMenuText_KeyPress);
 
             updateRateText_KeyPress(null, null);
             averageSamplesText_KeyPress(null, null);
@@ -168,7 +164,7 @@ namespace RX_FFT
 
                 menu.Name = windowName;
                 menu.Text = windowName;
-                menu.Click += new System.EventHandler(delegate(object s, EventArgs e) 
+                menu.Click += new EventHandler(delegate(object s, EventArgs e) 
                     {
                         ToolStripMenuItem sender = (ToolStripMenuItem)s;
                         string typeString = sender.Name;
@@ -399,7 +395,7 @@ namespace RX_FFT
                             AddMarker(freq);
                         });
 
-                        System.Drawing.Point popupPos = this.PointToClient(MousePosition);
+                        Point popupPos = this.PointToClient(MousePosition);
 
                         popupPos.X -= 20;
                         popupPos.Y -= 20;
@@ -903,7 +899,7 @@ namespace RX_FFT
             }
 
             mainMenu.ContextMenu = menu;
-            mainMenu.ContextMenu.Show(mainMenu, new System.Drawing.Point(10, 10));
+            mainMenu.ContextMenu.Show(mainMenu, new Point(10, 10));
         }
 
         private void OpenRandomDevice()

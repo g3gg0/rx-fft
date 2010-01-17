@@ -1,14 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using LibRXFFT.Libraries.GSM.Layer1;
-
-using LibRXFFT.Libraries.GSM.Layer3;
 using System.IO;
-using LibRXFFT.Libraries.GSM.Misc;
-using LibRXFFT.Libraries.GSM.Layer2;
 using LibRXFFT.Libraries.GSM.Layer1.ChannelCoding;
+using LibRXFFT.Libraries.GSM.Layer2;
+using LibRXFFT.Libraries.GSM.Layer3;
+using LibRXFFT.Libraries.GSM.Misc;
 
 namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
 {

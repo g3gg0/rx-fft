@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using LibRXFFT.Libraries.USB_RX.Interfaces;
 using System.Threading;
+using LibRXFFT.Libraries.USB_RX.Interfaces;
 using LibRXFFT.Libraries.USB_RX.Misc;
 
 namespace LibRXFFT.Libraries.USB_RX.Devices

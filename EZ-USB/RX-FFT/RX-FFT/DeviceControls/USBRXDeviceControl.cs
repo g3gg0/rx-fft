@@ -1,21 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Windows.Forms;
-using LibRXFFT.Libraries.USB_RX.Devices;
-using LibRXFFT.Libraries.USB_RX.Tuners;
-using LibRXFFT.Libraries.SampleSources;
-using LibRXFFT.Libraries.USB_RX.Misc;
-using LibRXFFT.Libraries.Misc;
-using RX_FFT.Dialogs;
-using LibRXFFT.Libraries;
-using System.IO;
-using LibRXFFT.Libraries.ShmemChain;
+using System;
 using System.Collections;
+using System.ComponentModel;
+using System.Drawing;
+using System.Windows.Forms;
+using LibRXFFT.Libraries;
+using LibRXFFT.Libraries.Misc;
+using LibRXFFT.Libraries.SampleSources;
+using LibRXFFT.Libraries.ShmemChain;
+using LibRXFFT.Libraries.USB_RX.Devices;
+using LibRXFFT.Libraries.USB_RX.Misc;
+using LibRXFFT.Libraries.USB_RX.Tuners;
+using RX_FFT.Dialogs;
 
 namespace RX_FFT.DeviceControls
 {
@@ -71,7 +66,7 @@ namespace RX_FFT.DeviceControls
 
                 _SampleSource = new ShmemSampleSource("USB-RX Device Control", USBRX.ShmemChannel, 1, 0);
                 _SampleSource.InvertedSpectrum = InvertedSpectrum;
-                _SampleSource.DataFormat = LibRXFFT.Libraries.ByteUtil.eSampleFormat.Direct16BitIQFixedPoint;
+                _SampleSource.DataFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPoint;
 
                 ToolTip ttFreq = new ToolTip();
                 ttFreq.SetToolTip(lblFrequency, "Min Freq: " + FrequencyFormatter.FreqToStringAccurate(USBRX.Tuner.LowestFrequency) + Environment.NewLine + "Max Freq: " + FrequencyFormatter.FreqToStringAccurate(USBRX.Tuner.HighestFrequency));
@@ -175,7 +170,7 @@ namespace RX_FFT.DeviceControls
 
             if (Connected)
             {
-                USBRX.CurrentMode = LibRXFFT.Libraries.eTransferMode.Stopped;
+                USBRX.CurrentMode = eTransferMode.Stopped;
                 USBRX.Close();
                 _SampleSource.Close();
             }

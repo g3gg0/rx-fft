@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using LibRXFFT.Libraries.GSM.CharacterCoding;
 
 namespace LibRXFFT.Libraries.GSM.Layer3

@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Windows.Forms;
-using LibRXFFT.Libraries.USB_RX.Interfaces;
-using LibRXFFT.Libraries.USB_RX.Tuners;
-using LibRXFFT.Libraries.USB_RX.Misc;
-using LibRXFFT.Libraries.Timers;
 using System.Threading;
+using System.Windows.Forms;
+using LibRXFFT.Libraries.Timers;
+using LibRXFFT.Libraries.USB_RX.Interfaces;
+using LibRXFFT.Libraries.USB_RX.Misc;
+using LibRXFFT.Libraries.USB_RX.Tuners;
 using RX_FFT.Components.GDI;
-
 
 namespace LibRXFFT.Libraries.USB_RX.Devices
 {

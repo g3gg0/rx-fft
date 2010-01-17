@@ -1,15 +1,8 @@
-﻿using System;
+using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using System.Xml.Serialization;
-using LibRXFFT.Libraries.GSM.Layer1;
 using LibRXFFT.Libraries.GSM.Layer3;
 
 namespace GSM_Analyzer

@@ -1,16 +1,12 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
+using System.IO;
 using System.Linq;
-using System.Text;
 using System.Windows.Forms;
+using System.Xml.Serialization;
 using LibRXFFT.Components.DirectX;
 using LibRXFFT.Libraries.Misc;
 using LibRXFFT.Libraries.USB_RX.Tuners;
-using System.IO;
-using System.Xml.Serialization;
 
 namespace RX_FFT.Dialogs
 {
@@ -70,7 +66,7 @@ namespace RX_FFT.Dialogs
         }
 
 
-        void lstMarkers_MouseDoubleClick(object sender, System.Windows.Forms.MouseEventArgs e)
+        void lstMarkers_MouseDoubleClick(object sender, MouseEventArgs e)
         {
             try
             {

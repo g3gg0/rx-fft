@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using LibRXFFT.Libraries.GSM.Misc;
 
 namespace LibRXFFT.Libraries.GSM.Layer3

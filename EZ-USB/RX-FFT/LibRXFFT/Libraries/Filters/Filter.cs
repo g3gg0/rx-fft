@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace LibRXFFT.Libraries.Filters
+﻿namespace LibRXFFT.Libraries.Filters
 {
     public abstract class Filter
     {

@@ -1,9 +1,6 @@
-ï»¿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System;
 using System.Collections;
-using LibRXFFT.Libraries.Filters;
+using System.Text;
 using LibRXFFT.Libraries.SignalProcessing;
 
 /* 
@@ -297,12 +294,12 @@ namespace DemodulatorCollection
 
             msg.Length = 0;
             msg.Append(Desc4);
-            msg.Append(string.Format("{0,3} samples, {1:0.###} Âµs", TransmittingSamplesMax, (TransmittingSamplesMax / SamplingRate) * 1000000));
+            msg.Append(string.Format("{0,3} samples, {1:0.###} µs", TransmittingSamplesMax, (TransmittingSamplesMax / SamplingRate) * 1000000));
             Log.AddMessage(msg.ToString());
 
             msg.Length = 0;
             msg.Append(Desc5);
-            msg.Append(string.Format("{0,3} samples, {1:0.###} Âµs", SymbolDistance, (SymbolDistance / SamplingRate) * 1000000));
+            msg.Append(string.Format("{0,3} samples, {1:0.###} µs", SymbolDistance, (SymbolDistance / SamplingRate) * 1000000));
             Log.AddMessage(msg.ToString());
             Log.AddMessage("");
         }

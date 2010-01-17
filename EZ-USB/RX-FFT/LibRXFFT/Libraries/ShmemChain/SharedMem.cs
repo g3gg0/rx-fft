@@ -1,6 +1,7 @@
 ﻿using System;
-using System.IO;
 using System.Collections;
+using System.IO;
+using System.Text;
 
 namespace LibRXFFT.Libraries.ShmemChain
 {
@@ -51,7 +52,7 @@ namespace LibRXFFT.Libraries.ShmemChain
             this.dstChan = -1;
 
             byte[] dBytes = new byte[name.Length];
-            System.Text.ASCIIEncoding enc = new System.Text.ASCIIEncoding();
+            ASCIIEncoding enc = new ASCIIEncoding();
 
             shmemID = SharedMemNative.shmemchain_register_node_special(srcChan, dstChan, defaultBufferSize, enc.GetBytes(name));
 
@@ -75,7 +76,7 @@ namespace LibRXFFT.Libraries.ShmemChain
             this.dstChan = dstChan;
 
             byte[] dBytes = new byte[name.Length];
-            System.Text.ASCIIEncoding enc = new System.Text.ASCIIEncoding();
+            ASCIIEncoding enc = new ASCIIEncoding();
 
             shmemID = SharedMemNative.shmemchain_register_node_special(srcChan, dstChan, defaultBufferSize, enc.GetBytes(name));
 
@@ -89,7 +90,7 @@ namespace LibRXFFT.Libraries.ShmemChain
             this.dstChan = dstChan;
 
             byte[] dBytes = new byte[name.Length];
-            System.Text.ASCIIEncoding enc = new System.Text.ASCIIEncoding();
+            ASCIIEncoding enc = new ASCIIEncoding();
 
             shmemID = SharedMemNative.shmemchain_register_node_special(srcChan, dstChan, bufferSize, enc.GetBytes(name));
 
@@ -117,7 +118,7 @@ namespace LibRXFFT.Libraries.ShmemChain
                 }
 
                 NodeInfo info = new NodeInfo();
-                info.name = new System.Text.ASCIIEncoding().GetString(name, 0, stringLength);
+                info.name = new ASCIIEncoding().GetString(name, 0, stringLength);
                 info.shmemID = nodeIds[pos];
                 info.srcChan = (int)data[0];
                 info.dstChan = (int)data[1];

@@ -62,7 +62,7 @@ namespace LibRXFFT.Components.DirectX
             // 
             this.FFTDisplay.Dock = System.Windows.Forms.DockStyle.Fill;
             this.FFTDisplay.Location = new System.Drawing.Point(0, 0);
-            this.FFTDisplay.Name = "fftDisplay";
+            this.FFTDisplay.Name = "FFTDisplay";
             this.FFTDisplay.Size = new System.Drawing.Size(537, 179);
             this.FFTDisplay.TabIndex = 0;
             // 
@@ -70,7 +70,7 @@ namespace LibRXFFT.Components.DirectX
             // 
             this.WaterfallDisplay.Dock = System.Windows.Forms.DockStyle.Fill;
             this.WaterfallDisplay.Location = new System.Drawing.Point(0, 0);
-            this.WaterfallDisplay.Name = "waterfallDisplay";
+            this.WaterfallDisplay.Name = "WaterfallDisplay";
             this.WaterfallDisplay.Size = new System.Drawing.Size(537, 196);
             this.WaterfallDisplay.TabIndex = 0;
             // 

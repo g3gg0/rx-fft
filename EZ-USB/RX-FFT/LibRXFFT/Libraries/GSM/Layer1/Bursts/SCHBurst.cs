@@ -1,12 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-using LibRXFFT.Libraries.GSM.Layer1;
-using LibRXFFT.Libraries.SignalProcessing;
-using LibRXFFT.Libraries.GSM.Layer2;
 using LibRXFFT.Libraries.GSM.Layer1.ChannelCoding;
+using LibRXFFT.Libraries.GSM.Layer2;
+using LibRXFFT.Libraries.SignalProcessing;
 
 namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
 {
@@ -54,7 +49,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
             Parameters.FirstSCH = false;
 
             /* skip the number of data bits defined in SCHBurst */
-            int sequencePos = (int)(startOffset + Parameters.Oversampling * (SCHBurst.SyncOffset + 2));
+            int sequencePos = (int)(startOffset + Parameters.Oversampling * (SyncOffset + 2));
 
             /* locate the training sequence over two bits */
             int position = SignalPower.Locate(rawBurst, sequencePos, TrainingSequence, (int)(Parameters.Oversampling * bitTolerance));

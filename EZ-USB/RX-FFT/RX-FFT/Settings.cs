@@ -1,15 +1,18 @@
-ï»¿namespace RX_FFT.Properties {
+using System.ComponentModel;
+using System.Configuration;
+
+namespace RX_FFT.Properties {
     
     
-    // Diese Klasse ermÃ¶glicht die Behandlung bestimmter Ereignisse der Einstellungsklasse:
-    //  Das SettingChanging-Ereignis wird ausgelÃ¶st, bevor der Wert einer Einstellung geÃ¤ndert wird.
-    //  Das PropertyChanged-Ereignis wird ausgelÃ¶st, nachdem der Wert einer Einstellung geÃ¤ndert wurde.
-    //  Das SettingsLoaded-Ereignis wird ausgelÃ¶st, nachdem die Einstellungswerte geladen wurden.
-    //  Das SettingsSaving-Ereignis wird ausgelÃ¶st, bevor die Einstellungswerte gespeichert werden.
+    // Diese Klasse ermöglicht die Behandlung bestimmter Ereignisse der Einstellungsklasse:
+    //  Das SettingChanging-Ereignis wird ausgelöst, bevor der Wert einer Einstellung geändert wird.
+    //  Das PropertyChanged-Ereignis wird ausgelöst, nachdem der Wert einer Einstellung geändert wurde.
+    //  Das SettingsLoaded-Ereignis wird ausgelöst, nachdem die Einstellungswerte geladen wurden.
+    //  Das SettingsSaving-Ereignis wird ausgelöst, bevor die Einstellungswerte gespeichert werden.
     internal sealed partial class Settings {
         
         public Settings() {
-            // // Heben Sie die  Auskommentierung der unten angezeigten Zeilen auf, um Ereignishandler zum Speichern und Ã„ndern von Einstellungen hinzuzufÃ¼gen:
+            // // Heben Sie die  Auskommentierung der unten angezeigten Zeilen auf, um Ereignishandler zum Speichern und Ändern von Einstellungen hinzuzufügen:
             //
             // this.SettingChanging += this.SettingChangingEventHandler;
             //
@@ -17,12 +20,12 @@
             //
         }
         
-        private void SettingChangingEventHandler(object sender, System.Configuration.SettingChangingEventArgs e) {
-            // FÃ¼gen Sie hier Code zum Behandeln des SettingChangingEvent-Ereignisses hinzu.
+        private void SettingChangingEventHandler(object sender, SettingChangingEventArgs e) {
+            // Fügen Sie hier Code zum Behandeln des SettingChangingEvent-Ereignisses hinzu.
         }
         
-        private void SettingsSavingEventHandler(object sender, System.ComponentModel.CancelEventArgs e) {
-            // FÃ¼gen Sie hier Code zum Behandeln des SettingsSaving-Ereignisses hinzu.
+        private void SettingsSavingEventHandler(object sender, CancelEventArgs e) {
+            // Fügen Sie hier Code zum Behandeln des SettingsSaving-Ereignisses hinzu.
         }
     }
 }

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+using System;
 using System.Windows.Forms;
 
 namespace GaussGenerator
@@ -8,7 +6,7 @@ namespace GaussGenerator
     static class Program
     {
         /// <summary>
-        /// Der Haupteinstiegspunkt für die Anwendung.
+        /// Der Haupteinstiegspunkt f�r die Anwendung.
         /// </summary>
         [STAThread]
         static void Main()

@@ -1,7 +1,6 @@
 ﻿using System;
-
-using LibRXFFT.Libraries.SignalProcessing;
 using LibRXFFT.Libraries.GSM.Layer1.Bursts;
+using LibRXFFT.Libraries.SignalProcessing;
 
 namespace LibRXFFT.Libraries.GSM.Layer1.GMSK
 {

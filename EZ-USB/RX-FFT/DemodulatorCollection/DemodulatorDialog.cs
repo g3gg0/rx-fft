@@ -1,15 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Windows.Forms;
-using LibRXFFT.Libraries.SampleSources;
 using System.Threading;
-using LibRXFFT.Libraries.ShmemChain;
+using System.Windows.Forms;
+using LibRXFFT.Libraries;
 using LibRXFFT.Libraries.Misc;
+using LibRXFFT.Libraries.SampleSources;
+using LibRXFFT.Libraries.ShmemChain;
 
 namespace DemodulatorCollection
 {
@@ -40,7 +37,7 @@ namespace DemodulatorCollection
             base.OnClosing(e);
         }
 
-        void btnOpenPulseKeying_Click(object sender, System.EventArgs e)
+        void btnOpenPulseKeying_Click(object sender, EventArgs e)
         {
             CloseDemod();
             DigitalDemodulator demod = new PKDemodulator();
@@ -135,7 +132,7 @@ namespace DemodulatorCollection
                 menu.MenuItems.Add(new MenuItem("Shared Memory", new EventHandler(btnOpen_SharedMemory)));
 //                menu.MenuItems.Add(new MenuItem("USRP CFile", new EventHandler(btnOpen_CFile)));
                 btnOpen.ContextMenu = menu;
-                btnOpen.ContextMenu.Show(btnOpen, new System.Drawing.Point(10, 10));
+                btnOpen.ContextMenu.Show(btnOpen, new Point(10, 10));
             }
         }
 
@@ -143,7 +140,7 @@ namespace DemodulatorCollection
         {
             SampleSource = new ShmemSampleSource("GSM Analyzer", srcChan, 1, 0);
 
-            SampleSource.DataFormat = LibRXFFT.Libraries.ByteUtil.eSampleFormat.Direct16BitIQFixedPoint;
+            SampleSource.DataFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPoint;
             SampleSource.SamplingRateChanged += new EventHandler(SampleSource_SamplingRateChanged);
 
             Processing = true;
@@ -196,7 +193,7 @@ namespace DemodulatorCollection
             }
 
             btnOpen.ContextMenu = menu;
-            btnOpen.ContextMenu.Show(btnOpen, new System.Drawing.Point(10, 10));
+            btnOpen.ContextMenu.Show(btnOpen, new Point(10, 10));
         }
 
     }

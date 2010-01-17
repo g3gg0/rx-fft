@@ -1,7 +1,6 @@
 ﻿using System;
-
-using LibRXFFT.Libraries.SignalProcessing;
 using System.IO;
+using LibRXFFT.Libraries.SignalProcessing;
 
 namespace LibRXFFT.Libraries.SampleSources
 {

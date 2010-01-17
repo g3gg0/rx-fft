@@ -1,7 +1,4 @@
-﻿
-using LibRXFFT.Libraries.ShmemChain;
-using LibRXFFT.Libraries.SignalProcessing;
-using System;
+﻿using LibRXFFT.Libraries.ShmemChain;
 
 namespace LibRXFFT.Libraries.SampleSources
 {

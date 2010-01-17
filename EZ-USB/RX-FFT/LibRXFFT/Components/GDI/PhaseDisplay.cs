@@ -4,7 +4,7 @@ using System.Drawing;
 using System.Timers;
 using System.Windows.Forms;
 using LibRXFFT.Libraries;
-using Timer = System.Timers.Timer;
+using Timer=System.Timers.Timer;
 
 namespace LibRXFFT.Components.GDI
 {

@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
+using System;
 using System.Drawing;
-using System.Data;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using LibRXFFT.Components.DirectX;
-using LibRXFFT.Libraries.Misc;
 using LibRXFFT.Libraries.Filters;
+using LibRXFFT.Libraries.Misc;
 using LibRXFFT.Libraries.SignalProcessing;
 
 namespace RX_Oscilloscope.Components
@@ -138,7 +133,7 @@ namespace RX_Oscilloscope.Components
             }
         }
 
-        private void txtSamplingRate_FrequencyChanged(object sender, System.EventArgs e)
+        private void txtSamplingRate_FrequencyChanged(object sender, EventArgs e)
         {
             if (SamplingRate != txtSamplingRate.Frequency)
             {
@@ -147,7 +142,7 @@ namespace RX_Oscilloscope.Components
         }
 
 
-        private void txtBufferTime_ValueChanged(object sender, System.EventArgs e)
+        private void txtBufferTime_ValueChanged(object sender, EventArgs e)
         {
             SamplesTotal = (int)txtBufferTime.Value;
             waveForm.MaxSamples = SamplesTotal;
@@ -155,7 +150,7 @@ namespace RX_Oscilloscope.Components
             UpdateSampleTimes();
         }
 
-        private void txtPreTrigSamples_ValueChanged(object sender, System.EventArgs e)
+        private void txtPreTrigSamples_ValueChanged(object sender, EventArgs e)
         {
             SamplesPreTrigger = (int)txtPreTrigSamples.Value;
 
@@ -163,7 +158,7 @@ namespace RX_Oscilloscope.Components
             UpdateTriggerBars();
         }
 
-        private void txtTriggerLevel_ValueChanged(object sender, System.EventArgs e)
+        private void txtTriggerLevel_ValueChanged(object sender, EventArgs e)
         {
             TriggerLevel = (double)txtTriggerLevel.Value;
 

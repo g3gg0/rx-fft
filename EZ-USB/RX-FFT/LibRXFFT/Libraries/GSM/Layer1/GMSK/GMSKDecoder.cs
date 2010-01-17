@@ -1,8 +1,9 @@
 ﻿using System;
-using LibRXFFT.Libraries.GSM.Bursts;
-using LibRXFFT.Libraries.SignalProcessing;
 
-namespace LibRXFFT.Libraries.GMSK
+using LibRXFFT.Libraries.SignalProcessing;
+using LibRXFFT.Libraries.GSM.Layer1.Bursts;
+
+namespace LibRXFFT.Libraries.GSM.Layer1.GMSK
 {
     public enum eInterpolation
     {

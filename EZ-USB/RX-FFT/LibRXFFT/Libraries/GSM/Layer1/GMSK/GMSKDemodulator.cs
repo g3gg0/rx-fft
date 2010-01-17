@@ -1,7 +1,7 @@
 ﻿using System;
 using LibRXFFT.Libraries.ShmemChain;
 
-namespace LibRXFFT.Libraries.GMSK
+namespace LibRXFFT.Libraries.GSM.Layer1.GMSK
 {
 
     public class GMSKDemodulator

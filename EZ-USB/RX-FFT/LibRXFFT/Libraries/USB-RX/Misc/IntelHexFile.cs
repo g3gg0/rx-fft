@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Globalization;
 using System.IO;
 
 namespace LibRXFFT.Libraries.USB_RX.Misc
@@ -39,7 +37,7 @@ namespace LibRXFFT.Libraries.USB_RX.Misc
                 for (int pos = 0; pos < hexVals.Length; pos++)
                 {
                     string byteHex = record.Substring(2 * pos + 1, 2);
-                    hexVals[pos] = byte.Parse(byteHex, System.Globalization.NumberStyles.HexNumber);
+                    hexVals[pos] = byte.Parse(byteHex, NumberStyles.HexNumber);
                 }
 
                 dataLength = hexVals[0];

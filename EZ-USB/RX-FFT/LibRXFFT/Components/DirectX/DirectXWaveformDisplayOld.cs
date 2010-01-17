@@ -2,12 +2,9 @@
 using System.Collections;
 using System.Drawing;
 using System.Threading;
-using System.Timers;
 using System.Windows.Forms;
 using LibRXFFT.Libraries;
-
-using Timer = System.Timers.Timer;
-
+using SlimDX.Direct3D9;
 
 namespace LibRXFFT.Components.DirectX
 {
@@ -36,7 +33,7 @@ namespace LibRXFFT.Components.DirectX
             {
                 InitializeDirectX();
             }
-            catch (SlimDX.Direct3D9.Direct3D9Exception e)
+            catch (Direct3D9Exception e)
             {
                 MessageBox.Show("Failed initializing DirectX." + Environment.NewLine + e.ToString());
             }

@@ -2,16 +2,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
 using System.Windows.Forms;
-using SlimDX;
 using SlimDX.Direct3D9;
-using Device = SlimDX.Direct3D9.Device;
-using Font = SlimDX.Direct3D9.Font;
-using RX_FFT.Components.GDI;
+using Font=SlimDX.Direct3D9.Font;
 
 namespace LibRXFFT.Components.DirectX
 {
@@ -972,7 +966,7 @@ namespace LibRXFFT.Components.DirectX
 
         protected override void OnKeyDown(KeyEventArgs e)
         {
-            if ((e.KeyData & System.Windows.Forms.Keys.Shift) != 0)
+            if ((e.KeyData & Keys.Shift) != 0)
             {
                 if (!ShiftPressed)
                 {
@@ -981,7 +975,7 @@ namespace LibRXFFT.Components.DirectX
                 }
             }
 
-            if ((e.KeyData & System.Windows.Forms.Keys.Alt) != 0)
+            if ((e.KeyData & Keys.Alt) != 0)
             {
                 if (!AltPressed)
                 {
@@ -990,7 +984,7 @@ namespace LibRXFFT.Components.DirectX
                 }
             }
 
-            if ((e.KeyData & System.Windows.Forms.Keys.Control) != 0)
+            if ((e.KeyData & Keys.Control) != 0)
             {
                 if (!ControlPressed)
                 {
@@ -1015,7 +1009,7 @@ namespace LibRXFFT.Components.DirectX
 
         protected override void OnKeyUp(KeyEventArgs e)
         {
-            if ((e.KeyData & System.Windows.Forms.Keys.Shift) == 0)
+            if ((e.KeyData & Keys.Shift) == 0)
             {
                 if (ShiftPressed)
                 {
@@ -1023,7 +1017,7 @@ namespace LibRXFFT.Components.DirectX
                     KeyReleased(Keys.Shift);
                 }
             }
-            if ((e.KeyData & System.Windows.Forms.Keys.Alt) == 0)
+            if ((e.KeyData & Keys.Alt) == 0)
             {
                 if (AltPressed)
                 {
@@ -1031,7 +1025,7 @@ namespace LibRXFFT.Components.DirectX
                     KeyReleased(Keys.Alt);
                 }
             }
-            if ((e.KeyData & System.Windows.Forms.Keys.Control) == 0)
+            if ((e.KeyData & Keys.Control) == 0)
             {
                 if (ControlPressed)
                 {
@@ -1061,7 +1055,7 @@ namespace LibRXFFT.Components.DirectX
             OverviewMode = false;
             UpdateOverlays = true;
             UpdateCursor = true;
-            MouseHovering = ClientRectangle.Contains(PointToClient(Control.MousePosition));
+            MouseHovering = ClientRectangle.Contains(PointToClient(MousePosition));
             if (MouseHovering && !forceUnhover)
             {
                 Cursor = EmptyCursor;

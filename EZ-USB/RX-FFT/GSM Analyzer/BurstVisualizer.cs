@@ -1,6 +1,4 @@
-﻿using System;
 using System.Windows.Forms;
-
 using LibRXFFT.Components.DirectX;
 using LibRXFFT.Libraries.GSM.Layer1.Bursts;
 

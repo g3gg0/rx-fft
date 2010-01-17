@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Threading;
+using LibRXFFT.Libraries.Demodulators;
 using LibRXFFT.Libraries.Filters;
 using LibRXFFT.Libraries.SignalProcessing;
-using LibRXFFT.Libraries.Demodulators;
-using System.Threading;
 
 namespace RX_FFT
 {

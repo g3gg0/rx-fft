@@ -1,15 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Windows.Forms;
-using System.IO;
-using LibRXFFT.Libraries.USB_RX.Misc;
 using System.Collections;
+using System.Drawing;
+using System.IO;
+using System.Windows.Forms;
 using LibRXFFT.Libraries.Misc;
+using LibRXFFT.Libraries.USB_RX.Misc;
 
 namespace LibRXFFT.Components.GDI
 {

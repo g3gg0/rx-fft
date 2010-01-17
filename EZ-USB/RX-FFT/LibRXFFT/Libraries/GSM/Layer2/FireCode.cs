@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 #warning "This file contains GPLv2 code (FireCode). This code must be rewritten from scratch."
 

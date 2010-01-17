@@ -1,26 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
+using System.Collections;
 using System.Drawing;
-using System.IO;
+using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using LibRXFFT.Components.GDI;
 using LibRXFFT.Libraries;
-
-
 using LibRXFFT.Libraries.GSM.Layer1;
-using LibRXFFT.Libraries.GSM.Layer2;
+using LibRXFFT.Libraries.GSM.Layer1.Bursts;
+using LibRXFFT.Libraries.GSM.Layer1.GMSK;
 using LibRXFFT.Libraries.GSM.Layer3;
+using LibRXFFT.Libraries.Misc;
 using LibRXFFT.Libraries.SampleSources;
 using LibRXFFT.Libraries.ShmemChain;
 using LibRXFFT.Libraries.SignalProcessing;
-using System.Text;
-using LibRXFFT.Components.DirectX;
-using LibRXFFT.Libraries.GSM.Misc;
-using System.Collections;
-using LibRXFFT.Libraries.Misc;
-using LibRXFFT.Libraries.GSM.Layer1.Bursts;
-using LibRXFFT.Libraries.GSM.Layer1.GMSK;
+using Timer=System.Windows.Forms.Timer;
 
 namespace GSM_Analyzer
 {
@@ -51,7 +45,7 @@ namespace GSM_Analyzer
 
         private DateTime LastTextBoxUpdate = DateTime.Now;
         private StringBuilder TextBoxBuffer = new StringBuilder(32768);
-        private System.Windows.Forms.Timer TextBoxCommitTimer = new System.Windows.Forms.Timer();
+        private Timer TextBoxCommitTimer = new Timer();
 
         public bool Subsampling = true;
         public int InternalOversampling = 1;
@@ -366,7 +360,7 @@ namespace GSM_Analyzer
                 menu.MenuItems.Add(new MenuItem("Shared Memory", new EventHandler(btnOpen_SharedMemory)));
                 menu.MenuItems.Add(new MenuItem("USRP CFile", new EventHandler(btnOpen_CFile)));
                 btnOpen.ContextMenu = menu;
-                btnOpen.ContextMenu.Show(btnOpen, new System.Drawing.Point(10, 10));
+                btnOpen.ContextMenu.Show(btnOpen, new Point(10, 10));
             }
         }
 
@@ -440,7 +434,7 @@ namespace GSM_Analyzer
             }
 
             btnOpen.ContextMenu = menu;
-            btnOpen.ContextMenu.Show(btnOpen, new System.Drawing.Point(10, 10));
+            btnOpen.ContextMenu.Show(btnOpen, new Point(10, 10));
         }
 
         void SampleReadFunc()

@@ -1,13 +1,13 @@
-﻿using LibRXFFT.Components;
+﻿using System;
+using System.IO;
+using System.Reflection;
 using System.Windows.Forms;
-using System;
-using System.Threading;
-using RX_FFT.Dialogs;
-using GSM_Analyzer;
-using RX_FFT.DeviceControls;
 using DemodulatorCollection;
+using GSM_Analyzer;
 using LibRXFFT.Components.DirectX;
 using LibRXFFT.Libraries;
+using RX_FFT.DeviceControls;
+using RX_FFT.Dialogs;
 
 namespace RX_FFT
 {
@@ -222,7 +222,7 @@ namespace RX_FFT
             }
         }
         
-        private void fftSizeOtherMenu_KeyPress(object sender, System.Windows.Forms.KeyPressEventArgs e)
+        private void fftSizeOtherMenu_KeyPress(object sender, KeyPressEventArgs e)
         {
             if (e == null || e.KeyChar == 0x0D)
             {
@@ -241,7 +241,7 @@ namespace RX_FFT
         #endregion
 
         #region Additional Numerical Options
-        private void verticalSmoothMenuText_KeyPress(object sender, System.Windows.Forms.KeyPressEventArgs e)
+        private void verticalSmoothMenuText_KeyPress(object sender, KeyPressEventArgs e)
         {
             if (e == null || e.KeyChar == 0x0D)
             {
@@ -257,7 +257,7 @@ namespace RX_FFT
             }
         }
 
-        private void averageSamplesText_KeyPress(object sender, System.Windows.Forms.KeyPressEventArgs e)
+        private void averageSamplesText_KeyPress(object sender, KeyPressEventArgs e)
         {
             if (e == null || e.KeyChar == 0x0D)
             {
@@ -273,7 +273,7 @@ namespace RX_FFT
             }
         }
 
-        private void updateRateText_KeyPress(object sender, System.Windows.Forms.KeyPressEventArgs e)
+        private void updateRateText_KeyPress(object sender, KeyPressEventArgs e)
         {
             if (e == null || e.KeyChar == 0x0D)
             {
@@ -365,15 +365,15 @@ namespace RX_FFT
 
         private DateTime RetrieveLinkerTimestamp()
         {
-            string filePath = System.Reflection.Assembly.GetCallingAssembly().Location;
+            string filePath = Assembly.GetCallingAssembly().Location;
             const int c_PeHeaderOffset = 60;
             const int c_LinkerTimestampOffset = 8;
             byte[] b = new byte[2048];
-            System.IO.Stream s = null;
+            Stream s = null;
 
             try
             {
-                s = new System.IO.FileStream(filePath, System.IO.FileMode.Open, System.IO.FileAccess.Read);
+                s = new FileStream(filePath, FileMode.Open, FileAccess.Read);
                 s.Read(b, 0, 2048);
             }
             finally
@@ -384,8 +384,8 @@ namespace RX_FFT
                 }
             }
 
-            int i = System.BitConverter.ToInt32(b, c_PeHeaderOffset);
-            int secondsSince1970 = System.BitConverter.ToInt32(b, i + c_LinkerTimestampOffset);
+            int i = BitConverter.ToInt32(b, c_PeHeaderOffset);
+            int secondsSince1970 = BitConverter.ToInt32(b, i + c_LinkerTimestampOffset);
             DateTime dt = new DateTime(1970, 1, 1, 0, 0, 0);
             dt = dt.AddSeconds(secondsSince1970);
             dt = dt.AddHours(TimeZone.CurrentTimeZone.GetUtcOffset(dt).Hours);

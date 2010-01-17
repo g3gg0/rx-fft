@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+using System;
 using System.Security;
 using System.Windows.Forms;
 
@@ -9,7 +7,7 @@ namespace GSM_Analyzer
     static class Program
     {
         /// <summary>
-        /// Der Haupteinstiegspunkt für die Anwendung.
+        /// Der Haupteinstiegspunkt f�r die Anwendung.
         /// </summary>
         [STAThread]
         static void Main()

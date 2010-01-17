@@ -1,18 +1,13 @@
 ﻿using System;
-using System.Collections;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Threading;
-using System.Timers;
 using System.Windows.Forms;
-using LibRXFFT.Libraries;
 using LibRXFFT.Libraries.FFTW;
-using Timer = System.Timers.Timer;
-using SlimDX.Direct3D9;
-using SlimDX;
-using Font = SlimDX.Direct3D9.Font;
-using System.Runtime.InteropServices;
 using LibRXFFT.Libraries.SignalProcessing;
-using System.IO;
+using SlimDX;
+using SlimDX.Direct3D9;
+using Font=SlimDX.Direct3D9.Font;
 
 namespace LibRXFFT.Components.DirectX
 {
@@ -182,7 +177,7 @@ namespace LibRXFFT.Components.DirectX
                             /* and save it to disk */
                             try
                             {
-                                newImage.Save(SavingNameExtended, System.Drawing.Imaging.ImageFormat.Png);
+                                newImage.Save(SavingNameExtended, ImageFormat.Png);
                             }
                             catch (Exception e)
                             {

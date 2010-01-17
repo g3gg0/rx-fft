@@ -1,9 +1,6 @@
 ﻿using System;
-using LibRXFFT.Libraries.GSM.Layer1;
-using LibRXFFT.Libraries.GSM.Layer2;
-using LibRXFFT.Libraries.GSM.Layer3;
 using LibRXFFT.Libraries.GSM.Layer1.ChannelCoding;
-
+using LibRXFFT.Libraries.GSM.Layer2;
 
 namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
 {

@@ -6,7 +6,7 @@ using System.Timers;
 using System.Windows.Forms;
 using LibRXFFT.Libraries;
 using LibRXFFT.Libraries.FFTW;
-using Timer = System.Timers.Timer;
+using Timer=System.Timers.Timer;
 
 namespace LibRXFFT.Components.GDI
 {

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace LibRXFFT.Libraries.GSM.CharacterCoding
+﻿namespace LibRXFFT.Libraries.GSM.CharacterCoding
 {
     public class GSM7Bit
     {

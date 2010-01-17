@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using SlimDX.Direct3D9;
-using System.Drawing;
+﻿using System.Drawing;
 
 namespace LibRXFFT.Components.DirectX
 {

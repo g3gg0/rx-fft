@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Windows.Forms;
-using LibRXFFT.Libraries.SampleSources;
 using System.Threading;
+using System.Windows.Forms;
+using LibRXFFT.Libraries;
+using LibRXFFT.Libraries.SampleSources;
 using LibRXFFT.Libraries.ShmemChain;
 
 namespace RX_Oscilloscope
@@ -85,7 +82,7 @@ namespace RX_Oscilloscope
 
                 menu.MenuItems.Add(new MenuItem("Shared Memory", new EventHandler(btnOpen_SharedMemory)));
                 btnOpen.ContextMenu = menu;
-                btnOpen.ContextMenu.Show(btnOpen, new System.Drawing.Point(10, 10));
+                btnOpen.ContextMenu.Show(btnOpen, new Point(10, 10));
             }
         }
 
@@ -93,7 +90,7 @@ namespace RX_Oscilloscope
         {
             SampleSource = new ShmemSampleSource("RX-Oscilloscope", srcChan, 1, 0);
 
-            SampleSource.DataFormat = LibRXFFT.Libraries.ByteUtil.eSampleFormat.Direct16BitIQFixedPoint;
+            SampleSource.DataFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPoint;
             SampleSource.SamplingRateChanged += new EventHandler(SampleSource_SamplingRateChanged);
 
             Processing = true;
@@ -143,7 +140,7 @@ namespace RX_Oscilloscope
             }
 
             btnOpen.ContextMenu = menu;
-            btnOpen.ContextMenu.Show(btnOpen, new System.Drawing.Point(10, 10));
+            btnOpen.ContextMenu.Show(btnOpen, new Point(10, 10));
         }
     }
 }

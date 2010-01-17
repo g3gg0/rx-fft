@@ -1,11 +1,9 @@
-﻿using System.Threading;
+﻿using System.Collections.Generic;
+using System.Drawing;
+using System.Threading;
 using System.Windows.Forms;
 using LibRXFFT.Libraries;
 using LibRXFFT.Libraries.FFTW;
-using System;
-using LibRXFFT.Libraries.GSM.Misc;
-using System.Drawing;
-using System.Collections.Generic;
 
 namespace LibRXFFT.Components.DirectX
 {

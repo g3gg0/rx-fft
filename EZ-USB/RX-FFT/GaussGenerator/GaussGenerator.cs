@@ -1,13 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
+using System;
 using System.Windows.Forms;
 using LibRXFFT.Libraries;
-
 using LibRXFFT.Libraries.ShmemChain;
 using LibRXFFT.Libraries.SignalProcessing;
 

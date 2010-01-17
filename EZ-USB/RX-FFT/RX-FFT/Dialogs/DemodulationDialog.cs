@@ -1,17 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
+using System;
 using System.Windows.Forms;
+using LibRXFFT.Libraries;
 using LibRXFFT.Libraries.Demodulators;
 using LibRXFFT.Libraries.Filters;
 using LibRXFFT.Libraries.Misc;
 using LibRXFFT.Libraries.SignalProcessing;
-using LibRXFFT.Libraries;
-using LibRXFFT.Libraries.FFTW;
 
 namespace RX_FFT.Dialogs
 {

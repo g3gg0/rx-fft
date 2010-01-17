@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace LibRXFFT.Libraries.USB_RX.Misc
+﻿namespace LibRXFFT.Libraries.USB_RX.Misc
 {
     public class MemoryDump
     {

@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
+using System;
 using System.Windows.Forms;
+using LibRXFFT.Libraries;
 using LibRXFFT.Libraries.SampleSources;
 
 namespace RX_FFT.DeviceControls
@@ -41,11 +36,11 @@ namespace RX_FFT.DeviceControls
 
         public event EventHandler TransferModeChanged;
 
-        public LibRXFFT.Libraries.eTransferMode TransferMode
+        public eTransferMode TransferMode
         {
             get
             {
-                return LibRXFFT.Libraries.eTransferMode.Stream;
+                return eTransferMode.Stream;
             }
             set
             {

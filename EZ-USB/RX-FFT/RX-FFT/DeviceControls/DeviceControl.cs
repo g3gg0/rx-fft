@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using LibRXFFT.Libraries.USB_RX.Tuners;
-using LibRXFFT.Libraries.SampleSources;
+using System;
 using LibRXFFT.Libraries;
+using LibRXFFT.Libraries.SampleSources;
+using LibRXFFT.Libraries.USB_RX.Tuners;
 
 namespace RX_FFT.DeviceControls
 {

@@ -1,7 +1,5 @@
 ﻿using System.IO;
 using GSM_Analyzer;
-using LibRXFFT.Libraries.ShmemChain;
-using LibRXFFT.Libraries.SignalProcessing;
 
 namespace LibRXFFT.Libraries.SampleSources
 {

@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Runtime.InteropServices;
 
 namespace LibRXFFT.Libraries
@@ -320,13 +317,13 @@ namespace LibRXFFT.Libraries
 
                 switch (dataFormat)
                 {
-                    case ByteUtil.eSampleFormat.Direct16BitIQFixedPoint:
+                    case eSampleFormat.Direct16BitIQFixedPoint:
                         bytesPerSamplePair = 4;
                         bytesPerSample = 2;
                         break;
 
-                    case ByteUtil.eSampleFormat.Direct64BitIQFloat:
-                    case ByteUtil.eSampleFormat.Direct64BitIQFloat64k:
+                    case eSampleFormat.Direct64BitIQFloat:
+                    case eSampleFormat.Direct64BitIQFloat64k:
                         bytesPerSamplePair = 8;
                         bytesPerSample = 4;
                         break;
@@ -350,8 +347,8 @@ namespace LibRXFFT.Libraries
                     switch (dataFormat)
                     {
                         case eSampleFormat.Direct16BitIQFixedPoint:
-                            I = ByteUtil.getDoubleFromBytes(dataBuffer, bytesPerSamplePair * pos);
-                            Q = ByteUtil.getDoubleFromBytes(dataBuffer, bytesPerSamplePair * pos + bytesPerSample);
+                            I = getDoubleFromBytes(dataBuffer, bytesPerSamplePair * pos);
+                            Q = getDoubleFromBytes(dataBuffer, bytesPerSamplePair * pos + bytesPerSample);
                             break;
 
                         case eSampleFormat.Direct64BitIQFloat:
@@ -397,13 +394,13 @@ namespace LibRXFFT.Libraries
 
                 switch (dataFormat)
                 {
-                    case ByteUtil.eSampleFormat.Direct16BitIQFixedPoint:
+                    case eSampleFormat.Direct16BitIQFixedPoint:
                         bytesPerSamplePair = 4;
                         bytesPerSample = 2;
                         break;
 
-                    case ByteUtil.eSampleFormat.Direct64BitIQFloat:
-                    case ByteUtil.eSampleFormat.Direct64BitIQFloat64k:
+                    case eSampleFormat.Direct64BitIQFloat:
+                    case eSampleFormat.Direct64BitIQFloat64k:
                         bytesPerSamplePair = 8;
                         bytesPerSample = 4;
                         break;
@@ -430,8 +427,8 @@ namespace LibRXFFT.Libraries
                     switch (dataFormat)
                     {
                         case eSampleFormat.Direct16BitIQFixedPoint:
-                            ByteUtil.putBytesFromDouble(dataBuffer, bytesPerSamplePair * pos, I);
-                            ByteUtil.putBytesFromDouble(dataBuffer, bytesPerSamplePair * pos + bytesPerSample, Q);
+                            putBytesFromDouble(dataBuffer, bytesPerSamplePair * pos, I);
+                            putBytesFromDouble(dataBuffer, bytesPerSamplePair * pos + bytesPerSample, Q);
                             break;
 
                         case eSampleFormat.Direct64BitIQFloat:

@@ -2,17 +2,11 @@
 using System.Collections;
 using System.Drawing;
 using System.Threading;
-using System.Timers;
 using System.Windows.Forms;
 using LibRXFFT.Libraries;
-using LibRXFFT.Libraries.FFTW;
-using Timer = LibRXFFT.Libraries.Timers.AccurateTimer;
-using Font = SlimDX.Direct3D9.Font;
-using SlimDX.Direct3D9;
-using LibRXFFT.Libraries.SignalProcessing;
-using LibRXFFT.Libraries.GSM.Misc;
 using LibRXFFT.Libraries.Misc;
-using LibRXFFT.Libraries.Timers;
+using SlimDX.Direct3D9;
+using Timer = LibRXFFT.Libraries.Timers.AccurateTimer;
 
 namespace LibRXFFT.Components.DirectX
 {
@@ -46,8 +40,8 @@ namespace LibRXFFT.Components.DirectX
         protected int ScaleVertexesUsed = 0;
         protected int OverlayVertexesUsed = 0;
 
-        protected AccurateTimer ScreenRefreshTimer;
-        protected AccurateTimer LinePointUpdateTimer;
+        protected Timer ScreenRefreshTimer;
+        protected Timer LinePointUpdateTimer;
         protected Thread DisplayThread;
         protected bool NeedsUpdate = false;
         public bool EnoughData = false;
@@ -149,12 +143,12 @@ namespace LibRXFFT.Components.DirectX
 
             if (!slaveMode)
             {
-                ScreenRefreshTimer = new AccurateTimer();
+                ScreenRefreshTimer = new Timer();
                 ScreenRefreshTimer.Interval = 1000 / 60;
                 ScreenRefreshTimer.Timer += new EventHandler(ScreenRefreshTimer_Func);
                 ScreenRefreshTimer.Start();
 
-                LinePointUpdateTimer = new AccurateTimer();
+                LinePointUpdateTimer = new Timer();
                 LinePointUpdateTimer.Interval = (uint)RenderSleepDelay;
                 LinePointUpdateTimer.Timer += new EventHandler(LinePointUpdateTimer_Func);
                 LinePointUpdateTimer.Start();

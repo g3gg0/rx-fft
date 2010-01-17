@@ -1,12 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Data;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
-using LibRXFFT.Libraries.Misc;
 
 namespace LibRXFFT.Components.GDI
 {
@@ -20,7 +13,7 @@ namespace LibRXFFT.Components.GDI
         public TextBoxMouseScroll()
             : base()
         {
-            this.MouseWheel += new System.Windows.Forms.MouseEventHandler(TextBoxMouseScroll_MouseWheel);
+            this.MouseWheel += new MouseEventHandler(TextBoxMouseScroll_MouseWheel);
             this.KeyPress += new KeyPressEventHandler(TextBoxMouseScroll_KeyPress);
         }
 

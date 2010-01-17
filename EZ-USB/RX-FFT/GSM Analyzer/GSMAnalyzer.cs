@@ -6,8 +6,8 @@ using System.Threading;
 using System.Windows.Forms;
 using LibRXFFT.Components.GDI;
 using LibRXFFT.Libraries;
-using LibRXFFT.Libraries.GMSK;
-using LibRXFFT.Libraries.GSM.Bursts;
+
+
 using LibRXFFT.Libraries.GSM.Layer1;
 using LibRXFFT.Libraries.GSM.Layer2;
 using LibRXFFT.Libraries.GSM.Layer3;
@@ -19,6 +19,8 @@ using LibRXFFT.Components.DirectX;
 using LibRXFFT.Libraries.GSM.Misc;
 using System.Collections;
 using LibRXFFT.Libraries.Misc;
+using LibRXFFT.Libraries.GSM.Layer1.Bursts;
+using LibRXFFT.Libraries.GSM.Layer1.GMSK;
 
 namespace GSM_Analyzer
 {
@@ -31,7 +33,7 @@ namespace GSM_Analyzer
         private Thread ReadThread;
         private bool ThreadActive;
 
-        public double[] BurstLengthJitter = new[] { 0.0d, 0.0d, 0.0d, 0.0d };
+        public double[] BurstLengthJitter = new[] { 0.75d, -0.25d, -0.25d, -0.25d };
 
         private Semaphore SingleStepSem = new Semaphore(0, 1, "SingleStepSemaphore");
         private bool SingleStep;

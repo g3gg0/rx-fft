@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Windows.Forms;
-using LibRXFFT.Libraries.GMSK;
+
 using LibRXFFT.Libraries.GSM.Layer3;
 using LibRXFFT.Libraries.SampleSources;
 using LibRXFFT.Libraries.SignalProcessing;
-using LibRXFFT.Libraries.GSM.Bursts;
+
 using LibRXFFT.Libraries.GSM.Layer2;
 using LibRXFFT.Libraries.GSM.Layer1;
+using LibRXFFT.Libraries.GSM.Layer1.Bursts;
+using LibRXFFT.Libraries.GSM.Layer1.GMSK;
 
 namespace GSM_Analyzer
 {

@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Windows.Forms;
-using LibRXFFT.Libraries.GSM.Bursts;
+
 using LibRXFFT.Components.DirectX;
+using LibRXFFT.Libraries.GSM.Layer1.Bursts;
 
 namespace GSM_Analyzer
 {

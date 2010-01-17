@@ -1,7 +1,7 @@
-using LibRXFFT.Libraries.GSM.Layer1;
+
 using System;
 
-namespace LibRXFFT.Libraries.GSM.Bursts
+namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
 {
     public class FCHBurst : Burst
     {

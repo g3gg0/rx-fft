@@ -1,18 +1,18 @@
 ﻿using System;
-using LibRXFFT.Libraries.GMSK;
+
 using LibRXFFT.Libraries.GSM.Layer1;
 using LibRXFFT.Libraries.GSM.Layer2;
 using LibRXFFT.Libraries.GSM.Layer3;
 
-namespace LibRXFFT.Libraries.GSM.Bursts
+namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
 {
-    public class BCCHBurst : NormalBurst
+    public class CCCHBurst : NormalBurst
     {
-        public BCCHBurst(L3Handler l3)
+        public CCCHBurst(L3Handler l3)
         {
             L3 = l3;
-            Name = "BCCH";
-            ShortName = "BC ";
+            Name = "CCCH";
+            ShortName = "CC ";
             InitBuffers(4);
         }
 
@@ -45,7 +45,7 @@ namespace LibRXFFT.Libraries.GSM.Bursts
 
                 /* CRC check/fix */
                 switch (CRCCheck())
-                { 
+                {
                     case eCRCState.Fixed:
                         StatusMessage = "(CRC Error recovered)";
                         break;

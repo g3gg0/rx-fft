@@ -18,6 +18,14 @@ namespace LibRXFFT.Components.DirectX
 {
     public partial class DirectXWaterfallDisplay : DirectXFFTDisplay
     {
+        public bool DynamicLimits = false;
+        public double DynamicLimitFact = 0.1f;
+        public double DynamicBaseLevel = 0;
+        private bool DynamicBaseLevelChanged = false;
+        public bool DrawTimeStamps = false;
+
+
+
 
         /* DirectX related graphic stuff */
         protected Sprite Sprite;
@@ -27,7 +35,7 @@ namespace LibRXFFT.Components.DirectX
         protected Texture SaveImageDisplayContext;
         protected Texture SaveWaterfallTexture;
         protected Texture SaveTempWaterfallTexture;
-        protected Texture SaveImageThreadContext;
+        //protected Texture SaveImageThreadContext;
         protected Color ColorFaderBG = Color.Orange;
 
         protected double DisplayXOffsetPrev = 0;
@@ -152,10 +160,10 @@ namespace LibRXFFT.Components.DirectX
                         try
                         {
                             /* build an image from the texture */
-                            SaveImageLock.WaitOne();
-                            DataStream saveImageStream = Texture.ToStream(SaveImageThreadContext, ImageFileFormat.Png);
+                            //SaveImageLock.WaitOne();
+                            DataStream saveImageStream = Texture.ToStream(/*SaveImageThreadContext*/SaveImageDisplayContext, ImageFileFormat.Png);
                             Image curImage = Image.FromStream(saveImageStream);
-                            SaveImageLock.ReleaseMutex();
+                            //SaveImageLock.ReleaseMutex();
 
 
                             /* and create a new image with the new size */
@@ -479,13 +487,15 @@ namespace LibRXFFT.Components.DirectX
             }
 
             Device.DrawUserPrimitives(PrimitiveType.LineList, OverlayVertexesUsed / 2, OverlayVertexes);
-            SmallFont.DrawString(null, LeveldBWhite + " dB", 27, barTop + whiteYPos - 6, (int)colorBarUpper);
-            SmallFont.DrawString(null, LeveldBBlack + " dB", 27, barTop + blackYPos - 6, (int)colorBarLower);
+            SmallFont.DrawString(null, string.Format("{0:0.0} dB", LeveldBWhite), 27, barTop + whiteYPos - 6, (int)colorBarUpper);
+            SmallFont.DrawString(null, string.Format("{0:0.0} dB", LeveldBBlack), 27, barTop + blackYPos - 6, (int)colorBarLower);
         }
 
         internal override void PrepareLinePoints()
         {
             bool resetAverage = !LinePointsUpdated;
+            double maxLevel = double.MinValue;
+            double minLevel = double.MaxValue;
 
             lock (SampleValues)
             {
@@ -516,6 +526,12 @@ namespace LibRXFFT.Components.DirectX
 
                             if (double.IsNaN(LinePoints[pos].Y))
                                 LinePoints[pos].Y = 0;
+
+                            if (DynamicLimits)
+                            {
+                                maxLevel = Math.Max(maxLevel, LinePoints[pos].Y);
+                                minLevel = Math.Min(minLevel, LinePoints[pos].Y);
+                            }
                         }
                         resetAverage = false;
                         LinePointEntries = samples;
@@ -524,6 +540,41 @@ namespace LibRXFFT.Components.DirectX
                     SampleValuesAveraged = 0;
                     EnoughData = false;
                 }
+            }
+
+            if (DynamicLimits)
+            {
+                float dBmax = (float)(SquaredFFTData ? DBTools.SquaredSampleTodB(maxLevel) : DBTools.SampleTodB(maxLevel));
+                float dBmin = (float)(SquaredFFTData ? DBTools.SquaredSampleTodB(minLevel) : DBTools.SampleTodB(minLevel));
+
+                LeveldBWhite = (LeveldBWhite + dBmax * DynamicLimitFact) / (1 + DynamicLimitFact);
+
+                LeveldBBlack -= DynamicBaseLevel;
+                if (DynamicBaseLevelChanged)
+                {
+                    DynamicBaseLevelChanged = false;
+                    LeveldBBlack = dBmin;
+                }
+                else
+                {
+                    LeveldBBlack = (LeveldBBlack + dBmin * DynamicLimitFact) / (1 + DynamicLimitFact);
+                }
+                LeveldBBlack += DynamicBaseLevel;
+
+                if (double.IsInfinity(LeveldBWhite) || double.IsNaN(LeveldBWhite))
+                {
+                    LeveldBWhite = 0;
+                }
+                if (double.IsInfinity(LeveldBBlack) || double.IsNaN(LeveldBBlack))
+                {
+                    LeveldBBlack = 0;
+                }
+
+                UpdateOverlays = true;
+
+                /* inform that smth has changed */
+                if (UserEventCallback != null)
+                    UserEventCallback(eUserEvent.StatusUpdated, 0);
             }
         }
 
@@ -536,24 +587,27 @@ namespace LibRXFFT.Components.DirectX
             if (SaveParameters == null)
             {
                 SaveParameters = new PresentParameters();
-                SaveParameters.BackBufferHeight = SaveImageBlockSize;
-                SaveParameters.BackBufferWidth = Math.Min(FFTSize, 8192);
-                SaveParameters.DeviceWindowHandle = Handle;
-                SaveParameters.BackBufferFormat = Format.A8R8G8B8;
-                SaveParameters.Multisample = MultisampleType.TwoSamples;
+                SaveParameters.BackBufferHeight = Math.Min(SaveImageBlockSize, DeviceCaps.MaxTextureHeight);
+                SaveParameters.BackBufferWidth = Math.Min(FFTSize, DeviceCaps.MaxTextureWidth);
+                SaveParameters.DeviceWindowHandle = PresentParameters.DeviceWindowHandle;
+                SaveParameters.BackBufferFormat = PresentParameters.BackBufferFormat;
+                SaveParameters.Multisample = PresentParameters.Multisample;
             }
 
-            SaveDeviceThreadContext = new Device(Direct3D, 0, DeviceType.Hardware, Handle, CreateFlags.HardwareVertexProcessing, SaveParameters);
+            SaveDeviceThreadContext = new Device(Direct3D, DefaultAdapter, DeviceType.Hardware, SaveParameters.DeviceWindowHandle, DeviceCreateFlags, SaveParameters);
+            SaveDeviceThreadContext.Clear(ClearFlags.Target | ClearFlags.ZBuffer, ColorBG, 1.0f, 0);
+
             SaveDeviceThreadContext.SetRenderState(RenderState.AlphaBlendEnable, true);
             SaveDeviceThreadContext.SetRenderState(RenderState.SourceBlend, Blend.SourceAlpha);
             SaveDeviceThreadContext.SetRenderState(RenderState.DestinationBlend, Blend.InverseSourceAlpha);
+            SaveDeviceThreadContext.VertexFormat = VertexFormat.PositionRhw | VertexFormat.Diffuse;
 
-            SaveDeviceDisplayContext = new Device(Direct3D, 0, DeviceType.Hardware, Handle, CreateFlags.HardwareVertexProcessing, SaveParameters);
+            SaveDeviceDisplayContext = new Device(Direct3D, DefaultAdapter, DeviceType.Hardware, SaveParameters.DeviceWindowHandle, DeviceCreateFlags, SaveParameters);
+            SaveDeviceDisplayContext.Clear(ClearFlags.Target | ClearFlags.ZBuffer, ColorBG, 1.0f, 0);
+
             SaveDeviceDisplayContext.SetRenderState(RenderState.AlphaBlendEnable, true);
             SaveDeviceDisplayContext.SetRenderState(RenderState.SourceBlend, Blend.SourceAlpha);
             SaveDeviceDisplayContext.SetRenderState(RenderState.DestinationBlend, Blend.InverseSourceAlpha);
-
-            SaveDeviceThreadContext.VertexFormat = VertexFormat.PositionRhw | VertexFormat.Diffuse;
             SaveDeviceDisplayContext.VertexFormat = VertexFormat.PositionRhw | VertexFormat.Diffuse;
         }
 
@@ -563,7 +617,10 @@ namespace LibRXFFT.Components.DirectX
 
             SaveParameters.BackBufferHeight = SaveImageBlockSize;
             SaveParameters.BackBufferWidth = Math.Min(FFTSize, 8192);
+            SaveDeviceThreadContext.Reset(SaveParameters);
+            SaveDeviceThreadContext.Clear(ClearFlags.Target | ClearFlags.ZBuffer, ColorBG, 1.0f, 0);
             SaveDeviceDisplayContext.Reset(SaveParameters);
+            SaveDeviceDisplayContext.Clear(ClearFlags.Target | ClearFlags.ZBuffer, ColorBG, 1.0f, 0);
         }
 
         protected override void ReleaseDevices()
@@ -578,6 +635,7 @@ namespace LibRXFFT.Components.DirectX
             SaveDeviceThreadContext = null;
         }
 
+
         protected override void AllocateResources()
         {
             base.AllocateResources();
@@ -586,21 +644,43 @@ namespace LibRXFFT.Components.DirectX
 
             SmallFont = new Font(Device, new System.Drawing.Font("Arial", 8));
 
+            
             WaterfallTexture = new Texture(Device, PresentParameters.BackBufferWidth, PresentParameters.BackBufferHeight, 1, Usage.RenderTarget, Format.A8R8G8B8, Pool.Default);
             TempWaterfallTexture = new Texture(Device, PresentParameters.BackBufferWidth, PresentParameters.BackBufferHeight, 1, Usage.RenderTarget, Format.A8R8G8B8, Pool.Default);
             Sprite = new Sprite(Device);
+            
+            //WaterfallTexture.Fill(new Fill2DCallback(delegate (Vector2 coordinate, Vector2 texelSize){return ColorBG;}));
+            //TempWaterfallTexture.Fill(new Fill2DCallback(delegate (Vector2 coordinate, Vector2 texelSize){return ColorBG;}));
+
+            
 
             /* save file every screen roll-over */
             SaveWaterfallLinesToRender = SaveParameters.BackBufferHeight;
             SaveWaterfallLinesRendered = 0;
 
-            SaveImageThreadContext = new Texture(SaveDeviceThreadContext, SaveParameters.BackBufferWidth, SaveParameters.BackBufferHeight, 1, Usage.RenderTarget, Format.A8R8G8B8, Pool.Default);
+            //SaveImageThreadContext = new Texture(SaveDeviceThreadContext, SaveParameters.BackBufferWidth, SaveParameters.BackBufferHeight, 1, Usage.RenderTarget, Format.A8R8G8B8, Pool.Default);
             SaveWaterfallTexture = new Texture(SaveDeviceDisplayContext, SaveParameters.BackBufferWidth, SaveParameters.BackBufferHeight, 1, Usage.RenderTarget, Format.A8R8G8B8, Pool.Default);
             SaveTempWaterfallTexture = new Texture(SaveDeviceDisplayContext, SaveParameters.BackBufferWidth, SaveParameters.BackBufferHeight, 1, Usage.RenderTarget, Format.A8R8G8B8, Pool.Default);
             SaveImageDisplayContext = new Texture(SaveDeviceDisplayContext, SaveParameters.BackBufferWidth, SaveParameters.BackBufferHeight, 1, Usage.RenderTarget, Format.A8R8G8B8, Pool.Default);
             
             SaveFixedFont = new Font(SaveDeviceDisplayContext, new System.Drawing.Font("Courier New", 8));
             SaveSprite = new Sprite(SaveDeviceDisplayContext);
+
+            /* clear textures */
+            ClearTexture(Device, WaterfallTexture);
+            ClearTexture(Device, TempWaterfallTexture);
+            ClearTexture(SaveDeviceDisplayContext, SaveWaterfallTexture);
+            ClearTexture(SaveDeviceDisplayContext, SaveTempWaterfallTexture);
+            ClearTexture(SaveDeviceDisplayContext, SaveImageDisplayContext);
+        }
+
+        private void ClearTexture(Device device, Texture texture)
+        {
+            device.BeginScene();
+            device.SetRenderTarget(0, texture.GetSurfaceLevel(0));
+            device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, ColorBG, 1.0f, 0);
+            device.EndScene();
+            device.Present();
         }
 
         protected override void ReleaseResources()
@@ -618,10 +698,10 @@ namespace LibRXFFT.Components.DirectX
 
             if (SaveImageDisplayContext != null)
                 SaveImageDisplayContext.Dispose();
-            if (SaveImageThreadContext != null)
-                SaveImageThreadContext.Dispose();
+            //if (SaveImageThreadContext != null)
+            //    SaveImageThreadContext.Dispose();
             SaveImageDisplayContext = null;
-            SaveImageThreadContext = null;
+            //SaveImageThreadContext = null;
 
             SaveImageLock.ReleaseMutex();
 
@@ -657,17 +737,22 @@ namespace LibRXFFT.Components.DirectX
             XMaximum = DirectXWidth;
         }
 
-        protected override void ResetModifiers()
+        protected override void ResetModifiers(bool forceUnhover)
         {
             LevelBarActive = false;
 
-            base.ResetModifiers();
+            base.ResetModifiers(forceUnhover);
+        }
+        
+        protected override void RefreshLinePoints()
+        {
+            /* dont do that - else the waterfall scrolls during mouse move etc */
         }
 
         protected override void KeyPressed(Keys key)
         {
             /* set main text and update overlays so the active bar gets colored */
-            if (key == Keys.Shift)
+            if (key == Keys.Shift && !DynamicLimits)
             {
                 MainTextPrev = MainText;
                 MainText = "Change Upper Limit (White)";
@@ -721,16 +806,28 @@ namespace LibRXFFT.Components.DirectX
             switch (action)
             {
                 case eUserAction.YOffset:
-                    LeveldBWhite = Math.Max(LeveldBBlack, Math.Min(0, LeveldBWhite + 2 * Math.Sign(param)));
-                    UpdateOverlays = true;
+                    if (!DynamicLimits)
+                    {
+                        LeveldBWhite = Math.Max(LeveldBBlack, Math.Min(0, LeveldBWhite + 2 * Math.Sign(param)));
+                        UpdateOverlays = true;
 
-                    /* inform that smth has changed */
-                    if (UserEventCallback != null)
-                        UserEventCallback(eUserEvent.StatusUpdated, 0); 
+                        /* inform that smth has changed */
+                        if (UserEventCallback != null)
+                            UserEventCallback(eUserEvent.StatusUpdated, 0);
+                    }
                     break;
 
                 case eUserAction.YZoomIn:
-                    LeveldBBlack = Math.Max(LeveldBMax, Math.Min(LeveldBWhite, LeveldBBlack + 2));
+                    if (!DynamicLimits)
+                    {
+                        LeveldBBlack = Math.Max(LeveldBMax, Math.Min(LeveldBWhite, LeveldBBlack + 2));
+                    }
+                    else
+                    {
+                        DynamicBaseLevel = Math.Max(LeveldBMax, Math.Min(-LeveldBMax, DynamicBaseLevel + 2));
+                        DynamicBaseLevelChanged = true;
+                    }
+                    
                     UpdateOverlays = true;
 
                     /* inform that smth has changed */
@@ -739,7 +836,15 @@ namespace LibRXFFT.Components.DirectX
                     break;
 
                 case eUserAction.YZoomOut:
-                    LeveldBBlack = Math.Max(LeveldBMax, Math.Min(LeveldBWhite, LeveldBBlack - 2));
+                    if (!DynamicLimits)
+                    {
+                        LeveldBBlack = Math.Max(LeveldBMax, Math.Min(LeveldBWhite, LeveldBBlack - 2));
+                    }
+                    else
+                    {
+                        DynamicBaseLevel = Math.Max(LeveldBMax, Math.Min(-LeveldBMax, DynamicBaseLevel - 2));
+                        DynamicBaseLevelChanged = true;
+                    }
                     UpdateOverlays = true;
 
                     /* inform that smth has changed */
@@ -779,7 +884,7 @@ namespace LibRXFFT.Components.DirectX
                             for (int pos = 0; pos < numPoints; pos++)
                             {
                                 double yVal = points[pos].Y;
-                                float dB = (float)(SquaredFFTData ? DBTools.SquaredSampleTodB(yVal) : DBTools.SampleTodB(yVal));
+                                float dB = (float)((SquaredFFTData ? DBTools.SquaredSampleTodB(yVal) : DBTools.SampleTodB(yVal)) - BaseAmplification);
                                 double ampl = 1 - ((dB - LeveldBWhite) / (LeveldBBlack - LeveldBWhite));
 
                                 ampl = Math.Max(0, ampl);
@@ -829,7 +934,7 @@ namespace LibRXFFT.Components.DirectX
                                 for (int sample = (int)(pos * ratio); sample < (pos + 1) * ratio; sample++)
                                 {
                                     double yVal = points[startPos + sample].Y;
-                                    float dB = (float)(SquaredFFTData ? DBTools.SquaredSampleTodB(yVal) : DBTools.SampleTodB(yVal));
+                                    float dB = (float)((SquaredFFTData ? DBTools.SquaredSampleTodB(yVal) : DBTools.SampleTodB(yVal)) - BaseAmplification);
                                     double ampl = 1 - ((dB - LeveldBWhite) / (LeveldBBlack - LeveldBWhite));
 
                                     ampl = Math.Max(0, ampl);
@@ -863,7 +968,7 @@ namespace LibRXFFT.Components.DirectX
                             for (int pos = 0; pos < numPoints; pos++)
                             {
                                 double yVal = points[pos].Y;
-                                float dB = (float)(SquaredFFTData ? DBTools.SquaredSampleTodB(yVal) : DBTools.SampleTodB(yVal));
+                                float dB = (float)((SquaredFFTData ? DBTools.SquaredSampleTodB(yVal) : DBTools.SampleTodB(yVal)) - BaseAmplification);
                                 double ampl = 1 - ((dB - LeveldBWhite) / (LeveldBBlack - LeveldBWhite));
 
                                 ampl = Math.Max(0, ampl);
@@ -900,6 +1005,8 @@ namespace LibRXFFT.Components.DirectX
 
         protected override void RenderCore()
         {
+            bool drawTimeStamp = false;
+
             if (LinePointsUpdated)
             {
                 LinePointsUpdated = false;
@@ -937,12 +1044,10 @@ namespace LibRXFFT.Components.DirectX
                 Device.DrawUserPrimitives(PrimitiveType.LineStrip, PlotVertsEntries, PlotVerts);
                 PlotVertsEntries = 0;
 
-                bool drawTimeStamp = false;
-
                 LinesWithoutTimestamp++;
                 /* draw a new timestamp */
                 DateTime newTimeStamp = DateTime.Now;
-                if (newTimeStamp.Subtract(TimeStamp).TotalMilliseconds > TimeStampEveryMiliseconds && LinesWithoutTimestamp > LinesWithoutTimestampMin)
+                if (DrawTimeStamps && newTimeStamp.Subtract(TimeStamp).TotalMilliseconds > TimeStampEveryMiliseconds && LinesWithoutTimestamp > LinesWithoutTimestampMin)
                 {
                     drawTimeStamp = true;
                     TimeStamp = newTimeStamp;
@@ -1030,9 +1135,9 @@ namespace LibRXFFT.Components.DirectX
                         SaveSprite.End();
 
                         /* get image into save thread device context */
-                        SaveImageLock.WaitOne();
-                        Surface.FromSurface(SaveImageThreadContext.GetSurfaceLevel(0), SaveImageDisplayContext.GetSurfaceLevel(0), Filter.None, 0);
-                        SaveImageLock.ReleaseMutex();
+                        //SaveImageLock.WaitOne();
+                        //Surface.FromSurface(SaveImageThreadContext.GetSurfaceLevel(0), SaveImageDisplayContext.GetSurfaceLevel(0), Filter.None, 0);
+                        //SaveImageLock.ReleaseMutex();
 
                         SaveWaterfallLinesRendered = SaveWaterfallLinesToRender / 2 + 1;
 

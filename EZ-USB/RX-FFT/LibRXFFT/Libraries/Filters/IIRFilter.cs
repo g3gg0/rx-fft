@@ -8,7 +8,7 @@ namespace LibRXFFT.Libraries.Filters
 {
     public class IIRFilter : Filter
     {
-        public static bool UseNative = false;
+        public static bool UseNative = true;
 
         protected IntPtr NativeContext;
 

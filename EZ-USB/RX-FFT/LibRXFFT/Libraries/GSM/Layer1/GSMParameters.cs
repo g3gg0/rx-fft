@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using LibRXFFT.Libraries.GSM.Bursts;
+using LibRXFFT.Libraries.GSM.Layer1.Bursts;
+
 
 namespace LibRXFFT.Libraries.GSM.Layer1
 {

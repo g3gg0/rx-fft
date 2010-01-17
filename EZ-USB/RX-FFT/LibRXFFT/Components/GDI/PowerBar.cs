@@ -18,9 +18,15 @@ namespace LibRXFFT.Components.GDI
         private Bitmap BarBitmap;
         private Graphics BarGraphics;
 
+        private Brush BrushOver = Brushes.Red;
+        private Brush BrushSignal = Brushes.Green;
+        private Pen PenLine = Pens.Yellow;
+        private Pen PenBorder = Pens.Black;
+
         public PowerBar()
         {
             InitializeComponent();
+            SetEnabledColors(Enabled);
             //CreateGraphics();
         }
 
@@ -34,6 +40,32 @@ namespace LibRXFFT.Components.GDI
         {
             CreateGraphics();
             base.OnSizeChanged(e);
+        }
+
+        protected override void OnEnabledChanged(EventArgs e)
+        {
+            SetEnabledColors(Enabled);
+            base.OnEnabledChanged(e);
+        }
+
+        private void SetEnabledColors(bool enabled)
+        {
+            if (enabled)
+            {
+                BrushOver = Brushes.Red;
+                BrushSignal = Brushes.Green;
+                PenLine = Pens.Yellow;
+                PenBorder = Pens.Black;
+            }
+            else
+            {
+                BrushOver = Brushes.DarkGray;
+                BrushSignal = Brushes.Gray;
+                PenLine = Pens.White;
+                PenBorder = Pens.Black;
+            }
+
+            NeedsUpdate = true;
         }
 
         protected override void OnPaint(PaintEventArgs pe)
@@ -57,10 +89,10 @@ namespace LibRXFFT.Components.GDI
 
         protected void UpdateGraphics()
         {
-            BarGraphics.FillRectangle(Brushes.Red, 0, 0, BarBitmap.Width, BarBitmap.Height);
-            BarGraphics.FillRectangle(Brushes.Green, 0, 0, (float)(BarBitmap.Width * Amplitude), (float)BarBitmap.Height);
-            BarGraphics.DrawLine(Pens.Yellow, (float)(BarBitmap.Width * LinePosition), 0, (float)(BarBitmap.Width * LinePosition), (float)BarBitmap.Height);
-            BarGraphics.DrawRectangle(Pens.Black, 0, 0, BarBitmap.Width - 1, BarBitmap.Height - 1);
+            BarGraphics.FillRectangle(BrushOver, 0, 0, BarBitmap.Width, BarBitmap.Height);
+            BarGraphics.FillRectangle(BrushSignal, 0, 0, (float)(BarBitmap.Width * Amplitude), (float)BarBitmap.Height);
+            BarGraphics.DrawLine(PenLine, (float)(BarBitmap.Width * LinePosition), 0, (float)(BarBitmap.Width * LinePosition), (float)BarBitmap.Height);
+            BarGraphics.DrawRectangle(PenBorder, 0, 0, BarBitmap.Width - 1, BarBitmap.Height - 1);
         }
 
         public double Amplitude

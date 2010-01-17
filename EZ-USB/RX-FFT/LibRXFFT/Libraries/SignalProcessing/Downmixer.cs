@@ -8,7 +8,7 @@ namespace LibRXFFT.Libraries.SignalProcessing
 {
     public class Downmixer
     {
-        public static bool UseNative = false;
+        public static bool UseNative = true;
         protected IntPtr NativeContext;
 
         protected int TimePos = 0;

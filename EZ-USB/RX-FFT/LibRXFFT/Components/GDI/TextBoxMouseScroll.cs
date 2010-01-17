@@ -26,10 +26,36 @@ namespace LibRXFFT.Components.GDI
 
         void TextBoxMouseScroll_KeyPress(object sender, KeyPressEventArgs e)
         {
+            if (ReadOnly)
+            {
+                e.Handled = false;
+                return;
+            }
+
+            if (e.KeyChar == 0x0D)
+            {
+                long newValue = Value;
+
+                newValue = Math.Min(UpperLimit, newValue);
+                newValue = Math.Max(LowerLimit, newValue);
+
+                Value = newValue;
+                if (ValueChanged != null)
+                {
+                    ValueChanged(this, null);
+                }
+
+                e.Handled = true;
+            }
         }
 
         void TextBoxMouseScroll_MouseWheel(object sender, MouseEventArgs e)
         {
+            if (ReadOnly)
+            {
+                return;
+            }
+
             string origText = Text;
             int oldSelectionStart = SelectionStart;
             long origValue = Value;
@@ -56,6 +82,11 @@ namespace LibRXFFT.Components.GDI
             int newSelStart = oldSelectionStart + (Text.Length - origText.Length);
             if (newSelStart >= 0)
                 SelectionStart = newSelStart;
+
+            if (ValueChanged != null)
+            {
+                ValueChanged(this, null);
+            }
         }
 
         public long Value

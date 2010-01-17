@@ -1,4 +1,4 @@
-﻿using LibRXFFT.Libraries.GMSK;
+﻿
 using LibRXFFT.Libraries.ShmemChain;
 using LibRXFFT.Libraries.SignalProcessing;
 using System;
@@ -50,6 +50,11 @@ namespace LibRXFFT.Libraries.SampleSources
                 InputSamplingRate = samplingRate;
         }
 
+        public override void Flush()
+        {
+            ShmemChannel.Flush();
+        }
+
         public override void Close()
         {
             ShmemChannel.Unregister();
@@ -84,6 +89,8 @@ namespace LibRXFFT.Libraries.SampleSources
             }
 
             SamplesRead = SourceSamplesI.Length;
+
+            SaveData();
 
             return true;
         }

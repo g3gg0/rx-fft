@@ -2,37 +2,48 @@
 using System.Windows.Forms;
 using LibRXFFT.Libraries.USB_RX.Interfaces;
 using LibRXFFT.Libraries.USB_RX.Tuners;
-using LibRXFFT.Libraries.Timers;
 using LibRXFFT.Libraries.USB_RX.Misc;
+using LibRXFFT.Libraries.Timers;
+using System.Threading;
+using RX_FFT.Components.GDI;
+
 
 namespace LibRXFFT.Libraries.USB_RX.Devices
 {
     public class USBRXDevice : I2CInterface, SPIInterface
     {
-        public enum TransferMode
-        {
-            Stopped,
-            Stream,
-            Block
-        }
-
         private int DevNum = 0;
         private AD6636 AD6636;
-        private TransferMode CurrentMode;
+        private eTransferMode _CurrentMode = eTransferMode.Stopped;
         public DigitalTuner Tuner;
         public Atmel Atmel;
 
+        public uint SamplesPerBlock { get; set; }
+
         public uint _ReadBlockSize = 4096;
-        public uint ReadBlockSize 
+        public uint ReadBlockSize
         {
             get { return _ReadBlockSize; }
-            set 
+            set
             {
                 _ReadBlockSize = value;
-                if (CurrentMode == TransferMode.Block)
+                if (CurrentMode == eTransferMode.Block)
                 {
                     USBRXDeviceNative.UsbSetControlledTransfer(DevNum, 0, ReadBlockSize);
                 }
+            }
+        }
+
+        public double BlocksPerSecond
+        {
+            get
+            {
+                return 1000 / (double)ReadTimer.Interval;
+            }
+
+            set
+            {
+                ReadTimer.Interval = (uint)(1000 / value);
             }
         }
 
@@ -43,7 +54,13 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                 return USBRXDeviceNative.UsbGetShmemChannel(DevNum);
             }
         }
-
+        public int ShmemNode
+        {
+            get
+            {
+                return USBRXDeviceNative.UsbGetShmemID(DevNum);
+            }
+        }
 
         public USBRXDevice()
         {
@@ -56,15 +73,16 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         {
             try
             {
+                //ShowConsole(true);
+
                 if (USBRXDeviceNative.UsbInit(DevNum))
                 {
-                    CurrentMode = TransferMode.Stopped;
                     Atmel = new Atmel(this);
                     AD6636 = new AD6636(Atmel, Atmel.TCXOFreq);
 
                     MT2131 mt2131 = new MT2131(this);
 
-                    if (!mt2131.exists())
+                    if (!mt2131.Exists())
                     {
                         Tuner = AD6636;
                     }
@@ -72,6 +90,16 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                     {
                         Tuner = new TunerStack(mt2131, AD6636, mt2131.IFFrequency, mt2131.IFStepSize);
                     }
+
+                    CurrentMode = eTransferMode.Stopped;
+
+                    ReadThread = new Thread(ReadThreadMain);
+                    ReadThread.Name = "USB-RX Block read thread";
+                    ReadThread.Start();
+
+                    ReadTriggerThread = new Thread(ReadTriggerThreadMain);
+                    ReadTriggerThread.Name = "USB-RX Block read trigger thread";
+                    ReadTriggerThread.Start();
 
                     return true;
                 }
@@ -98,7 +126,83 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             USBRXDeviceNative.UsbSetTimeout(0x80, mode);
         }
 
+        public eTransferMode CurrentMode
+        {
+            get { return _CurrentMode; }
+            set
+            {
+                switch (value)
+                {
+                    case eTransferMode.Block:
+                        if (CurrentMode == eTransferMode.Stream)
+                        {
+                            StopStreamRead();
+                        }
+                        else
+                        {
+                            StopRead();
+                        }
+                        StartRead();
+                        break;
+                    case eTransferMode.Stream:
+                        if (CurrentMode == eTransferMode.Stream)
+                        {
+                            StopStreamRead();
+                        }
+                        else
+                        {
+                            StopRead();
+                        }
+                        StartStreamRead();
+                        break;
+                    case eTransferMode.Stopped:
+                        if (CurrentMode == eTransferMode.Stream)
+                        {
+                            StopStreamRead();
+                        }
+                        else
+                        {
+                            StopRead();
+                        }
+                        break;
+                }
+                _CurrentMode = value;
+            }
+        }
+
+
         #region Abstraction
+
+        public enum eAgcType
+        {
+            Off,
+            Slow,
+            Medium,
+            Fast,
+            Manual
+        }
+
+        public enum eRfSource
+        {
+            Tuner,
+            RF1,
+            RF2,
+            RF3,
+            RF4
+        }
+
+        public bool SetFilter(AtmelFilter filter)
+        {
+            if (AD6636 == null)
+                return false;
+
+            if (!Atmel.SetFilter(filter.Id))
+                return false;
+
+            AD6636.SetFilter(filter);
+
+            return true;
+        }
 
         public bool SetFilter(AD6636FilterFile filter)
         {
@@ -107,46 +211,214 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
             return AD6636.SetFilter(filter);
         }
+
+        public bool SetAgc(eAgcType type)
+        {
+            SetMgc(0);
+            //AD6636.SetAgc();
+            return Atmel.SetAgc(type);
+        }
+
+        public bool SetMgc(int dB)
+        {
+            return AD6636.SetMgcValue(dB);
+        }
+
+        public bool SetRfSource(eRfSource source)
+        {
+            return Atmel.SetRfSource(source);
+        }
+
+        public bool SetAtt(bool state)
+        {
+            return Atmel.SetAtt(state);
+        }
+
+        public bool SetPreAmp(bool state)
+        {
+            return Atmel.SetPreAmp(state);
+        }
+
         #endregion
 
         #region Transfer
 
         private AccurateTimer ReadTimer;
+        private Thread ReadThread;
+        private Thread ReadTriggerThread;
+        private object ReadTriggerTrigger = new object();
+        private object ReadTrigger = new object();
+        private object ReadTimerLock = new object();
 
-        void ReadTimer_Timer(object sender, EventArgs e)
+        private bool ReadTriggered = false;
+        private bool ReadTimerLocked = false;
+
+        private double ExpectedReadDuration = 0;
+        private int SleepDuration = 10;
+
+
+        private void ReadTriggerThreadMain()
         {
-            //USBRXDeviceNative.SetSlaveFifoParams(true, 0, 0);
-            USBRXDeviceNative.UsbSetControlledTransfer(DevNum, ReadBlockSize, ReadBlockSize);
+            try
+            {
+                    while (true)
+                    {
+                        lock (ReadTriggerTrigger)
+                        {
+                            Monitor.Wait(ReadTriggerTrigger);
+                        }
+                        //Log.AddMessage("ReadTriggerTrigger [fired]");
+
+                        lock (ReadTimerLock)
+                        {
+                            lock (ReadTrigger)
+                            {
+                                int loops = 0;
+                                bool timeout = false;
+
+                                /* dont fire next read until last data was processed */
+                                while (ReadTimerLocked && !timeout)
+                                {
+                                    timeout = (++loops * SleepDuration * 1000) < (3 * ExpectedReadDuration);
+                                    Monitor.Wait(ReadTimerLock, SleepDuration);
+                                }
+
+                                if (timeout)
+                                {
+                                    Log.AddMessage("TIMEOUT!");
+                                }
+                                //Log.AddMessage("ReadTimerLocked [false]");
+
+                                ReadTriggered = true;
+                                Monitor.Pulse(ReadTrigger);
+                            }
+                        }
+                    }
+                
+            }
+            catch (ThreadAbortException ex)
+            {
+                return;
+            }
         }
 
-        public void StartStreamRead()
+        private void ReadThreadMain()
         {
-            CurrentMode = TransferMode.Stream;
+            try
+            {
+                lock (ReadTrigger)
+                {
+                    while (true)
+                    {
+                        /* when read timer fires */
+                        while (!ReadTriggered)
+                        {
+                            Monitor.Wait(ReadTrigger, 50);
+                        }
+
+                        ReadTriggered = false;
+
+                        /* start a new transfer */
+                        //Log.AddMessage("Transfer");
+                        USBRXDeviceNative.UsbSetControlledTransfer(DevNum, ReadBlockSize, ReadBlockSize);
+                        USBRXDeviceNative.SetSlaveFifoParams(true, 0, 0);
+                        Atmel.FIFOReset(false);
+
+                        ExpectedReadDuration = SamplesPerBlock / Tuner.SamplingRate;
+
+                        /* dont fire next read until data was processed */
+                        ReadTimerLocked = true;
+                    }
+                }
+            }
+            catch (ThreadAbortException ex)
+            {
+                return;
+            }
+        }
+
+        private void ReadTimer_Timer(object sender, EventArgs e)
+        {
+            //Log.AddMessage("ReadTimer_Timer [fired]");
+            lock (ReadTriggerTrigger)
+            {
+                Monitor.Pulse(ReadTriggerTrigger);
+            }
+        }
+
+        public void ReadBlockReceived()
+        {
+            lock (ReadTimerLock)
+            {
+                Atmel.FIFOReset(true);
+                USBRXDeviceNative.SetSlaveFifoParams(true, DevNum, 0);
+                ReadTimerLocked = false;
+                Monitor.Pulse(ReadTimerLock);
+            }
+        }
+
+        private void StartStreamRead()
+        {
             USBRXDeviceNative.UsbSetGPIFMode(DevNum);
             USBRXDeviceNative.UsbSetControlledTransfer(DevNum, 0, ReadBlockSize);
         }
 
-        public void StopStreamRead()
+        private void StopStreamRead()
         {
-            CurrentMode = TransferMode.Stopped;
+            USBRXDeviceNative.UsbSetControlledTransfer(DevNum, ReadBlockSize, ReadBlockSize);
             USBRXDeviceNative.UsbSetGPIFMode(DevNum);
         }
 
-        public void StartRead()
+        private void StartRead()
         {
-            CurrentMode = TransferMode.Block;
             USBRXDeviceNative.UsbSetGPIFMode(DevNum);
+            ReadTimerLocked = false;
             ReadTimer.Start();
+            lock (ReadTimerLock)
+            {
+                Monitor.Pulse(ReadTimerLock);
+            }
         }
 
-        public void StopRead()
+        private void StopRead()
         {
-            CurrentMode = TransferMode.Stopped;
             ReadTimer.Stop();
+            ReadTimerLocked = false;
+            lock (ReadTimerLock)
+            {
+                Monitor.Pulse(ReadTimerLock);
+            }
         }
+
 
         public void Close()
         {
+            /* stop read timer */
+            ReadTimer.Stop();
+
+
+            /* stop read trigger thread */
+            ReadTriggerThread.Abort();
+            ReadTimerLocked = false;
+            lock (ReadTimerLock)
+            {
+                Monitor.Pulse(ReadTimerLock);
+            }
+            lock (ReadTriggerTrigger)
+            {
+                Monitor.Pulse(ReadTriggerTrigger);
+            }
+
+
+            /* stop read thread */
+            ReadThread.Abort();
+            lock (ReadTrigger)
+            {
+                Monitor.Pulse(ReadTrigger);
+            }
+            ReadThread.Join();
+
+            /* close driver handle */
             USBRXDeviceNative.UsbClose(DevNum);
         }
 
@@ -159,29 +431,46 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
         #region I2CInterface Member
 
+        private object I2CAccessLock = new object();
+
         public bool I2CWriteByte(int busID, byte data)
         {
-            return USBRXDeviceNative.UsbI2CWriteByte(DevNum, busID, data);
+            lock (I2CAccessLock)
+            {
+                return USBRXDeviceNative.UsbI2CWriteByte(DevNum, busID, data);
+            }
         }
 
         public bool I2CWriteBytes(int busID, byte[] data)
         {
-            return USBRXDeviceNative.UsbI2CWriteBytes(DevNum, busID, (ushort)data.Length, data);
+            lock (I2CAccessLock)
+            {
+                return USBRXDeviceNative.UsbI2CWriteBytes(DevNum, busID, (ushort)data.Length, data);
+            }
         }
 
         public bool I2CReadByte(int busID, byte[] data)
         {
-            return USBRXDeviceNative.UsbI2CReadByte(DevNum, busID, data);
+            lock (I2CAccessLock)
+            {
+                return USBRXDeviceNative.UsbI2CReadByte(DevNum, busID, data);
+            }
         }
 
         public bool I2CReadBytes(int busID, byte[] data)
         {
-            return USBRXDeviceNative.UsbI2CReadBytes(DevNum, busID, (ushort)data.Length, data);
+            lock (I2CAccessLock)
+            {
+                return USBRXDeviceNative.UsbI2CReadBytes(DevNum, busID, (ushort)data.Length, data);
+            }
         }
 
         public bool I2CDeviceAck(int busID)
         {
-            return USBRXDeviceNative.UsbI2CReadBytes(DevNum, busID, 0, null);
+            lock (I2CAccessLock)
+            {
+                return USBRXDeviceNative.UsbI2CReadBytes(DevNum, busID, 0, null);
+            }
         }
 
         #endregion
@@ -218,7 +507,6 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         }
 
         #endregion
-
 
 
     }

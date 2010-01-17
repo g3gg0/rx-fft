@@ -8,7 +8,7 @@ namespace LibRXFFT.Libraries.Filters
 {
     public class FIRFilter : Filter
     {
-        public static bool UseNative = false;
+        public static bool UseNative = true;
 
         protected double[] Coefficients = null;
         protected double[] DelayLine;

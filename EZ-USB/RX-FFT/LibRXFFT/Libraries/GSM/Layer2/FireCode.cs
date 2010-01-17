@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+#warning "This file contains GPLv2 code (FireCode). This code must be rewritten from scratch."
+
 /*
  * Copyright 2005 Free Software Foundation, Inc.
  * 
@@ -25,7 +27,7 @@ using System.Text;
  */
 
 
-namespace LibRXFFT.Libraries.GSM.Layer1
+namespace LibRXFFT.Libraries.GSM.Layer2
 {
     public class FireCode
     {
@@ -175,7 +177,5 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             }
             return error_count;
         }
-
-
     }
 }

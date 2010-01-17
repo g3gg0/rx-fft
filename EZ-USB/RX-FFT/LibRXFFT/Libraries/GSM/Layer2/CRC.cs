@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace LibRXFFT.Libraries.GSM.Layer1
+namespace LibRXFFT.Libraries.GSM.Layer2
 {
     public class CRC
     {

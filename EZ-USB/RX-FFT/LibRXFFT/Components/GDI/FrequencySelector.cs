@@ -29,6 +29,12 @@ namespace LibRXFFT.Components.GDI
 
         void FrequencySelector_KeyPress(object sender, KeyPressEventArgs e)
         {
+            if (ReadOnly)
+            {
+                e.Handled = false;
+                return;
+            }
+
             ParseFrequency();
 
             if (e.KeyChar == 0x0D)
@@ -46,11 +52,18 @@ namespace LibRXFFT.Components.GDI
                 }
                 if (FrequencyChanged != null)
                     FrequencyChanged(this, null);
+
+                e.Handled = true;
             }
         }
 
         void FrequencySelector_MouseWheel(object sender, MouseEventArgs e)
         {
+            if (ReadOnly)
+            {
+                return;
+            }
+
             string origText = Text;
             int oldSelectionStart = SelectionStart;
             long origFreq = Frequency;

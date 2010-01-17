@@ -2,7 +2,7 @@
 
 namespace LibRXFFT.Libraries.ShmemChain
 {
-    class SharedMemNative
+    public class SharedMemNative
     {
         public const int MODE_PARTIAL = 0;			// try to read up to n bytes (or less or zero)
         public const int MODE_NOPARTIAL = 1;			// try to read n bytes (or zero)

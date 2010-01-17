@@ -1,5 +1,6 @@
 ﻿using System;
-using LibRXFFT.Libraries.GSM.Bursts;
+using LibRXFFT.Libraries.GSM.Layer1.Bursts;
+
 
 namespace LibRXFFT.Libraries.GSM.Layer1
 {

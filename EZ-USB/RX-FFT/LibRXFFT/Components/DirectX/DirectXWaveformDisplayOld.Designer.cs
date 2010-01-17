@@ -1,6 +1,6 @@
 ﻿namespace LibRXFFT.Components.DirectX
 {
-    partial class DirectXWaveformDisplay
+    partial class DirectXWaveformDisplayOld
     {
         /// <summary> 
         /// Erforderliche Designervariable.
@@ -18,12 +18,9 @@
                 components.Dispose();
             }
 
-            if (ScreenRefreshTimer != null)
-                ScreenRefreshTimer.Stop();
-            if (LinePointUpdateTimer != null)
-                LinePointUpdateTimer.Stop();
             if (DisplayThread != null)
                 DisplayThread.Abort();
+
 
             base.Dispose(disposing);
         }
@@ -38,13 +35,13 @@
         {
             this.SuspendLayout();
             // 
-            // FFTDisplay
+            // WaveformDisplay
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.DoubleBuffered = true;
-            this.Name = "DirectXFFTDisplay";
-            this.Size = new System.Drawing.Size(442, 285);
+            this.Name = "DirectXWaveformDisplay";
+            this.Size = new System.Drawing.Size(428, 289);
             this.ResumeLayout(false);
 
         }

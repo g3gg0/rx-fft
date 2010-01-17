@@ -1,6 +1,7 @@
 ﻿using System;
-using LibRXFFT.Libraries.GMSK;
+
 using LibRXFFT.Libraries.SignalProcessing;
+using System.IO;
 
 namespace LibRXFFT.Libraries.SampleSources
 {
@@ -10,6 +11,13 @@ namespace LibRXFFT.Libraries.SampleSources
         public bool InvertedSpectrum = false;
         protected Oversampler IOversampler;
         protected Oversampler QOversampler;
+
+        private BinaryWriter SavingFile = null;
+        private string _SavingFileName = "output.dat";
+        private bool _SavingEnabled = false;
+        private ByteUtil.eSampleFormat SavingDataType = ByteUtil.eSampleFormat.Direct16BitIQFixedPoint;
+        private int SavingBytesPerSample = 2;
+
 
         public static eOversamplingType DefaultOversamplingType = eOversamplingType.SinX;
         public eOversamplingType OversamplingType
@@ -24,7 +32,6 @@ namespace LibRXFFT.Libraries.SampleSources
             get { return IOversampler.SinXDepth; }
             set { IOversampler.SinXDepth = value; }
         }
-
 
         public int BytesPerSamplePair;
         public int BytesPerSample;
@@ -62,6 +69,8 @@ namespace LibRXFFT.Libraries.SampleSources
         public double[] SourceSamplesQ;
         public double[] OversampleI;
         public double[] OversampleQ;
+        public byte[] BinarySaveData;
+
         public int SamplesRead;
         public virtual int SamplesPerBlock
         {
@@ -92,6 +101,44 @@ namespace LibRXFFT.Libraries.SampleSources
             }
         }
 
+
+        public string SavingFileName
+        {
+            get
+            {
+                return _SavingFileName;
+            }
+            set
+            {
+                _SavingFileName = value;
+            }
+        }
+
+        public bool SavingEnabled
+        {
+            get
+            {
+                return _SavingEnabled;
+            }
+            set
+            {
+                _SavingEnabled = value;
+
+                if (SavingEnabled)
+                {
+                    SavingFile = new BinaryWriter(File.Create(SavingFileName));
+                }
+                else
+                {
+                    if (SavingFile != null)
+                    {
+                        SavingFile.Close();
+                        SavingFile = null;
+                    }
+                }
+            }
+        }
+
         public bool SamplingRateHasChanged;
         public event EventHandler SamplingRateChanged;
 
@@ -119,6 +166,12 @@ namespace LibRXFFT.Libraries.SampleSources
             SourceSamplesQ = new double[SamplesPerBlock * InternalOversampling];
             OversampleI = new double[SamplesPerBlock];
             OversampleQ = new double[SamplesPerBlock];
+
+            BinarySaveData = new byte[SamplesPerBlock * 2 * SavingBytesPerSample];
+        }
+
+        public virtual void Flush()
+        {
         }
 
         public virtual bool Read()
@@ -137,5 +190,14 @@ namespace LibRXFFT.Libraries.SampleSources
             if (SamplingRateChanged != null)
                 SamplingRateChanged(this, null);
         }
+
+        internal void SaveData()
+        {
+            if (!SavingEnabled)
+                return;
+            ByteUtil.SamplesToBinary(BinarySaveData, SamplesRead, SourceSamplesI, SourceSamplesQ, SavingDataType, false);
+            SavingFile.Write(BinarySaveData);
+        }
+
     }
 }

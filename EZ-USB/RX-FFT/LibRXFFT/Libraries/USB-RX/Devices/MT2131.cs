@@ -5,11 +5,14 @@ using System.Text;
 using System.Threading;
 using LibRXFFT.Libraries.USB_RX.Interfaces;
 using LibRXFFT.Libraries.USB_RX.Tuners;
+using LibRXFFT.Libraries.Misc;
 
 namespace LibRXFFT.Libraries.USB_RX.Devices
 {
-    class MT2131 : Tuner
+    public class MT2131 : Tuner
     {
+        public static bool DeviceTypeDisabled = true;
+
         public long IFFrequency = 43998970;
         public long IFStepSize = 500000;
 
@@ -43,12 +46,12 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             I2cDevice = device;
             BusID = defaultBusID;
 
-            if (!exists())
+            if (!Exists())
             {
                 return;
             }
             long oldFreq = GetFrequency();
-            init();
+            Init();
             SetFrequency(oldFreq);
 
         }
@@ -58,6 +61,12 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         public event EventHandler FrequencyChanged;
         public event EventHandler InvertedSpectrumChanged; 
         public event EventHandler FilterWidthChanged;
+
+        private double _Amplification = 0;
+        public double Amplification
+        {
+            get { return _Amplification; }
+        }
 
         public long LowestFrequency
         {
@@ -71,12 +80,12 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
         public long UpperFilterMargin
         {
-            get { return CurrentFrequency + FilterWidth/2; }
+            get { return Math.Min(CurrentFrequency + FilterWidth / 2, HighestFrequency); }
         }
 
         public long LowerFilterMargin
         {
-            get { return CurrentFrequency - FilterWidth / 2; }
+            get { return Math.Max(CurrentFrequency - FilterWidth / 2, LowestFrequency); }
         }
 
         public bool InvertedSpectrum
@@ -91,8 +100,61 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         {
             get
             {
-                return 8000000;
+                return 5000000;
             }
+        }
+
+        public string UpperFilterMarginDescription
+        {
+            get
+            {
+                if (CurrentFrequency + FilterWidth / 2 > HighestFrequency)
+                {
+                    return "MT2131 max. freq";
+                }
+                else
+                {
+                    return "MT2131 filter width";
+                }
+            }
+        }
+
+        public string LowerFilterMarginDescription
+        {
+            get
+            {
+                if (CurrentFrequency - FilterWidth / 2 < LowestFrequency)
+                {
+                    return "MT2131 min. freq.";
+                }
+                else
+                {
+                    return "MT2131 filter width";
+                }
+            }
+        }
+
+        public string FilterWidthDescription
+        {
+            get
+            {
+                return "MT2131 " + FrequencyFormatter.FreqToString(FilterWidth) + " hard limit";
+            }
+        }
+
+        public string[] Name
+        {
+            get { return new[] { "Microtune MT2131" }; }
+        }
+
+        public string[] Description
+        {
+            get { return new[] { "Single-chip terrestrial tuner" }; }
+        }
+
+        public string[] Details
+        {
+            get { return new[] { "(none)" }; }
         }
 
         public long GetFrequency()
@@ -101,7 +163,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             double div1, num1, div2, num2;
             byte[] b = new byte[6];
 
-            readReg(1, b);
+            ReadReg(1, b);
 
             num1 = b[0] * 0x20 + b[1];
             div1 = b[2];
@@ -120,134 +182,135 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
         public bool SetFrequency(long frequency)
         {
-            long freq;
-            byte if_band_center;
-            double f_lo1, f_lo2;
-            double div1, num1, div2, num2;
-            byte[] b = new byte[6];
+            bool success = false;
 
-            /* more than 1 GHz not possible */
-            if (frequency > 1000000000)
-                return false;
-
-            freq = frequency / 1000; // Hz -> kHz
-
-            f_lo1 = freq + MT2131_IF1 * 1000;
-            f_lo1 = (f_lo1 / 250) * 250;
-            f_lo2 = f_lo1 - freq - MT2131_IF2;
-
-            CurrentFrequency = (long)( (f_lo1 - f_lo2 - MT2131_IF2) * 1000);
-
-            /* Frequency LO1 = 16MHz * (DIV1 + NUM1/8192 ) */
-            num1 = f_lo1 * 64 / (MT2131_FREF / 128);
-            div1 = num1 / 0x2000;
-            num1 %= 0x2000;
-
-            /* Frequency LO2 = 16MHz * (DIV2 + NUM2/8192 ) */
-            num2 = f_lo2 * 64 / (MT2131_FREF / 128);
-            div2 = num2 / 0x2000;
-            num2 %= 0x2000;
-
-            if (freq <= 82500)
-                if_band_center = 0x00;
-            else if (freq <= 137500)
-                if_band_center = 0x01;
-            else if (freq <= 192500)
-                if_band_center = 0x02;
-            else if (freq <= 247500)
-                if_band_center = 0x03;
-            else if (freq <= 302500)
-                if_band_center = 0x04;
-            else if (freq <= 357500)
-                if_band_center = 0x05;
-            else if (freq <= 412500)
-                if_band_center = 0x06;
-            else if (freq <= 467500)
-                if_band_center = 0x07;
-            else if (freq <= 522500)
-                if_band_center = 0x08;
-            else if (freq <= 577500)
-                if_band_center = 0x09;
-            else if (freq <= 632500)
-                if_band_center = 0x0A;
-            else if (freq <= 687500)
-                if_band_center = 0x0B;
-            else if (freq <= 742500)
-                if_band_center = 0x0C;
-            else if (freq <= 797500)
-                if_band_center = 0x0D;
-            else if (freq <= 852500)
-                if_band_center = 0x0E;
-            else if (freq <= 907500)
-                if_band_center = 0x0F;
-            else if (freq <= 962500)
-                if_band_center = 0x10;
-            else if (freq <= 1017500)
-                if_band_center = 0x11;
-            else if (freq <= 1072500)
-                if_band_center = 0x12;
-            else
-                if_band_center = 0x13;
-
-            b[0] = (byte)(num1 / 0x20);
-            b[1] = (byte)(num1 % 0x20);
-            b[2] = (byte)div1;
-            b[3] = (byte)(num2 / 0x20);
-            b[4] = (byte)(num2 % 0x20);
-            b[5] = (byte)div2;
-
-            /*
-                    System.out.printf("IF1: %dMHz IF2: %dMHz\n", MT2131_IF1, MT2131_IF2);
-                    System.out.printf("PLL freq=%dkHz  band=%d\n", (int) freq,
-                            (int) if_band_center);
-                    System.out.printf("PLL f_lo1=%dkHz  f_lo2=%dkHz\n", (int) f_lo1,
-                            (int) f_lo2);
-                    System.out.printf("PLL div1=%d  num1=%d  div2=%d  num2=%d\n",
-                            (int) div1, (int) num1, (int) div2, (int) num2);
-                    System.out.printf("WRITE PLL [0..5]: %2x %2x %2x %2x %2x %2x\n", (int) b[0],
-                            (int) b[1], (int) b[2], (int) b[3], (int) b[4], (int) b[5]);
-            */
-
-            writeReg(0x01, b);
-            writeReg(0x0b, if_band_center);
-
-            /*
-             * Wait for lock i = 0; do { mt2131_readreg(priv, 0x08, &lockval); if
-             * ((lockval & 0x88) == 0x88) break; msleep(4); i++; } while (i < 10);
-             */
-
-            /* Wait for lock */
-            int i = 20;
-            do
+            if (LowestFrequency <= frequency && frequency <= HighestFrequency)
             {
-                readReg(MT2131_REG_LOCK, b);
-                if ((b[0] & 0x88) == 0x88)
-                    break;
-                try
+                long freq;
+                byte if_band_center;
+                double f_lo1, f_lo2;
+                double div1, num1, div2, num2;
+                byte[] b = new byte[6];
+
+                freq = frequency / 1000; // Hz -> kHz
+
+                f_lo1 = freq + MT2131_IF1 * 1000;
+                f_lo1 = (f_lo1 / 250) * 250;
+                f_lo2 = f_lo1 - freq - MT2131_IF2;
+
+                /* Frequency LO1 = 16MHz * (DIV1 + NUM1/8192 ) */
+                num1 = f_lo1 * 64 / (MT2131_FREF / 128);
+                div1 = num1 / 0x2000;
+                num1 %= 0x2000;
+
+                /* Frequency LO2 = 16MHz * (DIV2 + NUM2/8192 ) */
+                num2 = f_lo2 * 64 / (MT2131_FREF / 128);
+                div2 = num2 / 0x2000;
+                num2 %= 0x2000;
+
+                if (freq <= 82500)
+                    if_band_center = 0x00;
+                else if (freq <= 137500)
+                    if_band_center = 0x01;
+                else if (freq <= 192500)
+                    if_band_center = 0x02;
+                else if (freq <= 247500)
+                    if_band_center = 0x03;
+                else if (freq <= 302500)
+                    if_band_center = 0x04;
+                else if (freq <= 357500)
+                    if_band_center = 0x05;
+                else if (freq <= 412500)
+                    if_band_center = 0x06;
+                else if (freq <= 467500)
+                    if_band_center = 0x07;
+                else if (freq <= 522500)
+                    if_band_center = 0x08;
+                else if (freq <= 577500)
+                    if_band_center = 0x09;
+                else if (freq <= 632500)
+                    if_band_center = 0x0A;
+                else if (freq <= 687500)
+                    if_band_center = 0x0B;
+                else if (freq <= 742500)
+                    if_band_center = 0x0C;
+                else if (freq <= 797500)
+                    if_band_center = 0x0D;
+                else if (freq <= 852500)
+                    if_band_center = 0x0E;
+                else if (freq <= 907500)
+                    if_band_center = 0x0F;
+                else if (freq <= 962500)
+                    if_band_center = 0x10;
+                else if (freq <= 1017500)
+                    if_band_center = 0x11;
+                else if (freq <= 1072500)
+                    if_band_center = 0x12;
+                else
+                    if_band_center = 0x13;
+
+                b[0] = (byte)(num1 / 0x20);
+                b[1] = (byte)(num1 % 0x20);
+                b[2] = (byte)div1;
+                b[3] = (byte)(num2 / 0x20);
+                b[4] = (byte)(num2 % 0x20);
+                b[5] = (byte)div2;
+
+                /*
+                        System.out.printf("IF1: %dMHz IF2: %dMHz\n", MT2131_IF1, MT2131_IF2);
+                        System.out.printf("PLL freq=%dkHz  band=%d\n", (int) freq,
+                                (int) if_band_center);
+                        System.out.printf("PLL f_lo1=%dkHz  f_lo2=%dkHz\n", (int) f_lo1,
+                                (int) f_lo2);
+                        System.out.printf("PLL div1=%d  num1=%d  div2=%d  num2=%d\n",
+                                (int) div1, (int) num1, (int) div2, (int) num2);
+                        System.out.printf("WRITE PLL [0..5]: %2x %2x %2x %2x %2x %2x\n", (int) b[0],
+                                (int) b[1], (int) b[2], (int) b[3], (int) b[4], (int) b[5]);
+                */
+
+                WriteReg(0x01, b);
+                WriteReg(0x0b, if_band_center);
+
+                /* Wait for lock */
+                int i = 20;
+                do
                 {
-                    Thread.Sleep(5);
-                }
-                catch (ThreadAbortException e) 
-                { 
-                }
-                i--;
-            } while (i > 0);
+                    ReadReg(MT2131_REG_LOCK, b);
+                    if ((b[0] & 0x88) == 0x88)
+                        break;
+                    try
+                    {
+                        Thread.Sleep(5);
+                    }
+                    catch (ThreadAbortException e)
+                    {
+                    }
+                    i--;
+                } while (i > 0);
 
-            if (i == 0)
-                return false;
-
-            return true;
+                if (i != 0)
+                {
+                    CurrentFrequency = (long)((f_lo1 - f_lo2 - MT2131_IF2) * 1000);
+                    success = true;
+                }
+                else
+                {
+                    // could not lock PLL - set old frequency again
+                    SetFrequency(CurrentFrequency);
+                }
+            }
+            return success;
         }
 
         #endregion
 
-        public void readReg(byte register, byte[] buf)
+        public void ReadReg(byte register, byte[] buf)
         {
             this.I2cDevice.I2CWriteByte(BusID, register);
             this.I2cDevice.I2CReadBytes(BusID, buf);
         }
 
-        public bool writeReg(byte register, byte[] data)
+        public bool WriteReg(byte register, byte[] data)
         {
             byte[] buf = new byte[data.Length + 1];
 
@@ -258,7 +321,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             return this.I2cDevice.I2CWriteBytes(BusID, buf);
         }
 
-        public bool writeReg(byte register, byte data)
+        public bool WriteReg(byte register, byte data)
         {
             byte[] buf = new byte[2];
 
@@ -268,23 +331,26 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             return this.I2cDevice.I2CWriteByte(BusID, register);
         }
 
-        public void init()
+        public void Init()
         {
-            this.writeReg(0x01, mt2131_config1);
-            this.writeReg(0x0b, 0x09);
-            this.writeReg(0x15, 0x47);
-            this.writeReg(0x07, 0xf2);
-            this.writeReg(0x0b, 0x01);
-            this.writeReg(0x10, mt2131_config2);
+            this.WriteReg(0x01, mt2131_config1);
+            this.WriteReg(0x0b, 0x09);
+            this.WriteReg(0x15, 0x47);
+            this.WriteReg(0x07, 0xf2);
+            this.WriteReg(0x0b, 0x01);
+            this.WriteReg(0x10, mt2131_config2);
 
             return;
         }
 
 
-        public bool exists()
+        public bool Exists()
         {
+            if (DeviceTypeDisabled)
+                return false;
+
             byte[] buf = new byte[1];
-            readReg(0x00, buf);
+            ReadReg(0x00, buf);
 
             if (buf[0] != 0x3E && buf[0] != 0x3F)
                 return false;

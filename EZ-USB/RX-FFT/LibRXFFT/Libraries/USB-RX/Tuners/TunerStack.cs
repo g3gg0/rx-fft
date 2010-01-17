@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Collections;
 
 namespace LibRXFFT.Libraries.USB_RX.Tuners
 {
@@ -88,6 +89,11 @@ namespace LibRXFFT.Libraries.USB_RX.Tuners
         public event EventHandler InvertedSpectrumChanged;
         public event EventHandler FilterWidthChanged;
 
+        public double Amplification
+        {
+            get { return MasterTuner.Amplification + SlaveTuner.Amplification; }
+        }
+
         public long LowestFrequency
         {
             get { return MasterTuner.LowestFrequency; }
@@ -100,12 +106,12 @@ namespace LibRXFFT.Libraries.USB_RX.Tuners
 
         public long UpperFilterMargin
         {
-            get { return CurrentFrequency + FilterWidth / 2; }
+            get { return Math.Min(CurrentFrequency + FilterWidth / 2, HighestFrequency); }
         }
 
         public long LowerFilterMargin
         {
-            get { return CurrentFrequency - FilterWidth / 2; }
+            get { return Math.Max(CurrentFrequency - FilterWidth / 2, LowestFrequency); }
         }
 
         public long FilterWidth
@@ -114,6 +120,113 @@ namespace LibRXFFT.Libraries.USB_RX.Tuners
             {
                 /* return the most narrow filter */
                 return Math.Min(SlaveTuner.FilterWidth, MasterTuner.FilterWidth);
+            }
+        }
+
+        public string UpperFilterMarginDescription
+        {
+            get
+            {
+                if ((SlaveTuner.UpperFilterMargin - SlaveTuner.GetFrequency()) < (MasterTuner.UpperFilterMargin - MasterTuner.GetFrequency()))
+                {
+                    return SlaveTuner.UpperFilterMarginDescription;
+                }
+                else
+                {
+                    return MasterTuner.UpperFilterMarginDescription;
+                }
+            }
+        }
+
+        public string LowerFilterMarginDescription
+        {
+            get
+            {
+                if ((SlaveTuner.GetFrequency() - SlaveTuner.LowerFilterMargin) < (MasterTuner.GetFrequency() - MasterTuner.LowerFilterMargin))
+                {
+                    return SlaveTuner.LowerFilterMarginDescription;
+                }
+                else
+                {
+                    return MasterTuner.LowerFilterMarginDescription;
+                }
+            }
+        }
+
+        public string FilterWidthDescription
+        {
+            get
+            {
+                if(SlaveTuner.FilterWidth < MasterTuner.FilterWidth)
+                {
+                    return SlaveTuner.FilterWidthDescription;
+                }
+
+                return MasterTuner.FilterWidthDescription;
+            }
+        }
+
+        public string[] Name
+        {
+            get
+            {
+                ArrayList lines = new ArrayList();
+
+                lines.Add("Combination of two tuners.");
+                lines.Add("Master:");
+                foreach (string line in MasterTuner.Name)
+                {
+                    lines.Add("    " + line);
+                }
+                lines.Add("Slave:");
+                foreach (string line in SlaveTuner.Name)
+                {
+                    lines.Add("    " + line);
+                }
+
+                return (string[])lines.ToArray(typeof(string));
+            }
+        }
+
+        public string[] Description
+        {
+            get
+            {
+                ArrayList lines = new ArrayList();
+
+                lines.Add("Master:");
+                foreach (string line in MasterTuner.Description)
+                {
+                    lines.Add("    " + line);
+                }
+                lines.Add("Slave:");
+                foreach (string line in SlaveTuner.Description)
+                {
+                    lines.Add("    " + line);
+                }
+
+                return (string[])lines.ToArray(typeof(string));
+            }
+        }
+
+        public string[] Details
+        {
+            get
+            {
+                ArrayList lines = new ArrayList();
+
+                lines.Add("Master:");
+                foreach (string line in MasterTuner.Details)
+                {
+                    lines.Add("    " + line);
+                }
+                lines.Add("Slave:");
+                foreach (string line in SlaveTuner.Details)
+                {
+                    lines.Add("    " + line);
+                }
+
+                return (string[])lines.ToArray(typeof(string));
             }
         }
 
@@ -162,5 +275,6 @@ namespace LibRXFFT.Libraries.USB_RX.Tuners
         }
 
         #endregion
+
     }
 }

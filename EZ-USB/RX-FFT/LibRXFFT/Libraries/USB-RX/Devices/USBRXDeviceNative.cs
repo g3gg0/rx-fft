@@ -6,8 +6,15 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
     {
         public static int MODE_IDLE = 0;
         public static int MODE_GPIF = 1;
-
+/* 
+ * configuration for dev board
         public static int PIN_SPI_RESET = 3;
+        public static int PIN_SPI_CLK = 6;
+        public static int PIN_SPI_SDI = 4;
+        public static int PIN_SPI_SDO = 5;
+        public static int PIN_SPI_LED_IN = 7;
+*/
+        public static int PIN_SPI_RESET = 2;
         public static int PIN_SPI_CLK = 6;
         public static int PIN_SPI_SDI = 4;
         public static int PIN_SPI_SDO = 5;
@@ -28,7 +35,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         public static ushort MODE_PREBUFFER = 0x00000010;
 
         [DllImport("usb2.dll", CallingConvention = CallingConvention.StdCall)]
-        public static extern uint UsbGetShmemID(int DevNum);
+        public static extern int UsbGetShmemID(int DevNum);
         [DllImport("usb2.dll", CallingConvention = CallingConvention.StdCall)]
         public static extern int UsbGetShmemChannel(int DevNum);
 

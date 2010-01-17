@@ -8,11 +8,13 @@ namespace LibRXFFT.Libraries
 {
     public class ByteUtil
     {
-        public static bool UseNative = false;
+        public static bool UseNative = true;
 
         [DllImport("libRXFFT_native.dll", EntryPoint = "SamplesFromBinary")]
         public static unsafe extern void SamplesFromBinaryNative(byte[] dataBuffer, int bytesRead, double[] samplesI, double[] samplesQ, int dataFormat, bool invertedSpectrum);
-
+        [DllImport("libRXFFT_native.dll", EntryPoint = "SamplesToBinary")]
+        public static unsafe extern void SamplesToBinaryNative(byte[] dataBuffer, int samplePairs, double[] samplesI, double[] samplesQ, int dataFormat, bool invertedSpectrum);
+        
 
         public static byte[] BitsToBytesRev(bool[] srcData)
         {
@@ -307,7 +309,6 @@ namespace LibRXFFT.Libraries
 
         public static void SamplesFromBinary(byte[] dataBuffer, int bytesRead, double[] samplesI, double[] samplesQ, eSampleFormat dataFormat, bool invertedSpectrum)
         {
-
             if (UseNative)
             {
                 SamplesFromBinaryNative(dataBuffer, bytesRead, samplesI, samplesQ, (int)dataFormat, invertedSpectrum);
@@ -372,6 +373,84 @@ namespace LibRXFFT.Libraries
 
                     samplesI[pos] = I;
                     samplesQ[pos] = Q;
+                }
+
+                return;
+            }
+        }
+        
+        public static void SamplesToBinary(byte[] dataBuffer, double[] samplesI, double[] samplesQ, eSampleFormat dataFormat, bool InvertedSpectrum)
+        {
+            SamplesToBinary(dataBuffer, dataBuffer.Length, samplesI, samplesQ, dataFormat, InvertedSpectrum);
+        }
+
+        public static void SamplesToBinary(byte[] dataBuffer, int samplePairs, double[] samplesI, double[] samplesQ, eSampleFormat dataFormat, bool invertedSpectrum)
+        {
+            if (UseNative)
+            {
+                SamplesToBinaryNative(dataBuffer, samplePairs, samplesI, samplesQ, (int)dataFormat, invertedSpectrum);
+            }
+            else
+            {
+                int bytesPerSample;
+                int bytesPerSamplePair;
+
+                switch (dataFormat)
+                {
+                    case ByteUtil.eSampleFormat.Direct16BitIQFixedPoint:
+                        bytesPerSamplePair = 4;
+                        bytesPerSample = 2;
+                        break;
+
+                    case ByteUtil.eSampleFormat.Direct64BitIQFloat:
+                    case ByteUtil.eSampleFormat.Direct64BitIQFloat64k:
+                        bytesPerSamplePair = 8;
+                        bytesPerSample = 4;
+                        break;
+
+                    default:
+                        bytesPerSamplePair = 0;
+                        bytesPerSample = 0;
+                        break;
+                }
+
+                int samplePos = 0;
+
+                if (samplesI.Length < samplePairs || samplesQ.Length < samplePairs)
+                    return;
+
+                for (int pos = 0; pos < samplePairs; pos++)
+                {
+                    double I = samplesI[pos];
+                    double Q = samplesQ[pos];
+
+                    if (invertedSpectrum)
+                        I = -I;
+
+                    switch (dataFormat)
+                    {
+                        case eSampleFormat.Direct16BitIQFixedPoint:
+                            ByteUtil.putBytesFromDouble(dataBuffer, bytesPerSamplePair * pos, I);
+                            ByteUtil.putBytesFromDouble(dataBuffer, bytesPerSamplePair * pos + bytesPerSample, Q);
+                            break;
+
+                        case eSampleFormat.Direct64BitIQFloat:
+                            byte[] bufI = BitConverter.GetBytes((float)I);
+                            byte[] bufQ = BitConverter.GetBytes((float)Q);
+                            Array.Copy(bufI, 0, dataBuffer, bytesPerSamplePair * pos, bytesPerSample);
+                            Array.Copy(bufQ, 0, dataBuffer, bytesPerSamplePair * pos + bytesPerSample, bytesPerSample);
+                            break;
+
+                        case eSampleFormat.Direct64BitIQFloat64k:
+                            byte[] bufI64k = BitConverter.GetBytes((float)(I / 65536));
+                            byte[] bufQ64k = BitConverter.GetBytes((float)(Q / 65536));
+                            Array.Copy(bufI64k, 0, dataBuffer, bytesPerSamplePair * pos, bytesPerSample);
+                            Array.Copy(bufQ64k, 0, dataBuffer, bytesPerSamplePair * pos + bytesPerSample, bytesPerSample);
+                            break;
+
+                        default:
+                            return;
+                    }
                 }
 
                 return;

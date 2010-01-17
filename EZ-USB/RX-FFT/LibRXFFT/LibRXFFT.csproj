@@ -37,6 +37,7 @@
     <DebugType>full</DebugType>
     <PlatformTarget>x64</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
     <OutputPath>bin\x64\Release\</OutputPath>
@@ -102,11 +103,17 @@
     </Compile>
     <Compile Include="Components\DirectX\DirectXTypes.cs" />
     <Compile Include="Components\DirectX\DrawableObject.cs" />
-    <Compile Include="Components\GDI\AD6636FilterList.cs">
+    <Compile Include="Components\DirectX\DirectXWaveformDisplay.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Components\GDI\AD6636FilterList.Designer.cs">
-      <DependentUpon>AD6636FilterList.cs</DependentUpon>
+    <Compile Include="Components\DirectX\DirectXWaveformDisplay.Designer.cs">
+      <DependentUpon>DirectXWaveformDisplay.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Components\GDI\FilterList.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Components\GDI\FilterList.Designer.cs">
+      <DependentUpon>FilterList.cs</DependentUpon>
     </Compile>
     <Compile Include="Components\GDI\CFileDecimationDialog.cs">
       <SubType>Form</SubType>
@@ -123,11 +130,11 @@
     <Compile Include="Components\DirectX\DirectXPlot.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Components\DirectX\DirectXWaveformDisplay.cs">
+    <Compile Include="Components\DirectX\DirectXWaveformDisplayOld.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Components\DirectX\DirectXWaveformDisplay.Designer.cs">
-      <DependentUpon>DirectXWaveformDisplay.cs</DependentUpon>
+    <Compile Include="Components\DirectX\DirectXWaveformDisplayOld.Designer.cs">
+      <DependentUpon>DirectXWaveformDisplayOld.cs</DependentUpon>
     </Compile>
     <Compile Include="Components\DirectX\DirectXFFTDisplay.cs">
       <SubType>UserControl</SubType>
@@ -155,6 +162,13 @@
     </Compile>
     <Compile Include="Components\GDI\FrequencySelector.cs">
       <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Components\GDI\Log.cs" />
+    <Compile Include="Components\GDI\LogWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Components\GDI\LogWindow.Designer.cs">
+      <DependentUpon>LogWindow.cs</DependentUpon>
     </Compile>
     <Compile Include="Components\GDI\PowerBar.cs">
       <SubType>Component</SubType>
@@ -212,23 +226,23 @@
     <Compile Include="Libraries\Filters\FIRCoefficients.cs" />
     <Compile Include="Libraries\Filters\FIRFilter.cs" />
     <Compile Include="Libraries\Globals.cs" />
-    <Compile Include="Libraries\GMSK\ConvolutionalCoder.cs" />
-    <Compile Include="Libraries\GMSK\DifferenceCode.cs" />
-    <Compile Include="Libraries\GMSK\GMSKDecoder.cs" />
-    <Compile Include="Libraries\GMSK\GMSKDemodulator.cs" />
-    <Compile Include="Libraries\GMSK\InterleaveCoder.cs" />
-    <Compile Include="Libraries\GSM\Bursts\BCCHBurst.cs" />
-    <Compile Include="Libraries\GSM\Bursts\Burst.cs" />
-    <Compile Include="Libraries\GSM\Bursts\CBCHBurst.cs" />
-    <Compile Include="Libraries\GSM\Bursts\CCCHBurst.cs" />
-    <Compile Include="Libraries\GSM\Bursts\FACCHBurst.cs" />
-    <Compile Include="Libraries\GSM\Bursts\SACCHBurst.cs" />
-    <Compile Include="Libraries\GSM\Bursts\TCHBurst.cs" />
+    <Compile Include="Libraries\GSM\Layer1\ChannelCoding\ConvolutionalCoder.cs" />
+    <Compile Include="Libraries\GSM\Layer1\ChannelCoding\DifferenceCode.cs" />
+    <Compile Include="Libraries\GSM\Layer1\GMSK\GMSKDecoder.cs" />
+    <Compile Include="Libraries\GSM\Layer1\GMSK\GMSKDemodulator.cs" />
+    <Compile Include="Libraries\GSM\Layer1\ChannelCoding\InterleaveCoder.cs" />
+    <Compile Include="Libraries\GSM\Layer1\Bursts\BCCHBurst.cs" />
+    <Compile Include="Libraries\GSM\Layer1\Bursts\Burst.cs" />
+    <Compile Include="Libraries\GSM\Layer1\Bursts\CBCHBurst.cs" />
+    <Compile Include="Libraries\GSM\Layer1\Bursts\CCCHBurst.cs" />
+    <Compile Include="Libraries\GSM\Layer1\Bursts\FACCHBurst.cs" />
+    <Compile Include="Libraries\GSM\Layer1\Bursts\SACCHBurst.cs" />
+    <Compile Include="Libraries\GSM\Layer1\Bursts\TCHBurst.cs" />
     <Compile Include="Libraries\GSM\CharacterCoding\GSM7Bit.cs" />
-    <Compile Include="Libraries\GSM\Layer1\CRC.cs" />
-    <Compile Include="Libraries\GSM\Bursts\FCHBurst.cs" />
+    <Compile Include="Libraries\GSM\Layer2\CRC.cs" />
+    <Compile Include="Libraries\GSM\Layer1\Bursts\FCHBurst.cs" />
     <Compile Include="Libraries\GSM\Layer1\FCCHFinder.cs" />
-    <Compile Include="Libraries\GSM\Layer1\FireCode.cs" />
+    <Compile Include="Libraries\GSM\Layer2\FireCode.cs" />
     <Compile Include="Libraries\GSM\Layer1\GSMParameters.cs" />
     <Compile Include="Libraries\GSM\Layer2\L2Handler.cs" />
     <Compile Include="Libraries\GSM\Layer3\CBCHandler.cs" />
@@ -236,9 +250,9 @@
     <Compile Include="Libraries\FrequencyFormatter.cs" />
     <Compile Include="Libraries\GSM\Misc\GaussKrueger.cs" />
     <Compile Include="Libraries\GSM\Misc\MCCTable.cs" />
-    <Compile Include="Libraries\GSM\Bursts\NormalBurst.cs" />
-    <Compile Include="Libraries\GSM\Bursts\SCHBurst.cs" />
-    <Compile Include="Libraries\GSM\Bursts\SDCCHBurst.cs" />
+    <Compile Include="Libraries\GSM\Layer1\Bursts\NormalBurst.cs" />
+    <Compile Include="Libraries\GSM\Layer1\Bursts\SCHBurst.cs" />
+    <Compile Include="Libraries\GSM\Layer1\Bursts\SDCCHBurst.cs" />
     <Compile Include="Libraries\GSM\Layer1\SequenceGenerator.cs" />
     <Compile Include="Libraries\GSM\Layer1\TimeSlotHandler.cs" />
     <Compile Include="Libraries\GSM\Layer3\L3Handler.cs" />
@@ -262,10 +276,15 @@
     <Compile Include="Libraries\Timers\HighPerformanceCounter.cs" />
     <Compile Include="Libraries\USB-RX\Devices\AD6636.cs" />
     <Compile Include="Libraries\USB-RX\Devices\Atmel.cs" />
+    <Compile Include="Libraries\USB-RX\Devices\AtmelProgrammer.cs" />
     <Compile Include="Libraries\USB-RX\Interfaces\AD6636Interface.cs" />
     <Compile Include="Libraries\USB-RX\Interfaces\I2CInterface.cs" />
     <Compile Include="Libraries\USB-RX\Interfaces\SPIInterface.cs" />
     <Compile Include="Libraries\USB-RX\Misc\AD6636FilterFile.cs" />
+    <Compile Include="Libraries\USB-RX\Misc\AtmelFilter.cs" />
+    <Compile Include="Libraries\USB-RX\Misc\FilterInformation.cs" />
+    <Compile Include="Libraries\USB-RX\Misc\IntelHexFile.cs" />
+    <Compile Include="Libraries\USB-RX\Misc\MemoryDump.cs" />
     <Compile Include="Libraries\USB-RX\Tuners\DigitalTuner.cs" />
     <Compile Include="Libraries\USB-RX\Tuners\Tuner.cs" />
     <Compile Include="Libraries\USB-RX\Devices\MT2131.cs" />
@@ -279,8 +298,12 @@
       <DependentUpon>DirectXPhaseDisplay.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Components\GDI\AD6636FilterList.resx">
-      <DependentUpon>AD6636FilterList.cs</DependentUpon>
+    <EmbeddedResource Include="Components\DirectX\DirectXWaveformDisplay.resx">
+      <DependentUpon>DirectXWaveformDisplay.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Components\GDI\FilterList.resx">
+      <DependentUpon>FilterList.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Components\GDI\CFileDecimationDialog.resx">
@@ -291,8 +314,8 @@
       <DependentUpon>DifferenciateDisplay.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Components\DirectX\DirectXWaveformDisplay.resx">
-      <DependentUpon>DirectXWaveformDisplay.cs</DependentUpon>
+    <EmbeddedResource Include="Components\DirectX\DirectXWaveformDisplayOld.resx">
+      <DependentUpon>DirectXWaveformDisplayOld.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Components\DirectX\DirectXFFTDisplay.resx">
@@ -309,6 +332,10 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Components\GDI\FFTDisplay.resx">
       <DependentUpon>FFTDisplay.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Components\GDI\LogWindow.resx">
+      <DependentUpon>LogWindow.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Components\GDI\StatusLamp.resx">

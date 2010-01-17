@@ -1,8 +1,11 @@
 ﻿using System;
-using LibRXFFT.Libraries.GMSK;
-using LibRXFFT.Libraries.GSM.Bursts;
+
+
 using LibRXFFT.Libraries.GSM.Layer3;
 using LibRXFFT.Libraries.SignalProcessing;
+using LibRXFFT.Libraries.GSM.Layer1.Bursts;
+using LibRXFFT.Libraries.GSM.Layer1.GMSK;
+using LibRXFFT.Libraries.GSM.Layer1.ChannelCoding;
 
 namespace LibRXFFT.Libraries.GSM.Layer1
 {

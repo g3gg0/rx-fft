@@ -8,16 +8,16 @@ using System.Collections;
 namespace LibRXFFT.Libraries.USB_RX.Misc
 {
 
-    public class AD6636FilterFile : IComparable
+    public class AD6636FilterFile : FilterInformation, IComparable
     {
-        public String ProgramVersion;
-        public String DeviceName;
-        public String FileName;
+        public string ProgramVersion;
+        public string DeviceName;
+        public string FileName;
 
-        public long Width;
+        public long _Width;
 
         public long InputFrequency;
-        public long OutputFrequency;
+        public long _OutputFrequency;
         public long Decimation;
         public long PLLMult;
         public long PLLDiv;
@@ -104,15 +104,39 @@ namespace LibRXFFT.Libraries.USB_RX.Misc
 
         }
 
+        public long Width
+        {
+            get
+            {
+                return _Width;
+            }
+        }
+
+        public long Rate
+        {
+            get
+            {
+                return _OutputFrequency;
+            }
+        }
+
+        public string Location
+        {
+            get
+            {
+                return FileName;
+            }
+        }
+
         private void ParseFile()
         {
             ProgramVersion = ReadSectionFieldString("Filter Design", "Version");
             DeviceName = ReadSectionFieldString("Device", "Name");
 
-            Width = 2 * ReadSectionFieldLong("Ideal Response", "Frequency");
+            _Width = 2 * ReadSectionFieldLong("Ideal Response", "Frequency");
 
             InputFrequency = (long)ReadSectionFieldDouble(DeviceName, "Input Frequency");
-            OutputFrequency = (long)ReadSectionFieldDouble(DeviceName, "Output Frequency");
+            _OutputFrequency = (long)ReadSectionFieldDouble(DeviceName, "Output Frequency");
             Decimation = (long)ReadSectionFieldDouble(DeviceName, "Decimation");
             PLLMult = ReadSectionFieldLong(DeviceName, "PLL Multiplier");
             PLLDiv = ReadSectionFieldLong(DeviceName, "PLL Divider");
@@ -305,7 +329,7 @@ namespace LibRXFFT.Libraries.USB_RX.Misc
             }
             AD6636FilterFile other = (AD6636FilterFile)obj;
 
-            return (Width < other.Width) ? -1 : 1;
+            return (Width > other.Width) ? -1 : 1;
         }
 
         #endregion

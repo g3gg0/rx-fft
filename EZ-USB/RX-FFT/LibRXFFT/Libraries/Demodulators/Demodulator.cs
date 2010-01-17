@@ -7,7 +7,7 @@ namespace LibRXFFT.Libraries.Demodulators
 {
     public class Demodulator
     {
-        public static bool UseNative = false;
+        public static bool UseNative = true;
         protected IntPtr NativeContext;
 
         public virtual double[] ProcessData(byte[] inBuffer, double[] outData)

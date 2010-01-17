@@ -1,5 +1,6 @@
-﻿using LibRXFFT.Libraries.GMSK;
+﻿
 using LibRXFFT.Libraries.SignalProcessing;
+using LibRXFFT.Libraries.GSM.Layer1.ChannelCoding;
 
 namespace LibRXFFT.Libraries.GSM.Layer1
 {

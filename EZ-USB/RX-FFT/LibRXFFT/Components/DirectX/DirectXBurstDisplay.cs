@@ -6,7 +6,7 @@ using SlimDX.Direct3D9;
 
 namespace LibRXFFT.Components.DirectX
 {
-    public class DirectXBurstDisplay : DirectXWaveformDisplay
+    public class DirectXBurstDisplay : DirectXWaveformDisplayOld
     {
         uint[,] BitLineColorTable = new uint[,] { { 0xFFFF3030, 0xF8F0000 }, { 0xFF9F1818, 0xFF7F1818 }, { 0xFF7F0C0C, 0xFF4F0C0C }, { 0xFF5F0000, 0xFF2F0000 }, { 0xFF3F0000, 0xFF1F0000 } };
 

@@ -42,7 +42,7 @@ namespace LibRXFFT.Libraries.FFTW
         public bool ResultAvailable = false;
         public bool Available = false;
 
-        public static bool UseFFTW = false;
+        public static bool UseFFTW = true;
 
         /* differences in signal are at about -200dB */
         public static bool DiffFFTWKISS = false;

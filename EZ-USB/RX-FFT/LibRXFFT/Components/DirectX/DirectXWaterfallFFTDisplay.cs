@@ -19,6 +19,7 @@ namespace LibRXFFT.Components.DirectX
         private FFTTransformer FFT = new FFTTransformer(256);
         private int _FFTSize = 256;
         private double[] FFTResult = new double[256];
+        private double[] FFTResultPartial = new double[256];
 
         private bool LevelBarActive = false;
         private LabelledLine LevelBarUpper = new LabelledLine("Waterfall upper limit", 0, Color.BlueViolet);
@@ -66,11 +67,108 @@ namespace LibRXFFT.Components.DirectX
             //WaterfallDisplay.EventActions[eUserEvent.MouseWheelDownAlt] = eUserAction.UserCallback;
         }
 
+        public string[] DisplayInformation
+        {
+            get
+            {
+                return FFTDisplay.DisplayInformation;
+            }
+        }
+
         public void AddUserEventCallback(eUserEvent evt)
         {
             FFTDisplay.EventActions[evt] = eUserAction.UserCallback;
             WaterfallDisplay.EventActions[evt] = eUserAction.UserCallback;
         }
+
+        #region FFT Filter width display
+
+        public string LimiterUpperDescription
+        {
+            get
+            {
+                return FFTDisplay.LimiterUpperDescription;
+            }
+            set
+            {
+                FFTDisplay.LimiterUpperDescription = value;
+            }
+        }
+
+        public string LimiterLowerDescription
+        {
+            get
+            {
+                return FFTDisplay.LimiterLowerDescription;
+            }
+            set
+            {
+                FFTDisplay.LimiterLowerDescription = value;
+            }
+        }
+
+        public bool LimiterDisplayEnabled
+        {
+            get
+            {
+                return FFTDisplay.LimiterDisplayEnabled;
+            }
+            set
+            {
+                FFTDisplay.LimiterDisplayEnabled = value;
+            }
+        }
+
+        public double LimiterLowerLimit
+        {
+            get
+            {
+                return FFTDisplay.LimiterLowerLimit;
+            }
+            set
+            {
+                FFTDisplay.LimiterLowerLimit = value;
+            }
+        }
+
+        public double LimiterUpperLimit
+        {
+            get
+            {
+                return FFTDisplay.LimiterUpperLimit;
+            }
+            set
+            {
+                FFTDisplay.LimiterUpperLimit = value;
+            }
+        }
+
+        public Color LimiterColor
+        {
+            get
+            {
+                return FFTDisplay.LimiterColor;
+            }
+            set
+            {
+                FFTDisplay.LimiterColor = value;
+            }
+        }
+
+        #endregion
+
+        public bool DynamicLimits
+        {
+            get
+            {
+                return WaterfallDisplay.DynamicLimits;
+            }
+            set
+            {
+                WaterfallDisplay.DynamicLimits = value;
+            }
+        }
+
 
         /* return a value between -0.5 to 0.5 that indicates the cursor position relative to the center */
         public double RelativeCursorXPos
@@ -86,16 +184,63 @@ namespace LibRXFFT.Components.DirectX
             return FFTDisplay.FrequencyFromCursorPosOffset(xOffset);
         }
 
+        public double FitSpectrumWidth = 1;
+
+        public bool _FitSpectrumEnabled;
+        public bool FitSpectrumEnabled
+        {
+            get
+            {
+                return _FitSpectrumEnabled;
+            }
+            set
+            {
+                _FitSpectrumEnabled = value;
+
+                /* update sampling rates again */
+                SamplingRate = SamplingRate;
+            }
+        }
+
+        public double _SamplingRate;
         public double SamplingRate
         {
             set 
-            { 
-                FFTDisplay.SamplingRate = value;
-                WaterfallDisplay.SamplingRate = value;
+            {
+                _SamplingRate = value;
+                if (FitSpectrumEnabled)
+                {
+                    FFTDisplay.SamplingRate = value * FitSpectrumWidth;
+                    WaterfallDisplay.SamplingRate = value * FitSpectrumWidth;
+                }
+                else
+                {
+                    FFTDisplay.SamplingRate = value;
+                    WaterfallDisplay.SamplingRate = value;
+                }
             }
-            get { return FFTDisplay.SamplingRate; }
+            get { return _SamplingRate; }
         }
 
+        public bool ChannelMode
+        {
+            get { return FFTDisplay.ChannelMode; }
+            set
+            {
+                FFTDisplay.ChannelMode = value;
+                WaterfallDisplay.ChannelMode = value;
+            }
+        }
+
+        public FrequencyBand ChannelBandDetails
+        {
+            get { return FFTDisplay.ChannelBandDetails; }
+            set
+            {
+                FFTDisplay.ChannelBandDetails = value;
+                WaterfallDisplay.ChannelBandDetails = value;
+            }
+        }
 
         public double UpdateRate
         {
@@ -183,22 +328,37 @@ namespace LibRXFFT.Components.DirectX
 
                 /* used to paint waterfall level bars */
                 case eUserEvent.StatusUpdated:
+                    /* level bars toggled off */
                     if (!WaterfallDisplay.LevelBarActive && LevelBarActive)
                     {
                         FFTDisplay.LabelledHorLines.Remove(LevelBarLower);
-                        FFTDisplay.LabelledHorLines.Remove(LevelBarUpper);
+                        if (!WaterfallDisplay.DynamicLimits)
+                        {
+                            FFTDisplay.LabelledHorLines.Remove(LevelBarUpper);
+                        }
                         LevelBarActive = false;
                     }
 
+                    /* level bars toggled on */
                     if (WaterfallDisplay.LevelBarActive && !LevelBarActive)
                     {
                         FFTDisplay.LabelledHorLines.AddLast(LevelBarLower);
-                        FFTDisplay.LabelledHorLines.AddLast(LevelBarUpper);
+                        if (!WaterfallDisplay.DynamicLimits)
+                        {
+                            FFTDisplay.LabelledHorLines.AddLast(LevelBarUpper);
+                        }
                         LevelBarActive = true;
                     }
 
-                    LevelBarLower.Position = WaterfallDisplay.LeveldBBlack;
-                    LevelBarUpper.Position = WaterfallDisplay.LeveldBWhite;
+                    if (!WaterfallDisplay.DynamicLimits)
+                    {
+                        LevelBarLower.Position = WaterfallDisplay.LeveldBBlack;
+                        LevelBarUpper.Position = WaterfallDisplay.LeveldBWhite;
+                    }
+                    else
+                    {
+                        LevelBarLower.Position = WaterfallDisplay.LeveldBBlack;
+                    }
                     FFTDisplay.UpdateOverlays = true;
                     break;
 
@@ -259,6 +419,16 @@ namespace LibRXFFT.Components.DirectX
             if (UserEventCallback != null)
             {
                 UserEventCallback(evt, param);
+            }
+        }
+
+        public int SpectParts
+        {
+            get { return FFTDisplay.SpectParts; }
+            set
+            {
+                FFTDisplay.SpectParts = value;
+                WaterfallDisplay.SpectParts = value;
             }
         }
 
@@ -325,6 +495,11 @@ namespace LibRXFFT.Components.DirectX
 
         public void ProcessData(double[] iSamples, double[] qSamples)
         {
+            ProcessData(iSamples, qSamples, 0, 0);
+        }
+
+        public void ProcessData(double[] iSamples, double[] qSamples, int spectPart, double baseAmp)
+        {
             if (FFTDisplay.EnoughData)
                 return;
 
@@ -343,15 +518,41 @@ namespace LibRXFFT.Components.DirectX
                     {
                         FFT.GetResultSquared(FFTResult);
 
-                        FFTDisplay.ProcessFFTData(FFTResult);
-                        WaterfallDisplay.ProcessFFTData(FFTResult);
+                        if (FitSpectrumEnabled)
+                        {
+                            CenterCut((int)(FitSpectrumWidth * FFTSize));
+                            FFTDisplay.ProcessFFTData(FFTResultPartial, spectPart, baseAmp);
+                            WaterfallDisplay.ProcessFFTData(FFTResultPartial, spectPart, baseAmp);
+                        }
+                        else
+                        {
+                            FFTDisplay.ProcessFFTData(FFTResult, spectPart, baseAmp);
+                            WaterfallDisplay.ProcessFFTData(FFTResult, spectPart, baseAmp);
+                        }
                     }
                 }
             }
         }
 
+        private void CenterCut(int FFTCenterWidth)
+        {
+            if (FFTResultPartial.Length !=  FFTCenterWidth)
+            {
+                FFTResultPartial = new double[FFTCenterWidth];
+            }
+
+            for (int pos = 0; pos < FFTCenterWidth; pos++)
+            {
+                FFTResultPartial[pos] = FFTResult[FFTResult.Length / 2 - FFTCenterWidth / 2 + pos];
+            }
+        }
 
         public void ProcessSample(double I, double Q)
+        {
+            ProcessSample(I, Q, 0, 1, 0);
+        }
+
+        public void ProcessSample(double I, double Q, int spectPart, int spectParts, double baseAmp)
         {
             lock (FFTLock)
             {
@@ -361,11 +562,12 @@ namespace LibRXFFT.Components.DirectX
                 {
                     FFT.GetResultSquared(FFTResult);
 
-                    FFTDisplay.ProcessFFTData(FFTResult);
-                    WaterfallDisplay.ProcessFFTData(FFTResult);
+                    FFTDisplay.ProcessFFTData(FFTResult, spectPart, baseAmp);
+                    WaterfallDisplay.ProcessFFTData(FFTResult, spectPart, baseAmp);
                 }
             }
         }
+
 
         public LinkedList<FrequencyMarker> Markers
         {
@@ -381,6 +583,5 @@ namespace LibRXFFT.Components.DirectX
                 FFTDisplay.UpdateOverlays = true;
             }
         }
-
     }
 }

@@ -11,6 +11,7 @@ using SlimDX;
 using SlimDX.Direct3D9;
 using Device = SlimDX.Direct3D9.Device;
 using Font = SlimDX.Direct3D9.Font;
+using RX_FFT.Components.GDI;
 
 namespace LibRXFFT.Components.DirectX
 {
@@ -22,9 +23,10 @@ namespace LibRXFFT.Components.DirectX
             get { return 1000 / RenderSleepDelay; }
             set { RenderSleepDelay = 1000 / value; }
         }
-        public double RenderSleepDelay = 1000 / 25;
+        public double RenderSleepDelay = 1000 / 60;
         public DirectXPlot SlavePlot = null;
 
+        public bool KeepText = false;
         public string MainText = "";
         public string MainTextPrev = "";
  
@@ -35,11 +37,16 @@ namespace LibRXFFT.Components.DirectX
 
         protected bool YAxisCentered = true;
 
+        protected int DirectXResetTries = 0;
+        protected int DirectXResetTriesMax = 500;
         protected bool DirectXAvailable = false;
 
         protected Direct3D Direct3D;
         protected PresentParameters PresentParameters;
 
+        protected int DefaultAdapter;
+        protected Capabilities DeviceCaps;
+        protected CreateFlags DeviceCreateFlags;
         protected Device Device;
         protected Font DisplayFont;
         protected Font SmallFont;
@@ -88,9 +95,6 @@ namespace LibRXFFT.Components.DirectX
         public Dictionary<eUserEvent, eUserAction> EventActions = new Dictionary<eUserEvent, eUserAction>();
 
 
-
-
-
         /* values are in pixels and set by the DragX/Y functions */
         protected double DisplayXOffset = 0;
         protected double DisplayYOffset = 0;
@@ -109,6 +113,10 @@ namespace LibRXFFT.Components.DirectX
 
         public double YZoomFactor { get; set; }
         public double XZoomFactor { get; set; }
+        public double YZoomFactorMax { get; set; }
+        public double YZoomFactorMin { get; set; }
+        public double XZoomFactorMax { get; set; }
+        public double XZoomFactorMin { get; set; }
 
         public Color ColorOverview { get; set; }
         public Color ColorFont { get; set; }
@@ -116,6 +124,8 @@ namespace LibRXFFT.Components.DirectX
         public Color ColorBG { get; set; }
         public Color ColorCursor { get; set; }
 
+        private Cursor EmptyCursor;
+        private Cursor DefaultCursor;
 
         public DirectXPlot() : this(false)
         { 
@@ -131,6 +141,14 @@ namespace LibRXFFT.Components.DirectX
             ColorBG = Color.Black;
             ColorCursor = Color.Red;
 
+            YZoomFactorMax = 50;
+            YZoomFactorMin = 0.01d;
+            XZoomFactorMax = 20;
+            XZoomFactorMin = 1;
+            
+            DefaultCursor = this.Cursor;
+            EmptyCursor = CreateEmptyCursor();
+
             try
             {
                 InitializeDirectX();
@@ -141,7 +159,33 @@ namespace LibRXFFT.Components.DirectX
             }
         }
 
-        void SetDefaultActions()
+        public string[] DisplayInformation
+        {
+            get
+            {
+                ArrayList lines = new ArrayList();
+
+                lines.Add("Name:              " + Direct3D.Adapters.DefaultAdapter.Details.DeviceName);
+                lines.Add("Driver:            " + Direct3D.Adapters.DefaultAdapter.Details.DriverName);
+                lines.Add("MaxTextureHeight:  " + DeviceCaps.MaxTextureHeight);
+                lines.Add("MaxTextureWidth:   " + DeviceCaps.MaxTextureWidth);
+                lines.Add("Multisample:       " + PresentParameters.Multisample);
+                lines.Add("DeviceCaps:        " + DeviceCaps.DeviceCaps);
+                
+                return (string[])lines.ToArray(typeof(string));
+            }
+        }
+
+        protected Cursor CreateEmptyCursor()
+        {
+            Bitmap b = new Bitmap(16, 16);
+            Graphics g = Graphics.FromImage(b);
+            IntPtr ptr = b.GetHicon();
+
+            return new Cursor(ptr);
+        }
+
+        protected void SetDefaultActions()
         {
             EventActions[eUserEvent.MousePosX] = eUserAction.XPos;
             EventActions[eUserEvent.MousePosY] = eUserAction.YPos;
@@ -292,17 +336,22 @@ namespace LibRXFFT.Components.DirectX
             {
                 DirectXLock.WaitOne();
 
+                DirectXResetTries = 0;
                 DirectXHeight = Height;
                 DirectXWidth = Width;
 
+                if (DeviceCaps != null)
+                {
+                    DirectXHeight = Math.Min(DirectXHeight, DeviceCaps.MaxTextureHeight);
+                    DirectXWidth = Math.Min(DirectXWidth, DeviceCaps.MaxTextureWidth);
+                }
+                
                 /* deciding between soft and hard initialization */
                 if (Direct3D == null)
                 {
                     /* Direct3D init */
                     Direct3D = new Direct3D();
-
-                    /* device initialization */
-
+                    
                     /* we dont need to allocate that all the time. once is enough */
                     AllocateDevices();
 
@@ -343,17 +392,46 @@ namespace LibRXFFT.Components.DirectX
 
         protected virtual void AllocateDevices()
         {
+            DefaultAdapter = Direct3D.Adapters.DefaultAdapter.Adapter;
+            DeviceCaps = Direct3D.GetDeviceCaps(DefaultAdapter, DeviceType.Hardware);
+
+            DeviceCreateFlags = CreateFlags.Multithreaded;
+
+            DirectXHeight = Math.Min(DirectXHeight, DeviceCaps.MaxTextureHeight);
+            DirectXWidth = Math.Min(DirectXWidth, DeviceCaps.MaxTextureWidth);
+
+
+            // supports hardware vertex processing?
+            if ((DeviceCaps.DeviceCaps & SlimDX.Direct3D9.DeviceCaps.HWTransformAndLight) != 0)
+            {
+                DeviceCreateFlags |= CreateFlags.HardwareVertexProcessing;
+            }
+            else
+            {
+                DeviceCreateFlags |= CreateFlags.SoftwareVertexProcessing;
+            }
+            
             if (PresentParameters == null)
             {
                 PresentParameters = new PresentParameters();
                 PresentParameters.BackBufferHeight = DirectXHeight;
                 PresentParameters.BackBufferWidth = DirectXWidth;
                 PresentParameters.DeviceWindowHandle = Handle;
-                PresentParameters.BackBufferFormat = Format.A8R8G8B8;
                 PresentParameters.Multisample = MultisampleType.TwoSamples;
-            }
+                PresentParameters.BackBufferFormat = Format.A8R8G8B8;
 
-            Device = new Device(Direct3D, 0, DeviceType.Hardware, Handle, CreateFlags.HardwareVertexProcessing, PresentParameters);
+                if (Direct3D.CheckDeviceMultisampleType(DefaultAdapter, DeviceType.Hardware, PresentParameters.BackBufferFormat, true, MultisampleType.TwoSamples))
+                {
+                    PresentParameters.Multisample = MultisampleType.TwoSamples;
+                }
+                else
+                {
+                    PresentParameters.Multisample = MultisampleType.None;
+                }
+            }
+            
+            Device = new Device(Direct3D, DefaultAdapter, DeviceType.Hardware, PresentParameters.DeviceWindowHandle, DeviceCreateFlags, PresentParameters);
+            Device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, ColorBG, 1.0f, 0);
 
             Device.SetRenderState(RenderState.AlphaBlendEnable, true);
             Device.SetRenderState(RenderState.SourceBlend, Blend.SourceAlpha);
@@ -365,6 +443,7 @@ namespace LibRXFFT.Components.DirectX
             PresentParameters.BackBufferHeight = DirectXHeight;
             PresentParameters.BackBufferWidth = DirectXWidth;
             Device.Reset(PresentParameters);
+            Device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, ColorBG, 1.0f, 0);
             Device.SetRenderState(RenderState.AlphaBlendEnable, true);
             Device.SetRenderState(RenderState.SourceBlend, Blend.SourceAlpha);
             Device.SetRenderState(RenderState.DestinationBlend, Blend.InverseSourceAlpha);
@@ -531,9 +610,9 @@ namespace LibRXFFT.Components.DirectX
             int centerPos = (int)((startPos + endPos) / 2);
 
             Device.DrawUserPrimitives(PrimitiveType.LineList, OverviewVertexCount/2, OverviewVertexes);
-            SmallFont.DrawString(null, XLabelFromSampleNum(startPos), startPos + 10, 60, ColorFont.ToArgb());
-            SmallFont.DrawString(null, XLabelFromSampleNum(endPos), endPos + 10, 60, ColorFont.ToArgb());
-            SmallFont.DrawString(null, XLabelFromSampleNum(centerPos), centerPos, 60, ColorFont.ToArgb());
+            SmallFont.DrawString(null, XLabelFromSampleNum(startPos), startPos + 10, 40, ColorFont.ToArgb());
+            SmallFont.DrawString(null, XLabelFromSampleNum(centerPos), centerPos, 50, ColorFont.ToArgb());
+            SmallFont.DrawString(null, XLabelFromSampleNum(endPos), endPos + 10, 40, ColorFont.ToArgb());
         }
 
         internal virtual void PrepareLinePoints()
@@ -543,10 +622,11 @@ namespace LibRXFFT.Components.DirectX
 
         protected virtual void RenderCore()
         {
-            Device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, ColorBG, 1.0f, 0);
             Device.BeginScene();
+            
+            Device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, ColorBG, 1.0f, 0);
             Device.VertexFormat = VertexFormat.PositionRhw | VertexFormat.Diffuse;
-
+            
             RenderAxis();
             RenderPlotVerts();
             RenderOverlay();
@@ -554,7 +634,7 @@ namespace LibRXFFT.Components.DirectX
 
             DisplayFont.DrawString(null, MainText, 20, 30, ColorBG);
             DisplayFont.DrawString(null, MainText, 21, 31, ColorFont);
-
+            
             Device.EndScene();
             Device.Present();
         }
@@ -562,9 +642,28 @@ namespace LibRXFFT.Components.DirectX
 
         internal virtual void Render()
         {
-            
+
             if (!DirectXAvailable)
+            {
+                if (++DirectXResetTries >= DirectXResetTriesMax)
+                {
+                    if (!DirectXAvailable)
+                    {
+                        MessageBox.Show("Failed to re-init DirectX within " + (DirectXResetTriesMax /10) + " seconds.");
+                        Thread.Sleep(1000);
+                    }
+                }
+                try
+                {
+                    BeginInvoke(new ResetDirectXDelegate(ResetDirectX), null);
+                }
+                catch (Exception e)
+                {
+                }
+                Thread.Sleep(100);
+
                 return;
+            }
 
             try
             {
@@ -576,19 +675,6 @@ namespace LibRXFFT.Components.DirectX
             {
                 DirectXAvailable = false;
                 DirectXLock.ReleaseMutex();
-
-                int loops = 50;
-                while (!DirectXAvailable && loops-- > 0)
-                {
-                    BeginInvoke(new ResetDirectXDelegate(ResetDirectX), null);
-                    Thread.Sleep(100);
-                }
-
-                if (!DirectXAvailable)
-                {
-                    MessageBox.Show("Failed to re-init DirectX within 10 seconds.");
-                    System.Console.WriteLine(e.ToString());
-                }
             }
         }
 
@@ -780,7 +866,8 @@ namespace LibRXFFT.Components.DirectX
 
                 case eUserAction.XOffset:
                     oldOffset = DisplayXOffset;
-                    delta1 = param + DisplayXOffset;
+
+                    delta1 = param + oldOffset;
                     delta2 = Math.Min(XMaximum * XZoomFactor - DirectXWidth, delta1);
                     DisplayXOffset = Math.Max(0, delta2);
 
@@ -796,7 +883,7 @@ namespace LibRXFFT.Components.DirectX
                 case eUserAction.YOffset:
                     oldOffset = DisplayYOffset;
 
-                    param += DisplayYOffset;
+                    param += oldOffset;
                     param = Math.Min(DirectXHeight * YZoomFactor, param);
                     DisplayYOffset = Math.Max(-DirectXHeight * YZoomFactor, param);
 
@@ -804,12 +891,13 @@ namespace LibRXFFT.Components.DirectX
                     {
                         UpdateAxis = true;
                         UpdateCursor = true;
+                        UpdateOverlays = true;
                     }
 
                     break;
 
                 case eUserAction.XZoomIn:
-                    if (XZoomFactor < 20.0f)
+                    if (XZoomFactor < XZoomFactorMax)
                     {
                         DisplayXOffset = (DisplayXOffset + LastMousePos.X) * XZoomStep - LastMousePos.X;
                         XZoomFactor *= XZoomStep;
@@ -828,7 +916,7 @@ namespace LibRXFFT.Components.DirectX
                     break;
 
                 case eUserAction.XZoomOut:
-                    if (XZoomFactor > 0.01f)
+                    if (XZoomFactor > XZoomFactorMin)
                     {
                         DisplayXOffset = (DisplayXOffset + LastMousePos.X) / XZoomStep - LastMousePos.X;
                         XZoomFactor /= XZoomStep;
@@ -847,8 +935,9 @@ namespace LibRXFFT.Components.DirectX
                     break;
 
                 case eUserAction.YZoomIn:
-                    if (YZoomFactor < 50.0f)
+                    if (YZoomFactor < YZoomFactorMax)
                     {
+                        DisplayYOffset = (LastMousePos.Y + DisplayYOffset) * YZoomStep - LastMousePos.Y;
                         YZoomFactor *= YZoomStep;
 
                         /* call ourselves again for min/max fitting */
@@ -856,13 +945,15 @@ namespace LibRXFFT.Components.DirectX
 
                         UpdateAxis = true;
                         UpdateCursor = true;
+                        UpdateOverlays = true;
                     }
 
                     break;
 
                 case eUserAction.YZoomOut:
-                    if (YZoomFactor > 0.001f)
+                    if (YZoomFactor > YZoomFactorMin)
                     {
+                        DisplayYOffset = (LastMousePos.Y + DisplayYOffset) / YZoomStep - LastMousePos.Y;
                         YZoomFactor /= YZoomStep;
 
                         /* call ourselves again for min/max fitting */
@@ -870,6 +961,7 @@ namespace LibRXFFT.Components.DirectX
 
                         UpdateAxis = true;
                         UpdateCursor = true;
+                        UpdateOverlays = true;
                     }
 
                     break;
@@ -907,13 +999,13 @@ namespace LibRXFFT.Components.DirectX
                 }
             }
 
-
             if (OverviewModeEnabled)
             {
                 if (ShiftPressed && !OverviewMode)
                 {
                     OverviewMode = true;
                     UpdateOverlays = true;
+                    UpdateCursor = true;
                     MainTextPrev = MainText;
                     MainText = "Zoom Selection";
                 }
@@ -952,22 +1044,38 @@ namespace LibRXFFT.Components.DirectX
             {
                 if (!ShiftPressed && OverviewMode)
                 {
-                    ResetModifiers();
+                    ResetModifiers(false);
                 }
             }
         }
+        protected virtual void ResetModifiers(bool forceUnhover)
+        {
+            ResetModifiers(forceUnhover, false);
+        }
 
-        protected virtual void ResetModifiers()
+        protected virtual void ResetModifiers(bool forceUnhover, bool keepText)
         {
             ShiftPressed = false;
             AltPressed = false;
             ControlPressed = false;
-            MouseHovering = false;       
             OverviewMode = false;
             UpdateOverlays = true;
+            UpdateCursor = true;
+            MouseHovering = ClientRectangle.Contains(PointToClient(Control.MousePosition));
+            if (MouseHovering && !forceUnhover)
+            {
+                Cursor = EmptyCursor;
+            }
+            else
+            {
+                Cursor = DefaultCursor;
+            }
 
-            MainText = MainTextPrev;
-            MainTextPrev = "";
+            if (!keepText)
+            {
+                MainText = MainTextPrev;
+                MainTextPrev = "";
+            }
 
             if (UserEventCallback != null)
                 UserEventCallback(eUserEvent.StatusUpdated, 0);
@@ -977,6 +1085,7 @@ namespace LibRXFFT.Components.DirectX
         {
             //Focus();
             ProcessUserEvent(eUserEvent.StatusUpdated, 0);
+            Cursor = EmptyCursor;
             MouseHovering = true;
             UpdateCursor = true;
             ProcessUserEvent(eUserEvent.MouseEnter, 0);
@@ -984,9 +1093,9 @@ namespace LibRXFFT.Components.DirectX
 
         protected override void OnMouseLeave(EventArgs e)
         {
-            ResetModifiers();
+            ResetModifiers(true, true);
             UpdateCursor = true;
-            ProcessUserEvent(eUserEvent.MouseLeave, 0);
+            ProcessUserEvent(eUserEvent.MouseLeave, 0);            
         }
 
         protected override void OnMouseDoubleClick(MouseEventArgs e)

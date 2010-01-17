@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using LibRXFFT.Libraries.GSM.Layer1;
-using LibRXFFT.Libraries.GMSK;
+
 using LibRXFFT.Libraries.GSM.Layer3;
 using System.IO;
 using LibRXFFT.Libraries.GSM.Misc;
+using LibRXFFT.Libraries.GSM.Layer2;
+using LibRXFFT.Libraries.GSM.Layer1.ChannelCoding;
 
-namespace LibRXFFT.Libraries.GSM.Bursts
+namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
 {
     public class TCHBurst : NormalBurst
     {

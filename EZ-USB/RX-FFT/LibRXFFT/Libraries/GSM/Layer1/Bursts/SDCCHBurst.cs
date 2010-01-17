@@ -1,9 +1,9 @@
 ﻿using System;
-using LibRXFFT.Libraries.GMSK;
+
 using LibRXFFT.Libraries.GSM.Layer1;
 using LibRXFFT.Libraries.GSM.Layer3;
 
-namespace LibRXFFT.Libraries.GSM.Bursts
+namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
 {
     public class SDCCHBurst : NormalBurst
     {

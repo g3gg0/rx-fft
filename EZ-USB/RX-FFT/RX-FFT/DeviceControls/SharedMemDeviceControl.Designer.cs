@@ -1,4 +1,6 @@
-﻿namespace RX_FFT.DeviceControls
+﻿using System;
+
+namespace RX_FFT.DeviceControls
 {
     partial class SharedMemDeviceControl
     {
@@ -34,5 +36,6 @@
         }
 
         #endregion
+
     }
 }

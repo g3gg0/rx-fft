@@ -912,7 +912,7 @@ namespace LibRXFFT.Components.DirectX
                 case eUserAction.XZoomOut:
                     if (XZoomFactor > XZoomFactorMin)
                     {
-                        DisplayXOffset = (DisplayXOffset + LastMousePos.X) / XZoomStep - LastMousePos.X;
+                        //DisplayXOffset = (DisplayXOffset + LastMousePos.X) / XZoomStep - LastMousePos.X;
                         XZoomFactor /= XZoomStep;
 
                         /* call ourselves again for min/max fitting */
@@ -931,7 +931,7 @@ namespace LibRXFFT.Components.DirectX
                 case eUserAction.YZoomIn:
                     if (YZoomFactor < YZoomFactorMax)
                     {
-                        DisplayYOffset = (LastMousePos.Y + DisplayYOffset) * YZoomStep - LastMousePos.Y;
+                        //DisplayYOffset = (LastMousePos.Y + DisplayYOffset) * YZoomStep - LastMousePos.Y;
                         YZoomFactor *= YZoomStep;
 
                         /* call ourselves again for min/max fitting */

@@ -43,7 +43,7 @@ namespace LibRXFFT.Libraries.ShmemChain
             shmemID = SharedMemNative.shmemchain_register_node(srcChan, dstChan);
 
             if (shmemID < 0)
-                throw new NotSupportedException("Failed to register shmem node. Error code #" + SharedMemNative.shmemchain_get_last_error());
+                throw new NotSupportedException("Failed to register shmem node. Error code #" + SharedMemNative.shmemchain_get_last_error() + " #" + SharedMemNative.shmemchain_get_last_errorcode());
         }
 
         public SharedMem(string name)
@@ -57,7 +57,7 @@ namespace LibRXFFT.Libraries.ShmemChain
             shmemID = SharedMemNative.shmemchain_register_node_special(srcChan, dstChan, defaultBufferSize, enc.GetBytes(name));
 
             if (shmemID < 0)
-                throw new NotSupportedException("Failed to register shmem node. Error code #" + SharedMemNative.shmemchain_get_last_error());
+                throw new NotSupportedException("Failed to register shmem node. Error code #" + SharedMemNative.shmemchain_get_last_error() + " #" + SharedMemNative.shmemchain_get_last_errorcode());
         }
 
         public SharedMem(int srcChan, int dstChan)
@@ -67,7 +67,7 @@ namespace LibRXFFT.Libraries.ShmemChain
             shmemID = SharedMemNative.shmemchain_register_node(srcChan, dstChan);
 
             if (shmemID < 0)
-                throw new NotSupportedException("Failed to register shmem node. Error code #" + SharedMemNative.shmemchain_get_last_error());
+                throw new NotSupportedException("Failed to register shmem node. Error code #" + SharedMemNative.shmemchain_get_last_error() + " #" + SharedMemNative.shmemchain_get_last_errorcode());
         }
 
         public SharedMem(int srcChan, int dstChan, string name)
@@ -81,7 +81,7 @@ namespace LibRXFFT.Libraries.ShmemChain
             shmemID = SharedMemNative.shmemchain_register_node_special(srcChan, dstChan, defaultBufferSize, enc.GetBytes(name));
 
             if (shmemID < 0)
-                throw new NotSupportedException("Failed to register shmem node. Error code #" + SharedMemNative.shmemchain_get_last_error());
+                throw new NotSupportedException("Failed to register shmem node. Error code #" + SharedMemNative.shmemchain_get_last_error() + " #" + SharedMemNative.shmemchain_get_last_errorcode());
         }
 
         public SharedMem(int srcChan, int dstChan, string name, int bufferSize)
@@ -95,13 +95,13 @@ namespace LibRXFFT.Libraries.ShmemChain
             shmemID = SharedMemNative.shmemchain_register_node_special(srcChan, dstChan, bufferSize, enc.GetBytes(name));
 
             if (shmemID < 0)
-                throw new NotSupportedException("Failed to register shmem node. Error code #" + SharedMemNative.shmemchain_get_last_error());
+                throw new NotSupportedException("Failed to register shmem node. Error code #" + SharedMemNative.shmemchain_get_last_error() + " #" + SharedMemNative.shmemchain_get_last_errorcode());
         }
 
         public static NodeInfo[] GetNodeInfos()
         {
             ArrayList nodes = new ArrayList();
-            int[] nodeIds = new int[64];
+            int[] nodeIds = new int[512];
             int used = SharedMemNative.shmemchain_get_all_nodes(nodeIds, nodeIds.Length);
 
             for (int pos = 0; pos < used; pos++)

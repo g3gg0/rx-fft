@@ -284,6 +284,11 @@ namespace GSM_Analyzer
             L2Handler.DumpRawData = chkL2DumpRaw.Checked;
         }
 
+        private void chkL2DumpFaulty_CheckedChanged(object sender, EventArgs e)
+        {
+            L2Handler.DumpFaulty = chkL2DumpFaulty.Checked;
+        }
+
         private void chkL2ShowAllFrames_CheckedChanged(object sender, EventArgs e)
         {
             L2Handler.ShowAllMessages = chkL2ShowAllFrames.Checked;

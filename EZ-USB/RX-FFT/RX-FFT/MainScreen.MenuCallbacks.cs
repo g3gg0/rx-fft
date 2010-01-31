@@ -8,6 +8,7 @@ using LibRXFFT.Components.DirectX;
 using LibRXFFT.Libraries;
 using RX_FFT.DeviceControls;
 using RX_FFT.Dialogs;
+using RX_Oscilloscope;
 
 namespace RX_FFT
 {
@@ -85,6 +86,7 @@ namespace RX_FFT
 
         private void closeMenu_Click(object sender, EventArgs e)
         {
+            StopThreads();
             CloseDevice();
         }
 
@@ -104,6 +106,9 @@ namespace RX_FFT
 
         private void scanBandMenu_Click(object sender, EventArgs e)
         {
+            if(!DeviceOpened)
+                return;
+
             FrequencyBand band = new FrequencyBand();
             band.BaseFrequency = 935014000;
             band.ChannelStart = 2;
@@ -118,13 +123,32 @@ namespace RX_FFT
                 {
                     ScanFrequencies.AddLast(new FrequencyMarker("Ch. " + channel, "", band.BaseFrequency + (channel - band.ChannelStart) * band.ChannelDistance));
                 }
+
+                CurrentScanFreq = ScanFrequencies.First;
                 ChannelBandDetails = band;
+
+                ScanStrongestFrequency = false;
                 ScanFrequenciesEnabled = true;
             }
             else
             {
                 ScanFrequenciesEnabled = false;
             }
+        }
+
+        private void scanMarkersMenu_Click(object sender, EventArgs e)
+        {
+            
+            ScanFrequencies.Clear();
+            foreach (FrequencyMarker marker in Markers)
+            {
+                ScanFrequencies.AddLast(marker);
+            }
+
+            CurrentScanFreq = ScanFrequencies.First;
+            ChannelBandDetails = new FrequencyBand();
+            ScanStrongestFrequency = true;
+            ScanFrequenciesEnabled = true;
         }
 
         private void demodulationMenu_Click(object sender, EventArgs e)
@@ -144,10 +168,8 @@ namespace RX_FFT
 
         private void quitMenu_Click(object sender, EventArgs e)
         {
-            if (DeviceOpened)
-            {
-                CloseDevice();
-            }
+            StopThreads();
+            CloseDevice();
             Close();
         }
 
@@ -343,23 +365,63 @@ namespace RX_FFT
 
         private void gsmAnalyzerMenu_Click(object sender, EventArgs e)
         {
-            GSMAnalyzer analyzer = new GSMAnalyzer();
+            if (!(Device is USBRXDeviceControl))
+            {
+                MessageBox.Show("Further analysis is not possible with the opened device.");
+                return;
+            }
 
-            analyzer.Show();
+            if (GsmAnalyzerWindow == null || GsmAnalyzerWindow.IsDisposed)
+            {
+                GsmAnalyzerWindow = new GSMAnalyzer();
+            }
+
+            GsmAnalyzerWindow.Show();
             if (Device != null)
             {
-                analyzer.OpenSharedMem(((USBRXDeviceControl)Device).ShmemChannel);
+                GsmAnalyzerWindow.OpenSharedMem(((USBRXDeviceControl)Device).ShmemChannel);
+                GsmAnalyzerWindow.Device = Device;
             }
         }
 
         private void digitalDemodulatorsMenu_Click(object sender, EventArgs e)
         {
-            DemodulatorDialog demod = new DemodulatorDialog();
+            if (!(Device is USBRXDeviceControl))
+            {
+                MessageBox.Show("Further analysis is not possible with the opened device.");
+                return;
+            }
 
-            demod.Show();
+            if (DemodulatorWindow == null || DemodulatorWindow.IsDisposed)
+            {
+                DemodulatorWindow = new DemodulatorDialog();
+            }
+
+            DemodulatorWindow.Show();
             if (Device != null)
             {
-                demod.SharedMemoryChannel = ((USBRXDeviceControl)Device).ShmemChannel;
+                DemodulatorWindow.SharedMemoryChannel = ((USBRXDeviceControl)Device).ShmemChannel;
+            }
+        }
+
+
+        private void oscilloscopeMenu_Click(object sender, EventArgs e)
+        {
+            if(!(Device is USBRXDeviceControl))
+            {
+                MessageBox.Show("Further analysis is not possible with the opened device.");
+                return;
+            }
+
+            if (OscilloscopeWindow == null || OscilloscopeWindow.IsDisposed)
+            {
+                OscilloscopeWindow = new RXOscilloscope();
+            }
+
+            OscilloscopeWindow.Show();
+            if (Device != null)
+            {
+                OscilloscopeWindow.OpenSharedMem(((USBRXDeviceControl)Device).ShmemChannel);
             }
         }
 

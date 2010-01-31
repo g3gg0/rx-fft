@@ -17,6 +17,13 @@ namespace RX_FFT.Components.GDI
             UpdateTimer.Start();
         }
 
+        protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+        {
+            Visible = false;
+            e.Cancel = true;
+            base.OnClosing(e);
+        }
+
         void UpdateTimer_Tick(object sender, EventArgs e)
         {
             lock (txtLog)

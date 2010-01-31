@@ -277,6 +277,8 @@
     <Compile Include="Libraries\USB-RX\Devices\AD6636.cs" />
     <Compile Include="Libraries\USB-RX\Devices\Atmel.cs" />
     <Compile Include="Libraries\USB-RX\Devices\AtmelProgrammer.cs" />
+    <Compile Include="Libraries\USB-RX\Devices\BO35.cs" />
+    <Compile Include="Libraries\USB-RX\Devices\SerialPortTuner.cs" />
     <Compile Include="Libraries\USB-RX\Interfaces\AD6636Interface.cs" />
     <Compile Include="Libraries\USB-RX\Interfaces\I2CInterface.cs" />
     <Compile Include="Libraries\USB-RX\Interfaces\SPIInterface.cs" />
@@ -286,6 +288,7 @@
     <Compile Include="Libraries\USB-RX\Misc\IntelHexFile.cs" />
     <Compile Include="Libraries\USB-RX\Misc\MemoryDump.cs" />
     <Compile Include="Libraries\USB-RX\Tuners\DigitalTuner.cs" />
+    <Compile Include="Libraries\USB-RX\Tuners\RadioChannelHandler.cs" />
     <Compile Include="Libraries\USB-RX\Tuners\Tuner.cs" />
     <Compile Include="Libraries\USB-RX\Devices\MT2131.cs" />
     <Compile Include="Libraries\USB-RX\Tuners\TunerStack.cs" />

@@ -531,7 +531,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
         }
 
 
-        public void Handle(double[] timeSlotSamples)
+        public void Handle(double[] timeSlotSamples, double[] timeSlotStrengths)
         {
             if (AddMessage == null)
                 return;
@@ -581,7 +581,9 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
             /* let the raw handler work with the data */
             if (handler != null)
-                rawHandlerState = handler.ParseRawBurst(Parameters, timeSlotSamples);
+            {
+                rawHandlerState = handler.ParseRawBurst(Parameters, timeSlotSamples, timeSlotStrengths);
+            }
 
             /* apply offset, if any */
             Decoder.SampleOffset = Parameters.SampleStartPosition + Parameters.SampleOffset + Parameters.SubSampleOffset;

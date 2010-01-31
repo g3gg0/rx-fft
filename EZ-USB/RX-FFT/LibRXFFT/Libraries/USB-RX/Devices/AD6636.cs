@@ -130,14 +130,16 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
         public bool SetMgcValue(int value)
         {
+            value = Math.Min(60, value);
+
             this.Device.AD6636WriteReg(AD6636_REG_IOAC, AD6636_REG_IOAC_L, 0x0B);
 
             if (value > 0)
             {
                 int mgcFactor = (int)(4095 - (value - 1) * 41.36);
+                this.Device.AD6636WriteReg(AD6636_REG_AGCCR, AD6636_REG_AGCCR_L, 0x040C);
                 this.Device.AD6636WriteReg(AD6636_REG_AGCLG + 0, AD6636_REG_AGCLG_L, 0);
                 this.Device.AD6636WriteReg(AD6636_REG_AGCLG + 1, AD6636_REG_AGCLG_L, 0);
-                this.Device.AD6636WriteReg(AD6636_REG_AGCCR, AD6636_REG_AGCCR_L, 0x040C);
                 this.Device.AD6636WriteReg(AD6636_REG_AGCSGR, AD6636_REG_AGCSGR_L, mgcFactor);
             }
             else
@@ -146,7 +148,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             }
 
             _Amplification = value;
-            //SoftSync();
+            SoftSync();
 
             return true;
         }
@@ -363,11 +365,39 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         public event EventHandler FrequencyChanged;
         public event EventHandler FilterWidthChanged;
         public event EventHandler InvertedSpectrumChanged;
+        public event EventHandler DeviceDisappeared;
+
+        public bool OpenTuner()
+        {
+            return true;
+        }
+
+        public void CloseTuner()
+        {
+        }
+
+        public long IntermediateFrequency
+        {
+            get { return 0; }
+        }
+
 
         private double _Amplification = 0;
         public double Amplification 
         {
             get { return _Amplification; }
+            set
+            {
+                if(Math.Abs(value - Amplification) > 5)
+                {
+                    SetMgcValue((int)value);
+                }
+            }
+        }
+
+        public double Attenuation
+        {
+            get { return 0; }
         }
 
         public long LowestFrequency
@@ -452,16 +482,24 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
         public long GetFrequency()
         {
+            return CurrentFrequency;
+            /*
             long frequency = (long)((double)this.Device.AD6636ReadReg(AD6636_REG_NCOFREQ, AD6636_REG_NCOFREQ_L) / this.NCOMul);
 
             CurrentFrequency = frequency;
 
             return frequency;
+             * */
         }
 
         public bool SetFrequency(long frequency)
         {
             bool success = false;
+
+            if (CurrentFrequency == frequency)
+            {
+                return true;
+            }
 
             if (LowestFrequency <= frequency && frequency <= HighestFrequency)
             {
@@ -503,6 +541,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         #region DigitalTuner Members
 
         public event EventHandler SamplingRateChanged;
+        
 
         public long SamplingRate
         {

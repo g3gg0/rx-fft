@@ -76,7 +76,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
         }
 
         /* parse the raw samples */
-        public virtual eSuccessState ParseRawBurst(GSMParameters Parameters, double[] rawBurst)
+        public virtual eSuccessState ParseRawBurst(GSMParameters Parameters, double[] rawBurst, double[] rawBurstStrength)
         {
             return eSuccessState.Unknown;
         }

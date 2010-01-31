@@ -32,7 +32,7 @@ namespace LibRXFFT.Components.DirectX
 
         public double LimiterLowerLimit = 0;
         public double LimiterUpperLimit = 0;
-        public bool LimiterDisplayEnabled = false;
+        public bool LimiterDisplayEnabled = true;
         public Color LimiterColor = Color.Green;
         public string LimiterUpperDescription = "";
         public string LimiterLowerDescription = "";

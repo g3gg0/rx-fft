@@ -63,7 +63,7 @@ namespace LibRXFFT.Components.GDI
             int oldSelectionStart = SelectionStart;
             long origFreq = Frequency;
             long newFreq = origFreq;
-            int freqDecades = origFreq.ToString().Length;
+            int freqDecades = 10;// origFreq.ToString().Length;
             int decade = freqDecades;
 
             /* check at which decade the cursor is positioned */
@@ -215,7 +215,7 @@ namespace LibRXFFT.Components.GDI
             }
             set
             {
-                Text = FrequencyFormatter.FreqToStringAccurate(value);
+                Text = FrequencyFormatter.FreqToStringSimple(value);
                 ParseFrequency();
             }
         }

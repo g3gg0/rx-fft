@@ -266,7 +266,7 @@ namespace LibRXFFT.Libraries.FFTW
                     Q /= FFTSize;
 
                     /* the output is not properly aligned, so start in the middle */
-                    amplitudes[(pos + FFTSize / 2) % FFTSize] = WindowingCorrection * Math.Sqrt(I * I + Q * Q);
+                    amplitudes[amplitudes.Length - 1 - (pos + FFTSize / 2) % FFTSize] = WindowingCorrection * Math.Sqrt(I * I + Q * Q);
                 }
             }
             else
@@ -285,7 +285,7 @@ namespace LibRXFFT.Libraries.FFTW
                         Q /= FFTSize;
 
                         /* the output is not properly aligned, so start in the middle */
-                        amplitudes[(pos + FFTSize / 2) % FFTSize] = WindowingCorrection * Math.Sqrt(I * I + Q * Q);
+                        amplitudes[amplitudes.Length - 1 - (pos + FFTSize / 2) % FFTSize] = WindowingCorrection * Math.Sqrt(I * I + Q * Q);
                     }
                 }
                 else
@@ -302,7 +302,7 @@ namespace LibRXFFT.Libraries.FFTW
                         Q /= FFTSize;
 
                         /* the output is not properly aligned, so start in the middle */
-                        amplitudes[(pos + FFTSize / 2) % FFTSize] = WindowingCorrection * Math.Sqrt(I * I + Q * Q);
+                        amplitudes[amplitudes.Length - 1 - (pos + FFTSize / 2) % FFTSize] = WindowingCorrection * Math.Sqrt(I * I + Q * Q);
                     }
                 }
             }
@@ -333,7 +333,7 @@ namespace LibRXFFT.Libraries.FFTW
                     Q /= FFTSize;
 
                     /* the output is not properly aligned, so start in the middle */
-                    amplitudes[(pos + FFTSize / 2) % FFTSize] = WindowingCorrection * (I * I + Q * Q);
+                    amplitudes[amplitudes.Length - 1 - (pos + FFTSize / 2) % FFTSize] = WindowingCorrection * (I * I + Q * Q);
                 }
             }
             else
@@ -352,7 +352,7 @@ namespace LibRXFFT.Libraries.FFTW
                         Q /= FFTSize;
 
                         /* the output is not properly aligned, so start in the middle */
-                        amplitudes[(pos + FFTSize / 2) % FFTSize] = WindowingCorrection * (I * I + Q * Q);
+                        amplitudes[amplitudes.Length - 1 - (pos + FFTSize / 2) % FFTSize] = WindowingCorrection * (I * I + Q * Q);
                     }
                 }
                 else
@@ -369,7 +369,7 @@ namespace LibRXFFT.Libraries.FFTW
                         Q /= FFTSize;
 
                         /* the output is not properly aligned, so start in the middle */
-                        amplitudes[(pos + FFTSize / 2) % FFTSize] = WindowingCorrection * (I * I + Q * Q);
+                        amplitudes[amplitudes.Length - 1 - (pos + FFTSize / 2) % FFTSize] = WindowingCorrection * (I * I + Q * Q);
                     }
                 }
             }

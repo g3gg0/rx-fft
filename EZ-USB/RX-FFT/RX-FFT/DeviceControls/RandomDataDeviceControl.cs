@@ -107,6 +107,7 @@ namespace RX_FFT.DeviceControls
         }
 
         public event EventHandler SamplingRateChanged;
+        
 
         #endregion
 
@@ -115,8 +116,29 @@ namespace RX_FFT.DeviceControls
         public event EventHandler FilterWidthChanged;
         public event EventHandler FrequencyChanged;
         public event EventHandler InvertedSpectrumChanged;
+        public event EventHandler DeviceDisappeared;
+
+        public bool OpenTuner()
+        {
+            return true;
+        }
+
+        public void CloseTuner()
+        {
+        }
 
         public double Amplification
+        {
+            get { return 0; }
+            set { }
+        }
+
+        public double Attenuation
+        {
+            get { return 0; }
+        }
+
+        public long IntermediateFrequency
         {
             get { return 0; }
         }
@@ -205,6 +227,18 @@ namespace RX_FFT.DeviceControls
         public bool InvertedSpectrum
         {
             get { return false; }
+        }
+
+        public bool ScanFrequenciesEnabled { get; set; }
+        public int ShmemChannel
+        {
+            get { return 0; }
+        }
+
+
+        public string ErrorMessage
+        {
+            get { return "None"; }
         }
 
         #endregion

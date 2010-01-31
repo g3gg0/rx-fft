@@ -38,6 +38,7 @@
             this.btnOpenASK = new System.Windows.Forms.Button();
             this.txtAmplitudeShiftKeying = new System.Windows.Forms.TextBox();
             this.btnOpen = new System.Windows.Forms.Button();
+            this.btnPocsag = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // btnOpenPulseDelay
@@ -110,11 +111,22 @@
             this.btnOpen.UseVisualStyleBackColor = true;
             this.btnOpen.Click += new System.EventHandler(this.btnOpen_Click);
             // 
+            // btnPocsag
+            // 
+            this.btnPocsag.Location = new System.Drawing.Point(13, 382);
+            this.btnPocsag.Name = "btnPocsag";
+            this.btnPocsag.Size = new System.Drawing.Size(75, 23);
+            this.btnPocsag.TabIndex = 4;
+            this.btnPocsag.Text = "POCSAG";
+            this.btnPocsag.UseVisualStyleBackColor = true;
+            this.btnPocsag.Click += new System.EventHandler(this.btnPocsag_Click);
+            // 
             // DemodulatorDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(634, 407);
+            this.ClientSize = new System.Drawing.Size(592, 422);
+            this.Controls.Add(this.btnPocsag);
             this.Controls.Add(this.btnOpen);
             this.Controls.Add(this.btnOpenASK);
             this.Controls.Add(this.txtAmplitudeShiftKeying);
@@ -140,6 +152,7 @@
         private System.Windows.Forms.Button btnOpenASK;
         private System.Windows.Forms.TextBox txtAmplitudeShiftKeying;
         private System.Windows.Forms.Button btnOpen;
+        private System.Windows.Forms.Button btnPocsag;
     }
 }
 

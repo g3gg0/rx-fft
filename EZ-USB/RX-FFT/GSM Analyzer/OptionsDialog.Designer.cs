@@ -80,6 +80,7 @@
             this.chkL2ShowAllFrames = new System.Windows.Forms.CheckBox();
             this.chkL2DumpRaw = new System.Windows.Forms.CheckBox();
             this.groupBox6 = new System.Windows.Forms.GroupBox();
+            this.chkL2DumpFaulty = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -216,7 +217,7 @@
             this.groupBox2.Controls.Add(this.chkL3SniffIMSI);
             this.groupBox2.Controls.Add(this.chkL3ShowUnhandled);
             this.groupBox2.Controls.Add(this.chkL3DumpRaw);
-            this.groupBox2.Location = new System.Drawing.Point(224, 206);
+            this.groupBox2.Location = new System.Drawing.Point(224, 231);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Size = new System.Drawing.Size(206, 118);
             this.groupBox2.TabIndex = 16;
@@ -572,11 +573,12 @@
             // 
             // groupBox5
             // 
+            this.groupBox5.Controls.Add(this.chkL2DumpFaulty);
             this.groupBox5.Controls.Add(this.chkL2ShowAllFrames);
             this.groupBox5.Controls.Add(this.chkL2DumpRaw);
             this.groupBox5.Location = new System.Drawing.Point(224, 137);
             this.groupBox5.Name = "groupBox5";
-            this.groupBox5.Size = new System.Drawing.Size(206, 63);
+            this.groupBox5.Size = new System.Drawing.Size(206, 88);
             this.groupBox5.TabIndex = 19;
             this.groupBox5.TabStop = false;
             this.groupBox5.Text = "L2 Options";
@@ -618,6 +620,17 @@
             this.groupBox6.TabIndex = 100;
             this.groupBox6.TabStop = false;
             this.groupBox6.Text = "Signal Processing";
+            // 
+            // chkL2DumpFaulty
+            // 
+            this.chkL2DumpFaulty.AutoSize = true;
+            this.chkL2DumpFaulty.Location = new System.Drawing.Point(10, 61);
+            this.chkL2DumpFaulty.Name = "chkL2DumpFaulty";
+            this.chkL2DumpFaulty.Size = new System.Drawing.Size(123, 17);
+            this.chkL2DumpFaulty.TabIndex = 19;
+            this.chkL2DumpFaulty.Text = "Dump faulty packets";
+            this.chkL2DumpFaulty.UseVisualStyleBackColor = true;
+            this.chkL2DumpFaulty.CheckedChanged += new System.EventHandler(this.chkL2DumpFaulty_CheckedChanged);
             // 
             // OptionsDialog
             // 
@@ -706,5 +719,6 @@
         private System.Windows.Forms.Button btnBurstLengthA;
         private System.Windows.Forms.CheckBox chkL1PreallocateTCH;
         private System.Windows.Forms.GroupBox groupBox6;
+        private System.Windows.Forms.CheckBox chkL2DumpFaulty;
     }
 }

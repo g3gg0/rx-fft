@@ -10,7 +10,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
     {
         public static bool DeviceTypeDisabled = true;
 
-        public long IFFrequency = 43998970;
+        private long IFFrequency = 43998970;
         public long IFStepSize = 500000;
 
         private I2CInterface I2cDevice;
@@ -42,28 +42,54 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         {
             I2cDevice = device;
             BusID = defaultBusID;
-
-            if (!Exists())
-            {
-                return;
-            }
-            long oldFreq = GetFrequency();
-            Init();
-            SetFrequency(oldFreq);
-
         }
 
         #region Tuner Members
 
         public event EventHandler FrequencyChanged;
-        public event EventHandler InvertedSpectrumChanged; 
+        public event EventHandler InvertedSpectrumChanged;
+        public event EventHandler DeviceDisappeared;
         public event EventHandler FilterWidthChanged;
+
+        public bool OpenTuner()
+        {
+            if (DeviceTypeDisabled)
+                return false;
+
+            byte[] buf = new byte[1];
+            ReadReg(0x00, buf);
+
+            if (buf[0] != 0x3E && buf[0] != 0x3F)
+                return false;
+
+            long oldFreq = GetFrequency();
+            Init();
+            SetFrequency(oldFreq);
+
+            return true;
+        }
+
+        public void CloseTuner()
+        {
+        }
 
         private double _Amplification = 0;
         public double Amplification
         {
             get { return _Amplification; }
+            set { }
         }
+
+        public double Attenuation
+        {
+            get { return 0; }
+        }
+
+        public long IntermediateFrequency
+        {
+            get { return IFFrequency; }
+        }
+
 
         public long LowestFrequency
         {
@@ -341,18 +367,6 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         }
 
 
-        public bool Exists()
-        {
-            if (DeviceTypeDisabled)
-                return false;
 
-            byte[] buf = new byte[1];
-            ReadReg(0x00, buf);
-
-            if (buf[0] != 0x3E && buf[0] != 0x3F)
-                return false;
-
-            return true;
-        }
     }
 }

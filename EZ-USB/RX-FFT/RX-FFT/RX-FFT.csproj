@@ -246,6 +246,10 @@
       <Project>{76F54DCE-B3C0-45E0-9C6F-492F396F3924}</Project>
       <Name>LibRXFFT</Name>
     </ProjectReference>
+    <ProjectReference Include="..\RX-Oscilloscope\RX-Oscilloscope.csproj">
+      <Project>{11C21A01-4ABE-47AD-A0F8-55C6183BA4B9}</Project>
+      <Name>RX-Oscilloscope</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\exit.png" />

@@ -62,42 +62,54 @@ namespace LibRXFFT.Libraries
 
         public static byte[] BitsToBytes(bool[] srcData)
         {
-            return BitsToBytes(srcData, null, 0, srcData.Length);
+            return BitsToBytes(srcData, null, 8, 0, srcData.Length);
+        }
+
+        public static byte[] BitsToBytes(bool[] srcData, int bitsPerByte)
+        {
+            return BitsToBytes(srcData, null, bitsPerByte, 0, srcData.Length);
         }
 
         public static byte[] BitsToBytes(bool[] srcData, int startPos, int bits)
         {
-            return BitsToBytes(srcData, null, startPos, bits);
+            return BitsToBytes(srcData, null, 8, startPos, bits);
         }
 
         public static byte[] BitsToBytes(bool[] srcData, byte[] dstData)
         {
-            return BitsToBytes(srcData, dstData, 0, srcData.Length);
+            return BitsToBytes(srcData, dstData, 8, 0, srcData.Length);
         }
 
-        public static byte[] BitsToBytes(bool[] srcData, byte[] dstData, int startPos, int bits)
+        public static byte[] BitsToBytes(bool[] srcData, byte[] dstData, int bitsPerByte, int startPos, int bits)
         {
-            int byteCount = (bits + 7) / 8;
+            int byteCount = (bits + (bitsPerByte-1)) / bitsPerByte;
             int leadingBits = 0;// (byteCount * 8) - srcData.Length;
 
             if (dstData == null)
                 dstData = new byte[byteCount];
 
-            for (int bytePos = 0; bytePos < bits / 8; bytePos++)
+            for (int bytePos = 0; bytePos < (bits / bitsPerByte); bytePos++)
             {
                 byte outByte = 0;
 
-                for (int bitPos = 0; bitPos < 8; bitPos++)
+                for (int bitPos = 0; bitPos < bitsPerByte; bitPos++)
                 {
-                    /* when handling the first bit, skip some bits if not aligned properly */
+                    /* when handling the first bit, skip some bits if not aligned properly 
                     if (bitPos == 0 && bytePos == 0)
                         bitPos = leadingBits;
 
                     byte bitValue = (byte)(1 << (7-bitPos));
-                    bool bitSet = srcData[startPos + bytePos * 8 + bitPos];
+                    bool bitSet = srcData[startPos + bytePos * bitsPerByte + bitPos];
 
                     if (bitSet)
                         outByte |= bitValue;
+                     * */
+
+                    bool bitSet = srcData[startPos + bytePos * bitsPerByte + bitPos];
+
+                    outByte <<= 1;
+                    if (bitSet)
+                        outByte |= 1;
                 }
 
                 dstData[bytePos] = outByte;
@@ -106,6 +118,11 @@ namespace LibRXFFT.Libraries
             return dstData;
         }
 
+
+        public static long BitsToLong(bool[] srcData)
+        {
+            return BitsToLong(srcData, 0, srcData.Length);
+        }
 
         public static long BitsToLong(bool[] srcData, int start, int length)
         {

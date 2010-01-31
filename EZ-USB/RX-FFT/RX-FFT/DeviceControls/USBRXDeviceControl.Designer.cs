@@ -13,6 +13,11 @@
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
+            if(Connected)
+            {
+                CloseTuner();
+            }
+
             if (disposing && (components != null))
             {
                 components.Dispose();
@@ -28,10 +33,8 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.lblFrequency = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.txtFilterRate = new System.Windows.Forms.TextBox();
-            this.label3 = new System.Windows.Forms.Label();
             this.txtFilterWidth = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.frequencySelector1 = new LibRXFFT.Components.GDI.FrequencySelector();
@@ -60,6 +63,7 @@
             this.radioAcqStream = new System.Windows.Forms.RadioButton();
             this.radioAcqBlock = new System.Windows.Forms.RadioButton();
             this.radioAcqOff = new System.Windows.Forms.RadioButton();
+            this.label3 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -73,51 +77,38 @@
             this.groupBox3.SuspendLayout();
             this.SuspendLayout();
             // 
-            // lblFrequency
-            // 
-            this.lblFrequency.AutoSize = true;
-            this.lblFrequency.Location = new System.Drawing.Point(6, 25);
-            this.lblFrequency.Name = "lblFrequency";
-            this.lblFrequency.Size = new System.Drawing.Size(60, 13);
-            this.lblFrequency.TabIndex = 1;
-            this.lblFrequency.Text = "Frequency:";
-            // 
             // groupBox1
             // 
             this.groupBox1.Controls.Add(this.txtFilterRate);
             this.groupBox1.Controls.Add(this.label3);
             this.groupBox1.Controls.Add(this.txtFilterWidth);
             this.groupBox1.Controls.Add(this.label2);
-            this.groupBox1.Controls.Add(this.lblFrequency);
             this.groupBox1.Controls.Add(this.frequencySelector1);
             this.groupBox1.Location = new System.Drawing.Point(3, 3);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(163, 110);
+            this.groupBox1.Size = new System.Drawing.Size(148, 110);
             this.groupBox1.TabIndex = 2;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Tuning";
             // 
             // txtFilterRate
             // 
-            this.txtFilterRate.Location = new System.Drawing.Point(72, 75);
+            this.txtFilterRate.BackColor = System.Drawing.Color.Black;
+            this.txtFilterRate.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txtFilterRate.ForeColor = System.Drawing.Color.Cyan;
+            this.txtFilterRate.Location = new System.Drawing.Point(50, 71);
             this.txtFilterRate.Name = "txtFilterRate";
             this.txtFilterRate.ReadOnly = true;
             this.txtFilterRate.Size = new System.Drawing.Size(85, 20);
             this.txtFilterRate.TabIndex = 5;
             this.txtFilterRate.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(6, 78);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(33, 13);
-            this.label3.TabIndex = 4;
-            this.label3.Text = "Rate:";
-            // 
             // txtFilterWidth
             // 
-            this.txtFilterWidth.Location = new System.Drawing.Point(72, 49);
+            this.txtFilterWidth.BackColor = System.Drawing.Color.Black;
+            this.txtFilterWidth.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txtFilterWidth.ForeColor = System.Drawing.Color.Cyan;
+            this.txtFilterWidth.Location = new System.Drawing.Point(50, 45);
             this.txtFilterWidth.Name = "txtFilterWidth";
             this.txtFilterWidth.ReadOnly = true;
             this.txtFilterWidth.Size = new System.Drawing.Size(85, 20);
@@ -127,7 +118,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(6, 52);
+            this.label2.Location = new System.Drawing.Point(7, 48);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(38, 13);
             this.label2.TabIndex = 2;
@@ -135,12 +126,15 @@
             // 
             // frequencySelector1
             // 
+            this.frequencySelector1.BackColor = System.Drawing.Color.Black;
+            this.frequencySelector1.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.frequencySelector1.ForeColor = System.Drawing.Color.Cyan;
             this.frequencySelector1.Frequency = ((long)(0));
-            this.frequencySelector1.Location = new System.Drawing.Point(72, 23);
+            this.frequencySelector1.Location = new System.Drawing.Point(10, 19);
             this.frequencySelector1.Name = "frequencySelector1";
-            this.frequencySelector1.Size = new System.Drawing.Size(85, 20);
+            this.frequencySelector1.Size = new System.Drawing.Size(125, 20);
             this.frequencySelector1.TabIndex = 1;
-            this.frequencySelector1.Text = "0 Hz";
+            this.frequencySelector1.Text = "0.000.000.000 Hz";
             this.frequencySelector1.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.frequencySelector1.FrequencyChanged += new System.EventHandler(this.frequencySelector1_FrequencyChanged);
             // 
@@ -152,7 +146,7 @@
             this.groupBox2.Location = new System.Drawing.Point(0, 0);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Padding = new System.Windows.Forms.Padding(5);
-            this.groupBox2.Size = new System.Drawing.Size(577, 110);
+            this.groupBox2.Size = new System.Drawing.Size(565, 110);
             this.groupBox2.TabIndex = 4;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Filters";
@@ -174,7 +168,7 @@
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.FilterList);
-            this.splitContainer1.Size = new System.Drawing.Size(567, 87);
+            this.splitContainer1.Size = new System.Drawing.Size(555, 87);
             this.splitContainer1.SplitterDistance = 57;
             this.splitContainer1.SplitterWidth = 1;
             this.splitContainer1.TabIndex = 0;
@@ -207,7 +201,7 @@
             this.FilterList.Location = new System.Drawing.Point(0, 0);
             this.FilterList.Margin = new System.Windows.Forms.Padding(0);
             this.FilterList.Name = "FilterList";
-            this.FilterList.Size = new System.Drawing.Size(509, 87);
+            this.FilterList.Size = new System.Drawing.Size(497, 87);
             this.FilterList.TabIndex = 3;
             // 
             // splitContainer2
@@ -228,7 +222,7 @@
             // splitContainer2.Panel2
             // 
             this.splitContainer2.Panel2.Controls.Add(this.groupBox2);
-            this.splitContainer2.Size = new System.Drawing.Size(577, 228);
+            this.splitContainer2.Size = new System.Drawing.Size(565, 228);
             this.splitContainer2.SplitterDistance = 114;
             this.splitContainer2.TabIndex = 5;
             // 
@@ -240,7 +234,7 @@
             this.groupBox5.Controls.Add(this.radioAgcFast);
             this.groupBox5.Controls.Add(this.radioAgcMedium);
             this.groupBox5.Controls.Add(this.radioAgcSlow);
-            this.groupBox5.Location = new System.Drawing.Point(427, 3);
+            this.groupBox5.Location = new System.Drawing.Point(412, 3);
             this.groupBox5.Name = "groupBox5";
             this.groupBox5.Size = new System.Drawing.Size(144, 110);
             this.groupBox5.TabIndex = 5;
@@ -333,7 +327,7 @@
             this.groupBox4.Controls.Add(this.radioRf2);
             this.groupBox4.Controls.Add(this.chkPreAmp);
             this.groupBox4.Controls.Add(this.radioRf3);
-            this.groupBox4.Location = new System.Drawing.Point(258, 3);
+            this.groupBox4.Location = new System.Drawing.Point(243, 3);
             this.groupBox4.Name = "groupBox4";
             this.groupBox4.Size = new System.Drawing.Size(162, 110);
             this.groupBox4.TabIndex = 4;
@@ -427,7 +421,7 @@
             this.groupBox3.Controls.Add(this.radioAcqStream);
             this.groupBox3.Controls.Add(this.radioAcqBlock);
             this.groupBox3.Controls.Add(this.radioAcqOff);
-            this.groupBox3.Location = new System.Drawing.Point(172, 3);
+            this.groupBox3.Location = new System.Drawing.Point(157, 3);
             this.groupBox3.Name = "groupBox3";
             this.groupBox3.Size = new System.Drawing.Size(80, 110);
             this.groupBox3.TabIndex = 3;
@@ -470,11 +464,20 @@
             this.radioAcqOff.UseVisualStyleBackColor = true;
             this.radioAcqOff.CheckedChanged += new System.EventHandler(this.radioAcqOff_CheckedChanged);
             // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(7, 74);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(33, 13);
+            this.label3.TabIndex = 4;
+            this.label3.Text = "Rate:";
+            // 
             // USBRXDeviceControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(577, 228);
+            this.ClientSize = new System.Drawing.Size(565, 228);
             this.ControlBox = false;
             this.Controls.Add(this.splitContainer2);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
@@ -505,10 +508,8 @@
         #endregion
 
         private LibRXFFT.Components.GDI.FrequencySelector frequencySelector1;
-        private System.Windows.Forms.Label lblFrequency;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.TextBox txtFilterRate;
-        private System.Windows.Forms.Label label3;
         private System.Windows.Forms.TextBox txtFilterWidth;
         private System.Windows.Forms.Label label2;
         private LibRXFFT.Components.GDI.FilterList FilterList;
@@ -536,5 +537,6 @@
         private LibRXFFT.Components.GDI.TextBoxMouseScroll txtMgcValue;
         private System.Windows.Forms.Button btnAtmel;
         private System.Windows.Forms.Button btnFiles;
+        private System.Windows.Forms.Label label3;
     }
 }

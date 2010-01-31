@@ -69,6 +69,12 @@ namespace LibRXFFT.Libraries.Misc
             return String.Format("{0:0.###}", frequency) + " " + scale[fact] + "Hz";
         }
 
+        public static string FreqToStringSimple(decimal frequency)
+        {
+
+            return String.Format("{0:0,000,000,000} Hz", frequency);
+        }
+
         public static string TimeToString(long time)
         {
             return TimeToString((decimal)time);

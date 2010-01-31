@@ -12,7 +12,11 @@ namespace RX_FFT.DeviceControls
         eTransferMode TransferMode { set; get; }
         SampleSource SampleSource { get; }
         bool Connected { get; }
+        string ErrorMessage { get; }
+
         double BlocksPerSecond { get; set; }
+        bool ScanFrequenciesEnabled { get; set; }
+        int ShmemChannel { get; }
 
         void Close();
         bool ReadBlock();

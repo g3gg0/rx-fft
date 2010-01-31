@@ -24,7 +24,7 @@ namespace RX_FFT.Components.GDI
 
             DateTime now = DateTime.Now;
 
-            LogWindow.AddMessage(now.Hour + ":" + now.Minute + ":" + now.Second + "." + now.Millisecond + " " + msg);
+            LogWindow.AddMessage(string.Format("{0:HH}:{0:mm}:{0:ss}:{0:ffff}", now) + " " + msg);
         }
     }
 }

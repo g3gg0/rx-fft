@@ -8,6 +8,7 @@ namespace LibRXFFT.Libraries.GSM.Layer2
     {
         public static bool ShowAllMessages = false;
         public static bool DumpRawData = false;
+        public static bool DumpFaulty = false;
 
         byte[] packetBuffer = new byte[8192];
         private long packetBufferOffset = 0;
@@ -110,10 +111,14 @@ namespace LibRXFFT.Libraries.GSM.Layer2
                 }
                 else
                 {
-                    StatusMessage += "Faulty length?! Length = " + (packetBufferOffset + L2Data.Length) + Environment.NewLine;
-                    StatusMessage += "          Raw Data" + Environment.NewLine;
-                    StatusMessage += "             " + DumpBytes(l2Data) + Environment.NewLine;
-                    ShowMessage = true;
+                    if (DumpFaulty)
+                    {
+                        StatusMessage += "Faulty length?! Length = " + (packetBufferOffset + L2Data.Length) +
+                                         Environment.NewLine;
+                        StatusMessage += "          Raw Data" + Environment.NewLine;
+                        StatusMessage += "             " + DumpBytes(l2Data) + Environment.NewLine;
+                        ShowMessage = true;
+                    }
                 }
 
                 /* that counter is just for convinience */

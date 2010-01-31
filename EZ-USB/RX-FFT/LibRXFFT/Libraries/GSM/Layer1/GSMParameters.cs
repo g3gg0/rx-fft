@@ -65,6 +65,9 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             }
         }
 
+        public double AveragePower;
+        public double AverageIdlePower;
+
         public double PhaseOffsetValue = 0;
         public bool PhaseAutoOffset = true;
         public double Oversampling = 1;

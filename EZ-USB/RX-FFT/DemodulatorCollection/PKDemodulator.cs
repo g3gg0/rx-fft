@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Text;
 using LibRXFFT.Libraries.SignalProcessing;
+using RX_FFT.Components.GDI;
 
 /* 
  * Pulse keying demodulator 

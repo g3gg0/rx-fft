@@ -72,13 +72,13 @@ namespace LibRXFFT.Libraries.GSM.Layer1.GMSK
                     I = -I;
 
                 /* 
-                 * this strength calculation is incorrect!
+                 * this strength calculation is incorrect (squared)!
                  * the Math.Sqrt() is missing, but that would consume
                  * too much CPU power. 
                  * thats okay since the strength is just used qualitative.
                  * the *exact* value doesnt matter.
                  */
-                double strength = 100 * (I * I + Q * Q);
+                double strength = (I * I + Q * Q);
                 double phase;
 
                 phase = UseFastAtan2 ? FastAtan2b(I, Q) : Math.Atan2(I, Q);

@@ -43,6 +43,8 @@ namespace LibRXFFT.Libraries.ShmemChain
         [DllImport("shmemchain.dll", CallingConvention = CallingConvention.StdCall)]
         public static extern int shmemchain_get_last_error();
         [DllImport("shmemchain.dll", CallingConvention = CallingConvention.StdCall)]
+        public static extern int shmemchain_get_last_errorcode();
+        [DllImport("shmemchain.dll", CallingConvention = CallingConvention.StdCall)]
         public static extern long shmemchain_get_rate(int node_id);
         [DllImport("shmemchain.dll", CallingConvention = CallingConvention.StdCall)]
         public static extern int shmemchain_set_rate(int node_id, long rate);

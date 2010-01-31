@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
+using DemodulatorCollection;
+using GSM_Analyzer;
 using LibRXFFT.Components.DirectX;
 using LibRXFFT.Libraries;
 using LibRXFFT.Libraries.FFTW;
@@ -13,10 +15,12 @@ using LibRXFFT.Libraries.SignalProcessing;
 using LibRXFFT.Libraries.Timers;
 using LibRXFFT.Libraries.USB_RX.Devices;
 using LibRXFFT.Libraries.USB_RX.Tuners;
-using RX_FFT.Components.GDI;
 using RX_FFT.DeviceControls;
 using RX_FFT.Dialogs;
-using Point=System.Drawing.Point;
+using RX_Oscilloscope;
+using Log = RX_FFT.Components.GDI.Log;
+using Point = System.Drawing.Point;
+using Timer = System.Threading.Timer;
 
 namespace RX_FFT
 {
@@ -58,8 +62,11 @@ namespace RX_FFT
         bool ReadThreadRun;
         bool AudioThreadRun;
 
+        private LinkedListNode<FrequencyMarker> CurrentScanFreq;
+
+        private double ScanFrequenciesPowerMin = 66;
         bool _ScanFrequenciesEnabled = false;
-        bool ScanFrequenciesEnabled 
+        bool ScanFrequenciesEnabled
         {
             get
             {
@@ -68,8 +75,12 @@ namespace RX_FFT
             set
             {
                 _ScanFrequenciesEnabled = value;
+                if (DeviceOpened)
+                {
+                    Device.ScanFrequenciesEnabled = value;
+                }
 
-                if (ScanFrequenciesEnabled)
+                if (ScanFrequenciesEnabled && !ScanStrongestFrequency)
                 {
                     FFTDisplay.SpectParts = ScanFrequencies.Count;
                     FFTDisplay.ChannelMode = true;
@@ -96,10 +107,6 @@ namespace RX_FFT
 
         private LinkedList<FrequencyMarker> Markers = new LinkedList<FrequencyMarker>();
         private LinkedList<FrequencyMarker> ScanFrequencies = new LinkedList<FrequencyMarker>();
-        /*
-        private FrequencyMarker UpperFilterMarginMarker = new FrequencyMarker("Upper Limit", "Upper Frequency Limit", 0);
-        private FrequencyMarker LowerFilterMarginMarker = new FrequencyMarker("Lower Limit", "Lower Frequency Limit", 0);
-        */
 
         ShmemSampleSource AudioShmem;
         double[] DecimatedInputI = new double[0];
@@ -113,6 +120,20 @@ namespace RX_FFT
         MarkerListDialog MarkerDialog;
         PerformaceStatsDialog StatsDialog;
         PerformanceEnvelope PerformanceCounters = new PerformanceEnvelope();
+
+        RXOscilloscope OscilloscopeWindow = new RXOscilloscope();
+        DemodulatorDialog DemodulatorWindow = new DemodulatorDialog();
+        GSMAnalyzer GsmAnalyzerWindow = new GSMAnalyzer();
+
+        bool _DeviceOpened = false;
+        private bool ScanStrongestFrequency;
+        private long _currentFrequency;
+        private double CurrentMaxSignalDb = 0;
+
+        /* try to set amplification to get a input power of -10dB */
+        private double DesiredInputSignalPower = -10.0;
+
+        private Timer StatusUpdateTimer;
 
 
         public MainScreen()
@@ -150,11 +171,6 @@ namespace RX_FFT
 
             DeviceOpened = false;
 
-            /*
-            Markers.AddLast(UpperFilterMarginMarker);
-            Markers.AddLast(LowerFilterMarginMarker);
-            */
-
             /* build the windowing function list dropdown menu */
             foreach (string windowName in Enum.GetNames(typeof(FFTTransformer.eWindowingFunction)))
             {
@@ -164,31 +180,61 @@ namespace RX_FFT
 
                 menu.Name = windowName;
                 menu.Text = windowName;
-                menu.Click += new EventHandler(delegate(object s, EventArgs e) 
-                    {
-                        ToolStripMenuItem sender = (ToolStripMenuItem)s;
-                        string typeString = sender.Name;
+                menu.Click += new EventHandler(delegate(object s, EventArgs e)
+                {
+                    ToolStripMenuItem sender = (ToolStripMenuItem)s;
+                    string typeString = sender.Name;
 
-                        try
-                        {
-                            FFTTransformer.eWindowingFunction type = (FFTTransformer.eWindowingFunction)Enum.Parse(typeof(FFTTransformer.eWindowingFunction), typeString);
-                            FFTDisplay.WindowingFunction = type;
-                        }
-                        catch (Exception ex)
-                        {
-                        }
-                    });
+                    try
+                    {
+                        FFTTransformer.eWindowingFunction type = (FFTTransformer.eWindowingFunction)Enum.Parse(typeof(FFTTransformer.eWindowingFunction), typeString);
+                        FFTDisplay.WindowingFunction = type;
+                    }
+                    catch (Exception ex)
+                    {
+                    }
+                });
             }
 
             ToolStripManager.LoadSettings(this);
 
-            ScanFrequencies.AddLast(new FrequencyMarker(0));
-            ScanFrequencies.AddLast(new FrequencyMarker(10000000));
-            ScanFrequencies.AddLast(new FrequencyMarker(20000000));
+            StatusUpdateTimer = new Timer(StatusUpdateTimerFunc, null, 500, 500);
+
+        }
+
+        private void StatusUpdateTimerFunc(object state)
+        {
+            if (!IsDisposed)
+            {
+                BeginInvoke(
+                    new MethodInvoker(
+                        () =>
+                        {
+                            maxDbLabel.Text = CurrentMaxSignalDb.ToString("#.# dB");
+                            fpsLabel.Text =
+                                string.Format("{0:0.##}", FFTDisplay.FpsProcessed) + " of " +
+                                string.Format("{0:0.##}", FFTDisplay.FpsReceived);
+                        }));
+            }
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
+            StopThreads();
+
+            if (GsmAnalyzerWindow != null && !GsmAnalyzerWindow.IsDisposed)
+            {
+                GsmAnalyzerWindow.Close();
+            }
+            if (DemodulatorWindow != null && !DemodulatorWindow.IsDisposed)
+            {
+                DemodulatorWindow.Close();
+            }
+            if (OscilloscopeWindow != null && !OscilloscopeWindow.IsDisposed)
+            {
+                OscilloscopeWindow.Close();
+            }
+
             CloseDevice();
             base.OnFormClosing(e);
         }
@@ -198,12 +244,12 @@ namespace RX_FFT
             ToolStripManager.SaveSettings(this);
         }
 
-        bool _DeviceOpened = false;
+
         bool DeviceOpened
         {
             get { return _DeviceOpened; }
-            set 
-            { 
+            set
+            {
                 _DeviceOpened = value;
 
                 closeMenu.Enabled = DeviceOpened;
@@ -212,6 +258,9 @@ namespace RX_FFT
 
                 if (value)
                 {
+                    UpdateRate = UpdateRate;
+                    FFTSize = FFTSize;
+                    CurrentFrequency = CurrentFrequency;
                     statusLabel.Text = "Connected";
                 }
                 else
@@ -224,16 +273,36 @@ namespace RX_FFT
             }
         }
 
+        protected long CurrentFrequency
+        {
+            get
+            {
+                return _currentFrequency;
+            }
+            set
+            {
+                _currentFrequency = value;
+                if (DeviceOpened)
+                {
+                    Device.SetFrequency(CurrentFrequency);
+                }
+            }
+        }
+
         int FFTSize
         {
             get { return FFTDisplay.FFTSize; }
             set
             {
-                lock (FFTSizeSpinLock)
+                if (Device != null)
+                    Device.SamplesPerBlock = value * Math.Max(1, SamplesToAverage);
+
+                if (FFTDisplay.FFTSize != value)
                 {
-                    if (Device != null)
-                        Device.SamplesPerBlock = value * Math.Max(1, SamplesToAverage);
-                    FFTDisplay.FFTSize = value;
+                    lock (FFTSizeSpinLock)
+                    {
+                        FFTDisplay.FFTSize = value;
+                    }
                 }
             }
         }
@@ -321,7 +390,12 @@ namespace RX_FFT
                     {
                         double relative = FFTDisplay.RelativeCursorXPos;
 
-                        DemodOptions.DemodulationDownmixer.TimeStep = -relative * (2 * Math.PI);
+                        if (Device != null && Device.InvertedSpectrum)
+                        {
+                            relative -= relative;
+                        }
+
+                        DemodOptions.DemodulationDownmixer.TimeStep = relative * (2 * Math.PI);
                     }
                     break;
 
@@ -342,12 +416,12 @@ namespace RX_FFT
                 case eUserEvent.MouseDragXControl:
                     {
                         long mouseFreq = FFTDisplay.Frequency;
-                        
+
                         long currentFreq = Device.GetFrequency();
                         long newFreq = currentFreq - (mouseFreq - MouseDragStartFreq);
 
                         //FFTDisplay.CenterFrequency = newFreq;
-                        Device.SetFrequency(newFreq);
+                        CurrentFrequency = newFreq;
                     }
                     break;
 
@@ -362,7 +436,7 @@ namespace RX_FFT
                             ScanFrequenciesEnabled = false;
                         }
 
-                        Device.SetFrequency(freq);
+                        CurrentFrequency = freq;
                         //FFTDisplay.CenterFrequency = freq;
                     }
                     break;
@@ -372,7 +446,7 @@ namespace RX_FFT
                     {
                         long freq = FFTDisplay.Frequency;
 
-                        
+
                         ContextMenu contextMenu = new ContextMenu();
                         MenuItem menuItem1 = new MenuItem();
                         MenuItem menuItem2 = new MenuItem();
@@ -652,7 +726,7 @@ namespace RX_FFT
                         if (DemodOptions.DisplayDemodulationSignal)
                         {
                             PerformanceCounters.CounterVisualization.Start();
-                            FFTDisplay.ProcessData(inputI, inputQ, 0, Device.Amplification);
+                            FFTDisplay.ProcessData(inputI, inputQ, 0, Device.Amplification - Device.Attenuation);
                             PerformanceCounters.CounterVisualization.Stop();
                         }
                     }
@@ -676,7 +750,8 @@ namespace RX_FFT
             double[] inputI;
             double[] inputQ;
 
-            LinkedListNode<FrequencyMarker> CurrentScanFreq = ScanFrequencies.First;
+            int dbUpdateDivisor = 10;
+            int dbUpdateCounter = 0;
             int spectPart = 0;
             //FFTDisplay.SpectParts = ScanFrequencies.Count;
 
@@ -694,13 +769,42 @@ namespace RX_FFT
                         if (!ProcessPaused)
                         {
                             Device.ReadBlock();
+
                             if (Device.TransferMode == eTransferMode.Block)
                             {
+                                long avail = ((ShmemSampleSource)Device.SampleSource).ShmemChannel.Length;
+
+                                if (avail > 0)
+                                {
+                                    Log.AddMessage("FFTReadFunc: avail " + avail +
+                                                   " Bytes. Thats okay when FFT size was changed.");
+                                }
                                 Device.SampleSource.Flush();
                             }
 
                             inputI = Device.SampleSource.SourceSamplesI;
                             inputQ = Device.SampleSource.SourceSamplesQ;
+
+                            if (dbUpdateCounter++ > dbUpdateDivisor)
+                            {
+                                double maxDb = DBTools.MaximumDb(inputI, inputQ);
+
+                                if (CurrentMaxSignalDb == 0 || maxDb == 0 || CurrentMaxSignalDb / maxDb > 1.5f || maxDb / CurrentMaxSignalDb > 1.5f)
+                                {
+                                    CurrentMaxSignalDb = maxDb;
+                                }
+                                else
+                                {
+                                    CurrentMaxSignalDb = (9 * CurrentMaxSignalDb + maxDb) / 10;
+                                }
+
+                                /* allow a maximum of -10dB input signal power */
+                                double desired = -CurrentMaxSignalDb + DesiredInputSignalPower + Device.Amplification;
+
+                                Device.Amplification = desired;
+
+                                dbUpdateCounter = 0;
+                            }
 
                             //Log.AddMessage("FFTReadFunc: Read " + inputI.Length + " Samples");
 
@@ -734,28 +838,39 @@ namespace RX_FFT
                             if (ScanFrequenciesEnabled)
                             {
                                 PerformanceCounters.CounterVisualization.Start();
-                                FFTDisplay.ProcessData(inputI, inputQ, spectPart, Device.Amplification);
-                                PerformanceCounters.CounterVisualization.Stop();
-
-                                if (CurrentScanFreq.Next != null)
+                                if (ScanStrongestFrequency)
                                 {
-                                    spectPart++;
-                                    CurrentScanFreq = CurrentScanFreq.Next;
+                                    FFTDisplay.ProcessData(inputI, inputQ, 0, Device.Amplification - Device.Attenuation);
                                 }
                                 else
                                 {
-                                    spectPart = 0;
-                                    CurrentScanFreq = ScanFrequencies.First;
+                                    FFTDisplay.ProcessData(inputI, inputQ, spectPart, Device.Amplification - Device.Attenuation);
                                 }
 
-                                Device.SetFrequency(CurrentScanFreq.Value.Frequency);
+                                PerformanceCounters.CounterVisualization.Stop();
+
+                                if (!ScanStrongestFrequency || DemodOptions.SquelchState == Demodulation.eSquelchState.Closed)
+                                {
+                                    if (CurrentScanFreq.Next != null)
+                                    {
+                                        spectPart++;
+                                        CurrentScanFreq = CurrentScanFreq.Next;
+                                    }
+                                    else
+                                    {
+                                        spectPart = 0;
+                                        CurrentScanFreq = ScanFrequencies.First;
+                                    }
+
+                                    CurrentFrequency = CurrentScanFreq.Value.Frequency;
+                                }
                             }
                             else
                             {
                                 if (!DemodOptions.DisplayDemodulationSignal)
                                 {
                                     PerformanceCounters.CounterVisualization.Start();
-                                    FFTDisplay.ProcessData(inputI, inputQ, 0, Device.Amplification);
+                                    FFTDisplay.ProcessData(inputI, inputQ, 0, Device.Amplification - Device.Attenuation);
                                     PerformanceCounters.CounterVisualization.Stop();
                                 }
                             }
@@ -773,88 +888,49 @@ namespace RX_FFT
         private void OpenBO35Device()
         {
             USBRXDeviceControl dev = new USBRXDeviceControl();
-            if (dev.Connected)
+
+            if (!dev.OpenTuner())
             {
-                Device = dev;
-
-                /* create an extra shmem channel for audio decoding */
-                AudioShmem = new ShmemSampleSource("RX-FFT Audio Decoder", dev.ShmemChannel, 1, 0);
-                AudioShmem.InvertedSpectrum = dev.SampleSource.InvertedSpectrum;
-
-                dev.FrequencyChanged += new EventHandler(Device_FrequencyChanged);
-                dev.SamplingRateChanged += new EventHandler(Device_RateChanged);
-                dev.FilterWidthChanged += new EventHandler(Device_FilterWidthChanged);
-                dev.TransferModeChanged += new EventHandler(Device_TransferModeChanged);
-
-                //dev.SetFrequency(100200000);
-                dev.SamplesPerBlock = Math.Max(1, SamplesToAverage) * FFTSize;
-
-                lock (DemodOptions)
-                {
-                    DemodOptions.SoundDevice = new DXSoundDevice(Handle);
-                }
-
-                ReadThreadRun = true;
-                ReadThread = new Thread(new ThreadStart(FFTReadFunc));
-                ReadThread.Name = "MainScreen Data Read Thread";
-                ReadThread.Start();
-
-                AudioThreadRun = true;
-                AudioThread = new Thread(new ThreadStart(AudioReadFunc));
-                AudioThread.Name = "Audio Decoder Thread";
-                AudioThread.Start();
-
-                DeviceOpened = true;
+                MessageBox.Show("Failed to open the device. Reason: " + dev.ErrorMessage);
+                return;
             }
-            else
-            {
-                dev.Close();
-                dev = null;
-                MessageBox.Show("Could not find " + BO35DeviceName + ".");
-            }
-        }
 
-        void Device_TransferModeChanged(object sender, EventArgs e)
-        {
-            statusLabel.Text = statusLabel.Text.Replace(" (" + eTransferMode.Stopped.ToString() + ")", "");
-            statusLabel.Text = statusLabel.Text.Replace(" (" + eTransferMode.Block.ToString() + ")", "");
-            statusLabel.Text = statusLabel.Text.Replace(" (" + eTransferMode.Stream.ToString() + ")", "");
-
-            if (Device != null)
-            {
-                statusLabel.Text += " (" + Device.TransferMode.ToString() + ")";
-            }
-        }
-
-        public void OpenSharedMem(int srcChan)
-        {
-            SharedMemDeviceControl dev = new SharedMemDeviceControl(srcChan);
             Device = dev;
-
-            /* create an extra shmem channel for audio decoding */
-            AudioShmem = new ShmemSampleSource("RX-FFT Audio Decoder", dev.ShmemChannel, 1, 0);
-            AudioShmem.InvertedSpectrum = dev.SampleSource.InvertedSpectrum;
 
             dev.FrequencyChanged += new EventHandler(Device_FrequencyChanged);
             dev.SamplingRateChanged += new EventHandler(Device_RateChanged);
             dev.FilterWidthChanged += new EventHandler(Device_FilterWidthChanged);
-
+            dev.TransferModeChanged += new EventHandler(Device_TransferModeChanged);
+            dev.InvertedSpectrumChanged += new EventHandler(Device_InvertedSpectrumChanged);
+            dev.DeviceDisappeared += new EventHandler(Device_DeviceDisappeared);
             dev.SamplesPerBlock = Math.Max(1, SamplesToAverage) * FFTSize;
 
-            lock (DemodOptions)
+            StartThreads();
+
+            DeviceOpened = true;
+
+            CurrentFrequency = dev.GetFrequency();
+        }
+
+
+        public void OpenSharedMem(int srcChan)
+        {
+            SharedMemDeviceControl dev = new SharedMemDeviceControl(srcChan);
+
+            if (!dev.Connected)
             {
-                DemodOptions.SoundDevice = new DXSoundDevice(Handle);
+                MessageBox.Show("Failed to open the device. Reason: " + dev.ErrorMessage);
+                return;
             }
 
-            ReadThreadRun = true;
-            ReadThread = new Thread(new ThreadStart(FFTReadFunc));
-            ReadThread.Name = "MainScreen Data Read Thread";
-            ReadThread.Start();
+            Device = dev;
 
-            AudioThreadRun = true;
-            AudioThread = new Thread(new ThreadStart(AudioReadFunc));
-            AudioThread.Name = "Audio Decoder Thread";
-            AudioThread.Start();
+            dev.FrequencyChanged += new EventHandler(Device_FrequencyChanged);
+            dev.SamplingRateChanged += new EventHandler(Device_RateChanged);
+            dev.FilterWidthChanged += new EventHandler(Device_FilterWidthChanged);
+            dev.SamplesPerBlock = Math.Max(1, SamplesToAverage) * FFTSize;
+
+            StartThreads();
 
             DeviceOpened = true;
         }
@@ -905,13 +981,29 @@ namespace RX_FFT
         private void OpenRandomDevice()
         {
             RandomDataDeviceControl dev = new RandomDataDeviceControl();
+
+            if (!dev.Connected)
+            {
+                MessageBox.Show("Failed to open the device. Reason: " + dev.ErrorMessage);
+                return;
+            }
+
             Device = dev;
 
             dev.FrequencyChanged += new EventHandler(Device_FrequencyChanged);
             dev.SamplingRateChanged += new EventHandler(Device_RateChanged);
             dev.FilterWidthChanged += new EventHandler(Device_FilterWidthChanged);
 
-            dev.SetFrequency(1000000);
+            StartThreads();
+
+            DeviceOpened = true;
+        }
+
+        private void StartThreads()
+        {
+            /* create an extra shmem channel for audio decoding */
+            AudioShmem = new ShmemSampleSource("RX-FFT Audio Decoder", Device.ShmemChannel, 1, 0);
+            AudioShmem.InvertedSpectrum = Device.SampleSource.InvertedSpectrum;
 
             lock (DemodOptions)
             {
@@ -919,14 +1011,17 @@ namespace RX_FFT
             }
 
             ReadThreadRun = true;
-            ReadThread = new Thread(new ThreadStart(FFTReadFunc));
+            ReadThread = new Thread(FFTReadFunc);
             ReadThread.Name = "MainScreen Data Read Thread";
             ReadThread.Start();
 
-            DeviceOpened = true;
+            AudioThreadRun = true;
+            AudioThread = new Thread(AudioReadFunc);
+            AudioThread.Name = "Audio Decoder Thread";
+            AudioThread.Start();
         }
 
-        private void CloseDevice()
+        private void StopThreads()
         {
             /* pause transfers and finish threads */
             ProcessPaused = true;
@@ -965,19 +1060,57 @@ namespace RX_FFT
                 AudioShmem = null;
             }
 
-            if (DeviceOpened)
-            {
-                Device.Close();
-                Device = null;
-
-                DeviceOpened = false;
-            }
-
             /* un-pause again */
             ProcessPaused = false;
             if (!Disposing)
             {
                 pauseMenu.Checked = ProcessPaused;
+            }
+        }
+
+        private void CloseDevice()
+        {
+            if (DeviceOpened)
+            {
+                Device.Close();
+                Device = null;
+                DeviceOpened = false;
+            }
+        }
+
+        void Device_DeviceDisappeared(object sender, EventArgs e)
+        {
+            Tuner dev = (Tuner)sender;
+            StopThreads();
+
+            BeginInvoke(new MethodInvoker(() =>
+            {
+                dev.CloseTuner();
+                if (MessageBox.Show("The device '" + dev.Name[0] + "' seems to have disappeared. Reconnect?", "Device failure", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                {
+                    if (dev.OpenTuner())
+                    {
+                        StartThreads();
+                        DeviceOpened = true;
+                    }
+                }
+            }));
+
+        }
+
+        void Device_InvertedSpectrumChanged(object sender, EventArgs e)
+        {
+        }
+
+        void Device_TransferModeChanged(object sender, EventArgs e)
+        {
+            statusLabel.Text = statusLabel.Text.Replace(" (" + eTransferMode.Stopped.ToString() + ")", "");
+            statusLabel.Text = statusLabel.Text.Replace(" (" + eTransferMode.Block.ToString() + ")", "");
+            statusLabel.Text = statusLabel.Text.Replace(" (" + eTransferMode.Stream.ToString() + ")", "");
+
+            if (Device != null)
+            {
+                statusLabel.Text += " (" + Device.TransferMode.ToString() + ")";
             }
         }
 
@@ -1006,8 +1139,9 @@ namespace RX_FFT
         {
             if (!ScanFrequenciesEnabled)
             {
-                FFTDisplay.CenterFrequency = Device.GetFrequency();
+                _currentFrequency = Device.GetFrequency();
 
+                FFTDisplay.CenterFrequency = CurrentFrequency;
                 FFTDisplay.LimiterUpperLimit = Device.UpperFilterMargin;
                 FFTDisplay.LimiterLowerLimit = Device.LowerFilterMargin;
                 FFTDisplay.LimiterUpperDescription = Device.UpperFilterMarginDescription;
@@ -1061,11 +1195,6 @@ namespace RX_FFT
         {
             /* the markers were changed. update this in FFT */
             FFTDisplay.Markers = Markers;
-        }
-
-        private void toolStripButton1_Click(object sender, EventArgs e)
-        {
-
         }
 
         private void EnableSaving(string fileName)

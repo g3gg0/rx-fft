@@ -18,10 +18,7 @@ namespace LibRXFFT.Components.DirectX
         public double DynamicBaseLevel = 0;
         private bool DynamicBaseLevelChanged = false;
         public bool DrawTimeStamps = false;
-
-
-
-
+        
         /* DirectX related graphic stuff */
         protected Sprite Sprite;
         protected Surface DefaultRenderTarget;
@@ -91,6 +88,7 @@ namespace LibRXFFT.Components.DirectX
         public double LeveldBWhite = -10;
         public double LeveldBBlack = -100;
         public double LeveldBMax = -150;
+        public double ApproxMaxStrength;
 
 
         public DirectXWaterfallDisplay()
@@ -505,7 +503,7 @@ namespace LibRXFFT.Components.DirectX
 
                         for (int pos = 0; pos < samples; pos++)
                         {
-                            double sampleValue = (double)SampleValues[pos];
+                            double sampleValue = SampleValues[pos];
                             double posX = pos;
                             double posY = sampleValue;
 
@@ -524,8 +522,8 @@ namespace LibRXFFT.Components.DirectX
 
                             if (DynamicLimits)
                             {
-                                maxLevel = Math.Max(maxLevel, LinePoints[pos].Y);
-                                minLevel = Math.Min(minLevel, LinePoints[pos].Y);
+                                maxLevel = Math.Max(maxLevel, sampleValue);
+                                minLevel = Math.Min(minLevel, sampleValue);
                             }
                         }
                         resetAverage = false;
@@ -539,12 +537,15 @@ namespace LibRXFFT.Components.DirectX
 
             if (DynamicLimits)
             {
-                float dBmax = (float)(SquaredFFTData ? DBTools.SquaredSampleTodB(maxLevel) : DBTools.SampleTodB(maxLevel));
-                float dBmin = (float)(SquaredFFTData ? DBTools.SquaredSampleTodB(minLevel) : DBTools.SampleTodB(minLevel));
+                LeveldBBlack -= DynamicBaseLevel;
+                LeveldBWhite -= 10;
+
+                float dBmax = (float)((SquaredFFTData ? DBTools.SquaredSampleTodB(maxLevel) : DBTools.SampleTodB(maxLevel)) - BaseAmplification);
+                float dBmin = (float)((SquaredFFTData ? DBTools.SquaredSampleTodB(minLevel) : DBTools.SampleTodB(minLevel)) - BaseAmplification);
 
                 LeveldBWhite = (LeveldBWhite + dBmax * DynamicLimitFact) / (1 + DynamicLimitFact);
+                ApproxMaxStrength = LeveldBWhite;
 
-                LeveldBBlack -= DynamicBaseLevel;
                 if (DynamicBaseLevelChanged)
                 {
                     DynamicBaseLevelChanged = false;
@@ -554,7 +555,6 @@ namespace LibRXFFT.Components.DirectX
                 {
                     LeveldBBlack = (LeveldBBlack + dBmin * DynamicLimitFact) / (1 + DynamicLimitFact);
                 }
-                LeveldBBlack += DynamicBaseLevel;
 
                 if (double.IsInfinity(LeveldBWhite) || double.IsNaN(LeveldBWhite))
                 {
@@ -566,6 +566,8 @@ namespace LibRXFFT.Components.DirectX
                 }
 
                 UpdateOverlays = true;
+                LeveldBWhite += 10;
+                LeveldBBlack += DynamicBaseLevel;
 
                 /* inform that smth has changed */
                 if (UserEventCallback != null)

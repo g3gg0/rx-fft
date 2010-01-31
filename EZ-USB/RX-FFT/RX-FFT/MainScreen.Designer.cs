@@ -31,6 +31,10 @@ namespace RX_FFT
             this.statusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripStatusLabel2 = new System.Windows.Forms.ToolStripStatusLabel();
             this.samplingRateLabel = new System.Windows.Forms.ToolStripStatusLabel();
+            this.toolStripStatusLabel3 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.fpsLabel = new System.Windows.Forms.ToolStripStatusLabel();
+            this.toolStripStatusLabel4 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.maxDbLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.mainMenu = new System.Windows.Forms.MenuStrip();
             this.deviceMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.openMenu = new System.Windows.Forms.ToolStripMenuItem();
@@ -42,6 +46,8 @@ namespace RX_FFT
             this.saveMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.closeMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.scanBandMenu = new System.Windows.Forms.ToolStripMenuItem();
+            this.scanMarkersMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.demodulationMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.performanceStatisticsMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.markersMenu = new System.Windows.Forms.ToolStripMenuItem();
@@ -74,12 +80,12 @@ namespace RX_FFT
             this.advancedMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.gsmAnalyzerMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.digitalDemodulatorsMenu = new System.Windows.Forms.ToolStripMenuItem();
+            this.oscilloscopeMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.helpMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.deviceInformationMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripContainer1 = new System.Windows.Forms.ToolStripContainer();
             this.FFTDisplay = new LibRXFFT.Components.DirectX.DirectXWaterfallFFTDisplay();
-            this.scanBandMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip1.SuspendLayout();
             this.mainMenu.SuspendLayout();
             this.toolStripContainer1.ContentPanel.SuspendLayout();
@@ -92,18 +98,22 @@ namespace RX_FFT
             this.toolStripStatusLabel1,
             this.statusLabel,
             this.toolStripStatusLabel2,
-            this.samplingRateLabel});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 382);
+            this.samplingRateLabel,
+            this.toolStripStatusLabel3,
+            this.fpsLabel,
+            this.toolStripStatusLabel4,
+            this.maxDbLabel});
+            this.statusStrip1.Location = new System.Drawing.Point(0, 384);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(802, 28);
+            this.statusStrip1.Size = new System.Drawing.Size(924, 28);
             this.statusStrip1.TabIndex = 6;
             this.statusStrip1.Text = "statusBar";
             // 
             // toolStripStatusLabel1
             // 
+            this.toolStripStatusLabel1.Margin = new System.Windows.Forms.Padding(20, 3, 0, 2);
             this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            this.toolStripStatusLabel1.Padding = new System.Windows.Forms.Padding(40, 0, 0, 0);
-            this.toolStripStatusLabel1.Size = new System.Drawing.Size(82, 23);
+            this.toolStripStatusLabel1.Size = new System.Drawing.Size(42, 23);
             this.toolStripStatusLabel1.Text = "Status:";
             // 
             // statusLabel
@@ -113,13 +123,13 @@ namespace RX_FFT
                         | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right)
                         | System.Windows.Forms.ToolStripStatusLabelBorderSides.Bottom)));
             this.statusLabel.Name = "statusLabel";
-            this.statusLabel.Size = new System.Drawing.Size(150, 23);
+            this.statusLabel.Size = new System.Drawing.Size(120, 23);
             this.statusLabel.Text = "Idle";
             this.statusLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // toolStripStatusLabel2
             // 
-            this.toolStripStatusLabel2.Margin = new System.Windows.Forms.Padding(30, 3, 0, 2);
+            this.toolStripStatusLabel2.Margin = new System.Windows.Forms.Padding(20, 3, 0, 2);
             this.toolStripStatusLabel2.Name = "toolStripStatusLabel2";
             this.toolStripStatusLabel2.Size = new System.Drawing.Size(86, 23);
             this.toolStripStatusLabel2.Text = "Sampling Rate:";
@@ -131,9 +141,42 @@ namespace RX_FFT
                         | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right)
                         | System.Windows.Forms.ToolStripStatusLabelBorderSides.Bottom)));
             this.samplingRateLabel.Name = "samplingRateLabel";
-            this.samplingRateLabel.Size = new System.Drawing.Size(120, 23);
+            this.samplingRateLabel.Size = new System.Drawing.Size(100, 23);
             this.samplingRateLabel.Text = "(none)";
             this.samplingRateLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // toolStripStatusLabel3
+            // 
+            this.toolStripStatusLabel3.Margin = new System.Windows.Forms.Padding(20, 3, 0, 2);
+            this.toolStripStatusLabel3.Name = "toolStripStatusLabel3";
+            this.toolStripStatusLabel3.Size = new System.Drawing.Size(71, 23);
+            this.toolStripStatusLabel3.Text = "Frames/Sec:";
+            // 
+            // fpsLabel
+            // 
+            this.fpsLabel.AutoSize = false;
+            this.fpsLabel.BorderSides = ((System.Windows.Forms.ToolStripStatusLabelBorderSides)((((System.Windows.Forms.ToolStripStatusLabelBorderSides.Left | System.Windows.Forms.ToolStripStatusLabelBorderSides.Top)
+                        | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right)
+                        | System.Windows.Forms.ToolStripStatusLabelBorderSides.Bottom)));
+            this.fpsLabel.Name = "fpsLabel";
+            this.fpsLabel.Size = new System.Drawing.Size(80, 23);
+            this.fpsLabel.Text = "0";
+            // 
+            // toolStripStatusLabel4
+            // 
+            this.toolStripStatusLabel4.Margin = new System.Windows.Forms.Padding(20, 3, 0, 2);
+            this.toolStripStatusLabel4.Name = "toolStripStatusLabel4";
+            this.toolStripStatusLabel4.Size = new System.Drawing.Size(68, 23);
+            this.toolStripStatusLabel4.Text = "Input Level:";
+            // 
+            // maxDbLabel
+            // 
+            this.maxDbLabel.AutoSize = false;
+            this.maxDbLabel.BorderSides = ((System.Windows.Forms.ToolStripStatusLabelBorderSides)((((System.Windows.Forms.ToolStripStatusLabelBorderSides.Left | System.Windows.Forms.ToolStripStatusLabelBorderSides.Top)
+                        | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right)
+                        | System.Windows.Forms.ToolStripStatusLabelBorderSides.Bottom)));
+            this.maxDbLabel.Name = "maxDbLabel";
+            this.maxDbLabel.Size = new System.Drawing.Size(60, 23);
             // 
             // mainMenu
             // 
@@ -144,7 +187,7 @@ namespace RX_FFT
             this.helpMenu});
             this.mainMenu.Location = new System.Drawing.Point(0, 0);
             this.mainMenu.Name = "mainMenu";
-            this.mainMenu.Size = new System.Drawing.Size(802, 24);
+            this.mainMenu.Size = new System.Drawing.Size(924, 24);
             this.mainMenu.TabIndex = 7;
             this.mainMenu.Text = "menuStrip1";
             // 
@@ -156,12 +199,13 @@ namespace RX_FFT
             this.saveMenu,
             this.closeMenu,
             this.toolStripSeparator1,
+            this.scanBandMenu,
+            this.scanMarkersMenu,
             this.demodulationMenu,
             this.performanceStatisticsMenu,
             this.markersMenu,
             this.toolStripSeparator2,
-            this.quitMenu,
-            this.scanBandMenu});
+            this.quitMenu});
             this.deviceMenu.Name = "deviceMenu";
             this.deviceMenu.Size = new System.Drawing.Size(54, 20);
             this.deviceMenu.Text = "Device";
@@ -230,6 +274,20 @@ namespace RX_FFT
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
             this.toolStripSeparator1.Size = new System.Drawing.Size(188, 6);
+            // 
+            // scanBandMenu
+            // 
+            this.scanBandMenu.Name = "scanBandMenu";
+            this.scanBandMenu.Size = new System.Drawing.Size(191, 22);
+            this.scanBandMenu.Text = "Scan band";
+            this.scanBandMenu.Click += new System.EventHandler(this.scanBandMenu_Click);
+            // 
+            // scanMarkersMenu
+            // 
+            this.scanMarkersMenu.Name = "scanMarkersMenu";
+            this.scanMarkersMenu.Size = new System.Drawing.Size(191, 22);
+            this.scanMarkersMenu.Text = "Scan Markers";
+            this.scanMarkersMenu.Click += new System.EventHandler(this.scanMarkersMenu_Click);
             // 
             // demodulationMenu
             // 
@@ -452,7 +510,8 @@ namespace RX_FFT
             // 
             this.advancedMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.gsmAnalyzerMenu,
-            this.digitalDemodulatorsMenu});
+            this.digitalDemodulatorsMenu,
+            this.oscilloscopeMenu});
             this.advancedMenu.Name = "advancedMenu";
             this.advancedMenu.Size = new System.Drawing.Size(72, 20);
             this.advancedMenu.Text = "Advanced";
@@ -470,6 +529,13 @@ namespace RX_FFT
             this.digitalDemodulatorsMenu.Size = new System.Drawing.Size(186, 22);
             this.digitalDemodulatorsMenu.Text = "Digital Demodulators";
             this.digitalDemodulatorsMenu.Click += new System.EventHandler(this.digitalDemodulatorsMenu_Click);
+            // 
+            // oscilloscopeMenu
+            // 
+            this.oscilloscopeMenu.Name = "oscilloscopeMenu";
+            this.oscilloscopeMenu.Size = new System.Drawing.Size(186, 22);
+            this.oscilloscopeMenu.Text = "Oscilloscope";
+            this.oscilloscopeMenu.Click += new System.EventHandler(this.oscilloscopeMenu_Click);
             // 
             // helpMenu
             // 
@@ -500,17 +566,19 @@ namespace RX_FFT
             // toolStripContainer1.ContentPanel
             // 
             this.toolStripContainer1.ContentPanel.Controls.Add(this.FFTDisplay);
-            this.toolStripContainer1.ContentPanel.Size = new System.Drawing.Size(802, 333);
+            this.toolStripContainer1.ContentPanel.Size = new System.Drawing.Size(924, 335);
             this.toolStripContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.toolStripContainer1.Location = new System.Drawing.Point(0, 24);
             this.toolStripContainer1.Name = "toolStripContainer1";
-            this.toolStripContainer1.Size = new System.Drawing.Size(802, 358);
+            this.toolStripContainer1.Size = new System.Drawing.Size(924, 360);
             this.toolStripContainer1.TabIndex = 8;
             this.toolStripContainer1.Text = "toolStripContainer1";
             // 
             // FFTDisplay
             // 
             this.FFTDisplay.CenterFrequency = 0;
+            this.FFTDisplay.ChannelBandDetails = null;
+            this.FFTDisplay.ChannelMode = false;
             this.FFTDisplay.Dock = System.Windows.Forms.DockStyle.Fill;
             this.FFTDisplay.DynamicLimits = false;
             this.FFTDisplay.FFTSize = 2048;
@@ -527,24 +595,18 @@ namespace RX_FFT
             this.FFTDisplay.SamplingRate = 0;
             this.FFTDisplay.SavingEnabled = false;
             this.FFTDisplay.SavingName = "waterfall.png";
-            this.FFTDisplay.Size = new System.Drawing.Size(802, 333);
+            this.FFTDisplay.Size = new System.Drawing.Size(924, 335);
+            this.FFTDisplay.SpectParts = 1;
             this.FFTDisplay.TabIndex = 0;
             this.FFTDisplay.UpdateRate = 10;
             this.FFTDisplay.VerticalSmooth = 1;
             this.FFTDisplay.WindowingFunction = LibRXFFT.Libraries.FFTW.FFTTransformer.eWindowingFunction.BlackmanHarris;
             // 
-            // scanBandMenu
-            // 
-            this.scanBandMenu.Name = "scanBandMenu";
-            this.scanBandMenu.Size = new System.Drawing.Size(191, 22);
-            this.scanBandMenu.Text = "Scan band";
-            this.scanBandMenu.Click += new System.EventHandler(this.scanBandMenu_Click);
-            // 
             // MainScreen
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(802, 410);
+            this.ClientSize = new System.Drawing.Size(924, 412);
             this.Controls.Add(this.toolStripContainer1);
             this.Controls.Add(this.mainMenu);
             this.Controls.Add(this.statusStrip1);
@@ -622,6 +684,12 @@ namespace RX_FFT
         private System.Windows.Forms.ToolStripMenuItem fitSpectrumMenu;
         private System.Windows.Forms.ToolStripMenuItem displayFilterMarginsMenu;
         private System.Windows.Forms.ToolStripMenuItem scanBandMenu;
+        private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel3;
+        private System.Windows.Forms.ToolStripStatusLabel fpsLabel;
+        private System.Windows.Forms.ToolStripMenuItem oscilloscopeMenu;
+        private System.Windows.Forms.ToolStripMenuItem scanMarkersMenu;
+        private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel4;
+        private System.Windows.Forms.ToolStripStatusLabel maxDbLabel;
     }
 }
 

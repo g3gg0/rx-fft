@@ -4,18 +4,18 @@ namespace LibRXFFT.Libraries.GSM.Layer2
 {
     public static class CRC
     {
-        public static readonly bool[] PolynomialTCHFR = new bool[]
+        public static readonly bool[] PolynomialTCHFR = new[]
                                                           {
                                                               true, false, true, true
                                                           };
 
-        public static readonly bool[] PolynomialSCH = new bool[]
+        public static readonly bool[] PolynomialSCH = new[]
                                                           {
                                                               true, false, true, false, true, true, true, false, true,
                                                               false, true
                                                           };
 
-        public static readonly bool[] PolynomialFIRE = new bool[]
+        public static readonly bool[] PolynomialFIRE = new[]
                                                            {
                                                                true, false, false, false, false, false, false, false, false,
                                                                false, false, false, false, false, true, false, false,
@@ -80,8 +80,13 @@ namespace LibRXFFT.Libraries.GSM.Layer2
 
         public static bool Matches(bool[] data)
         {
+            return Matches(data, false);
+        }
+
+        public static bool Matches(bool[] data, bool negated)
+        {
             foreach (bool b in data)
-                if (!b)
+                if (b == negated)
                     return false;
 
             return true;

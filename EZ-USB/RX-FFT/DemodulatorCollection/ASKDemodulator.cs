@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Text;
 using LibRXFFT.Libraries.SignalProcessing;
+using RX_FFT.Components.GDI;
 
 /* 
  * Pulse keying demodulator 
@@ -146,7 +147,6 @@ namespace DemodulatorCollection
                 return;
 
             double sampleValue = Math.Sqrt(iValue * iValue + qValue * qValue);
-            bool transmitting = false;
 
             SampleNum++;
 
@@ -215,6 +215,7 @@ namespace DemodulatorCollection
 
                 case eLearningState.Done:
 
+                    bool transmitting = false;
                     if (sampleValue > DecisionValue)
                     {
                         transmitting = true;
@@ -247,8 +248,6 @@ namespace DemodulatorCollection
                     }
                     else
                     {
-                        transmitting = false;
-
                         /* was active? */
                         if (TransmittingSamples != 0)
                         {
@@ -259,8 +258,6 @@ namespace DemodulatorCollection
 
                     if (Transmission)
                     {
-                        long diffToLastBit = SampleNum - LastBitSample;
-
                         if (TransmissionFirstSample)
                         {
                             DumpBits();

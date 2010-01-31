@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using LibRXFFT.Libraries.GSM.Layer1.ChannelCoding;
 using LibRXFFT.Libraries.GSM.Layer2;
 using LibRXFFT.Libraries.SignalProcessing;
@@ -36,7 +36,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
             Array.Copy(tmpTrainingSequence, (int)(2 * Parameters.Oversampling), TrainingSequence, 0, TrainingSequence.Length);
         }
 
-        public override eSuccessState ParseRawBurst(GSMParameters Parameters, double[] rawBurst)
+        public override eSuccessState ParseRawBurst(GSMParameters Parameters, double[] rawBurst, double[] rawBurstStrength)
         {
             double startOffset = Parameters.SampleStartPosition;
 

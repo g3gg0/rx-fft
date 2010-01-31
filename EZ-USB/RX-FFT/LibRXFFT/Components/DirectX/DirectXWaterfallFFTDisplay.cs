@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
 using LibRXFFT.Libraries;
 using LibRXFFT.Libraries.FFTW;
+using LibRXFFT.Libraries.Timers;
 
 namespace LibRXFFT.Components.DirectX
 {
@@ -23,14 +25,16 @@ namespace LibRXFFT.Components.DirectX
         private LabelledLine LevelBarUpper = new LabelledLine("Waterfall upper limit", 0, Color.BlueViolet);
         private LabelledLine LevelBarLower = new LabelledLine("Waterfall lower limit", 0, Color.BlueViolet);
 
-
-        private double IMax = -100;
-        private double IMin = 100;
-
+        private AccurateTimer FpsUpdateTimer;
 
         public DirectXWaterfallFFTDisplay()
         {
             InitializeComponent();
+
+            FpsUpdateTimer = new AccurateTimer();
+            FpsUpdateTimer.Interval = 1000;
+            FpsUpdateTimer.Timer += FpsUpdateTimer_Timer;
+            FpsUpdateTimer.Start();
 
             /* we work with already squared FFT values for performance reasons */
             FFTDisplay.SquaredFFTData = true;
@@ -63,6 +67,26 @@ namespace LibRXFFT.Components.DirectX
             /* configure update speed */
             //WaterfallDisplay.EventActions[eUserEvent.MouseWheelUpAlt] = eUserAction.UserCallback;
             //WaterfallDisplay.EventActions[eUserEvent.MouseWheelDownAlt] = eUserAction.UserCallback;
+        }
+
+        private long FpsBlocksReceived = 0;
+        private long FpsBlocksProcessed = 0;
+        private long FpsSeconds = 0;
+        public double FpsReceived = 0;
+        public double FpsProcessed = 0;
+
+        void FpsUpdateTimer_Timer(object sender, EventArgs e)
+        {
+            FpsSeconds++;
+
+            if (FpsBlocksProcessed > 50 && FpsBlocksReceived > 50)
+            {
+                FpsReceived = (double)FpsBlocksReceived / FpsSeconds;
+                FpsProcessed = (double)FpsBlocksProcessed / FpsSeconds;
+                FpsSeconds = 0;
+                FpsBlocksReceived = 0;
+                FpsBlocksProcessed = 0;
+            }
         }
 
         public string[] DisplayInformation
@@ -498,8 +522,12 @@ namespace LibRXFFT.Components.DirectX
 
         public void ProcessData(double[] iSamples, double[] qSamples, int spectPart, double baseAmp)
         {
+            FpsBlocksReceived++;
+
             if (FFTDisplay.EnoughData)
                 return;
+
+            FpsBlocksProcessed++;
 
             lock (FFTLock)
             {
@@ -580,6 +608,11 @@ namespace LibRXFFT.Components.DirectX
 
                 FFTDisplay.UpdateOverlays = true;
             }
+        }
+
+        public double ApproxMaxStrength
+        {
+            get { return WaterfallDisplay.ApproxMaxStrength; }
         }
     }
 }

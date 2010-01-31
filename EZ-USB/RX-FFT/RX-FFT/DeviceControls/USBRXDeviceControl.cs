@@ -25,6 +25,13 @@ namespace RX_FFT.DeviceControls
 
         private double BoardAttenuation = 0;
         private double BoardAmplification = 0;
+        private FilterInformation CurrentFilter;
+
+        public USBRXDeviceControl()
+        {
+            InitializeComponent();
+            Hide();
+        }
 
         public int ShmemChannel
         {
@@ -36,62 +43,6 @@ namespace RX_FFT.DeviceControls
             get { return USBRX.ShmemNode; }
         }
 
-        public USBRXDeviceControl()
-        {
-            /* display the wait message */
-            WaitDialog waitDlg = new WaitDialog();
-            waitDlg.Show();
-            waitDlg.Refresh();
-
-            /* do our own stuff */
-            InitializeComponent();
-
-            USBRX = new USBRXDevice();
-            USBRX.ShowConsole(false);
-
-            if (USBRX.Init())
-            {
-                FilterList.NCOFreq = USBRX.Atmel.TCXOFreq;
-                FilterList.UpdateFilters("Filter");
-                FilterList.AddFilters("..\\..\\..\\Filter");
-                FilterList.FilterSelected += new EventHandler(FilterList_FilterSelected);
-
-                USBRX.Tuner.SamplingRateChanged += new EventHandler(AD6636_FilterRateChanged);
-                USBRX.Tuner.FilterWidthChanged += new EventHandler(AD6636_FilterWidthChanged);
-
-                frequencySelector1.UpperLimit = USBRX.Tuner.HighestFrequency;
-                frequencySelector1.LowerLimit = USBRX.Tuner.LowestFrequency;
-                CurrentFrequency = USBRX.Tuner.GetFrequency();
-                SetFreqTextbox(CurrentFrequency);
-
-                _SampleSource = new ShmemSampleSource("USB-RX Device Control", USBRX.ShmemChannel, 1, 0);
-                _SampleSource.InvertedSpectrum = InvertedSpectrum;
-                _SampleSource.DataFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPoint;
-
-                ToolTip ttFreq = new ToolTip();
-                ttFreq.SetToolTip(lblFrequency, "Min Freq: " + FrequencyFormatter.FreqToStringAccurate(USBRX.Tuner.LowestFrequency) + Environment.NewLine + "Max Freq: " + FrequencyFormatter.FreqToStringAccurate(USBRX.Tuner.HighestFrequency));
-                ttFreq.AutomaticDelay = 500;
-
-                UpdateAtmelFilters();
-                SelectFiles(true);
-
-                _Connected = true;
-
-                /* small hack to select first (widest) filter */
-                FilterList.FilterSelect(FilterList.FirstFilter);
-
-                Show();
-            }
-
-            /* close wait dialog and show ours */
-            waitDlg.Close();
-
-            radioAcqOff.Checked = true;
-            radioTuner.Checked = true;
-            radioAgcOff.Checked = true;
-            chkAtt.Checked = false;
-            chkPreAmp.Checked = false;
-        }
 
         void UpdateAtmelFilters()
         {
@@ -107,7 +58,18 @@ namespace RX_FFT.DeviceControls
             }
         }
 
-        void AD6636_FilterWidthChanged(object sender, EventArgs e)
+        void Tuner_DeviceDisappeared(object sender, EventArgs e)
+        {
+            if (DeviceDisappeared != null)
+                DeviceDisappeared(sender, e);
+        }
+
+        void Tuner_InvertedSpectrumChanged(object sender, EventArgs e)
+        {
+            SampleSource.InvertedSpectrum = InvertedSpectrum;
+        }
+
+        void Tuner_FilterWidthChanged(object sender, EventArgs e)
         {
             /* update UI */
             txtFilterWidth.Text = FrequencyFormatter.FreqToStringAccurate(FilterWidth);
@@ -117,7 +79,7 @@ namespace RX_FFT.DeviceControls
                 FilterWidthChanged(this, null);
         }
 
-        void AD6636_FilterRateChanged(object sender, EventArgs e)
+        void Tuner_FilterRateChanged(object sender, EventArgs e)
         {
             /* update UI */
             txtFilterRate.Text = FrequencyFormatter.FreqToStringAccurate(SamplingRate);
@@ -137,6 +99,7 @@ namespace RX_FFT.DeviceControls
 
             if (USBRX != null)
             {
+                CurrentFilter = (FilterInformation)sender;
                 if (sender is AD6636FilterFile)
                 {
                     radioAgcSlow.Enabled = false;
@@ -168,24 +131,20 @@ namespace RX_FFT.DeviceControls
                 return;
             }
 
-            if (Connected)
-            {
-                USBRX.CurrentMode = eTransferMode.Stopped;
-                USBRX.Close();
-                _SampleSource.Close();
-            }
+            CloseTuner();
         }
 
         private void frequencySelector1_FrequencyChanged(object sender, EventArgs e)
         {
-            if (!Connected)
+            if (!Connected || ScanFrequenciesEnabled)
                 return;
+
             CurrentFrequency = frequencySelector1.Frequency;
 
             if (!USBRX.Tuner.SetFrequency(CurrentFrequency))
-                frequencySelector1.BackColor = Color.Red;
+                frequencySelector1.ForeColor = Color.Red;
             else
-                frequencySelector1.BackColor = Color.White;
+                frequencySelector1.ForeColor = Color.Cyan;
 
             if (FrequencyChanged != null)
                 FrequencyChanged(this, null);
@@ -236,10 +195,151 @@ namespace RX_FFT.DeviceControls
         public event EventHandler FrequencyChanged; 
         public event EventHandler FilterWidthChanged;
         public event EventHandler InvertedSpectrumChanged;
+        public event EventHandler DeviceDisappeared;
+
+        public virtual bool OpenTuner()
+        {
+            /* display the wait message */
+            WaitDialog waitDlg = new WaitDialog();
+            waitDlg.Show();
+            waitDlg.Refresh();
+            
+            USBRX = new USBRXDevice();
+            USBRX.ShowConsole(false);
+
+            try
+            {
+                if (!USBRX.Init())
+                {
+                    ErrorMessage = "There was no BO-35digi found on USB bus.";
+                    waitDlg.Close();
+                    Close();
+                    return false;
+                }
+            }
+            catch (BadImageFormatException e)
+            {
+                ErrorMessage = "Unsupported architecture.";
+                waitDlg.Close();
+                Close();
+                return false;
+            }
+            catch (Exception e)
+            {
+                ErrorMessage = "Unhandled exception." + Environment.NewLine + e;
+                waitDlg.Close();
+                Close();
+                return false;
+            }
+            ErrorMessage = "";
+
+            FilterList.NCOFreq = USBRX.Atmel.TCXOFreq;
+            FilterList.UpdateFilters("Filter");
+            FilterList.AddFilters("..\\..\\..\\Filter");
+            FilterList.FilterSelected += new EventHandler(FilterList_FilterSelected);
+
+            USBRX.Tuner.SamplingRateChanged += new EventHandler(Tuner_FilterRateChanged);
+            USBRX.Tuner.FilterWidthChanged += new EventHandler(Tuner_FilterWidthChanged);
+            USBRX.Tuner.InvertedSpectrumChanged += new EventHandler(Tuner_InvertedSpectrumChanged);
+            USBRX.Tuner.DeviceDisappeared += new EventHandler(Tuner_DeviceDisappeared);
+
+            frequencySelector1.UpperLimit = USBRX.Tuner.HighestFrequency;
+            frequencySelector1.LowerLimit = USBRX.Tuner.LowestFrequency;
+            CurrentFrequency = USBRX.Tuner.GetFrequency();
+            SetFreqTextbox(CurrentFrequency);
+
+            _SampleSource = new ShmemSampleSource("USB-RX Device Control", USBRX.ShmemChannel, 1, 0);
+            _SampleSource.InvertedSpectrum = InvertedSpectrum;
+            _SampleSource.DataFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPoint;
+
+            ToolTip ttFreq = new ToolTip();
+            ttFreq.SetToolTip(frequencySelector1, "Min Freq: " + FrequencyFormatter.FreqToStringAccurate(USBRX.Tuner.LowestFrequency) + Environment.NewLine + "Max Freq: " + FrequencyFormatter.FreqToStringAccurate(USBRX.Tuner.HighestFrequency));
+            ttFreq.AutomaticDelay = 500;
+
+            UpdateAtmelFilters();
+            SelectFiles(true);
+
+            Connected = true;
+
+            /* small hack to select first (widest) filter */
+            FilterList.FilterSelect(FilterList.FirstFilter);
+
+            /* close wait dialog and show ours */
+            waitDlg.Close();
+
+            Show();
+
+            radioAcqOff.Checked = true;
+            radioTuner.Checked = true;
+            radioAgcOff.Checked = true;
+            chkAtt.Checked = false;
+            chkPreAmp.Checked = false;
+
+            radioTuner_CheckedChanged(null, null);
+            chkAtt_CheckedChanged(null, null);
+            chkPreAmp_CheckedChanged(null, null);
+            radioAgcOff_CheckedChanged(null, null);
+
+            return true;
+        }
+
+        public virtual void CloseTuner()
+        {
+            if (Connected)
+            {
+                USBRX.Tuner.CloseTuner();
+                USBRX.CurrentMode = eTransferMode.Stopped;
+                USBRX.Close();
+                USBRX=null;
+                _SampleSource.Close();
+
+                Connected = false;
+            }
+
+            Hide();
+        }
+
+        public long IntermediateFrequency
+        {
+            get { return 0; }
+        }
 
         public double Amplification
         {
-            get { return USBRX.Tuner.Amplification + BoardAmplification - BoardAttenuation; }
+            get { return USBRX.Tuner.Amplification + BoardAmplification; }
+            set
+            {
+                double val = value;
+
+                if(val > 30 && AttEnabled)
+                {
+                    USBRX.SetAtt(false);
+                    BeginInvoke(new MethodInvoker(() => chkAtt.Checked = false));
+                    val -= 30;
+                }
+
+                if (val > 20)
+                {
+                    if (!PreampEnabled)
+                    {
+                        USBRX.SetPreAmp(true);
+                        BeginInvoke(new MethodInvoker(() => chkPreAmp.Checked = true));
+                    }
+                    val -= 20;
+                }
+
+                /* try to set main tuner amplification */
+                USBRX.Tuner.Amplification = val;
+
+                /* try to handle the remaining amplification */
+                val -= USBRX.Tuner.Amplification;
+
+            }
+        }
+
+        public double Attenuation
+        {
+            get { return BoardAmplification + USBRX.Tuner.Attenuation; }
         }
 
         public long LowestFrequency
@@ -334,9 +434,23 @@ namespace RX_FFT.DeviceControls
                 return (string[])lines.ToArray(typeof(string));
             }
         }
+
+
         #endregion
 
         #region DeviceControl Member
+
+        public string _ErrorMessage;
+        private bool AttEnabled = false;
+        private bool PreampEnabled = false;
+
+        public string ErrorMessage
+        {
+            get { return _ErrorMessage; }
+            private set { _ErrorMessage = value;}
+
+        }
+
 
         public event EventHandler TransferModeChanged;
 
@@ -344,6 +458,9 @@ namespace RX_FFT.DeviceControls
         {
             get
             {
+                if (!Connected)
+                    return eTransferMode.Stopped;
+
                 return USBRX.CurrentMode;
             }
             set
@@ -399,7 +516,10 @@ namespace RX_FFT.DeviceControls
             if (USBRX.Tuner.SetFrequency(frequency))
             {
                 CurrentFrequency = frequency;
-                this.BeginInvoke(new setFreqDelegate(SetFreqTextbox), frequency);
+                if (!ScanFrequenciesEnabled)
+                {
+                    this.BeginInvoke(new setFreqDelegate(SetFreqTextbox), frequency);
+                }
                 if (FrequencyChanged != null)
                     FrequencyChanged(this, null);
                 return true;
@@ -434,9 +554,13 @@ namespace RX_FFT.DeviceControls
             }
         }
 
+        public bool ScanFrequenciesEnabled { get; set; }
+
         public void Close()
         {
             ClosingAllowed = true;
+
+            CloseTuner();
             base.Close();
         }
 
@@ -461,6 +585,10 @@ namespace RX_FFT.DeviceControls
             {
                 return _Connected;
             }
+            private set
+            {
+                _Connected = value;
+            }
         }
 
 
@@ -469,20 +597,29 @@ namespace RX_FFT.DeviceControls
 
         private void radioAcqOff_CheckedChanged(object sender, EventArgs e)
         {
-            SampleSource.Flush();
-            TransferMode = eTransferMode.Stopped;
+            if (radioAcqOff.Checked)
+            {
+                SampleSource.Flush();
+                TransferMode = eTransferMode.Stopped;
+            }
         }
 
         private void radioAcqBlock_CheckedChanged(object sender, EventArgs e)
         {
-            SampleSource.Flush();
-            TransferMode = eTransferMode.Block;
+            if (radioAcqBlock.Checked)
+            {
+                SampleSource.Flush();
+                TransferMode = eTransferMode.Block;
+            }
         }
 
         private void radioAcqStream_CheckedChanged(object sender, EventArgs e)
         {
-            SampleSource.Flush();
-            TransferMode = eTransferMode.Stream;
+            if (radioAcqStream.Checked)
+            {
+                SampleSource.Flush();
+                TransferMode = eTransferMode.Stream;
+            }
         }
 
         private void radioRf1_CheckedChanged(object sender, EventArgs e)
@@ -527,8 +664,9 @@ namespace RX_FFT.DeviceControls
 
         private void chkAtt_CheckedChanged(object sender, EventArgs e)
         {
-            USBRX.SetAtt(chkAtt.Checked);
-            if (chkAtt.Checked)
+            AttEnabled = chkAtt.Checked;
+            USBRX.SetAtt(AttEnabled);
+            if (AttEnabled)
             {
                 BoardAttenuation = 20;
             }
@@ -540,8 +678,9 @@ namespace RX_FFT.DeviceControls
 
         private void chkPreAmp_CheckedChanged(object sender, EventArgs e)
         {
-            USBRX.SetPreAmp(chkPreAmp.Checked);
-            if (chkPreAmp.Checked)
+            PreampEnabled = chkPreAmp.Checked;
+            USBRX.SetPreAmp(PreampEnabled);
+            if (PreampEnabled)
             {
                 BoardAmplification = 20;
             }
@@ -553,22 +692,34 @@ namespace RX_FFT.DeviceControls
 
         private void radioAgcOff_CheckedChanged(object sender, EventArgs e)
         {
-            USBRX.SetAgc(USBRXDevice.eAgcType.Off);
+            if (radioAgcOff.Checked)
+            {
+                USBRX.SetAgc(USBRXDevice.eAgcType.Off);
+            }
         }
 
         private void radioAgcSlow_CheckedChanged(object sender, EventArgs e)
         {
-            USBRX.SetAgc(USBRXDevice.eAgcType.Slow);
+            if (radioAgcSlow.Checked)
+            {
+                USBRX.SetAgc(USBRXDevice.eAgcType.Slow);
+            }
         }
 
         private void radioAgcMedium_CheckedChanged(object sender, EventArgs e)
         {
-            USBRX.SetAgc(USBRXDevice.eAgcType.Medium);
+            if (radioAgcMedium.Checked)
+            {
+                USBRX.SetAgc(USBRXDevice.eAgcType.Medium);
+            }
         }
 
         private void radioAgcFast_CheckedChanged(object sender, EventArgs e)
         {
-            USBRX.SetAgc(USBRXDevice.eAgcType.Fast);
+            if (radioAgcFast.Checked)
+            {
+                USBRX.SetAgc(USBRXDevice.eAgcType.Fast);
+            }
         }
 
         private void radioAgcManual_CheckedChanged(object sender, EventArgs e)
@@ -582,7 +733,10 @@ namespace RX_FFT.DeviceControls
 
         private void txtMgcValue_ValueChanged(object sender, EventArgs e)
         {
-            USBRX.SetMgc((int)txtMgcValue.Value);
+            if (radioAgcManual.Checked)
+            {
+                USBRX.SetMgc((int) txtMgcValue.Value);
+            }
         }
     }
 }

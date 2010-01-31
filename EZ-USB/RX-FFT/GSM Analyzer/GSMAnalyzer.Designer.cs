@@ -20,6 +20,13 @@ namespace GSM_Analyzer
                 components.Dispose();
             }
 
+            if (ChannelScanThread != null)
+            {
+                ChannelScanThread.Abort();
+                ChannelScanThread.Join();
+                ChannelScanThread = null;
+            }
+
             if (ReadThread != null && ReadThread.IsAlive)
             {
                 ThreadActive = false;
@@ -45,6 +52,9 @@ namespace GSM_Analyzer
             this.btnOpen = new System.Windows.Forms.Button();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.splitContainer5 = new System.Windows.Forms.SplitContainer();
+            this.txtArfcn = new LibRXFFT.Components.GDI.TextBoxMouseScroll();
+            this.label16 = new System.Windows.Forms.Label();
+            this.btnScan = new System.Windows.Forms.Button();
             this.btnSpectrum = new System.Windows.Forms.Button();
             this.btnClear = new System.Windows.Forms.Button();
             this.btnOptions = new System.Windows.Forms.Button();
@@ -70,6 +80,10 @@ namespace GSM_Analyzer
             this.lblT1 = new System.Windows.Forms.Label();
             this.lblT2 = new System.Windows.Forms.Label();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.lblIdlePower = new System.Windows.Forms.Label();
+            this.lblPower = new System.Windows.Forms.Label();
+            this.label18 = new System.Windows.Forms.Label();
+            this.label17 = new System.Windows.Forms.Label();
             this.label6 = new System.Windows.Forms.Label();
             this.lblSucess = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
@@ -126,7 +140,7 @@ namespace GSM_Analyzer
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.txtLog);
-            this.splitContainer1.Size = new System.Drawing.Size(910, 476);
+            this.splitContainer1.Size = new System.Drawing.Size(949, 476);
             this.splitContainer1.SplitterDistance = 81;
             this.splitContainer1.SplitterWidth = 1;
             this.splitContainer1.TabIndex = 3;
@@ -140,6 +154,9 @@ namespace GSM_Analyzer
             // 
             // splitContainer5.Panel1
             // 
+            this.splitContainer5.Panel1.Controls.Add(this.txtArfcn);
+            this.splitContainer5.Panel1.Controls.Add(this.label16);
+            this.splitContainer5.Panel1.Controls.Add(this.btnScan);
             this.splitContainer5.Panel1.Controls.Add(this.btnSpectrum);
             this.splitContainer5.Panel1.Controls.Add(this.btnClear);
             this.splitContainer5.Panel1.Controls.Add(this.btnOptions);
@@ -156,10 +173,42 @@ namespace GSM_Analyzer
             this.splitContainer5.Panel2.Controls.Add(this.groupBox3);
             this.splitContainer5.Panel2.Controls.Add(this.groupBox2);
             this.splitContainer5.Panel2.Controls.Add(this.groupBox1);
-            this.splitContainer5.Size = new System.Drawing.Size(910, 81);
+            this.splitContainer5.Size = new System.Drawing.Size(949, 81);
             this.splitContainer5.SplitterDistance = 348;
             this.splitContainer5.SplitterWidth = 1;
             this.splitContainer5.TabIndex = 8;
+            // 
+            // txtArfcn
+            // 
+            this.txtArfcn.Location = new System.Drawing.Point(158, 58);
+            this.txtArfcn.LowerLimit = ((long)(0));
+            this.txtArfcn.Name = "txtArfcn";
+            this.txtArfcn.Size = new System.Drawing.Size(47, 20);
+            this.txtArfcn.TabIndex = 20;
+            this.txtArfcn.Text = "0";
+            this.txtArfcn.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.txtArfcn.UpperLimit = ((long)(2048));
+            this.txtArfcn.Value = ((long)(0));
+            this.txtArfcn.ValueChanged += new System.EventHandler(this.txtArfcn_ValueChanged);
+            // 
+            // label16
+            // 
+            this.label16.AutoSize = true;
+            this.label16.Location = new System.Drawing.Point(105, 62);
+            this.label16.Name = "label16";
+            this.label16.Size = new System.Drawing.Size(46, 13);
+            this.label16.TabIndex = 19;
+            this.label16.Text = "ARFCN:";
+            // 
+            // btnScan
+            // 
+            this.btnScan.Location = new System.Drawing.Point(3, 57);
+            this.btnScan.Name = "btnScan";
+            this.btnScan.Size = new System.Drawing.Size(75, 23);
+            this.btnScan.TabIndex = 18;
+            this.btnScan.Text = "Scan";
+            this.btnScan.UseVisualStyleBackColor = true;
+            this.btnScan.Click += new System.EventHandler(this.btnScan_Click);
             // 
             // btnSpectrum
             // 
@@ -404,6 +453,10 @@ namespace GSM_Analyzer
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.lblIdlePower);
+            this.groupBox2.Controls.Add(this.lblPower);
+            this.groupBox2.Controls.Add(this.label18);
+            this.groupBox2.Controls.Add(this.label17);
             this.groupBox2.Controls.Add(this.label6);
             this.groupBox2.Controls.Add(this.lblSucess);
             this.groupBox2.Controls.Add(this.label7);
@@ -412,12 +465,48 @@ namespace GSM_Analyzer
             this.groupBox2.Controls.Add(this.label8);
             this.groupBox2.Controls.Add(this.lblFreqOffset);
             this.groupBox2.Controls.Add(this.lblRate);
-            this.groupBox2.Location = new System.Drawing.Point(203, 2);
+            this.groupBox2.Location = new System.Drawing.Point(341, 2);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(114, 78);
+            this.groupBox2.Size = new System.Drawing.Size(169, 78);
             this.groupBox2.TabIndex = 17;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Statistics";
+            // 
+            // lblIdlePower
+            // 
+            this.lblIdlePower.AutoSize = true;
+            this.lblIdlePower.Location = new System.Drawing.Point(119, 31);
+            this.lblIdlePower.Name = "lblIdlePower";
+            this.lblIdlePower.Size = new System.Drawing.Size(16, 13);
+            this.lblIdlePower.TabIndex = 15;
+            this.lblIdlePower.Text = "---";
+            // 
+            // lblPower
+            // 
+            this.lblPower.AutoSize = true;
+            this.lblPower.Location = new System.Drawing.Point(119, 18);
+            this.lblPower.Name = "lblPower";
+            this.lblPower.Size = new System.Drawing.Size(16, 13);
+            this.lblPower.TabIndex = 15;
+            this.lblPower.Text = "---";
+            // 
+            // label18
+            // 
+            this.label18.AutoSize = true;
+            this.label18.Location = new System.Drawing.Point(88, 31);
+            this.label18.Name = "label18";
+            this.label18.Size = new System.Drawing.Size(27, 13);
+            this.label18.TabIndex = 15;
+            this.label18.Text = "Idle:";
+            // 
+            // label17
+            // 
+            this.label17.AutoSize = true;
+            this.label17.Location = new System.Drawing.Point(88, 18);
+            this.label17.Name = "label17";
+            this.label17.Size = new System.Drawing.Size(28, 13);
+            this.label17.TabIndex = 15;
+            this.label17.Text = "Pwr:";
             // 
             // label6
             // 
@@ -501,7 +590,7 @@ namespace GSM_Analyzer
             this.groupBox1.Controls.Add(this.label14);
             this.groupBox1.Controls.Add(this.label5);
             this.groupBox1.Controls.Add(this.lblMCCMNC);
-            this.groupBox1.Location = new System.Drawing.Point(323, 2);
+            this.groupBox1.Location = new System.Drawing.Point(203, 2);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(132, 78);
             this.groupBox1.TabIndex = 16;
@@ -588,14 +677,14 @@ namespace GSM_Analyzer
             this.txtLog.Multiline = true;
             this.txtLog.Name = "txtLog";
             this.txtLog.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtLog.Size = new System.Drawing.Size(910, 394);
+            this.txtLog.Size = new System.Drawing.Size(949, 394);
             this.txtLog.TabIndex = 1;
             // 
             // GSMAnalyzer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(910, 476);
+            this.ClientSize = new System.Drawing.Size(949, 476);
             this.Controls.Add(this.splitContainer1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "GSMAnalyzer";
@@ -619,6 +708,7 @@ namespace GSM_Analyzer
             this.ResumeLayout(false);
 
         }
+
 
         #endregion
 
@@ -668,6 +758,13 @@ namespace GSM_Analyzer
         private System.Windows.Forms.Label label15;
         private System.Windows.Forms.Label lblFreqOffset;
         private System.Windows.Forms.Button btnSpectrum;
+        private System.Windows.Forms.Button btnScan;
+        private TextBoxMouseScroll txtArfcn;
+        private System.Windows.Forms.Label label16;
+        private System.Windows.Forms.Label lblPower;
+        private System.Windows.Forms.Label label17;
+        private System.Windows.Forms.Label lblIdlePower;
+        private System.Windows.Forms.Label label18;
     }
 }
 

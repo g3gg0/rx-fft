@@ -46,10 +46,10 @@ namespace LibRXFFT.Components.DirectX
         protected bool NeedsUpdate = false;
         public bool EnoughData = false;
 
-        double ScalePosMax = 0;
-        double ScalePosMin = -120;
-        double ScaleBarDistance = 10;
-        double ScaleTextDistance = 20;
+        public double ScalePosMax = 0;
+        public double ScalePosMin = -120;
+        public double ScaleBarDistance = 10;
+        public double ScaleTextDistance = 20;
 
         /* sample value buffer */
         public int MaxSamples { get; set; }

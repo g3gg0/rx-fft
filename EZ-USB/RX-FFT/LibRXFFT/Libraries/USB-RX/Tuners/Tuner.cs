@@ -8,6 +8,10 @@ namespace LibRXFFT.Libraries.USB_RX.Tuners
         event EventHandler FilterWidthChanged;
         event EventHandler FrequencyChanged;
         event EventHandler InvertedSpectrumChanged;
+        event EventHandler DeviceDisappeared;
+
+        bool OpenTuner();
+        void CloseTuner();
 
         /* SetFrequency must be a function, because it may fail and returns a status flag */
         bool SetFrequency(long frequency);
@@ -22,6 +26,8 @@ namespace LibRXFFT.Libraries.USB_RX.Tuners
         string[] Description { get; }
         string[] Details { get; }
 
+        long IntermediateFrequency { get; }
+
         long LowestFrequency { get; }
         long HighestFrequency { get; }
 
@@ -32,6 +38,9 @@ namespace LibRXFFT.Libraries.USB_RX.Tuners
         string LowerFilterMarginDescription { get; }
 
         /* returns the amplification in dB */
-        double Amplification { get; }
+        double Amplification { get; set;  }
+
+        /* returns the attenuation to compensate in dB */
+        double Attenuation { get; }
     }
 }

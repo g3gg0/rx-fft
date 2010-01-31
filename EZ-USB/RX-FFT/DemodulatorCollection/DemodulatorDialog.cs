@@ -4,9 +4,11 @@ using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
 using LibRXFFT.Libraries;
+using LibRXFFT.Libraries.GSM.Layer2;
 using LibRXFFT.Libraries.Misc;
 using LibRXFFT.Libraries.SampleSources;
 using LibRXFFT.Libraries.ShmemChain;
+using RX_FFT.Components.GDI;
 
 namespace DemodulatorCollection
 {
@@ -40,6 +42,10 @@ namespace DemodulatorCollection
         void btnOpenPulseKeying_Click(object sender, EventArgs e)
         {
             CloseDemod();
+
+            if (SampleSource == null)
+                return;
+
             DigitalDemodulator demod = new PKDemodulator();
             demod.SamplingRate = SampleSource.OutputSamplingRate;
             demod.Init();
@@ -49,6 +55,10 @@ namespace DemodulatorCollection
         private void btnOpenPulseDelay_Click(object sender, EventArgs e)
         {
             CloseDemod();
+
+            if(SampleSource==null)
+                return;
+
             DigitalDemodulator demod = new PDDemodulator();
             demod.SamplingRate = SampleSource.OutputSamplingRate;
             demod.Init();
@@ -58,7 +68,26 @@ namespace DemodulatorCollection
         private void btnOpenASK_Click(object sender, EventArgs e)
         {
             CloseDemod();
+
+            if (SampleSource == null)
+                return;
+
             DigitalDemodulator demod = new ASKDemodulator();
+            demod.SamplingRate = SampleSource.OutputSamplingRate;
+            demod.Init();
+            Demodulator = demod;
+        }
+
+        private void btnPocsag_Click(object sender, EventArgs e)
+        {
+            CloseDemod();
+
+            if (SampleSource == null)
+                return;
+
+            DigitalDemodulator demod = new PSKDemodulator();
+            ((PSKDemodulator)demod).BitSink = new POCSAGDecoder();
+
             demod.SamplingRate = SampleSource.OutputSamplingRate;
             demod.Init();
             Demodulator = demod;
@@ -110,7 +139,13 @@ namespace DemodulatorCollection
 
                         if (Demodulator != null)
                         {
-                            Demodulator.Process(I, Q);
+                            try
+                            {
+                                Demodulator.Process(I, Q);
+                            }
+                            catch (Exception e)
+                            {
+                            }
                         }
                     }
                 }
@@ -195,6 +230,7 @@ namespace DemodulatorCollection
             btnOpen.ContextMenu = menu;
             btnOpen.ContextMenu.Show(btnOpen, new Point(10, 10));
         }
+
 
     }
 }

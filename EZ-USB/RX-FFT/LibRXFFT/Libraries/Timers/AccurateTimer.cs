@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using RX_FFT.Components.GDI;
 
 namespace LibRXFFT.Libraries.Timers
 {
@@ -140,7 +141,10 @@ namespace LibRXFFT.Libraries.Timers
             {
                 TimerID = timeSetEvent(Interval, 0, thisCB, UIntPtr.Zero, (uint)f);
                 if (TimerID == 0)
-                    throw new Exception("timeSetEvent error");
+                {
+                    Log.AddMessage("timeSetEvent error"); 
+                    //throw new Exception("timeSetEvent error");
+                }
                 Running = true;
                 //Debug.WriteLine("MMTimer " + id.ToString() + " started");
             }
@@ -148,8 +152,15 @@ namespace LibRXFFT.Libraries.Timers
 
         void CBFunc(uint uTimerID, uint uMsg, UIntPtr dwUser, UIntPtr dw1, UIntPtr dw2)
         {
-            //Callback from the MMTimer API that fires the Timer event. Note we are in a different thread here
-            OnTimer(new EventArgs());
+            try
+            {
+                //Callback from the MMTimer API that fires the Timer event. Note we are in a different thread here
+                OnTimer(new EventArgs());
+            }
+            catch (Exception e)
+            {
+                Log.AddMessage("Exception: " + e.ToString());
+            }
         }
     }
 }

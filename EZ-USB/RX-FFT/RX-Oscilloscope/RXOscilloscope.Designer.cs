@@ -44,7 +44,7 @@
             this.scope.Location = new System.Drawing.Point(0, 0);
             this.scope.Name = "scope";
             this.scope.SamplingRate = 0;
-            this.scope.Size = new System.Drawing.Size(855, 337);
+            this.scope.Size = new System.Drawing.Size(992, 361);
             this.scope.TabIndex = 0;
             // 
             // btnOpen
@@ -73,7 +73,7 @@
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.scope);
-            this.splitContainer1.Size = new System.Drawing.Size(855, 371);
+            this.splitContainer1.Size = new System.Drawing.Size(992, 395);
             this.splitContainer1.SplitterDistance = 30;
             this.splitContainer1.TabIndex = 5;
             // 
@@ -81,7 +81,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(855, 371);
+            this.ClientSize = new System.Drawing.Size(992, 395);
             this.Controls.Add(this.splitContainer1);
             this.Name = "RXOscilloscope";
             this.Text = "Oscilloscope";

@@ -20,6 +20,8 @@ namespace RX_Oscilloscope.Components
         private int SamplesPreTrigger = 0;
         private bool Triggered = false;
 
+        private bool DisplayPhase = false;
+
         /* when this is set, force waveform display to draw all samples */
         private bool ForceShowSamples = false;
 
@@ -27,6 +29,7 @@ namespace RX_Oscilloscope.Components
         private LabelledLine TriggerSampleBar = new LabelledLine("Trig", -1000, Color.Yellow);
 
         private IIRFilter LowPass = null;
+        private double LastPhase;
 
         public Oscilloscope()
         {
@@ -38,6 +41,8 @@ namespace RX_Oscilloscope.Components
             waveForm.MaxSamples = SamplesTotal;
             waveForm.LabelledHorLines.AddLast(TriggerLevelBar);
             waveForm.LabelledVertLines.AddLast(TriggerSampleBar);
+
+            UpdateScale();
         }
 
         public double SamplingRate
@@ -75,20 +80,70 @@ namespace RX_Oscilloscope.Components
             }
         }
 
-        internal void Process(double I, double Q)
+        private double FastAtan2b(double y, double x)
         {
-            double level;
+            const double ONEQTR_PI = Math.PI / 4.0f;
+            const double THRQTR_PI = 3.0f * Math.PI / 4.0f;
+            double r;
+            double angle;
+            double abs_y = Math.Abs(y);
 
-            if (LowPass != null)
+            if (x < 0.0f)
             {
-                level = Math.Sqrt(I * I + Q * Q);
-                level = LowPass.ProcessSample(level);
-                level = DBTools.SampleTodB(level);
+                r = (x + abs_y) / (abs_y - x);
+                angle = THRQTR_PI;
             }
             else
             {
-                level = I * I + Q * Q;
-                level = DBTools.SquaredSampleTodB(level);
+                r = (x - abs_y) / (x + abs_y);
+                angle = ONEQTR_PI;
+            }
+
+            angle += (0.1963f * r * r - 0.9817f) * r;
+
+            return y < 0.0f ? -angle : angle;
+        }
+
+        internal void Process(double I, double Q)
+        {
+            double level = 0;
+
+            if (DisplayPhase)
+            {
+
+                double phase;
+
+                phase = UseFastAtan2 ? FastAtan2b(I, Q) : Math.Atan2(I, Q);
+
+                while (phase - LastPhase < -(Math.PI / 2))
+                    phase += Math.PI;
+
+                while (phase - LastPhase > Math.PI / 2)
+                    phase -= Math.PI;
+
+                /* catch the case where I and Q are zero */
+                if (double.IsNaN(phase))
+                    phase = LastPhase;
+
+                double diff = phase - LastPhase;
+                
+                level = diff;
+                
+                LastPhase = phase % (2 * Math.PI);
+            }
+            else
+            {
+                if (LowPass != null)
+                {
+                    level = Math.Sqrt(I*I + Q*Q);
+                    level = LowPass.ProcessSample(level);
+                    level = DBTools.SampleTodB(level);
+                }
+                else
+                {
+                    level = I*I + Q*Q;
+                    level = DBTools.SquaredSampleTodB(level);
+                }
             }
 
 
@@ -132,6 +187,8 @@ namespace RX_Oscilloscope.Components
                 }
             }
         }
+
+        protected bool UseFastAtan2 { get; set; }
 
         private void txtSamplingRate_FrequencyChanged(object sender, EventArgs e)
         {
@@ -244,6 +301,39 @@ namespace RX_Oscilloscope.Components
                     LowPass = new IIRFilter(IIRCoefficients.IIRLowPass_256);
                     break;
             }
+        }
+
+
+        private void UpdateScale()
+        {
+            if (DisplayPhase)
+            {
+                waveForm.ScalePosMax = 10;
+                waveForm.ScalePosMin = -10;
+                waveForm.ScaleBarDistance = 1;
+                waveForm.ScaleTextDistance = 2;
+                waveForm.ScaleUnit = "rad/s";
+            }
+            else
+            {
+                waveForm.ScalePosMax = 0;
+                waveForm.ScalePosMin = -120;
+                waveForm.ScaleBarDistance = 10;
+                waveForm.ScaleTextDistance = 20;
+                waveForm.ScaleUnit = "dB";
+
+            }
+        }
+
+        private void radioPower_CheckedChanged(object sender, EventArgs e)
+        {
+            DisplayPhase = !radioPower.Checked;
+            UpdateScale();
+        }
+        private void radioPhase_CheckedChanged(object sender, EventArgs e)
+        {
+            DisplayPhase = radioPhase.Checked;
+            UpdateScale();
         }
     }
 }

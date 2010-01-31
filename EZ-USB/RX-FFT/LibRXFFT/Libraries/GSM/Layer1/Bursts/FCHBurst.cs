@@ -11,7 +11,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
             ShortName = "FC ";
         }
 
-        public override eSuccessState ParseRawBurst(GSMParameters Parameters, double[] rawBurst)
+        public override eSuccessState ParseRawBurst(GSMParameters Parameters, double[] rawBurst, double[] rawBurstStrength)
         {
             double startOffset = Parameters.SampleStartPosition;
 
@@ -20,17 +20,34 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
             int startPos = (int)(Parameters.Oversampling * 4);
             int samples = (int)(Parameters.Oversampling * bits);
 
-            double avg = 0;
+            double avgPhase = 0;
+            double avgPower = 0;
             for (int pos = startPos; pos < samples + startPos; pos++)
-                avg += rawBurst[(int)(startOffset + pos)];
-            avg /= bits;
+            {
+                avgPhase += rawBurst[(int)(startOffset + pos)];
+                avgPower += Math.Sqrt(rawBurstStrength[(int)(startOffset + pos)]);
+            }
+
+            double avgIdlePower = 0;
+            for (int pos = 1; pos < startOffset / 4 + 1; pos++)
+            {
+                avgIdlePower += Math.Sqrt(rawBurstStrength[pos]);
+            }
+
+            avgPhase /= bits;
+            avgPower /= samples;
+            avgIdlePower /= (startOffset / 4);
 
             /* should have +PI/2 per high bit. calculate phase correction value per sample */
-            double phaseOffset = (Math.PI / 2 - avg) / Parameters.Oversampling;
+            double phaseOffset = (Math.PI / 2 - avgPhase) / Parameters.Oversampling;
 
             /* set offset */
             if (Parameters.PhaseAutoOffset)
                 Parameters.PhaseOffsetValue += phaseOffset;
+
+            int ratio = 10;
+            Parameters.AveragePower = ((ratio - 1) * Parameters.AveragePower + avgPower) / ratio;
+            Parameters.AverageIdlePower = ((ratio - 1) * Parameters.AverageIdlePower + avgIdlePower) / ratio;
 
             return eSuccessState.Unknown;
         }

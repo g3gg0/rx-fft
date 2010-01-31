@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using RX_FFT.Components.GDI;
 
 namespace LibRXFFT.Libraries.USB_RX.Tuners
 {
@@ -7,35 +8,50 @@ namespace LibRXFFT.Libraries.USB_RX.Tuners
     {
         private Tuner SlaveTuner;
         private Tuner MasterTuner;
-        private long MasterTunerIFFreq;
         private long MasterTunerFreqSteps;
         private long CurrentFrequency;
 
 
-        public TunerStack(Tuner masterTuner, DigitalTuner slaveTuner,
-                long masterTunerIFFreq, long masterTunerFreqSteps)
-            : this(masterTuner, (Tuner)slaveTuner, masterTunerIFFreq, masterTunerFreqSteps)
+        public TunerStack(Tuner masterTuner, DigitalTuner slaveTuner, long masterTunerFreqSteps)
+            : this(masterTuner, (Tuner)slaveTuner, masterTunerFreqSteps)
         {
             /* this is a digital tuner, register for sampling rate change */
             slaveTuner.SamplingRateChanged += new EventHandler(Tuner_SamplingRateChanged);
         }
 
-        public TunerStack(Tuner masterTuner, Tuner slaveTuner,
-                long masterTunerIFFreq, long masterTunerFreqSteps)
+
+        public TunerStack(Tuner masterTuner, Tuner slaveTuner, long masterTunerFreqSteps)
         {
             this.SlaveTuner = slaveTuner;
             this.MasterTuner = masterTuner;
-            this.MasterTunerIFFreq = masterTunerIFFreq;
             this.MasterTunerFreqSteps = masterTunerFreqSteps;
 
             /* register for any filter width etc change */
             SlaveTuner.InvertedSpectrumChanged += new EventHandler(Tuner_InvertedSpectrumChanged);
             SlaveTuner.FrequencyChanged += new EventHandler(Tuner_FrequencyChanged);
             SlaveTuner.FilterWidthChanged += new EventHandler(Tuner_FilterWidthChanged);
+            SlaveTuner.DeviceDisappeared += new EventHandler(SlaveTuner_DeviceDisappeared);
 
             MasterTuner.FilterWidthChanged += new EventHandler(Tuner_FilterWidthChanged);
             MasterTuner.InvertedSpectrumChanged += new EventHandler(Tuner_InvertedSpectrumChanged);
             MasterTuner.FrequencyChanged += new EventHandler(Tuner_FrequencyChanged);
+            MasterTuner.DeviceDisappeared += new EventHandler(MasterTuner_DeviceDisappeared);
+        }
+
+        void SlaveTuner_DeviceDisappeared(object sender, EventArgs e)
+        {
+            if (DeviceDisappeared != null)
+            {
+                DeviceDisappeared(SlaveTuner, null);
+            }
+        }
+
+        void MasterTuner_DeviceDisappeared(object sender, EventArgs e)
+        {
+            if (DeviceDisappeared != null)
+            {
+                DeviceDisappeared(MasterTuner, null);
+            }
         }
 
         void Tuner_SamplingRateChanged(object sender, EventArgs e)
@@ -66,6 +82,7 @@ namespace LibRXFFT.Libraries.USB_RX.Tuners
         #region DigitalTuner Member
 
         public event EventHandler SamplingRateChanged;
+        
 
         public long SamplingRate
         {
@@ -85,10 +102,44 @@ namespace LibRXFFT.Libraries.USB_RX.Tuners
         public event EventHandler FrequencyChanged;
         public event EventHandler InvertedSpectrumChanged;
         public event EventHandler FilterWidthChanged;
+        public event EventHandler DeviceDisappeared;
+
+        public bool OpenTuner()
+        {
+            MasterTuner.OpenTuner();
+            SlaveTuner.OpenTuner();
+            return true;
+        }
+        public void CloseTuner()
+        {
+            MasterTuner.CloseTuner();
+            SlaveTuner.CloseTuner();
+        }
+
+        public long IntermediateFrequency
+        {
+            get { return MasterTuner.IntermediateFrequency; }
+        }
 
         public double Amplification
         {
             get { return MasterTuner.Amplification + SlaveTuner.Amplification; }
+            set
+            {
+                double val = value;
+
+                /* try to set master tuners amplification */
+                MasterTuner.Amplification = val;
+
+                /* leave the rest up to the slave tuner */
+                val -= MasterTuner.Amplification;
+                SlaveTuner.Amplification = val;
+            }
+        }
+
+        public double Attenuation
+        {
+            get { return MasterTuner.Attenuation + SlaveTuner.Attenuation; }
         }
 
         public long LowestFrequency
@@ -154,7 +205,7 @@ namespace LibRXFFT.Libraries.USB_RX.Tuners
         {
             get
             {
-                if(SlaveTuner.FilterWidth < MasterTuner.FilterWidth)
+                if (SlaveTuner.FilterWidth < MasterTuner.FilterWidth)
                 {
                     return SlaveTuner.FilterWidthDescription;
                 }
@@ -234,9 +285,9 @@ namespace LibRXFFT.Libraries.USB_RX.Tuners
             long freqMaster = this.MasterTuner.GetFrequency();
 
             if (InvertedSpectrum)
-                frequency = MasterTunerIFFreq - freqSlave + freqMaster;
+                frequency = MasterTuner.IntermediateFrequency - freqSlave + freqMaster;
             else
-                frequency = MasterTunerIFFreq - freqSlave - freqMaster;
+                frequency = MasterTuner.IntermediateFrequency - freqSlave - freqMaster;
 
             CurrentFrequency = frequency;
 
@@ -245,13 +296,20 @@ namespace LibRXFFT.Libraries.USB_RX.Tuners
 
         public bool SetFrequency(long frequency)
         {
-            long freqMaster = (frequency / MasterTunerFreqSteps) * MasterTunerFreqSteps;
+            long freqMaster = frequency;
             long freqSlave;
 
+            if (MasterTunerFreqSteps > 0)
+            {
+                freqMaster = (frequency / MasterTunerFreqSteps) * MasterTunerFreqSteps;
+            }
+
             if (InvertedSpectrum)
-                freqSlave = MasterTunerIFFreq - (frequency - freqMaster);
+                freqSlave = MasterTuner.IntermediateFrequency - (frequency - freqMaster);
             else
-                freqSlave = MasterTunerIFFreq + (frequency - freqMaster);
+                freqSlave = MasterTuner.IntermediateFrequency + (frequency - freqMaster);
+
+            //Log.AddMessage("M: " + freqMaster + " S: " + freqSlave);
 
             if (!SlaveTuner.SetFrequency(freqSlave))
                 return false;

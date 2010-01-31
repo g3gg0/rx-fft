@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Windows.Forms;
+using LibRXFFT.Libraries.Misc;
 using LibRXFFT.Libraries.Timers;
 using LibRXFFT.Libraries.USB_RX.Interfaces;
 using LibRXFFT.Libraries.USB_RX.Misc;
@@ -11,15 +12,17 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 {
     public class USBRXDevice : I2CInterface, SPIInterface
     {
-        private int DevNum = 0;
+        private int DevNum;
         private AD6636 AD6636;
         private eTransferMode _CurrentMode = eTransferMode.Stopped;
         public DigitalTuner Tuner;
         public Atmel Atmel;
 
+        private bool PreQueueTransfer = false;
+
         public uint SamplesPerBlock { get; set; }
 
-        public uint _ReadBlockSize = 4096;
+        private uint _ReadBlockSize = 4096;
         public uint ReadBlockSize
         {
             get { return _ReadBlockSize; }
@@ -53,6 +56,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                 return USBRXDeviceNative.UsbGetShmemChannel(DevNum);
             }
         }
+
         public int ShmemNode
         {
             get
@@ -72,23 +76,42 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         {
             try
             {
-                //ShowConsole(true);
+                ShowConsole(true);
 
                 if (USBRXDeviceNative.UsbInit(DevNum))
                 {
                     Atmel = new Atmel(this);
                     AD6636 = new AD6636(Atmel, Atmel.TCXOFreq);
+                    Tuner = AD6636;
 
-                    MT2131 mt2131 = new MT2131(this);
+                    /* try to open BO-35 */
+                    BO35 bo35 = new BO35(true);
+                    bool success = false;
 
-                    if (!mt2131.Exists())
+                    try
                     {
-                        Tuner = AD6636;
+                        success = bo35.OpenTuner();
+                    }
+                    catch(Exception e)
+                    {
+                        
+                    }
+
+                    if (success)
+                    {
+                        Tuner = new TunerStack(bo35, Tuner, 0);
                     }
                     else
                     {
-                        Tuner = new TunerStack(mt2131, AD6636, mt2131.IFFrequency, mt2131.IFStepSize);
+                        MT2131 mt2131 = new MT2131(this);
+
+                        if (mt2131.OpenTuner())
+                        {
+                            Tuner = new TunerStack(mt2131, Tuner, mt2131.IFStepSize);
+                        }
                     }
+
+                    Tuner.OpenTuner();
 
                     CurrentMode = eTransferMode.Stopped;
 
@@ -130,6 +153,8 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             get { return _CurrentMode; }
             set
             {
+                PreQueueTransfer = false;
+
                 switch (value)
                 {
                     case eTransferMode.Block:
@@ -143,6 +168,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                         }
                         StartRead();
                         break;
+
                     case eTransferMode.Stream:
                         if (CurrentMode == eTransferMode.Stream)
                         {
@@ -154,6 +180,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                         }
                         StartStreamRead();
                         break;
+
                     case eTransferMode.Stopped:
                         if (CurrentMode == eTransferMode.Stream)
                         {
@@ -254,46 +281,48 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
         private double ExpectedReadDuration = 0;
         private int SleepDuration = 10;
-
+        private int MaxOvertimeFactor = 10;
 
         private void ReadTriggerThreadMain()
         {
             try
             {
-                    while (true)
+                while (true)
+                {
+                    lock (ReadTriggerTrigger)
                     {
-                        lock (ReadTriggerTrigger)
-                        {
-                            Monitor.Wait(ReadTriggerTrigger);
-                        }
-                        //Log.AddMessage("ReadTriggerTrigger [fired]");
+                        Monitor.Wait(ReadTriggerTrigger);
+                    }
+                    //Log.AddMessage("ReadTriggerTrigger [fired]");
 
-                        lock (ReadTimerLock)
+                    lock (ReadTimerLock)
+                    {
+                        lock (ReadTrigger)
                         {
-                            lock (ReadTrigger)
+                            int loops = 0;
+                            int maxLoops = (int)(MaxOvertimeFactor * 1000 * ExpectedReadDuration / SleepDuration);
+                            bool timeout = false;
+
+                            /* dont fire next read until last data was processed */
+                            while (ReadTimerLocked && !timeout)
                             {
-                                int loops = 0;
-                                bool timeout = false;
-
-                                /* dont fire next read until last data was processed */
-                                while (ReadTimerLocked && !timeout)
-                                {
-                                    timeout = (++loops * SleepDuration * 1000) < (3 * ExpectedReadDuration);
-                                    Monitor.Wait(ReadTimerLock, SleepDuration);
-                                }
-
-                                if (timeout)
-                                {
-                                    Log.AddMessage("TIMEOUT!");
-                                }
-                                //Log.AddMessage("ReadTimerLocked [false]");
-
-                                ReadTriggered = true;
-                                Monitor.Pulse(ReadTrigger);
+                                /* minimum once again */
+                                timeout = loops++ > maxLoops;
+                                Monitor.Wait(ReadTimerLock, SleepDuration);
                             }
+
+                            if (timeout)
+                            {
+                                //Log.AddMessage("TIMEOUT! Expected " + FrequencyFormatter.TimeToString(ExpectedReadDuration) + ", stopped after " + FrequencyFormatter.TimeToString(((double)(loops*SleepDuration)/1000)));
+                            }
+                            //Log.AddMessage("ReadTimerLocked [false]");
+
+                            ReadTriggered = true;
+                            Monitor.Pulse(ReadTrigger);
                         }
                     }
-                
+                }
+
             }
             catch (ThreadAbortException ex)
             {
@@ -319,11 +348,17 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
                         /* start a new transfer */
                         //Log.AddMessage("Transfer");
-                        USBRXDeviceNative.UsbSetControlledTransfer(DevNum, ReadBlockSize, ReadBlockSize);
                         USBRXDeviceNative.SetSlaveFifoParams(true, 0, 0);
+
+                        if (!PreQueueTransfer)
+                        {
+                            PreQueueTransfer = true;
+                            USBRXDeviceNative.UsbSetControlledTransfer(DevNum, ReadBlockSize, ReadBlockSize);
+                        }
+
                         Atmel.FIFOReset(false);
 
-                        ExpectedReadDuration = SamplesPerBlock / Tuner.SamplingRate;
+                        ExpectedReadDuration = SamplesPerBlock / (double)Tuner.SamplingRate;
 
                         /* dont fire next read until data was processed */
                         ReadTimerLocked = true;
@@ -350,7 +385,15 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             lock (ReadTimerLock)
             {
                 Atmel.FIFOReset(true);
+                // reset EP FIFOs
                 USBRXDeviceNative.SetSlaveFifoParams(true, DevNum, 0);
+
+                // and already pre-start transfer
+                if (PreQueueTransfer)
+                {
+                    USBRXDeviceNative.UsbSetControlledTransfer(DevNum, ReadBlockSize, ReadBlockSize);
+                }
+
                 ReadTimerLocked = false;
                 Monitor.Pulse(ReadTimerLock);
             }
@@ -392,9 +435,10 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
         public void Close()
         {
+            Tuner.CloseTuner();
+
             /* stop read timer */
             ReadTimer.Stop();
-
 
             /* stop read trigger thread */
             ReadTriggerThread.Abort();
@@ -506,7 +550,5 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         }
 
         #endregion
-
-
     }
 }

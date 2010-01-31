@@ -14,7 +14,9 @@ using LibRXFFT.Libraries.Misc;
 using LibRXFFT.Libraries.SampleSources;
 using LibRXFFT.Libraries.ShmemChain;
 using LibRXFFT.Libraries.SignalProcessing;
-using Timer=System.Windows.Forms.Timer;
+using Timer = System.Windows.Forms.Timer;
+using LibRXFFT.Libraries.USB_RX.Tuners;
+using RX_FFT.Components.GDI;
 
 namespace GSM_Analyzer
 {
@@ -23,6 +25,17 @@ namespace GSM_Analyzer
         internal ArrayList Statistics = new ArrayList(8192);
 
         public SampleSource Source;
+        private Tuner _Device;
+        public Tuner Device
+        {
+            get { return _Device; }
+            set { 
+                _Device = value;
+                ChannelHandler.Device = value; 
+            }
+        }
+        private RadioChannelHandler ChannelHandler;
+        private Thread ChannelScanThread;
 
         private Thread ReadThread;
         private bool ThreadActive;
@@ -39,6 +52,7 @@ namespace GSM_Analyzer
         private BurstVisualizer BurstWindow;
         private SpectrumVisualizer SpectrumWindow;
         private OptionsDialog OptionsWindow;
+        private StationListDialog StationDialog;
 
         private Object BurstWindowLock = new Object();
         private Object SpectrumWindowLock = new Object();
@@ -80,6 +94,17 @@ namespace GSM_Analyzer
             InitializeComponent();
             Parameters = new GSMParameters();
             Demodulator = new GMSKDemodulator();
+
+            Log.Init();
+            ChannelHandler = new RadioChannelHandler(Device);
+            ChannelHandler.FrequencyOffset = 0;
+            ChannelHandler.AddBand(new FrequencyBand("P-GSM", 935000000, 200000, 1, 124));
+            ChannelHandler.AddBand(new FrequencyBand("E-GSM a", 925000000, 200000, 975, 1023));
+            ChannelHandler.AddBand(new FrequencyBand("E-GSM b", 924800000, 200000, 0, 0));
+            ChannelHandler.AddBand(new FrequencyBand("T-GSM 900", 915400000, 200000, 1024, 1052));
+            ChannelHandler.AddBand(new FrequencyBand("DCS 1800", 1805000000, 200000, 512, 885));
+
+            txtArfcn.Value = ChannelHandler.LowestChannel;
 
 
             /* already init here to load XML files */
@@ -289,6 +314,12 @@ namespace GSM_Analyzer
             }
         }
 
+        private void UpdatePowerDetails(double averagePower, double averageIdlePower)
+        {
+            lblPower.Text = DBTools.SampleTodB(averagePower).ToString("#0.0 dB");
+            lblIdlePower.Text = DBTools.SampleTodB(averageIdlePower).ToString("#0.0 dB");
+        }
+
         /* intentionally dont pass GSMParameters due to thread safeness */
         void UpdateErrorSuccess(long err, long succ, long TN, long T1, long T2, long T3)
         {
@@ -330,6 +361,7 @@ namespace GSM_Analyzer
 
         void UpdateStats(GSMParameters param)
         {
+            BeginInvoke(new MethodInvoker(() => UpdatePowerDetails(param.AveragePower, param.AverageIdlePower)));
             BeginInvoke(new updateErrorSuccessDelegate(UpdateErrorSuccess), new object[] { param.TotalErrors, param.TotalSuccess, param.TN, param.T1, param.T2, param.T3 });
             BeginInvoke(new updateFreqOffsetDelegate(UpdateFreqOffset), new object[] { param.PhaseOffsetFrequency });
         }
@@ -347,6 +379,13 @@ namespace GSM_Analyzer
 
                 if (!ReadThread.Join(1000))
                     ReadThread.Abort();
+
+                if (ChannelScanThread != null)
+                {
+                    ChannelScanThread.Abort();
+                    ChannelScanThread = null;
+                    btnScan.Text = "Scan";
+                }
 
                 Source.Close();
                 Source = null;
@@ -650,7 +689,7 @@ namespace GSM_Analyzer
                                             /* let the handler process this packet */
                                             Parameters.SampleOffset = 0;
                                             Parameters.SubSampleOffset = 0;
-                                            Handler.Handle(burstBuffer);
+                                            Handler.Handle(burstBuffer, burstStrengthBuffer);
 
                                             if (Parameters.Errors > 0)
                                             {
@@ -725,7 +764,7 @@ namespace GSM_Analyzer
                                             }
                                         }
 
-                                        Handler.Handle(burstBuffer);
+                                        Handler.Handle(burstBuffer, burstStrengthBuffer);
 
                                         lock (BurstWindowLock)
                                         {
@@ -876,7 +915,7 @@ namespace GSM_Analyzer
         }
 
         private void btnSpectrum_Click(object sender, EventArgs e)
-        {       
+        {
             lock (SpectrumWindowLock)
             {
                 if (SpectrumWindow == null || !SpectrumWindow.Visible)
@@ -948,6 +987,129 @@ namespace GSM_Analyzer
             txtLog.Clear();
         }
 
-    }
+        void txtArfcn_ValueChanged(object sender, System.EventArgs e)
+        {
+            long chan = txtArfcn.Value;
 
+            if (ChannelHandler.HasChannel(chan))
+            {
+                txtArfcn.BackColor = Color.White;
+                ChannelHandler.Channel = txtArfcn.Value;
+                Source.Flush();
+                Parameters.State = eGSMState.Reset;
+            }
+            else
+            {
+                if(chan < ChannelHandler.LowestChannel)
+                {
+                    txtArfcn.Value = ChannelHandler.LowestChannel;
+                }
+                else if (chan > ChannelHandler.HighestChannel)
+                {
+                    txtArfcn.Value = ChannelHandler.HighestChannel;
+                }
+                else
+                {
+                    txtArfcn.BackColor = Color.Red;
+                }
+            }
+        }
+
+        private void btnScan_Click(object sender, EventArgs e)
+        {
+            if (ChannelScanThread == null)
+            {
+                if (Device != null && Source != null)
+                {
+                    StationDialog = new StationListDialog(ChannelHandler);
+                    StationDialog.Show();
+
+                    ChannelScanThread = new Thread(ChannelScanThreadMain);
+                    ChannelScanThread.Start();
+                    btnScan.Text = "Stop";
+                }
+            }
+            else
+            {
+                ChannelScanThread.Abort();
+                ChannelScanThread = null;
+                btnScan.Text = "Scan";
+            }
+        }
+
+        private void ChannelScanThreadMain()
+        {
+            ChannelHandler.Channel = ChannelHandler.LowestChannel;
+
+            while (true)
+            {
+                Source.Flush();
+                Parameters.State = eGSMState.Reset;
+
+                /* wait until reset done */
+                int waitForSearch = 100;
+                while (Parameters.State == eGSMState.Reset && --waitForSearch > 0)
+                {
+                    Thread.Sleep(100);
+                }
+
+                /* wait for FCCH searching */
+                int waitForLock = 8;
+                while (Parameters.State == eGSMState.FCCHSearch && --waitForLock > 0)
+                {
+                    Thread.Sleep(100);
+                }
+
+                /* when FCCH found, wait until CBCH found */
+                if (Parameters.State != eGSMState.FCCHSearch)
+                {
+                    int waitForDetails = 50;
+                    bool detailsfound = false;
+
+                    while (!detailsfound && --waitForDetails > 0)
+                    {
+                        Thread.Sleep(100);
+
+                        /* exit loop if all details were received */
+                        detailsfound = true;
+                        detailsfound &= Parameters.CBCH != eTriState.Unknown;
+                        detailsfound &= Handler.L3.PDUDataFields.ContainsKey("MCC/MNC");
+                        detailsfound &= Handler.L3.PDUDataFields.ContainsKey("LAC");
+                        detailsfound &= Handler.L3.PDUDataFields.ContainsKey("CellIdent");
+                    }
+
+                    string mccMncString = "Unknown";
+                    string lacString = "Unknown";
+                    string cellIdentString = "Unknown";
+
+                    if (Handler.L3.PDUDataFields.ContainsKey("MCC/MNC"))
+                        mccMncString = Handler.L3.PDUDataFields["MCC/MNC"];
+
+                    if (Handler.L3.PDUDataFields.ContainsKey("LAC"))
+                        lacString = Handler.L3.PDUDataFields["LAC"];
+
+                    if (Handler.L3.PDUDataFields.ContainsKey("CellIdent"))
+                        cellIdentString = Handler.L3.PDUDataFields["CellIdent"];
+
+                    StationDialog.AddStation(ChannelHandler.Channel, mccMncString, lacString,cellIdentString, Parameters.CBCH.ToString());
+
+                    Log.AddMessage("Channel " + ChannelHandler.Channel + " used.");
+                    Log.AddMessage("  MCC/MNC  : " + mccMncString);
+                    Log.AddMessage("  LAC      : " + lacString);
+                    Log.AddMessage("  CellIdent: " + cellIdentString);
+                    Log.AddMessage("  CBCH     : " + Parameters.CBCH);
+                }
+
+                if (ChannelHandler.Channel == ChannelHandler.HighestChannel)
+                {
+                    Log.AddMessage("Scan finished");
+                    BeginInvoke(new MethodInvoker(() => btnScan.Text="Scan"));
+                    return;
+                }
+
+                ChannelHandler.Channel = ChannelHandler.NextChannel;
+                BeginInvoke(new MethodInvoker(() => txtArfcn.Value = ChannelHandler.Channel));
+            }
+        }
+    }
 }

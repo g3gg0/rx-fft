@@ -315,6 +315,12 @@ namespace RX_FFT
         #endregion
 
 
+        private void agcMenu_Click(object sender, EventArgs e)
+        {
+            AGCEnabled = !AGCEnabled;
+            agcMenu.Checked = AGCEnabled;
+        }
+
         private void dynamicWaterfallMenu_Click(object sender, EventArgs e)
         {
             dynamicWaterfallMenu.Checked = !dynamicWaterfallMenu.Checked;

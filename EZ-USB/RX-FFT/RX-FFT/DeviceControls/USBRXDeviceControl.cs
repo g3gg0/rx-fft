@@ -333,13 +333,12 @@ namespace RX_FFT.DeviceControls
 
                 /* try to handle the remaining amplification */
                 val -= USBRX.Tuner.Amplification;
-
             }
         }
 
         public double Attenuation
         {
-            get { return BoardAmplification + USBRX.Tuner.Attenuation; }
+            get { return BoardAttenuation + USBRX.Tuner.Attenuation; }
         }
 
         public long LowestFrequency
@@ -400,10 +399,14 @@ namespace RX_FFT.DeviceControls
             {
                 ArrayList lines = new ArrayList();
 
-                lines.Add("BO-35digi with tuners:");
-                foreach (string line in USBRX.Tuner.Name)
+                lines.Add("BO-35digi");
+                if (USBRX != null && USBRX.Tuner != null)
                 {
-                    lines.Add("    " + line);
+                    lines.Add("with tuners:");
+                    foreach (string line in USBRX.Tuner.Name)
+                    {
+                        lines.Add("    " + line);
+                    }
                 }
 
                 return (string[])lines.ToArray(typeof(string));
@@ -412,7 +415,17 @@ namespace RX_FFT.DeviceControls
 
         string[] Tuner.Description
         {
-            get { return USBRX.Tuner.Description; }
+            get 
+            {
+                if (USBRX != null && USBRX.Tuner != null)
+                {
+                    return USBRX.Tuner.Description;
+                }
+                else
+                {
+                    return new[]{"No description available"};
+                }
+            }
         }
 
         string[] Tuner.Details
@@ -421,14 +434,23 @@ namespace RX_FFT.DeviceControls
             {
                 ArrayList lines = new ArrayList();
 
-                lines.Add("Hardware details:");
-                lines.Add("    Serial: " + USBRX.Atmel.SerialNumber);
-                lines.Add("    TCXOFreq: " + USBRX.Atmel.TCXOFreq);
-                
-                lines.Add("Tuner details:");
-                foreach (string line in USBRX.Tuner.Details)
+                if (USBRX != null)
                 {
-                    lines.Add("    " + line);
+                    if (USBRX.Atmel != null)
+                    {
+                        lines.Add("Hardware details:");
+                        lines.Add("    Serial: " + USBRX.Atmel.SerialNumber);
+                        lines.Add("    TCXOFreq: " + USBRX.Atmel.TCXOFreq);
+                    }
+
+                    if (USBRX.Tuner != null)
+                    {
+                        lines.Add("Tuner details:");
+                        foreach (string line in USBRX.Tuner.Details)
+                        {
+                            lines.Add("    " + line);
+                        }
+                    }
                 }
 
                 return (string[])lines.ToArray(typeof(string));
@@ -542,7 +564,12 @@ namespace RX_FFT.DeviceControls
         {
             get
             {
-                return USBRX.Tuner.InvertedSpectrum;
+                if (USBRX != null && USBRX.Tuner != null)
+                {
+                    return USBRX.Tuner.InvertedSpectrum;
+                }
+
+                return false;
             }
         }
 
@@ -566,17 +593,30 @@ namespace RX_FFT.DeviceControls
 
         public bool ReadBlock()
         {
-            bool ret;
+            bool success;
 
-            ret = SampleSource.Read();
+            success = SampleSource.Read();
 
             /* transfer done, if needed start next one */
-            if(TransferMode == eTransferMode.Block)
+            if (success)
             {
-                USBRX.ReadBlockReceived();
+                if (TransferMode == eTransferMode.Block)
+                {
+                    USBRX.ReadBlockReceived();
+                }
+            }
+            else
+            {
+                if (USBRX.DeviceLost)
+                {
+                    if (DeviceDisappeared != null)
+                    {
+                        DeviceDisappeared(this, null);
+                    }
+                }
             }
 
-            return ret;
+            return success;
         }
 
         public bool Connected

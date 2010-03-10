@@ -321,7 +321,6 @@ namespace RX_Oscilloscope.Components
                 waveForm.ScaleBarDistance = 10;
                 waveForm.ScaleTextDistance = 20;
                 waveForm.ScaleUnit = "dB";
-
             }
         }
 
@@ -335,5 +334,6 @@ namespace RX_Oscilloscope.Components
             DisplayPhase = radioPhase.Checked;
             UpdateScale();
         }
+
     }
 }

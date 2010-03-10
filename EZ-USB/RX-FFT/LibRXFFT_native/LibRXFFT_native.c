@@ -335,7 +335,7 @@ __inline void putBytesFromDouble(unsigned char *writeBuffer, int pos, double sam
     //putBytesFromInt(readBuffer, pos, (int)(sampleValue * 0x7FFF));
 }
 
-LIBRXFFT_NATIVE_API void SamplesFromBinary(unsigned char *dataBuffer, int bytesRead, double *samplesI, double *samplesQ, int dataFormat, int invertedSpectrum)
+LIBRXFFT_NATIVE_API void SamplesFromBinary(unsigned char *dataBuffer, int bytesRead, int destSize, double *samplesI, double *samplesQ, int dataFormat, int invertedSpectrum)
 {
 	int bytesPerSample = 0;
 	int bytesPerSamplePair = 0;
@@ -364,6 +364,12 @@ LIBRXFFT_NATIVE_API void SamplesFromBinary(unsigned char *dataBuffer, int bytesR
 
 	samplePos = 0;
 	samplePairs = bytesRead / bytesPerSamplePair;
+
+	if(samplePairs > destSize)
+	{
+		printf ( "SamplesFromBinary: ERROR - too many bytes to read\r\n");
+		return;
+	}
 
 //#pragma omp parallel for
 

@@ -241,7 +241,7 @@ namespace LibRXFFT.Components.DirectX
 
         public void ProcessData(double power)
         {
-            if (SampleValues.Count > 2*MaxSamples)
+            if (SampleValues.Count > 2 * MaxSamples)
                 return;
 
             ProcessData(power, false);
@@ -305,10 +305,10 @@ namespace LibRXFFT.Components.DirectX
         {
             return -(scaleValue + DisplayYOffset) / (DirectXHeight * YZoomFactor);
         }
-        
+
         public override void ProcessUserAction(eUserAction action, double param)
         {
-            NeedsUpdate = true; 
+            NeedsUpdate = true;
             double oldOffset;
 
             switch (action)
@@ -318,7 +318,7 @@ namespace LibRXFFT.Components.DirectX
                     oldOffset = DisplayYOffset;
 
                     param += oldOffset;
-                    param = Math.Min(10*DirectXHeight, param);
+                    param = Math.Min(10 * DirectXHeight, param);
                     DisplayYOffset = Math.Max(-10 * DirectXHeight, param);
 
                     if (oldOffset != DisplayYOffset)
@@ -361,7 +361,7 @@ namespace LibRXFFT.Components.DirectX
                     }
 
                     break;
-            
+
                 default:
                     base.ProcessUserAction(action, param);
                     break;
@@ -719,14 +719,16 @@ namespace LibRXFFT.Components.DirectX
             }
 
             /* draw overlay */
-            Device.DrawUserPrimitives(PrimitiveType.LineList, OverlayVertexesUsed / 2, OverlayVertexes);
+            if (OverlayVertexesUsed > 0)
+                Device.DrawUserPrimitives(PrimitiveType.LineList, OverlayVertexesUsed / 2, OverlayVertexes);
             foreach (StringLabel label in OverlayTextLabels)
             {
                 SmallFont.DrawString(null, label.Label, label.X, label.Y, (int)label.Color);
             }
 
             /* draw scale lines and text */
-            Device.DrawUserPrimitives(PrimitiveType.LineList, ScaleVertexesUsed / 2, ScaleVertexes);
+            if (ScaleVertexesUsed > 0)
+                Device.DrawUserPrimitives(PrimitiveType.LineList, ScaleVertexesUsed / 2, ScaleVertexes);
 
             for (double scalePos = ScalePosMin; scalePos <= ScalePosMax; scalePos += ScaleTextDistance)
             {
@@ -795,8 +797,8 @@ namespace LibRXFFT.Components.DirectX
                     {
                         int removeCount = SampleValues.Count - MaxSamples;
                         SampleValues.RemoveRange(0, removeCount);
-                    } 
-                    
+                    }
+
                     int samples = SampleValues.Count;
 
                     lock (LinePointsLock)

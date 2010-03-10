@@ -480,14 +480,18 @@ namespace LibRXFFT.Components.DirectX.Drawables
                     {
                         DockPanelPrivate priv = dock.Private;
 
-                        MainPlot.Device.DrawUserPrimitives(PrimitiveType.TriangleStrip, priv.TitleBodyVertexesUsed - 2, priv.TitleBodyVertexes);
-                        MainPlot.Device.DrawUserPrimitives(PrimitiveType.LineList, priv.TitleBorderVertexesUsed / 2, priv.TitleBorderVertexes);
+                        if (priv.TitleBodyVertexesUsed - 2 > 0)
+                            MainPlot.Device.DrawUserPrimitives(PrimitiveType.TriangleStrip, priv.TitleBodyVertexesUsed - 2, priv.TitleBodyVertexes);
+                        if (priv.TitleBorderVertexesUsed > 0)
+                            MainPlot.Device.DrawUserPrimitives(PrimitiveType.LineList, priv.TitleBorderVertexesUsed / 2, priv.TitleBorderVertexes);
 
                         /* back titles are not visible for collapsed docks */
                         if (dock.State != eDockState.Collapsed)
                         {
-                            MainPlot.Device.DrawUserPrimitives(PrimitiveType.TriangleStrip, priv.BackTitleBodyVertexesUsed - 2, priv.BackTitleBodyVertexes);
-                            MainPlot.Device.DrawUserPrimitives(PrimitiveType.LineList, priv.BackTitleBorderVertexesUsed / 2, priv.BackTitleBorderVertexes);
+                            if (priv.BackTitleBodyVertexesUsed - 2 > 0)
+                                MainPlot.Device.DrawUserPrimitives(PrimitiveType.TriangleStrip, priv.BackTitleBodyVertexesUsed - 2, priv.BackTitleBodyVertexes);
+                            if (priv.BackTitleBorderVertexesUsed > 0)
+                                MainPlot.Device.DrawUserPrimitives(PrimitiveType.LineList, priv.BackTitleBorderVertexesUsed / 2, priv.BackTitleBorderVertexes);
                         }
 
                         if (priv.TitleSprite == null)

@@ -47,7 +47,7 @@ namespace LibRXFFT.Components.DirectX
         protected bool NeedsUpdate = false;
         public bool EnoughData = false;
         public bool EnoughDataReset = false;
-        
+
 
         /* channel displaying */
         public bool ChannelMode = false;
@@ -272,7 +272,7 @@ namespace LibRXFFT.Components.DirectX
 
         public void ProcessFFTData(double[] amplitudes, int spectPart, double baseAmp)
         {
-            if (EnoughData || (EnoughDataReset && spectPart != 0) )
+            if (EnoughData || (EnoughDataReset && spectPart != 0))
                 return;
 
             EnoughDataReset = false;
@@ -794,9 +794,7 @@ namespace LibRXFFT.Components.DirectX
 
             /* draw overlay */
             if (OverlayVertexesUsed > 0)
-            {
                 Device.DrawUserPrimitives(PrimitiveType.LineList, OverlayVertexesUsed / 2, OverlayVertexes);
-            }
 
             foreach (StringLabel label in OverlayTextLabels)
             {
@@ -805,9 +803,7 @@ namespace LibRXFFT.Components.DirectX
 
             /* draw scale lines and text */
             if (ScaleVertexesUsed > 0)
-            {
                 Device.DrawUserPrimitives(PrimitiveType.LineList, ScaleVertexesUsed / 2, ScaleVertexes);
-            }
 
             SmallFont.DrawString(null, "   0 " + ScaleUnit, 10, (int)-sampleToDBScale(0), (int)(colorCursor & 0x80FFFFFF));
             SmallFont.DrawString(null, " -50 " + ScaleUnit, 10, (int)-sampleToDBScale(-50), (int)(colorCursor & 0x80FFFFFF));
@@ -893,15 +889,15 @@ namespace LibRXFFT.Components.DirectX
             {
                 long channels = 1 + ChannelBandDetails.ChannelEnd - ChannelBandDetails.ChannelStart;
                 long channel = (long)((offset + 0.5f) * channels);
-                return ChannelBandDetails.BaseFrequency + channel*ChannelBandDetails.ChannelDistance;
+                return ChannelBandDetails.BaseFrequency + channel * ChannelBandDetails.ChannelDistance;
             }
         }
 
         public long FrequencyFromCursorPosOffset(double xOffset)
         {
             /* offset (-0.5 ... 0.5) */
-            double offset = ((DisplayXOffset + LastMousePos.X + xOffset) / (XZoomFactor * DirectXWidth)) - 0.5f - XAxisSampleOffset; 
-            
+            double offset = ((DisplayXOffset + LastMousePos.X + xOffset) / (XZoomFactor * DirectXWidth)) - 0.5f - XAxisSampleOffset;
+
             if (!ChannelMode)
             {
                 long frequency = (long)(CenterFrequency + offset * SamplingRate);

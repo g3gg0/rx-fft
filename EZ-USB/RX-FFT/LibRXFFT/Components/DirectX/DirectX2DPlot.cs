@@ -258,7 +258,7 @@ namespace LibRXFFT.Components.DirectX
                     oldOffset = DisplayXOffset;
 
                     param += oldOffset;
-                    param = Math.Min(DirectXWidth*XZoomFactor, param);
+                    param = Math.Min(DirectXWidth * XZoomFactor, param);
                     DisplayXOffset = Math.Max(-DirectXWidth * XZoomFactor, param);
 
                     if (oldOffset != DisplayXOffset)
@@ -704,7 +704,9 @@ namespace LibRXFFT.Components.DirectX
             }
 
             /* draw overlay */
-            Device.DrawUserPrimitives(PrimitiveType.LineList, OverlayVertexesUsed / 2, OverlayVertexes);
+            if (OverlayVertexesUsed > 0)
+                Device.DrawUserPrimitives(PrimitiveType.LineList, OverlayVertexesUsed / 2, OverlayVertexes);
+
             foreach (StringLabel label in OverlayTextLabels)
             {
                 SmallFont.DrawString(null, label.Label, label.X, label.Y, (int)label.Color);
@@ -712,9 +714,7 @@ namespace LibRXFFT.Components.DirectX
 
             /* draw scale lines and text */
             if (ScaleVertexesUsed > 0)
-            {
                 Device.DrawUserPrimitives(PrimitiveType.LineList, ScaleVertexesUsed / 2, ScaleVertexes);
-            }
 
             for (double scalePos = ScalePosMin; scalePos <= ScalePosMax; scalePos += ScaleTextDistance)
             {
@@ -817,6 +817,5 @@ namespace LibRXFFT.Components.DirectX
 
             }
         }
-
     }
 }

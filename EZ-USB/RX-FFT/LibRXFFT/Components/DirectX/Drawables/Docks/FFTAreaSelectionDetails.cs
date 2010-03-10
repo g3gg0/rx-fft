@@ -27,7 +27,7 @@ namespace LibRXFFT.Components.DirectX.Drawables.Docks
         protected Rectangle TextShadowRect = new Rectangle();
 
         protected Rectangle FontSizeRect = new Rectangle();
-        
+
 
 
         public FFTAreaSelectionDetails(FFTAreaSelection selection, DockPanel panel)
@@ -94,7 +94,8 @@ namespace LibRXFFT.Components.DirectX.Drawables.Docks
                 BodyVertexesUsed = BuildFilledRectangle(BodyVertexes, BodyVertexesUsed, xPos, (int)(xPos + Width), yPos, yPos + Height, 0xBF000000);
             }
 
-            Panel.MainPlot.Device.DrawUserPrimitives(PrimitiveType.TriangleStrip, BodyVertexesUsed - 2, BodyVertexes);
+            if (BodyVertexesUsed - 2 > 0)
+                Panel.MainPlot.Device.DrawUserPrimitives(PrimitiveType.TriangleStrip, BodyVertexesUsed - 2, BodyVertexes);
 
             TextRect.X = XPosition + 10;
             TextRect.Y = YPosition + 3;

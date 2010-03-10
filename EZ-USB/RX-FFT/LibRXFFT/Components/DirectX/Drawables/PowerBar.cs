@@ -105,8 +105,8 @@ namespace LibRXFFT.Components.DirectX.Drawables
                 {
                     /* gradient blue -> cyan */
                     maxDelta = Math.Max(0, Math.Min(delta, Power));
-                    colorPct = maxDelta/delta;
-                    BodyVertexesUsed = BuildFilledRectangle(BodyVertexes, BodyVertexesUsed, (int)(xPos + AbsoluteWidth * relPos), (int)(xPos + AbsoluteWidth * (relPos + maxDelta)), yPos, yPos + AbsoluteHeight, 0xFF0000FF, 0xFF0000FF | (((uint) (255.0f * colorPct)) << 8 ));
+                    colorPct = maxDelta / delta;
+                    BodyVertexesUsed = BuildFilledRectangle(BodyVertexes, BodyVertexesUsed, (int)(xPos + AbsoluteWidth * relPos), (int)(xPos + AbsoluteWidth * (relPos + maxDelta)), yPos, yPos + AbsoluteHeight, 0xFF0000FF, 0xFF0000FF | (((uint)(255.0f * colorPct)) << 8));
                     relPos += delta;
 
                 }
@@ -115,7 +115,7 @@ namespace LibRXFFT.Components.DirectX.Drawables
                     /* gradient cyan -> yellow */
                     maxDelta = Math.Max(0, Math.Min(delta, Power - relPos));
                     colorPct = maxDelta / delta;
-                    BodyVertexesUsed = BuildFilledRectangle(BodyVertexes, BodyVertexesUsed, (int)(xPos + AbsoluteWidth * relPos), (int)(xPos + AbsoluteWidth * (relPos + maxDelta)), yPos, yPos + AbsoluteHeight, 0xFF00FFFF, 0xFF00FF00 | (((uint)(255.0f * colorPct)) << 16) | ((uint)(255.0f * (1-colorPct))));
+                    BodyVertexesUsed = BuildFilledRectangle(BodyVertexes, BodyVertexesUsed, (int)(xPos + AbsoluteWidth * relPos), (int)(xPos + AbsoluteWidth * (relPos + maxDelta)), yPos, yPos + AbsoluteHeight, 0xFF00FFFF, 0xFF00FF00 | (((uint)(255.0f * colorPct)) << 16) | ((uint)(255.0f * (1 - colorPct))));
                     relPos += delta;
                 }
 
@@ -124,12 +124,14 @@ namespace LibRXFFT.Components.DirectX.Drawables
                     /* gradient yellow -> red */
                     maxDelta = Math.Max(0, Math.Min(delta, Power - relPos));
                     colorPct = maxDelta / delta;
-                    BodyVertexesUsed = BuildFilledRectangle(BodyVertexes, BodyVertexesUsed, (int)(xPos + AbsoluteWidth * relPos), (int)(xPos + AbsoluteWidth * (relPos + maxDelta)), yPos, yPos + AbsoluteHeight, 0xFFFFFF00, 0xFFFF0000 | (((uint)(255.0f * (1-colorPct))) << 8));
+                    BodyVertexesUsed = BuildFilledRectangle(BodyVertexes, BodyVertexesUsed, (int)(xPos + AbsoluteWidth * relPos), (int)(xPos + AbsoluteWidth * (relPos + maxDelta)), yPos, yPos + AbsoluteHeight, 0xFFFFFF00, 0xFFFF0000 | (((uint)(255.0f * (1 - colorPct))) << 8));
                 }
             }
 
-            MainPlot.Device.DrawUserPrimitives(PrimitiveType.TriangleStrip, BodyVertexesUsed - 2, BodyVertexes);
-            MainPlot.Device.DrawUserPrimitives(PrimitiveType.LineList, BorderVertexesUsed / 2, BorderVertexes);
+            if (BodyVertexesUsed - 2 > 0)
+                MainPlot.Device.DrawUserPrimitives(PrimitiveType.TriangleStrip, BodyVertexesUsed - 2, BodyVertexes);
+            if (BorderVertexesUsed > 0)
+                MainPlot.Device.DrawUserPrimitives(PrimitiveType.LineList, BorderVertexesUsed / 2, BorderVertexes);
         }
 
         public override void ReleaseResources()

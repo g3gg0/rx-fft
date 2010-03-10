@@ -8,7 +8,7 @@ namespace LibRXFFT.Components.DirectX
 
         Vertex[] CursorVertexes = new Vertex[6];
         public bool[] BurstBits = new bool[0];
-        
+
 
         protected void DrawBit(int bitNum, uint color1, uint color2, uint colorText)
         {

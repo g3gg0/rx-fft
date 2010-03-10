@@ -229,9 +229,10 @@ namespace LibRXFFT.Components.DirectX.Drawables
                 BodyVertexesUsed = 0;
                 BodyVertexesUsed = BuildFilledRectangle(BodyVertexes, BodyVertexesUsed, xPos, xPos + AbsoluteWidth, yPos, yPos + AbsoluteHeight, 0x1F00FFFF);
             }
-
-            MainPlot.Device.DrawUserPrimitives(PrimitiveType.TriangleStrip, BodyVertexesUsed - 2, BodyVertexes);
-            MainPlot.Device.DrawUserPrimitives(PrimitiveType.LineList, BorderVertexesUsed / 2, BorderVertexes);
+            if (BodyVertexesUsed - 2 > 0)
+                MainPlot.Device.DrawUserPrimitives(PrimitiveType.TriangleStrip, BodyVertexesUsed - 2, BodyVertexes);
+            if (BorderVertexesUsed > 0)
+                MainPlot.Device.DrawUserPrimitives(PrimitiveType.LineList, BorderVertexesUsed / 2, BorderVertexes);
 
         }
 

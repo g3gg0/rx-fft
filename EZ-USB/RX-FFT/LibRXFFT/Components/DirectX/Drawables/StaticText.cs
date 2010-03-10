@@ -82,7 +82,7 @@ namespace LibRXFFT.Components.DirectX.Drawables
                 BorderVertexesUsed = BuildRectangle(BorderVertexes, BorderVertexesUsed, xPos - 7, xPos + 7 + AbsoluteWidth, yPos - 4, yPos + 4 + AbsoluteHeight, 0x7FFF0000);
                 BorderVertexesUsed = BuildRectangle(BorderVertexes, BorderVertexesUsed, xPos - 6, xPos + 6 + AbsoluteWidth, yPos - 3, yPos + 3 + AbsoluteHeight, 0xFFFF0000);
                 BorderVertexesUsed = BuildRectangle(BorderVertexes, BorderVertexesUsed, xPos - 5, xPos + 5 + AbsoluteWidth, yPos - 2, yPos + 2 + AbsoluteHeight, 0x7FFF0000);
-                
+
                 BodyVertexesUsed = 0;
                 BodyVertexesUsed = BuildFilledRectangle(BodyVertexes, BodyVertexesUsed, xPos - 6, xPos + 6 + AbsoluteWidth, yPos - 3, yPos + 3 + AbsoluteHeight, 0x1FFF0000);
             }
@@ -103,7 +103,8 @@ namespace LibRXFFT.Components.DirectX.Drawables
             }
 
             MainPlot.Device.DrawUserPrimitives(PrimitiveType.TriangleStrip, 2, BodyVertexes);
-            MainPlot.Device.DrawUserPrimitives(PrimitiveType.LineList, BorderVertexesUsed / 2, BorderVertexes);
+            if (BorderVertexesUsed > 0)
+                MainPlot.Device.DrawUserPrimitives(PrimitiveType.LineList, BorderVertexesUsed / 2, BorderVertexes);
 
             DisplayFont.DrawString(null, Text, xPos + 2, yPos + 2, ShadowColor);
             DisplayFont.DrawString(null, Text, xPos, yPos, TextColor);

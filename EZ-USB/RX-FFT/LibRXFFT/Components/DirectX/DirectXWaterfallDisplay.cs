@@ -7,7 +7,7 @@ using LibRXFFT.Libraries.FFTW;
 using LibRXFFT.Libraries.SignalProcessing;
 using SlimDX;
 using SlimDX.Direct3D9;
-using Font=SlimDX.Direct3D9.Font;
+using Font = SlimDX.Direct3D9.Font;
 using LibRXFFT.Components.Generic;
 
 namespace LibRXFFT.Components.DirectX
@@ -19,7 +19,7 @@ namespace LibRXFFT.Components.DirectX
         public double DynamicBaseLevel = 0;
         private bool DynamicBaseLevelChanged = false;
         public bool DrawTimeStamps = false;
-        
+
         /* DirectX related graphic stuff */
         protected override MultisampleType SuggestedMultisample { get { return MultisampleType.None; } }
 
@@ -490,7 +490,8 @@ namespace LibRXFFT.Components.DirectX
                 OverlayVertexesUsed++;
             }
 
-            Device.DrawUserPrimitives(PrimitiveType.LineList, OverlayVertexesUsed / 2, OverlayVertexes);
+            if (OverlayVertexesUsed > 0)
+                Device.DrawUserPrimitives(PrimitiveType.LineList, OverlayVertexesUsed / 2, OverlayVertexes);
             SmallFont.DrawString(null, string.Format("{0:0.0} dB", LeveldBWhite), 27, barTop + whiteYPos - 6, (int)colorBarUpper);
             SmallFont.DrawString(null, string.Format("{0:0.0} dB", LeveldBBlack), 27, barTop + blackYPos - 6, (int)colorBarLower);
         }
@@ -635,7 +636,7 @@ namespace LibRXFFT.Components.DirectX
         {
             base.ReleaseDevices();
 
-            if (SaveDeviceDisplayContext!=null)
+            if (SaveDeviceDisplayContext != null)
                 SaveDeviceDisplayContext.Dispose();
             if (SaveDeviceThreadContext != null)
                 SaveDeviceThreadContext.Dispose();
@@ -653,11 +654,11 @@ namespace LibRXFFT.Components.DirectX
             WaterfallTexture = new Texture(Device, PresentParameters.BackBufferWidth, PresentParameters.BackBufferHeight, 1, Usage.RenderTarget, Format.A8R8G8B8, Pool.Default);
             TempWaterfallTexture = new Texture(Device, PresentParameters.BackBufferWidth, PresentParameters.BackBufferHeight, 1, Usage.RenderTarget, Format.A8R8G8B8, Pool.Default);
             Sprite = new Sprite(Device);
-            
+
             //WaterfallTexture.Fill(new Fill2DCallback(delegate (Vector2 coordinate, Vector2 texelSize){return ColorBG;}));
             //TempWaterfallTexture.Fill(new Fill2DCallback(delegate (Vector2 coordinate, Vector2 texelSize){return ColorBG;}));
 
-            
+
 
             /* save file every screen roll-over */
             SaveWaterfallLinesToRender = SaveParameters.BackBufferHeight;
@@ -667,7 +668,7 @@ namespace LibRXFFT.Components.DirectX
             SaveWaterfallTexture = new Texture(SaveDeviceDisplayContext, SaveParameters.BackBufferWidth, SaveParameters.BackBufferHeight, 1, Usage.RenderTarget, Format.A8R8G8B8, Pool.Default);
             SaveTempWaterfallTexture = new Texture(SaveDeviceDisplayContext, SaveParameters.BackBufferWidth, SaveParameters.BackBufferHeight, 1, Usage.RenderTarget, Format.A8R8G8B8, Pool.Default);
             SaveImageDisplayContext = new Texture(SaveDeviceDisplayContext, SaveParameters.BackBufferWidth, SaveParameters.BackBufferHeight, 1, Usage.RenderTarget, Format.A8R8G8B8, Pool.Default);
-            
+
             SaveFixedFont = new Font(SaveDeviceDisplayContext, new System.Drawing.Font("Courier New", 8));
             SaveSprite = new Sprite(SaveDeviceDisplayContext);
 
@@ -750,7 +751,7 @@ namespace LibRXFFT.Components.DirectX
 
             base.ResetModifiers(forceUnhover);
         }
-        
+
         protected override void RefreshLinePoints()
         {
             /* dont do that - else the waterfall scrolls during mouse move etc */
@@ -834,7 +835,7 @@ namespace LibRXFFT.Components.DirectX
                         DynamicBaseLevel = Math.Max(LeveldBMax, Math.Min(-LeveldBMax, DynamicBaseLevel + 2));
                         DynamicBaseLevelChanged = true;
                     }
-                    
+
                     UpdateOverlays = true;
 
                     /* inform that smth has changed */
@@ -1037,7 +1038,8 @@ namespace LibRXFFT.Components.DirectX
                 Sprite.End();
 
                 /* paint first line */
-                Device.DrawUserPrimitives(PrimitiveType.LineStrip, PlotVertsEntries, PlotVerts);
+                if (PlotVertsEntries > 0)
+                    Device.DrawUserPrimitives(PrimitiveType.LineStrip, PlotVertsEntries, PlotVerts);
                 PlotVertsEntries = 0;
 
                 LinesWithoutTimestamp++;
@@ -1068,11 +1070,11 @@ namespace LibRXFFT.Components.DirectX
                 /* now write the temp buffer into the real image buffer */
                 Device.SetRenderTarget(0, WaterfallTexture.GetSurfaceLevel(0));
 
-                
+
                 Sprite.Begin(SpriteFlags.None);
                 Sprite.Draw(TempWaterfallTexture, ColorWhite);
                 Sprite.End();
-               
+
 
                 //Device.EndScene();
 
@@ -1092,9 +1094,10 @@ namespace LibRXFFT.Components.DirectX
                     SaveSprite.Begin(SpriteFlags.None);
                     SaveSprite.Draw(SaveWaterfallTexture, Vector3.Zero, new Vector3(0, 1, 0), new Color4(Color.White));
                     SaveSprite.End();
-                    
+
                     /* paint first line */
-                    SaveDeviceDisplayContext.DrawUserPrimitives(PrimitiveType.LineStrip, PlotVertsOverview.Length - 1, PlotVertsOverview);
+                    if (PlotVertsOverview.Length - 1 > 0)
+                        SaveDeviceDisplayContext.DrawUserPrimitives(PrimitiveType.LineStrip, PlotVertsOverview.Length - 1, PlotVertsOverview);
 
                     if (drawTimeStamp)
                     {

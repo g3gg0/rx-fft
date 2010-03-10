@@ -49,7 +49,8 @@ namespace LibRXFFT.Components.DirectX.Drawables.Docks
         protected Rectangle TextShadowRect = new Rectangle();
 
 
-        public PowerBarDock(DockPanel panel) : base(panel)
+        public PowerBarDock(DockPanel panel)
+            : base(panel)
         {
             Title = "RSSI";
             Width = 100;
@@ -137,17 +138,18 @@ namespace LibRXFFT.Components.DirectX.Drawables.Docks
                 }
             }
 
-            Panel.MainPlot.Device.DrawUserPrimitives(PrimitiveType.TriangleStrip, BodyVertexesUsed - 2, BodyVertexes);
+            if (BodyVertexesUsed - 2 > 0)
+                Panel.MainPlot.Device.DrawUserPrimitives(PrimitiveType.TriangleStrip, BodyVertexesUsed - 2, BodyVertexes);
 
             TextRect.X = XPosition;
             TextRect.Y = YPosition;
             TextRect.Width = Width;
-            TextRect.Height = Height; 
+            TextRect.Height = Height;
             TextShadowRect.X = XPosition + 1;
             TextShadowRect.Y = YPosition + 1;
             TextShadowRect.Width = Width;
             TextShadowRect.Height = Height;
-            
+
             string text = Power.ToString("#0.0 ") + Unit;
 
             DisplayFont.DrawString(null, text, TextShadowRect, DrawTextFormat.Center | DrawTextFormat.VerticalCenter, (int)ShadowColor);

@@ -9,6 +9,7 @@ using Font = SlimDX.Direct3D9.Font;
 using Mutex = LibRXFFT.Libraries.Misc.TraceMutex;
 using LibRXFFT.Components.DirectX.Drawables;
 using LibRXFFT.Components.DirectX.Drawables.Docks;
+using RX_FFT.Components.GDI;
 
 
 namespace LibRXFFT.Components.DirectX
@@ -318,8 +319,6 @@ namespace LibRXFFT.Components.DirectX
 
 
 
-        public delegate void ResetDirectXDelegate();
-
         protected void ResetDirectX()
         {
             ReleaseDirectX();
@@ -492,8 +491,8 @@ namespace LibRXFFT.Components.DirectX
                 }
                 catch (Exception e)
                 {
+                    Log.AddMessage("Drawable Exception: " + e);
                 }
-
             }
         }
 
@@ -521,8 +520,8 @@ namespace LibRXFFT.Components.DirectX
                 }
                 catch (Exception e)
                 {
+                    Log.AddMessage("Drawable Exception: " + e);
                 }
-
             }
         }
 
@@ -539,7 +538,8 @@ namespace LibRXFFT.Components.DirectX
 
         protected virtual void RenderOverview(int vertexCount, Vertex[] vertexes)
         {
-            Device.DrawUserPrimitives(PrimitiveType.LineStrip, vertexCount, vertexes);
+            if (vertexCount > 0)
+                Device.DrawUserPrimitives(PrimitiveType.LineStrip, vertexCount, vertexes);
 
             /* only recalc scale lines when axis need to get updated */
             if (UpdateOverlays)
@@ -658,7 +658,8 @@ namespace LibRXFFT.Components.DirectX
             int endPos = (int)(((DisplayXOffset + DirectXWidth) / XZoomFactor));
             int centerPos = (int)((startPos + endPos) / 2);
 
-            Device.DrawUserPrimitives(PrimitiveType.LineList, OverviewVertexCount / 2, OverviewVertexes);
+            if (OverviewVertexCount > 0)
+                Device.DrawUserPrimitives(PrimitiveType.LineList, OverviewVertexCount / 2, OverviewVertexes);
             SmallFont.DrawString(null, XLabelFromSampleNum(startPos), startPos + 10, 40, ColorFont.ToArgb());
             SmallFont.DrawString(null, XLabelFromSampleNum(centerPos), centerPos, 50, ColorFont.ToArgb());
             SmallFont.DrawString(null, XLabelFromSampleNum(endPos), endPos + 10, 40, ColorFont.ToArgb());
@@ -693,13 +694,18 @@ namespace LibRXFFT.Components.DirectX
                 {
                     if (!DirectXAvailable)
                     {
-                        MessageBox.Show("Failed to re-init DirectX within " + (DirectXResetTriesMax / 10) + " seconds.");
-                        Thread.Sleep(1000);
+                        if (MessageBox.Show("Failed to re-init DirectX within " + (DirectXResetTriesMax / 10) + " seconds. Retry again?", "Reset DirectX failed", MessageBoxButtons.RetryCancel) != DialogResult.Retry)
+                        {
+                            throw new Exception("Failed to initialize DirectX");
+                        }
                     }
                 }
                 try
                 {
-                    BeginInvoke(new ResetDirectXDelegate(ResetDirectX), null);
+                    BeginInvoke((MethodInvoker)delegate()
+                    {
+                        ResetDirectX();
+                    });
                 }
                 catch (Exception e)
                 {
@@ -727,9 +733,9 @@ namespace LibRXFFT.Components.DirectX
                     }
                     catch (Exception e)
                     {
+                        Log.AddMessage("Drawable Exception: " + e);
                     }
                 }
-
 
                 Device.EndScene();
                 Device.Present();
@@ -762,7 +768,10 @@ namespace LibRXFFT.Components.DirectX
                 if (ShiftPressed)
                     RenderOverview(PlotVertsEntries, PlotVertsOverview);
                 else
-                    Device.DrawUserPrimitives(PrimitiveType.LineStrip, PlotVertsEntries, PlotVerts);
+                {
+                    if (PlotVertsEntries > 0)
+                        Device.DrawUserPrimitives(PrimitiveType.LineStrip, PlotVertsEntries, PlotVerts);
+                }
             }
         }
 
@@ -788,7 +797,10 @@ namespace LibRXFFT.Components.DirectX
 
                     if (YAxisCentered)
                     {
-                        YAxisVerts = new Vertex[4 + YAxisLines.Count * 2];
+                        if (YAxisVerts == null || YAxisVerts.Length < (4 + YAxisLines.Count * 2))
+                        {
+                            YAxisVerts = new Vertex[4 + YAxisLines.Count * 2];
+                        }
 
                         YAxisVerts[0].PositionRhw.X = 0;
                         YAxisVerts[0].PositionRhw.Y = DirectXHeight / 2;
@@ -832,10 +844,15 @@ namespace LibRXFFT.Components.DirectX
                         }
                     }
                     else
-                        YAxisVerts = new Vertex[0];
+                    {
+                        YAxisVerts = null;
+                    }
 
+                    if (XAxisVerts == null || XAxisVerts.Length < XAxisLines * 4)
+                    {
+                        XAxisVerts = new Vertex[XAxisLines * 4];
+                    }
 
-                    XAxisVerts = new Vertex[XAxisLines * 4];
                     for (int pos = 0; pos < XAxisLines; pos++)
                     {
                         float xPos = (float)(XAxisGridOffset * XZoomFactor - DisplayXOffset + (pos * XAxisUnit * XZoomFactor));
@@ -1564,6 +1581,5 @@ namespace LibRXFFT.Components.DirectX
         protected override void OnPaint(PaintEventArgs e)
         {
         }
-
     }
 }

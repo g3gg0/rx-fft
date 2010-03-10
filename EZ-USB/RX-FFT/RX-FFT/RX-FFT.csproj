@@ -82,6 +82,7 @@
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>x86</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -126,9 +127,6 @@
     </Compile>
     <Compile Include="Dialogs\MarkerListDialog.Designer.cs">
       <DependentUpon>MarkerListDialog.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Dialogs\ToolStripForm.cs">
-      <SubType>Component</SubType>
     </Compile>
     <Compile Include="Icons.Designer.cs">
       <AutoGen>True</AutoGen>

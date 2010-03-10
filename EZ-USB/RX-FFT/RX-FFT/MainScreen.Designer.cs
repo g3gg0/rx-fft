@@ -15,6 +15,11 @@ namespace RX_FFT
         /// <param name="disposing">True, wenn verwaltete Ressourcen gelöscht werden sollen; andernfalls False.</param>
         protected override void Dispose(bool disposing)
         {
+            if (StatusUpdateTimer != null)
+            {
+                StatusUpdateTimer.Dispose();
+                StatusUpdateTimer = null;
+            }
             base.Dispose(disposing);
         }
 
@@ -86,6 +91,7 @@ namespace RX_FFT
             this.deviceInformationMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripContainer1 = new System.Windows.Forms.ToolStripContainer();
             this.FFTDisplay = new LibRXFFT.Components.DirectX.DirectXWaterfallFFTDisplay();
+            this.agcMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip1.SuspendLayout();
             this.mainMenu.SuspendLayout();
             this.toolStripContainer1.ContentPanel.SuspendLayout();
@@ -336,7 +342,8 @@ namespace RX_FFT
             this.waterfallRecordingMenu,
             this.dynamicWaterfallMenu,
             this.fitSpectrumMenu,
-            this.displayFilterMarginsMenu});
+            this.displayFilterMarginsMenu,
+            this.agcMenu});
             this.optionsMenu.Name = "optionsMenu";
             this.optionsMenu.Size = new System.Drawing.Size(61, 20);
             this.optionsMenu.Text = "Options";
@@ -602,6 +609,13 @@ namespace RX_FFT
             this.FFTDisplay.VerticalSmooth = 1;
             this.FFTDisplay.WindowingFunction = LibRXFFT.Libraries.FFTW.FFTTransformer.eWindowingFunction.BlackmanHarris;
             // 
+            // agcMenu
+            // 
+            this.agcMenu.Name = "agcMenu";
+            this.agcMenu.Size = new System.Drawing.Size(214, 22);
+            this.agcMenu.Text = "Automatic Gain Control";
+            this.agcMenu.Click += new System.EventHandler(this.agcMenu_Click);
+            // 
             // MainScreen
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -690,6 +704,7 @@ namespace RX_FFT
         private System.Windows.Forms.ToolStripMenuItem scanMarkersMenu;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel4;
         private System.Windows.Forms.ToolStripStatusLabel maxDbLabel;
+        private System.Windows.Forms.ToolStripMenuItem agcMenu;
     }
 }
 

@@ -13,17 +13,17 @@
         /// <param name="disposing">True, wenn verwaltete Ressourcen gelöscht werden sollen; andernfalls False.</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
-            {
-                components.Dispose();
-            }
-
             if (ScreenRefreshTimer != null)
                 ScreenRefreshTimer.Stop();
             if (LinePointUpdateTimer != null)
                 LinePointUpdateTimer.Stop();
             if (DisplayThread != null)
                 DisplayThread.Abort();
+
+            if (disposing && (components != null))
+            {
+                components.Dispose();
+            }
 
             base.Dispose(disposing);
         }

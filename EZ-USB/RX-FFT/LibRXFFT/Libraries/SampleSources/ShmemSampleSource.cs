@@ -5,21 +5,25 @@ namespace LibRXFFT.Libraries.SampleSources
     public class ShmemSampleSource : SampleSource
     {
         public SharedMem ShmemChannel;
+        private byte[] InBuffer;
+        private byte[] NextInBuffer;
+        private bool NextInBufferAvailable;
 
         public override int SamplesPerBlock
         {
             set
             {
-                InBuffer = new byte[value * BytesPerSamplePair];
+                NextInBuffer = new byte[value * BytesPerSamplePair];
+                NextInBufferAvailable = true;
                 AllocateBuffers();
             }
             get
             {
-                return InBuffer.Length / BytesPerSamplePair;
+                return NextInBuffer.Length / BytesPerSamplePair;
             }
         }
 
-        private byte[] InBuffer;
+        
 
         public ShmemSampleSource(string name, int oversampling)
             : this(name, oversampling, 2184533)
@@ -44,7 +48,9 @@ namespace LibRXFFT.Libraries.SampleSources
             SamplesPerBlock = 1024;
 
             if (samplingRate > 0)
+            {
                 InputSamplingRate = samplingRate;
+            }
         }
 
         public override void Flush()
@@ -59,6 +65,13 @@ namespace LibRXFFT.Libraries.SampleSources
 
         public override bool Read()
         {
+            /* in case we should use some other input buffer */
+            if (NextInBufferAvailable)
+            {
+                NextInBufferAvailable = false;
+                InBuffer = NextInBuffer;
+            }
+
             /* when the rate has changed */
             if (ShmemChannel.Rate != 0 && InputSamplingRate != ShmemChannel.Rate / 2)
             {
@@ -67,28 +80,37 @@ namespace LibRXFFT.Libraries.SampleSources
 
             int read = ShmemChannel.Read(InBuffer, 0, InBuffer.Length);
 
+            /* in case buffer size has changed meanwhile, return */
+            if (NextInBufferAvailable)
+            {
+                SamplesRead = 0;
+                return true;
+            }
+
+            /* in case we could not read enough bytes, return */
             if (read != InBuffer.Length)
             {
                 SamplesRead = 0;
                 return false;
             }
 
-
-            if (InternalOversampling > 1)
+            lock (SampleBufferLock)
             {
-                ByteUtil.SamplesFromBinary(InBuffer, OversampleI, OversampleQ, DataFormat, InvertedSpectrum);
-                IOversampler.Oversample(OversampleI, SourceSamplesI);
-                QOversampler.Oversample(OversampleQ, SourceSamplesQ);
+                if (InternalOversampling > 1)
+                {
+                    ByteUtil.SamplesFromBinary(InBuffer, OversampleI, OversampleQ, DataFormat, InvertedSpectrum);
+                    IOversampler.Oversample(OversampleI, SourceSamplesI);
+                    QOversampler.Oversample(OversampleQ, SourceSamplesQ);
+                }
+                else
+                {
+                    ByteUtil.SamplesFromBinary(InBuffer, SourceSamplesI, SourceSamplesQ, DataFormat, InvertedSpectrum);
+                }
+
+                SamplesRead = SourceSamplesI.Length;
+
+                SaveData();
             }
-            else
-            {
-                ByteUtil.SamplesFromBinary(InBuffer, SourceSamplesI, SourceSamplesQ, DataFormat, InvertedSpectrum);
-            }
-
-            SamplesRead = SourceSamplesI.Length;
-
-            SaveData();
-
             return true;
         }
     }

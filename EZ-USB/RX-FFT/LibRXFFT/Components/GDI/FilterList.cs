@@ -17,6 +17,7 @@ namespace LibRXFFT.Components.GDI
         private ArrayList FilterFiles = new ArrayList();
         private Button LastButton = null;
         private Color LastButtonColor;
+        private string LastFolderName = "";
 
 
         public FilterList()
@@ -59,7 +60,7 @@ namespace LibRXFFT.Components.GDI
         public void RebuildFilterFileButtons()
         {
             ctrFilterFileButtons.Controls.Clear();
-            ctrAtmelFilterButtons.Controls.Clear();
+            //ctrAtmelFilterButtons.Controls.Clear();
 
             FilterFiles.Sort();
             FirstFilter = null;
@@ -80,8 +81,16 @@ namespace LibRXFFT.Components.GDI
                 DialogResult result = d.ShowDialog();
                 if (result == DialogResult.OK)
                 {
-                    string folderName = d.SelectedPath;
-                    UpdateFilters(folderName);
+                    LastFolderName = d.SelectedPath;
+                    UpdateFilters(LastFolderName);
+                }
+            });
+            /* right-click rescans the last filter folder */
+            btn.MouseUp += new MouseEventHandler(delegate(object sender, MouseEventArgs e)
+            {
+                if (e.Button == MouseButtons.Right)
+                {
+                    UpdateFilters(LastFolderName);
                 }
             });
             ctrFilterFileButtons.Controls.Add(btn);

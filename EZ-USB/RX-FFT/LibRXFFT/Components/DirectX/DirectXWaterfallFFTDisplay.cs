@@ -6,12 +6,18 @@ using System.Windows.Forms;
 using LibRXFFT.Libraries;
 using LibRXFFT.Libraries.FFTW;
 using LibRXFFT.Libraries.Timers;
+using LibRXFFT.Components.DirectX.Drawables;
+using System.Net;
+using System.Net.Sockets;
+using LibRXFFT.Libraries.SignalProcessing;
 
 namespace LibRXFFT.Components.DirectX
 {
     public partial class DirectXWaterfallFFTDisplay : UserControl
     {
         public UserEventCallbackDelegate UserEventCallback;
+
+        private AttenuationCorrection Correction = new AttenuationCorrection();
 
         private Color MarkerColor = Color.LightGreen;
 
@@ -26,6 +32,8 @@ namespace LibRXFFT.Components.DirectX
         private LabelledLine LevelBarLower = new LabelledLine("Waterfall lower limit", 0, Color.BlueViolet);
 
         private AccurateTimer FpsUpdateTimer;
+
+        public RemoteControl Remote;
 
         public DirectXWaterfallFFTDisplay()
         {
@@ -67,6 +75,7 @@ namespace LibRXFFT.Components.DirectX
             /* configure update speed */
             //WaterfallDisplay.EventActions[eUserEvent.MouseWheelUpAlt] = eUserAction.UserCallback;
             //WaterfallDisplay.EventActions[eUserEvent.MouseWheelDownAlt] = eUserAction.UserCallback;
+
         }
 
         private long FpsBlocksReceived = 0;
@@ -230,6 +239,9 @@ namespace LibRXFFT.Components.DirectX
             set 
             {
                 _SamplingRate = value;
+
+                Correction.BuildCorrectionTable(LowestFrequency, HighestFrequency, FFTSize);
+
                 if (FitSpectrumEnabled)
                 {
                     FFTDisplay.SamplingRate = value * FitSpectrumWidth;
@@ -314,11 +326,27 @@ namespace LibRXFFT.Components.DirectX
             }
             set
             {
+                Correction.BuildCorrectionTable(LowestFrequency, HighestFrequency, FFTSize);
                 FFTDisplay.CenterFrequency = value;
                 WaterfallDisplay.CenterFrequency = value;
             }
         }
 
+        public long LowestFrequency
+        {
+            get
+            {
+                return (long)(CenterFrequency - SamplingRate / 2);
+            }
+        }
+
+        public long HighestFrequency
+        {
+            get
+            {
+                return (long)(CenterFrequency + SamplingRate / 2);
+            }
+        }
 
         public long Frequency
         {
@@ -465,6 +493,7 @@ namespace LibRXFFT.Components.DirectX
                     FFTResult = new double[_FFTSize];
                     FFT = new FFTTransformer(value);
 
+                    Correction.BuildCorrectionTable(LowestFrequency, HighestFrequency, FFTSize);
                     FFTDisplay.FFTSize = value;
                     WaterfallDisplay.FFTSize = value;
                 }
@@ -524,9 +553,9 @@ namespace LibRXFFT.Components.DirectX
         {
             FpsBlocksReceived++;
 
-            if (FFTDisplay.EnoughData)
+            if (FFTDisplay.EnoughData || WaterfallDisplay.EnoughData)
                 return;
-
+            
             FpsBlocksProcessed++;
 
             lock (FFTLock)
@@ -543,6 +572,9 @@ namespace LibRXFFT.Components.DirectX
                     if (FFT.ResultAvailable)
                     {
                         FFT.GetResultSquared(FFTResult);
+                        Correction.ApplyCorrectionTable(FFTResult);
+
+                        Remote.ProcessData(FFTResult);
 
                         if (FitSpectrumEnabled)
                         {
@@ -587,6 +619,8 @@ namespace LibRXFFT.Components.DirectX
                 if (FFT.ResultAvailable)
                 {
                     FFT.GetResultSquared(FFTResult);
+
+                    Correction.ApplyCorrectionTable(FFTResult);
 
                     FFTDisplay.ProcessFFTData(FFTResult, spectPart, baseAmp);
                     WaterfallDisplay.ProcessFFTData(FFTResult, spectPart, baseAmp);

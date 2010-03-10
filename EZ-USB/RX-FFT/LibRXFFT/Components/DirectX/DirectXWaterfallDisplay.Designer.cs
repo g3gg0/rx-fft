@@ -13,14 +13,21 @@
         /// <param name="disposing">True, wenn verwaltete Ressourcen gelöscht werden sollen; andernfalls False.</param>
         protected override void Dispose(bool disposing)
         {
+            SaveThreadRunning = false;
+            if (SaveThread != null)
+            {
+                SaveBufferTrigger.Release(1);
+                if (!SaveThread.Join(250))
+                {
+                    SaveThread.Abort();
+                }
+                SaveThread = null;
+            }
+
             if (disposing && (components != null))
             {
                 components.Dispose();
             }
-
-            if (SaveThread != null)
-                SaveThread.Abort();
-            SaveThread = null;
 
             base.Dispose(disposing);
         }
@@ -41,8 +48,8 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Name = "DirectXWaterfallDisplay";
             this.Size = new System.Drawing.Size(538, 333);
-            this.ResumeLayout(false);
 
+            this.ResumeLayout(false);
         }
 
         #endregion

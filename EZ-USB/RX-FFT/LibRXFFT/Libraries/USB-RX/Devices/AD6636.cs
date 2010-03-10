@@ -18,6 +18,9 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         private long _NCOFreq;
         private long CachedRegister = 0;
 
+        private FilterInformation CurrentFilter;
+
+
         private static int AD6636_REG_NCOFREQ = 0x70;
         private static int AD6636_REG_NCOFREQ_L = 4;
         private static int AD6636_REG_IOAC = 0x02;
@@ -104,6 +107,27 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             InitRegisters();
         }
 
+        public void ReInit()
+        {
+            long freq = CurrentFrequency;
+            CurrentFrequency = 0;
+
+            InitRegisters();
+            SetMgcValue((int)Amplification);
+
+            if (CurrentFilter is AtmelFilter)
+            {
+                SetFilter((AtmelFilter)CurrentFilter);
+            }
+            if (CurrentFilter is AD6636FilterFile)
+            {
+                SetFilter(CurrentChannel, (AD6636FilterFile)CurrentFilter);
+            }
+
+            SetFrequency(freq);
+            SoftSync();
+        }
+
         public void InitRegisters()
         {
             int pos = 0;
@@ -128,9 +152,10 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             }
         }
 
+
         public bool SetMgcValue(int value)
         {
-            value = Math.Min(60, value);
+            value = Math.Min(96, value);
 
             this.Device.AD6636WriteReg(AD6636_REG_IOAC, AD6636_REG_IOAC_L, 0x0B);
 
@@ -188,9 +213,11 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             return true;
         }
 
+
         /* used if atmel uploads filter */
         public bool SetFilter(AtmelFilter filter)
         {
+            CurrentFilter = filter;
             FilterRate = filter.Rate;
             _FilterWidth = filter.Width;
 
@@ -210,6 +237,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
         public bool SetFilter(int channel, AD6636FilterFile filter)
         {
+            CurrentFilter = filter;
             FilterRate = filter.Rate;
             _FilterWidth = filter.Width;
 
@@ -342,7 +370,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             this.Device.AD6636WriteReg(192, 2, regValue);
         }
 
-        private void SoftSync()
+        public void SoftSync()
         {
             this.Device.AD6636WriteReg(AD6636_REG_SOFTSYNC, AD6636_REG_SOFTSYNC_L, 0x00);
             this.Device.AD6636WriteReg(AD6636_REG_SOFTSYNC, AD6636_REG_SOFTSYNC_L, 0xCF);

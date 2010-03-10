@@ -43,7 +43,7 @@ namespace LibRXFFT.Components.DirectX
         protected Timer ScreenRefreshTimer;
         protected Timer LinePointUpdateTimer;
         protected Thread DisplayThread;
-        protected bool NeedsUpdate = false;
+        public bool NeedsUpdate = false;
         public bool EnoughData = false;
 
         public double ScalePosMax = 0;
@@ -220,6 +220,14 @@ namespace LibRXFFT.Components.DirectX
             public IntPtr hbmColor;
         }
 
+        public void Clear()
+        {
+            lock (SampleValues)
+            {
+                SampleValues.Clear();
+                NeedsUpdate = true;
+            }
+        }
 
 
         public void ProcessData(double level, bool forcePlot)
@@ -310,8 +318,8 @@ namespace LibRXFFT.Components.DirectX
                     oldOffset = DisplayYOffset;
 
                     param += oldOffset;
-                    param = Math.Min(DirectXHeight , param);
-                    DisplayYOffset = Math.Max(-DirectXHeight, param);
+                    param = Math.Min(10*DirectXHeight, param);
+                    DisplayYOffset = Math.Max(-10 * DirectXHeight, param);
 
                     if (oldOffset != DisplayYOffset)
                     {
@@ -640,6 +648,7 @@ namespace LibRXFFT.Components.DirectX
             if (UpdateOverlays)
             {
                 UpdateOverlays = false;
+                UpdateDrawablePositions();
                 OverlayTextLabels.Clear();
                 OverlayVertexesUsed = 0;
 

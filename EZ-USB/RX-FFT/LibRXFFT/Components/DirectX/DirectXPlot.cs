@@ -5,11 +5,14 @@ using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
 using SlimDX.Direct3D9;
-using Font=SlimDX.Direct3D9.Font;
+using Font = SlimDX.Direct3D9.Font;
+using Mutex = LibRXFFT.Libraries.Misc.TraceMutex;
+using LibRXFFT.Components.DirectX.Drawables;
+using LibRXFFT.Components.DirectX.Drawables.Docks;
+
 
 namespace LibRXFFT.Components.DirectX
 {
-
     public class DirectXPlot : UserControl
     {
         public double UpdateRate
@@ -23,11 +26,11 @@ namespace LibRXFFT.Components.DirectX
         public bool KeepText = false;
         public string MainText = "";
         public string MainTextPrev = "";
- 
+
         public UserEventCallbackDelegate UserEventCallback;
 
-        protected int DirectXWidth = 1280;
-        protected int DirectXHeight = 1024;
+        public int DirectXWidth = 1280;
+        public int DirectXHeight = 1024;
 
         protected bool YAxisCentered = true;
 
@@ -37,14 +40,22 @@ namespace LibRXFFT.Components.DirectX
 
         protected Direct3D Direct3D;
         protected PresentParameters PresentParameters;
+        protected virtual MultisampleType SuggestedMultisample { get { return MultisampleType.TwoSamples; } }
+
 
         protected int DefaultAdapter;
         protected Capabilities DeviceCaps;
         protected CreateFlags DeviceCreateFlags;
-        protected Device Device;
+        public Device Device;
         protected Font DisplayFont;
         protected Font SmallFont;
         protected Font FixedFont;
+
+
+        protected System.Drawing.Font DisplayFontSource = new System.Drawing.Font("Arial", 20);
+        protected System.Drawing.Font SmallFontSource = new System.Drawing.Font("Arial", 8);
+        protected System.Drawing.Font FixedFontSource = new System.Drawing.Font("Courier New", 8);
+
 
         /* add some interface to set the YAxisLines - for now external code is locking and modifying member variables */
         public readonly Mutex DirectXLock = new Mutex();
@@ -77,11 +88,13 @@ namespace LibRXFFT.Components.DirectX
         protected int LinePointEntries;
         private bool SizeHasChanged;
 
+        protected bool Dragging;
         protected bool ShiftPressed;
         protected bool AltPressed;
         protected bool ControlPressed;
         public bool MouseHovering;
         public bool ShowVerticalCursor;
+        public bool HideCursor;
 
         protected bool OverviewMode;
         protected bool OverviewModeEnabled = true;
@@ -90,8 +103,8 @@ namespace LibRXFFT.Components.DirectX
 
 
         /* values are in pixels and set by the DragX/Y functions */
-        protected double DisplayXOffset = 0;
-        protected double DisplayYOffset = 0;
+        public double DisplayXOffset = 0;
+        public double DisplayYOffset = 0;
 
         protected Point LastMousePos = new Point();
 
@@ -121,12 +134,19 @@ namespace LibRXFFT.Components.DirectX
         private Cursor EmptyCursor;
         private Cursor DefaultCursor;
 
-        public DirectXPlot() : this(false)
-        { 
+        private LinkedList<DirectXDrawable> Drawables = new LinkedList<DirectXDrawable>();
+        private InputEvent DrawableInputEvent = new InputEvent();
+
+        public DirectXPlot()
+            : this(false)
+        {
         }
 
         public DirectXPlot(bool slaveMode)
         {
+            SlimDX.Configuration.EnableObjectTracking = true;
+            SlimDX.Configuration.DetectDoubleDispose = true;
+
             SetDefaultActions();
 
             ColorOverview = Color.Red;
@@ -139,7 +159,7 @@ namespace LibRXFFT.Components.DirectX
             YZoomFactorMin = 0.01d;
             XZoomFactorMax = 20;
             XZoomFactorMin = 1;
-            
+
             DefaultCursor = this.Cursor;
             EmptyCursor = CreateEmptyCursor();
 
@@ -151,6 +171,15 @@ namespace LibRXFFT.Components.DirectX
             {
                 MessageBox.Show("Failed initializing DirectX." + Environment.NewLine + e.ToString());
             }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            ReleaseResources();
+            ReleaseDevices();
+            ReleaseDirectX();
+
+            base.Dispose(disposing);
         }
 
         public string[] DisplayInformation
@@ -165,7 +194,7 @@ namespace LibRXFFT.Components.DirectX
                 lines.Add("MaxTextureWidth:   " + DeviceCaps.MaxTextureWidth);
                 lines.Add("Multisample:       " + PresentParameters.Multisample);
                 lines.Add("DeviceCaps:        " + DeviceCaps.DeviceCaps);
-                
+
                 return (string[])lines.ToArray(typeof(string));
             }
         }
@@ -339,13 +368,13 @@ namespace LibRXFFT.Components.DirectX
                     DirectXHeight = Math.Min(DirectXHeight, DeviceCaps.MaxTextureHeight);
                     DirectXWidth = Math.Min(DirectXWidth, DeviceCaps.MaxTextureWidth);
                 }
-                
+
                 /* deciding between soft and hard initialization */
                 if (Direct3D == null)
                 {
                     /* Direct3D init */
                     Direct3D = new Direct3D();
-                    
+
                     /* we dont need to allocate that all the time. once is enough */
                     AllocateDevices();
 
@@ -404,26 +433,22 @@ namespace LibRXFFT.Components.DirectX
             {
                 DeviceCreateFlags |= CreateFlags.SoftwareVertexProcessing;
             }
-            
+
             if (PresentParameters == null)
             {
                 PresentParameters = new PresentParameters();
                 PresentParameters.BackBufferHeight = DirectXHeight;
                 PresentParameters.BackBufferWidth = DirectXWidth;
                 PresentParameters.DeviceWindowHandle = Handle;
-                PresentParameters.Multisample = MultisampleType.TwoSamples;
+                PresentParameters.Multisample = MultisampleType.None;
                 PresentParameters.BackBufferFormat = Format.A8R8G8B8;
 
-                if (Direct3D.CheckDeviceMultisampleType(DefaultAdapter, DeviceType.Hardware, PresentParameters.BackBufferFormat, true, MultisampleType.TwoSamples))
+                if (Direct3D.CheckDeviceMultisampleType(DefaultAdapter, DeviceType.Hardware, PresentParameters.BackBufferFormat, true, SuggestedMultisample))
                 {
-                    PresentParameters.Multisample = MultisampleType.TwoSamples;
-                }
-                else
-                {
-                    PresentParameters.Multisample = MultisampleType.None;
+                    PresentParameters.Multisample = SuggestedMultisample;
                 }
             }
-            
+
             Device = new Device(Direct3D, DefaultAdapter, DeviceType.Hardware, PresentParameters.DeviceWindowHandle, DeviceCreateFlags, PresentParameters);
             Device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, ColorBG, 1.0f, 0);
 
@@ -452,9 +477,24 @@ namespace LibRXFFT.Components.DirectX
 
         protected virtual void AllocateResources()
         {
-            DisplayFont = new Font(Device, new System.Drawing.Font("Arial", 20));
-            SmallFont = new Font(Device, new System.Drawing.Font("Arial", 8));
-            FixedFont = new Font(Device, new System.Drawing.Font("Courier New", 8));
+            DisplayFont = new Font(Device, DisplayFontSource);
+            SmallFont = new Font(Device, SmallFontSource);
+            FixedFont = new Font(Device, FixedFontSource);
+
+            lock (Drawables)
+            {
+                try
+                {
+                    foreach (DirectXDrawable drawable in Drawables)
+                    {
+                        drawable.AllocateResources();
+                    }
+                }
+                catch (Exception e)
+                {
+                }
+
+            }
         }
 
         protected virtual void ReleaseResources()
@@ -469,6 +509,21 @@ namespace LibRXFFT.Components.DirectX
             DisplayFont = null;
             SmallFont = null;
             FixedFont = null;
+
+            lock (Drawables)
+            {
+                try
+                {
+                    foreach (DirectXDrawable drawable in Drawables)
+                    {
+                        drawable.ReleaseResources();
+                    }
+                }
+                catch (Exception e)
+                {
+                }
+
+            }
         }
 
         protected virtual string XLabelFromCursorPos(double xPos)
@@ -603,7 +658,7 @@ namespace LibRXFFT.Components.DirectX
             int endPos = (int)(((DisplayXOffset + DirectXWidth) / XZoomFactor));
             int centerPos = (int)((startPos + endPos) / 2);
 
-            Device.DrawUserPrimitives(PrimitiveType.LineList, OverviewVertexCount/2, OverviewVertexes);
+            Device.DrawUserPrimitives(PrimitiveType.LineList, OverviewVertexCount / 2, OverviewVertexes);
             SmallFont.DrawString(null, XLabelFromSampleNum(startPos), startPos + 10, 40, ColorFont.ToArgb());
             SmallFont.DrawString(null, XLabelFromSampleNum(centerPos), centerPos, 50, ColorFont.ToArgb());
             SmallFont.DrawString(null, XLabelFromSampleNum(endPos), endPos + 10, 40, ColorFont.ToArgb());
@@ -616,11 +671,10 @@ namespace LibRXFFT.Components.DirectX
 
         protected virtual void RenderCore()
         {
-            Device.BeginScene();
-            
+
             Device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, ColorBG, 1.0f, 0);
             Device.VertexFormat = VertexFormat.PositionRhw | VertexFormat.Diffuse;
-            
+
             RenderAxis();
             RenderPlotVerts();
             RenderOverlay();
@@ -628,22 +682,18 @@ namespace LibRXFFT.Components.DirectX
 
             DisplayFont.DrawString(null, MainText, 20, 30, ColorBG);
             DisplayFont.DrawString(null, MainText, 21, 31, ColorFont);
-            
-            Device.EndScene();
-            Device.Present();
         }
 
 
         internal virtual void Render()
         {
-
             if (!DirectXAvailable)
             {
                 if (++DirectXResetTries >= DirectXResetTriesMax)
                 {
                     if (!DirectXAvailable)
                     {
-                        MessageBox.Show("Failed to re-init DirectX within " + (DirectXResetTriesMax /10) + " seconds.");
+                        MessageBox.Show("Failed to re-init DirectX within " + (DirectXResetTriesMax / 10) + " seconds.");
                         Thread.Sleep(1000);
                     }
                 }
@@ -662,12 +712,36 @@ namespace LibRXFFT.Components.DirectX
             try
             {
                 DirectXLock.WaitOne();
+                Device.BeginScene();
+
                 RenderCore();
+
+                lock (Drawables)
+                {
+                    try
+                    {
+                        foreach (DirectXDrawable drawable in Drawables)
+                        {
+                            drawable.Render();
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                    }
+                }
+
+
+                Device.EndScene();
+                Device.Present();
                 DirectXLock.ReleaseMutex();
             }
             catch (Direct3D9Exception e)
             {
                 DirectXAvailable = false;
+                DirectXLock.ReleaseMutex();
+            }
+            catch (Exception e)
+            {
                 DirectXLock.ReleaseMutex();
             }
         }
@@ -699,7 +773,7 @@ namespace LibRXFFT.Components.DirectX
         protected virtual void RenderCursor()
         {
         }
-        
+
         protected virtual void RenderAxis()
         {
             try
@@ -810,8 +884,6 @@ namespace LibRXFFT.Components.DirectX
         {
         }
 
-
-
         public void ProcessUserEvent(eUserEvent evt, double param)
         {
             eUserAction action = eUserAction.None;
@@ -820,9 +892,20 @@ namespace LibRXFFT.Components.DirectX
                 action = EventActions[evt];
 
             if (action == eUserAction.UserCallback)
-                UserEventCallback(evt, param);
+            {
+                if (UserEventCallback != null)
+                {
+                    UserEventCallback(evt, param);
+                }
+                else
+                {
+                    throw new Exception();
+                }
+            }
             else
+            {
                 ProcessUserAction(action, param);
+            }
         }
 
         public virtual void ProcessUserAction(eUserAction action, double param)
@@ -962,10 +1045,66 @@ namespace LibRXFFT.Components.DirectX
             }
         }
 
+        public void AddDrawable(DirectXDrawable directXDrawable)
+        {
+            lock (Drawables)
+            {
+                Drawables.AddLast(directXDrawable);
+            }
+        }
+
+        protected bool UpdateDrawablePositions()
+        {
+            lock (Drawables)
+            {
+                try
+                {
+                    foreach (DirectXDrawable drawable in Drawables)
+                    {
+                        drawable.UpdatePositions();
+                    }
+                }
+                catch (Exception e)
+                {
+                }
+            }
+
+            return false;
+        }
+
+        protected bool HandleDrawableInput(InputEvent evt)
+        {
+            lock (Drawables)
+            {
+                try
+                {
+                    foreach (DirectXDrawable drawable in Drawables)
+                    {
+                        if (drawable.ProcessInputEvent(evt))
+                        {
+                            return true;
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                }
+            }
+
+            return false;
+        }
 
 
         protected override void OnKeyDown(KeyEventArgs e)
         {
+            /* check if drawable wants to handle input event */
+            DrawableInputEvent.Type = eInputEventType.KeyDown;
+            DrawableInputEvent.KeyData = e.KeyData;
+            if (HandleDrawableInput(DrawableInputEvent))
+            {
+                return;
+            }
+
             if ((e.KeyData & Keys.Shift) != 0)
             {
                 if (!ShiftPressed)
@@ -1006,9 +1145,16 @@ namespace LibRXFFT.Components.DirectX
             }
         }
 
-
         protected override void OnKeyUp(KeyEventArgs e)
         {
+            /* check if drawable wants to handle input event */
+            DrawableInputEvent.Type = eInputEventType.KeyUp;
+            DrawableInputEvent.KeyData = e.KeyData;
+            if (HandleDrawableInput(DrawableInputEvent))
+            {
+                return;
+            }
+
             if ((e.KeyData & Keys.Shift) == 0)
             {
                 if (ShiftPressed)
@@ -1075,8 +1221,29 @@ namespace LibRXFFT.Components.DirectX
                 UserEventCallback(eUserEvent.StatusUpdated, 0);
         }
 
+        public void CursorType(bool standard)
+        {
+            if (standard)
+            {
+                HideCursor = true;
+                Cursor = DefaultCursor;
+            }
+            else
+            {
+                HideCursor = false;
+                Cursor = EmptyCursor;
+            }
+        }
+
         protected override void OnMouseEnter(EventArgs e)
         {
+            /* check if drawable wants to handle input event */
+            DrawableInputEvent.Type = eInputEventType.MouseEnter;
+            if (HandleDrawableInput(DrawableInputEvent))
+            {
+                return;
+            }
+
             //Focus();
             ProcessUserEvent(eUserEvent.StatusUpdated, 0);
             Cursor = EmptyCursor;
@@ -1087,13 +1254,28 @@ namespace LibRXFFT.Components.DirectX
 
         protected override void OnMouseLeave(EventArgs e)
         {
+            /* check if drawable wants to handle input event */
+            DrawableInputEvent.Type = eInputEventType.MouseLeave;
+            if (HandleDrawableInput(DrawableInputEvent))
+            {
+                return;
+            }
+
             ResetModifiers(true, true);
             UpdateCursor = true;
-            ProcessUserEvent(eUserEvent.MouseLeave, 0);            
+            ProcessUserEvent(eUserEvent.MouseLeave, 0);
         }
 
         protected override void OnMouseDoubleClick(MouseEventArgs e)
         {
+            /* check if drawable wants to handle input event */
+            DrawableInputEvent.Type = eInputEventType.MouseDoubleClick;
+            DrawableInputEvent.MouseButtons = e.Button;
+            if (HandleDrawableInput(DrawableInputEvent))
+            {
+                return;
+            }
+
             if (e.Button == MouseButtons.Right)
             {
                 if (AltPressed)
@@ -1133,6 +1315,14 @@ namespace LibRXFFT.Components.DirectX
 
         protected override void OnMouseClick(MouseEventArgs e)
         {
+            /* check if drawable wants to handle input event */
+            DrawableInputEvent.Type = eInputEventType.MouseClick;
+            DrawableInputEvent.MouseButtons = e.Button;
+            if (HandleDrawableInput(DrawableInputEvent))
+            {
+                return;
+            }
+
             if (e.Button == MouseButtons.Right)
             {
                 if (AltPressed)
@@ -1172,71 +1362,121 @@ namespace LibRXFFT.Components.DirectX
 
         protected override void OnMouseDown(MouseEventArgs e)
         {
+            /* check if drawable wants to handle input event */
+            DrawableInputEvent.Type = eInputEventType.MouseButtonDown;
+            DrawableInputEvent.MouseButtons = e.Button;
+            if (HandleDrawableInput(DrawableInputEvent))
+            {
+                return;
+            }
+
             if (AltPressed)
             {
                 if (e.Button == MouseButtons.Left)
+                {
                     ProcessUserEvent(eUserEvent.MouseDownLeftAlt, 0);
+                    Dragging = true;
+                }
                 if (e.Button == MouseButtons.Right)
                     ProcessUserEvent(eUserEvent.MouseDownRightAlt, 0);
             }
             else if (ControlPressed)
             {
                 if (e.Button == MouseButtons.Left)
+                {
                     ProcessUserEvent(eUserEvent.MouseDownLeftControl, 0);
+                    Dragging = true;
+                }
                 if (e.Button == MouseButtons.Right)
                     ProcessUserEvent(eUserEvent.MouseDownRightControl, 0);
             }
             else if (ShiftPressed)
             {
                 if (e.Button == MouseButtons.Left)
+                {
                     ProcessUserEvent(eUserEvent.MouseDownLeftShift, 0);
+                    Dragging = true;
+                }
                 if (e.Button == MouseButtons.Right)
                     ProcessUserEvent(eUserEvent.MouseDownRightShift, 0);
             }
             else
             {
                 if (e.Button == MouseButtons.Left)
+                {
                     ProcessUserEvent(eUserEvent.MouseDownLeft, 0);
+                    Dragging = true;
+                }
                 if (e.Button == MouseButtons.Right)
                     ProcessUserEvent(eUserEvent.MouseDownRight, 0);
-            }             
+            }
         }
 
         protected override void OnMouseUp(MouseEventArgs e)
         {
+            /* check if drawable wants to handle input event */
+            DrawableInputEvent.Type = eInputEventType.MouseButtonUp;
+            DrawableInputEvent.MouseButtons = e.Button;
+            if (HandleDrawableInput(DrawableInputEvent))
+            {
+                return;
+            }
+
             if (AltPressed)
             {
                 if (e.Button == MouseButtons.Left)
+                {
                     ProcessUserEvent(eUserEvent.MouseUpLeftAlt, 0);
+                    Dragging = false;
+                }
                 if (e.Button == MouseButtons.Right)
                     ProcessUserEvent(eUserEvent.MouseUpRightAlt, 0);
             }
             else if (ControlPressed)
             {
                 if (e.Button == MouseButtons.Left)
+                {
                     ProcessUserEvent(eUserEvent.MouseUpLeftControl, 0);
+                    Dragging = false;
+                }
                 if (e.Button == MouseButtons.Right)
                     ProcessUserEvent(eUserEvent.MouseUpRightControl, 0);
             }
             else if (ShiftPressed)
             {
                 if (e.Button == MouseButtons.Left)
+                {
                     ProcessUserEvent(eUserEvent.MouseUpLeftShift, 0);
+                    Dragging = false;
+                }
                 if (e.Button == MouseButtons.Right)
                     ProcessUserEvent(eUserEvent.MouseUpRightShift, 0);
             }
             else
             {
                 if (e.Button == MouseButtons.Left)
+                {
                     ProcessUserEvent(eUserEvent.MouseUpLeft, 0);
+                    Dragging = false;
+                }
                 if (e.Button == MouseButtons.Right)
                     ProcessUserEvent(eUserEvent.MouseUpRight, 0);
-            }    
+            }
         }
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
-            if (e.Button == MouseButtons.Left)
+            /* check if drawable wants to handle input event */
+            DrawableInputEvent.Type = eInputEventType.MouseMoved;
+            DrawableInputEvent.MouseButtons = e.Button;
+            DrawableInputEvent.MousePosition.X = e.X;
+            DrawableInputEvent.MousePosition.Y = e.Y;
+            if (HandleDrawableInput(DrawableInputEvent))
+            {
+                return;
+            }
+
+            if (e.Button == MouseButtons.Left && Dragging)
             {
                 double xDelta = LastMousePos.X - e.X;
                 double yDelta = LastMousePos.Y - e.Y;
@@ -1269,6 +1509,14 @@ namespace LibRXFFT.Components.DirectX
 
         protected override void OnMouseWheel(MouseEventArgs e)
         {
+            /* check if drawable wants to handle input event */
+            DrawableInputEvent.Type = eInputEventType.MouseWheel;
+            DrawableInputEvent.MouseWheelDelta = e.Delta;
+            if (HandleDrawableInput(DrawableInputEvent))
+            {
+                return;
+            }
+
             if (e.Delta > 0)
             {
                 if (AltPressed)
@@ -1316,5 +1564,6 @@ namespace LibRXFFT.Components.DirectX
         protected override void OnPaint(PaintEventArgs e)
         {
         }
+
     }
 }

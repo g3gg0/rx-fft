@@ -7,7 +7,7 @@ namespace LibRXFFT.Components.GDI
 {
     public partial class WaterfallFFTDisplay : UserControl
     {
-        Mutex FFTLock = new Mutex();
+        private Mutex FFTLock = new Mutex();
         private FFTTransformer FFT;
         private int _FFTSize = 512;
 

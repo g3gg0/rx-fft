@@ -8,6 +8,7 @@ using LibRXFFT.Libraries.SignalProcessing;
 using SlimDX;
 using SlimDX.Direct3D9;
 using Font=SlimDX.Direct3D9.Font;
+using LibRXFFT.Components.Generic;
 
 namespace LibRXFFT.Components.DirectX
 {
@@ -20,6 +21,8 @@ namespace LibRXFFT.Components.DirectX
         public bool DrawTimeStamps = false;
         
         /* DirectX related graphic stuff */
+        protected override MultisampleType SuggestedMultisample { get { return MultisampleType.None; } }
+
         protected Sprite Sprite;
         protected Surface DefaultRenderTarget;
         protected Texture WaterfallTexture;
@@ -29,6 +32,8 @@ namespace LibRXFFT.Components.DirectX
         protected Texture SaveTempWaterfallTexture;
         //protected Texture SaveImageThreadContext;
         protected Color ColorFaderBG = Color.Orange;
+
+        public ColorLookupTable ColorTable = new HeatColors(8192);
 
         protected double DisplayXOffsetPrev = 0;
         protected Object DisplayXOffsetLock = new Object();
@@ -41,6 +46,7 @@ namespace LibRXFFT.Components.DirectX
         public double TimeStampEveryMiliseconds = 1000;
 
         /* waterfall saving related */
+        private bool SaveThreadRunning = true;
         public string _SavingName = "waterfall.png";
         private string SavingNameExtended = "waterfall.png";
         private int SavingNamePostfix = 0;
@@ -65,7 +71,9 @@ namespace LibRXFFT.Components.DirectX
 
                 /* notify that its disabled */
                 if (!SavingEnabled)
+                {
                     SaveBufferTrigger.Release(1);
+                }
             }
         }
 
@@ -89,6 +97,8 @@ namespace LibRXFFT.Components.DirectX
         public double LeveldBBlack = -100;
         public double LeveldBMax = -150;
         public double ApproxMaxStrength;
+
+
 
 
         public DirectXWaterfallDisplay()
@@ -132,7 +142,7 @@ namespace LibRXFFT.Components.DirectX
         {
             try
             {
-                while (true)
+                while (SaveThreadRunning)
                 {
                     /* wait until we should do something */
                     SaveBufferTrigger.WaitOne();
@@ -344,6 +354,7 @@ namespace LibRXFFT.Components.DirectX
             if (UpdateOverlays)
             {
                 UpdateOverlays = false;
+                UpdateDrawablePositions();
 
                 OverlayVertexesUsed = 0;
 
@@ -639,9 +650,6 @@ namespace LibRXFFT.Components.DirectX
 
             DefaultRenderTarget = Device.GetRenderTarget(0);
 
-            SmallFont = new Font(Device, new System.Drawing.Font("Arial", 8));
-
-            
             WaterfallTexture = new Texture(Device, PresentParameters.BackBufferWidth, PresentParameters.BackBufferHeight, 1, Usage.RenderTarget, Format.A8R8G8B8, Pool.Default);
             TempWaterfallTexture = new Texture(Device, PresentParameters.BackBufferWidth, PresentParameters.BackBufferHeight, 1, Usage.RenderTarget, Format.A8R8G8B8, Pool.Default);
             Sprite = new Sprite(Device);
@@ -671,14 +679,6 @@ namespace LibRXFFT.Components.DirectX
             ClearTexture(SaveDeviceDisplayContext, SaveImageDisplayContext);
         }
 
-        private void ClearTexture(Device device, Texture texture)
-        {
-            device.BeginScene();
-            device.SetRenderTarget(0, texture.GetSurfaceLevel(0));
-            device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, ColorBG, 1.0f, 0);
-            device.EndScene();
-            device.Present();
-        }
 
         protected override void ReleaseResources()
         {
@@ -725,6 +725,16 @@ namespace LibRXFFT.Components.DirectX
             if (DefaultRenderTarget != null)
                 DefaultRenderTarget.Dispose();
             DefaultRenderTarget = null;
+        }
+
+
+        private void ClearTexture(Device device, Texture texture)
+        {
+            device.BeginScene();
+            device.SetRenderTarget(0, texture.GetSurfaceLevel(0));
+            device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, ColorBG, 1.0f, 0);
+            device.EndScene();
+            device.Present();
         }
 
         protected override void OnSizeChanged(EventArgs e)
@@ -881,32 +891,26 @@ namespace LibRXFFT.Components.DirectX
                             for (int pos = 0; pos < numPoints; pos++)
                             {
                                 double yVal = points[pos].Y;
-                                float dB = (float)((SquaredFFTData ? DBTools.SquaredSampleTodB(yVal) : DBTools.SampleTodB(yVal)) - BaseAmplification);
+                                float dB = (float)(yVal - BaseAmplification);
                                 double ampl = 1 - ((dB - LeveldBWhite) / (LeveldBBlack - LeveldBWhite));
 
                                 ampl = Math.Max(0, ampl);
                                 ampl = Math.Min(1, ampl);
 
-                                int colorCode = 0;
-                                colorCode <<= 8;
-                                colorCode |= (int)(ColorFG.R * ampl);
-                                colorCode <<= 8;
-                                colorCode |= (int)(ColorFG.G * ampl);
-                                colorCode <<= 8;
-                                colorCode |= (int)(ColorFG.B * ampl);
-
                                 PlotVertsOverview[pos].PositionRhw.X = (float)(((float)pos / (float)numPoints) * SaveParameters.BackBufferWidth);
                                 PlotVertsOverview[pos].PositionRhw.Y = 0;
                                 PlotVertsOverview[pos].PositionRhw.Z = 0.5f;
                                 PlotVertsOverview[pos].PositionRhw.W = 1;
-                                PlotVertsOverview[pos].Color = (uint)(0xFF000000 | colorCode);
+                                PlotVertsOverview[pos].Color = (uint)(0xFF000000 | ColorTable.Lookup(ampl));
                             }
                         }
 
                         /* get density */
                         int density = 0;
                         for (int pos = 0; (pos < numPoints) && (((double)points[pos].X / (double)numPoints) * DirectXWidth * XZoomFactor < 1); pos++)
+                        {
                             density++;
+                        }
 
                         /* calculate average on high density */
                         if (density > 1)
@@ -931,7 +935,7 @@ namespace LibRXFFT.Components.DirectX
                                 for (int sample = (int)(pos * ratio); sample < (pos + 1) * ratio; sample++)
                                 {
                                     double yVal = points[startPos + sample].Y;
-                                    float dB = (float)((SquaredFFTData ? DBTools.SquaredSampleTodB(yVal) : DBTools.SampleTodB(yVal)) - BaseAmplification);
+                                    float dB = (float)(yVal - BaseAmplification);
                                     double ampl = 1 - ((dB - LeveldBWhite) / (LeveldBBlack - LeveldBWhite));
 
                                     ampl = Math.Max(0, ampl);
@@ -940,19 +944,11 @@ namespace LibRXFFT.Components.DirectX
                                     maxAmpl = Math.Max(ampl, maxAmpl);
                                 }
 
-                                int colorCode = 0;
-                                colorCode <<= 8;
-                                colorCode |= (int)(ColorFG.R * maxAmpl);
-                                colorCode <<= 8;
-                                colorCode |= (int)(ColorFG.G * maxAmpl);
-                                colorCode <<= 8;
-                                colorCode |= (int)(ColorFG.B * maxAmpl);
-
                                 PlotVerts[pos].PositionRhw.X = (float)(pos - DisplayXOffset);
                                 PlotVerts[pos].PositionRhw.Y = 0;
                                 PlotVerts[pos].PositionRhw.Z = 0.5f;
                                 PlotVerts[pos].PositionRhw.W = 1;
-                                PlotVerts[pos].Color = (uint)(0xFF000000 | colorCode);
+                                PlotVerts[pos].Color = (uint)(0xFF000000 | ColorTable.Lookup(maxAmpl));
                             }
                         }
                         else
@@ -965,26 +961,18 @@ namespace LibRXFFT.Components.DirectX
                             for (int pos = 0; pos < numPoints; pos++)
                             {
                                 double yVal = points[pos].Y;
-                                float dB = (float)((SquaredFFTData ? DBTools.SquaredSampleTodB(yVal) : DBTools.SampleTodB(yVal)) - BaseAmplification);
+                                float dB = (float)(yVal - BaseAmplification);
                                 double ampl = 1 - ((dB - LeveldBWhite) / (LeveldBBlack - LeveldBWhite));
 
                                 ampl = Math.Max(0, ampl);
                                 ampl = Math.Min(1, ampl);
-
-                                int colorCode = 0;
-                                colorCode <<= 8;
-                                colorCode |= (int)(ColorFG.R * ampl);
-                                colorCode <<= 8;
-                                colorCode |= (int)(ColorFG.G * ampl);
-                                colorCode <<= 8;
-                                colorCode |= (int)(ColorFG.B * ampl);
 
                                 double xPos = ((double)points[pos].X / (double)numPoints) * DirectXWidth;
                                 PlotVerts[pos].PositionRhw.X = (float)((XAxisSampleOffset + xPos) * XZoomFactor - DisplayXOffset);
                                 PlotVerts[pos].PositionRhw.Y = 0;
                                 PlotVerts[pos].PositionRhw.Z = 0.5f;
                                 PlotVerts[pos].PositionRhw.W = 1;
-                                PlotVerts[pos].Color = (uint)(0xFF000000 | colorCode);
+                                PlotVerts[pos].Color = (uint)(0xFF000000 | ColorTable.Lookup(ampl));
                             }
                         }
                     }
@@ -999,6 +987,11 @@ namespace LibRXFFT.Components.DirectX
                 DirectXLock.ReleaseMutex();
             }
         }
+
+
+        protected Vector3 OldImageCenter = Vector3.Zero;
+        protected Vector3 OldImagePos = new Vector3(0, 1, 0);
+        protected Color4 ColorWhite = new Color4(Color.White);
 
         protected override void RenderCore()
         {
@@ -1015,8 +1008,6 @@ namespace LibRXFFT.Components.DirectX
 
             if (PlotVertsEntries > 0)
             {
-                Device.BeginScene();
-
                 /* render into temporary buffer */
                 Device.SetRenderTarget(0, TempWaterfallTexture.GetSurfaceLevel(0));
 
@@ -1032,9 +1023,17 @@ namespace LibRXFFT.Components.DirectX
                     DisplayXOffsetPrev = DisplayXOffset;
                 }
 
+
                 /* draw the old waterfall image */
                 Sprite.Begin(SpriteFlags.None);
-                Sprite.Draw(WaterfallTexture, Vector3.Zero, new Vector3(delta, 1, 0), new Color4(Color.White));
+                if (delta == 0)
+                {
+                    Sprite.Draw(WaterfallTexture, OldImageCenter, OldImagePos, ColorWhite);
+                }
+                else
+                {
+                    Sprite.Draw(WaterfallTexture, OldImageCenter, new Vector3(delta, 1, 0), ColorWhite);
+                }
                 Sprite.End();
 
                 /* paint first line */
@@ -1069,11 +1068,13 @@ namespace LibRXFFT.Components.DirectX
                 /* now write the temp buffer into the real image buffer */
                 Device.SetRenderTarget(0, WaterfallTexture.GetSurfaceLevel(0));
 
+                
                 Sprite.Begin(SpriteFlags.None);
-                Sprite.Draw(TempWaterfallTexture, new Color4(Color.White));
+                Sprite.Draw(TempWaterfallTexture, ColorWhite);
                 Sprite.End();
+               
 
-                Device.EndScene();
+                //Device.EndScene();
 
                 /* save the view into a file */
                 if (SavingEnabled)
@@ -1157,8 +1158,6 @@ namespace LibRXFFT.Components.DirectX
             Device.SetRenderTarget(0, TempWaterfallTexture.GetSurfaceLevel(0));
             Device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.Transparent, 1.0f, 0);
 
-            Device.BeginScene();
-
             RenderAxis();
 
             DisplayFont.DrawString(null, MainText, 20, 30, ColorBG);
@@ -1166,7 +1165,7 @@ namespace LibRXFFT.Components.DirectX
 
             RenderOverlay();
             RenderCursor();
-            Device.EndScene();
+            //Device.EndScene();
             #endregion
 
 
@@ -1174,16 +1173,14 @@ namespace LibRXFFT.Components.DirectX
             Device.SetRenderTarget(0, DefaultRenderTarget);
             Device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, ColorBG, 1.0f, 0);
 
-            Device.BeginScene();
+            //Device.BeginScene();
 
             Sprite.Begin(SpriteFlags.AlphaBlend);
             Sprite.Draw(WaterfallTexture, Color.White);
             Sprite.Draw(TempWaterfallTexture, Color.White);
             Sprite.End();
-            Device.EndScene();
             #endregion
 
-            Device.Present();
         }
     }
 }

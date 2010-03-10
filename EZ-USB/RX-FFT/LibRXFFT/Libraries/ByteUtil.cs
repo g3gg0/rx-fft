@@ -8,7 +8,7 @@ namespace LibRXFFT.Libraries
         public static bool UseNative = true;
 
         [DllImport("libRXFFT_native.dll", EntryPoint = "SamplesFromBinary")]
-        public static unsafe extern void SamplesFromBinaryNative(byte[] dataBuffer, int bytesRead, double[] samplesI, double[] samplesQ, int dataFormat, bool invertedSpectrum);
+        public static unsafe extern void SamplesFromBinaryNative(byte[] dataBuffer, int bytesRead, int destSize, double[] samplesI, double[] samplesQ, int dataFormat, bool invertedSpectrum);
         [DllImport("libRXFFT_native.dll", EntryPoint = "SamplesToBinary")]
         public static unsafe extern void SamplesToBinaryNative(byte[] dataBuffer, int samplePairs, double[] samplesI, double[] samplesQ, int dataFormat, bool invertedSpectrum);
         
@@ -325,7 +325,7 @@ namespace LibRXFFT.Libraries
         {
             if (UseNative)
             {
-                SamplesFromBinaryNative(dataBuffer, bytesRead, samplesI, samplesQ, (int)dataFormat, invertedSpectrum);
+                SamplesFromBinaryNative(dataBuffer, bytesRead, samplesI.Length, samplesI, samplesQ, (int)dataFormat, invertedSpectrum);
             }
             else
             {

@@ -69,6 +69,7 @@ namespace LibRXFFT.Libraries.SampleSources
         public double[] OversampleI;
         public double[] OversampleQ;
         public byte[] BinarySaveData;
+        public object SampleBufferLock = new object();
 
         public int SamplesRead;
         public virtual int SamplesPerBlock
@@ -161,12 +162,19 @@ namespace LibRXFFT.Libraries.SampleSources
 
         protected void AllocateBuffers()
         {
-            SourceSamplesI = new double[SamplesPerBlock * InternalOversampling];
-            SourceSamplesQ = new double[SamplesPerBlock * InternalOversampling];
-            OversampleI = new double[SamplesPerBlock];
-            OversampleQ = new double[SamplesPerBlock];
+            int samplesPerBlock = SamplesPerBlock;
+            int oversampling = InternalOversampling;
+            int savingBytes = SavingBytesPerSample;
 
-            BinarySaveData = new byte[SamplesPerBlock * 2 * SavingBytesPerSample];
+            lock (SampleBufferLock)
+            {
+                SourceSamplesI = new double[samplesPerBlock * oversampling];
+                SourceSamplesQ = new double[samplesPerBlock * oversampling];
+                OversampleI = new double[samplesPerBlock];
+                OversampleQ = new double[samplesPerBlock];
+
+                BinarySaveData = new byte[samplesPerBlock * 2 * savingBytes];
+            }
         }
 
         public virtual void Flush()

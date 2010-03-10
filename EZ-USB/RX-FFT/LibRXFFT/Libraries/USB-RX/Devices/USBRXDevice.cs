@@ -76,7 +76,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         {
             try
             {
-                ShowConsole(true);
+                ShowConsole(false);
 
                 if (USBRXDeviceNative.UsbInit(DevNum))
                 {
@@ -281,7 +281,9 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
         private double ExpectedReadDuration = 0;
         private int SleepDuration = 10;
-        private int MaxOvertimeFactor = 10;
+        private int MaxOvertimeFactor = 100;
+        private int TimeoutsHappened = 0;
+        public bool DeviceLost = false;
 
         private void ReadTriggerThreadMain()
         {
@@ -313,6 +315,43 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
                             if (timeout)
                             {
+                                TimeoutsHappened++;
+
+                                switch(TimeoutsHappened)
+                                {
+                                    case 1:
+                                    case 5:
+                                        AD6636.SoftSync();
+                                        Log.AddMessage("USBRXDevice: Timeout " + TimeoutsHappened + ". Re-Sync AD6636");
+                                        break;
+
+                                    case 2:
+                                    case 6:
+                                        AD6636.ReInit();
+                                        Log.AddMessage("USBRXDevice: Timeout " + TimeoutsHappened + ". Re-Init AD6636");
+                                        break;
+
+                                    case 3:
+                                    case 7:
+                                        Atmel.AD6636Reset();
+                                        AD6636.ReInit();
+                                        Log.AddMessage("USBRXDevice: Timeout " + TimeoutsHappened + ". Reset AD6636");
+                                        break;
+
+                                    case 4:
+                                    case 8:
+                                        USBRXDeviceNative.UsbSetIdleMode(DevNum);
+                                        USBRXDeviceNative.UsbSetGPIFMode(DevNum);
+                                        USBRXDeviceNative.SetSlaveFifoParams(true, 0, 0);
+                                        Atmel.FIFOReset(false);
+                                        Log.AddMessage("USBRXDevice: Timeout " + TimeoutsHappened + ". Reset Cypress Transfers");
+                                        break;
+
+
+                                    default:
+                                        DeviceLost = true;
+                                        break;
+                                }
                                 //Log.AddMessage("TIMEOUT! Expected " + FrequencyFormatter.TimeToString(ExpectedReadDuration) + ", stopped after " + FrequencyFormatter.TimeToString(((double)(loops*SleepDuration)/1000)));
                             }
                             //Log.AddMessage("ReadTimerLocked [false]");
@@ -322,7 +361,6 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                         }
                     }
                 }
-
             }
             catch (ThreadAbortException ex)
             {
@@ -384,6 +422,9 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         {
             lock (ReadTimerLock)
             {
+                TimeoutsHappened = 0;
+                DeviceLost = false;
+
                 Atmel.FIFOReset(true);
                 // reset EP FIFOs
                 USBRXDeviceNative.SetSlaveFifoParams(true, DevNum, 0);

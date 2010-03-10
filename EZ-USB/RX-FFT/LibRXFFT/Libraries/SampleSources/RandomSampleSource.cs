@@ -9,7 +9,7 @@ namespace LibRXFFT.Libraries.SampleSources
         private double ModulationPos = 0.0f;
         private double CurrentFreq = 2;
         private double CurrentNoise = 0.01;
-        
+
         private double EventCounter = 0;
 
         public override int SamplesPerBlock
@@ -34,38 +34,41 @@ namespace LibRXFFT.Libraries.SampleSources
 
         public override bool Read()
         {
-            RandomData.NextBytes(InBuffer);
-            ByteUtil.SamplesFromBinary(InBuffer, SourceSamplesI, SourceSamplesQ, DataFormat, InvertedSpectrum);
-
-            for (int pos = 0; pos < SourceSamplesI.Length; pos++)
+            lock (SampleBufferLock)
             {
-                double rel = pos / SourceSamplesI.Length;
+                RandomData.NextBytes(InBuffer);
+                ByteUtil.SamplesFromBinary(InBuffer, SourceSamplesI, SourceSamplesQ, DataFormat, InvertedSpectrum);
 
-                SourceSamplesI[pos] *= CurrentNoise;
-                SourceSamplesQ[pos] *= CurrentNoise;
-
-                SourceSamplesI[pos] += Math.Sin((ModulationPos + pos) / CurrentFreq);
-                SourceSamplesQ[pos] += Math.Cos((ModulationPos + pos) / CurrentFreq);
-
-                if (++EventCounter == 5000000)
+                for (int pos = 0; pos < SourceSamplesI.Length; pos++)
                 {
-                    EventCounter = 0;
-                    CurrentFreq = (double)RandomData.Next(0, 1000) / 1000 + 0.001;
-                    CurrentNoise = (double)RandomData.Next(0, 500) / 10000;
+                    double rel = pos / SourceSamplesI.Length;
+
+                    SourceSamplesI[pos] *= CurrentNoise;
+                    SourceSamplesQ[pos] *= CurrentNoise;
+
+                    SourceSamplesI[pos] += Math.Sin((ModulationPos + pos) / CurrentFreq);
+                    SourceSamplesQ[pos] += Math.Cos((ModulationPos + pos) / CurrentFreq);
+
+                    if (++EventCounter == 5000000)
+                    {
+                        EventCounter = 0;
+                        CurrentFreq = (double)RandomData.Next(0, 1000) / 1000 + 0.001;
+                        CurrentNoise = (double)RandomData.Next(0, 500) / 10000;
+                    }
+
+                    SourceSamplesI[pos] += Math.Sin(0.1f * rel * Math.PI) * Math.Sin(rel * Math.PI);
+                    SourceSamplesQ[pos] += Math.Cos(0.5f * rel * Math.PI) * Math.Cos(rel * Math.PI);
+
                 }
 
-                SourceSamplesI[pos] += Math.Sin(0.1f * rel * Math.PI) * Math.Sin(rel * Math.PI);
-                SourceSamplesQ[pos] += Math.Cos(0.5f * rel * Math.PI) * Math.Cos(rel * Math.PI);
+                ModulationPos += SourceSamplesI.Length;
+                SamplesRead = SourceSamplesI.Length;
+
+
+
+                SaveData();
 
             }
-
-            ModulationPos += SourceSamplesI.Length;
-            SamplesRead = SourceSamplesI.Length;
-
-
-
-            SaveData();
-
             return true;
         }
     }

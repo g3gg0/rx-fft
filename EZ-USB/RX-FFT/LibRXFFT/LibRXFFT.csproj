@@ -70,9 +70,9 @@
     <WarningLevel>1</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="SlimDX, Version=2.0.8.42, Culture=neutral, PublicKeyToken=b1b0c32fd1ffe4f9, processorArchitecture=AMD64">
+    <Reference Include="SlimDX, Version=2.0.9.42, Culture=neutral, PublicKeyToken=b1b0c32fd1ffe4f9, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files (x86)\SlimDX SDK (August 2009)\Bin\x64\SlimDX.dll</HintPath>
+      <HintPath>C:\Program Files (x86)\SlimDX SDK (February 2010)\Bin\x86\SlimDX.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core, Version=3.5.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
@@ -92,9 +92,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Components\DirectX\DirectX2DPlot.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Components\DirectX\DirectX2DPlot.Designer.cs">
+      <DependentUpon>DirectX2DPlot.cs</DependentUpon>
+    </Compile>
     <Compile Include="Components\DirectX\DirectXBurstDisplay.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Include="Components\DirectX\Drawables\DirectXDrawable.cs" />
+    <Compile Include="Components\DirectX\Drawables\DirectXDrawBase.cs" />
     <Compile Include="Components\DirectX\DirectXPhaseDisplay.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -109,6 +117,15 @@
     <Compile Include="Components\DirectX\DirectXWaveformDisplay.Designer.cs">
       <DependentUpon>DirectXWaveformDisplay.cs</DependentUpon>
     </Compile>
+    <Compile Include="Components\DirectX\Drawables\Docks\Dock.cs" />
+    <Compile Include="Components\DirectX\Drawables\DockPanel.cs" />
+    <Compile Include="Components\DirectX\Drawables\Docks\FFTAreaSelectionDetails.cs" />
+    <Compile Include="Components\DirectX\Drawables\Docks\TestDock.cs" />
+    <Compile Include="Components\DirectX\Drawables\Docks\PowerBarDock.cs" />
+    <Compile Include="Components\DirectX\Drawables\FFTAreaSelection.cs" />
+    <Compile Include="Components\DirectX\Drawables\PowerBar.cs" />
+    <Compile Include="Components\DirectX\Drawables\StaticText.cs" />
+    <Compile Include="Components\DirectX\Drawables\ScrollingText.cs" />
     <Compile Include="Components\GDI\FilterList.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -209,6 +226,8 @@
     <Compile Include="Components\GDI\WaveformDisplay.Designer.cs">
       <DependentUpon>WaveformDisplay.cs</DependentUpon>
     </Compile>
+    <Compile Include="Components\Generic\HeatColors.cs" />
+    <Compile Include="Components\Generic\ColorLookupTable.cs" />
     <Compile Include="Libraries\ByteUtil.cs" />
     <Compile Include="Libraries\Demodulators\AMDemodulator.cs" />
     <Compile Include="Libraries\Demodulators\Demodulator.cs" />
@@ -216,7 +235,10 @@
     <Compile Include="Libraries\Filters\FilterThread.cs" />
     <Compile Include="Libraries\Filters\IIRCoefficients.cs" />
     <Compile Include="Libraries\Filters\IIRFilter.cs" />
+    <Compile Include="Libraries\Misc\TraceMutex.cs" />
+    <Compile Include="Libraries\RemoteControl.cs" />
     <Compile Include="Libraries\SampleSources\RandomSampleSource.cs" />
+    <Compile Include="Libraries\SignalProcessing\AttenuationCorrection.cs" />
     <Compile Include="Libraries\SignalProcessing\Downmixer.cs" />
     <Compile Include="Libraries\Demodulators\FMDemodulator.cs" />
     <Compile Include="Libraries\FFTW\complexarray.cs" />

@@ -1,6 +1,6 @@
 ﻿namespace LibRXFFT.Components.DirectX
 {
-    partial class DirectXFFTDisplay
+    partial class DirectX2DPlot
     {
         /// <summary> 
         /// Erforderliche Designervariable.
@@ -18,13 +18,12 @@
             if (LinePointUpdateTimer != null)
                 LinePointUpdateTimer.Stop();
             if (DisplayThread != null)
-                DisplayThread.Abort();
-
+                DisplayThread.Abort(); 
+            
             if (disposing && (components != null))
             {
                 components.Dispose();
             }
-
             base.Dispose(disposing);
         }
 
@@ -36,17 +35,8 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.SuspendLayout();
-            // 
-            // FFTDisplay
-            // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            components = new System.ComponentModel.Container();
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.DoubleBuffered = true;
-            this.Name = "DirectXFFTDisplay";
-            this.Size = new System.Drawing.Size(442, 285);
-            this.ResumeLayout(false);
-
         }
 
         #endregion

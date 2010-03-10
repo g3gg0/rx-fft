@@ -84,6 +84,10 @@ namespace LibRXFFT.Libraries.USB_RX.Misc
                 {
                     FileContent = null;
                 }
+                finally
+                {
+                    reader.Close();
+                }
             }
             catch (FileNotFoundException e)
             {

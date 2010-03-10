@@ -91,7 +91,7 @@ namespace LibRXFFT.Components.DirectX
         #endregion
 
         private System.Windows.Forms.SplitContainer splitContainer;
-        private DirectXFFTDisplay FFTDisplay;
-        private DirectXWaterfallDisplay WaterfallDisplay;
+        public DirectXFFTDisplay FFTDisplay;
+        public DirectXWaterfallDisplay WaterfallDisplay;
     }
 }

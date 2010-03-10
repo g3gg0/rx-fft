@@ -597,8 +597,10 @@ namespace GSM_Analyzer
                             {
                                 if (SpectrumWindow != null)
                                 {
-                                    SpectrumWindow.ProcessIQSample(Source.SourceSamplesI[pos], Source.SourceSamplesQ[pos]);
-
+                                    lock (Source.SampleBufferLock)
+                                    {
+                                        SpectrumWindow.ProcessIQSample(Source.SourceSamplesI[pos], Source.SourceSamplesQ[pos]);
+                                    }
                                     if (!SpectrumWindow.Visible)
                                         SpectrumWindow = null;
                                 }

@@ -6,6 +6,7 @@ using System.Windows.Forms;
 using LibRXFFT.Libraries;
 using LibRXFFT.Libraries.SampleSources;
 using LibRXFFT.Libraries.ShmemChain;
+using RX_Oscilloscope.Components;
 
 namespace RX_Oscilloscope
 {
@@ -15,6 +16,7 @@ namespace RX_Oscilloscope
         private Thread ProcessThread;
         private bool Processing;
         public int SharedMemoryChannel = 0;
+
 
         public RXOscilloscope()
         {
@@ -35,7 +37,6 @@ namespace RX_Oscilloscope
             {
                 Processing = false;
                 ProcessThread.Join(500);
-                ProcessThread.Abort();
                 ProcessThread = null;
             }
             if (SampleSource != null)
@@ -47,6 +48,7 @@ namespace RX_Oscilloscope
 
         void SampleSource_SamplingRateChanged(object sender, EventArgs e)
         {
+            iqPlot.SamplingRate = SampleSource.OutputSamplingRate;
             scope.SamplingRate = SampleSource.OutputSamplingRate;
 
             SampleSource.SamplesPerBlock = (int)Math.Min(1024, SampleSource.OutputSamplingRate / 50);
@@ -58,12 +60,16 @@ namespace RX_Oscilloscope
             {
                 if (SampleSource.Read())
                 {
-                    for (int pos = 0; pos < SampleSource.SamplesRead; pos++)
+                    lock (SampleSource.SampleBufferLock)
                     {
-                        double I = SampleSource.SourceSamplesI[pos];
-                        double Q = SampleSource.SourceSamplesQ[pos];
+                        for (int pos = 0; pos < SampleSource.SamplesRead; pos++)
+                        {
+                            double I = SampleSource.SourceSamplesI[pos];
+                            double Q = SampleSource.SourceSamplesQ[pos];
 
-                        scope.Process(I, Q);
+                            iqPlot.Process(I, Q);
+                            scope.Process(I, Q);
+                        }
                     }
                 }
             }

@@ -30,46 +30,46 @@
         {
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.waveForm = new LibRXFFT.Components.DirectX.DirectXWaveformDisplay();
+            this.tabControl = new System.Windows.Forms.TabControl();
+            this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.groupBox5 = new System.Windows.Forms.GroupBox();
+            this.txtSamplingRate = new LibRXFFT.Components.GDI.FrequencySelector();
             this.groupBox6 = new System.Windows.Forms.GroupBox();
             this.radioPhase = new System.Windows.Forms.RadioButton();
             this.radioPower = new System.Windows.Forms.RadioButton();
-            this.groupBox5 = new System.Windows.Forms.GroupBox();
-            this.txtSamplingRate = new LibRXFFT.Components.GDI.FrequencySelector();
+            this.tabPage2 = new System.Windows.Forms.TabPage();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
             this.cmbLowPass = new System.Windows.Forms.ComboBox();
-            this.groupBox3 = new System.Windows.Forms.GroupBox();
-            this.lblBufferTime = new System.Windows.Forms.Label();
-            this.txtBufferTime = new LibRXFFT.Components.GDI.TextBoxMouseScroll();
-            this.label3 = new System.Windows.Forms.Label();
-            this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.lblPreTrigTime = new System.Windows.Forms.Label();
-            this.txtPreTrigSamples = new LibRXFFT.Components.GDI.TextBoxMouseScroll();
-            this.label4 = new System.Windows.Forms.Label();
+            this.tabPage3 = new System.Windows.Forms.TabPage();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.txtTriggerLevel = new LibRXFFT.Components.GDI.TextBoxMouseScroll();
             this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.chkTriggerFalling = new System.Windows.Forms.CheckBox();
             this.chkTriggerRising = new System.Windows.Forms.CheckBox();
-            this.tabControl = new System.Windows.Forms.TabControl();
-            this.tabPage1 = new System.Windows.Forms.TabPage();
-            this.tabPage2 = new System.Windows.Forms.TabPage();
-            this.tabPage3 = new System.Windows.Forms.TabPage();
+            this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.lblPreTrigTime = new System.Windows.Forms.Label();
+            this.txtPreTrigSamples = new LibRXFFT.Components.GDI.TextBoxMouseScroll();
+            this.label4 = new System.Windows.Forms.Label();
             this.tabPage4 = new System.Windows.Forms.TabPage();
+            this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.lblBufferTime = new System.Windows.Forms.Label();
+            this.txtBufferTime = new LibRXFFT.Components.GDI.TextBoxMouseScroll();
+            this.label3 = new System.Windows.Forms.Label();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
-            this.groupBox6.SuspendLayout();
-            this.groupBox5.SuspendLayout();
-            this.groupBox4.SuspendLayout();
-            this.groupBox3.SuspendLayout();
-            this.groupBox2.SuspendLayout();
-            this.groupBox1.SuspendLayout();
             this.tabControl.SuspendLayout();
             this.tabPage1.SuspendLayout();
+            this.groupBox5.SuspendLayout();
+            this.groupBox6.SuspendLayout();
             this.tabPage2.SuspendLayout();
+            this.groupBox4.SuspendLayout();
             this.tabPage3.SuspendLayout();
+            this.groupBox1.SuspendLayout();
+            this.groupBox2.SuspendLayout();
             this.tabPage4.SuspendLayout();
+            this.groupBox3.SuspendLayout();
             this.SuspendLayout();
             // 
             // splitContainer1
@@ -88,7 +88,7 @@
             // 
             this.splitContainer1.Panel2.Controls.Add(this.tabControl);
             this.splitContainer1.Size = new System.Drawing.Size(997, 511);
-            this.splitContainer1.SplitterDistance = 423;
+            this.splitContainer1.SplitterDistance = 430;
             this.splitContainer1.SplitterWidth = 1;
             this.splitContainer1.TabIndex = 1;
             // 
@@ -105,7 +105,7 @@
             this.waveForm.MaxSamples = 10000;
             this.waveForm.Name = "waveForm";
             this.waveForm.SamplingRate = 0;
-            this.waveForm.Size = new System.Drawing.Size(997, 423);
+            this.waveForm.Size = new System.Drawing.Size(997, 430);
             this.waveForm.SpectParts = 1;
             this.waveForm.TabIndex = 0;
             this.waveForm.UpdateRate = 25;
@@ -116,13 +116,58 @@
             this.waveForm.YZoomFactorMax = 0.5;
             this.waveForm.YZoomFactorMin = 0.005;
             // 
+            // tabControl
+            // 
+            this.tabControl.Controls.Add(this.tabPage1);
+            this.tabControl.Controls.Add(this.tabPage2);
+            this.tabControl.Controls.Add(this.tabPage3);
+            this.tabControl.Controls.Add(this.tabPage4);
+            this.tabControl.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tabControl.Location = new System.Drawing.Point(0, 0);
+            this.tabControl.Name = "tabControl";
+            this.tabControl.SelectedIndex = 0;
+            this.tabControl.Size = new System.Drawing.Size(997, 80);
+            this.tabControl.TabIndex = 10;
+            // 
+            // tabPage1
+            // 
+            this.tabPage1.Controls.Add(this.groupBox5);
+            this.tabPage1.Controls.Add(this.groupBox6);
+            this.tabPage1.Location = new System.Drawing.Point(4, 22);
+            this.tabPage1.Name = "tabPage1";
+            this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPage1.Size = new System.Drawing.Size(989, 54);
+            this.tabPage1.TabIndex = 0;
+            this.tabPage1.Text = "Source Signal";
+            this.tabPage1.UseVisualStyleBackColor = true;
+            // 
+            // groupBox5
+            // 
+            this.groupBox5.Controls.Add(this.txtSamplingRate);
+            this.groupBox5.Location = new System.Drawing.Point(6, 6);
+            this.groupBox5.Name = "groupBox5";
+            this.groupBox5.Size = new System.Drawing.Size(119, 46);
+            this.groupBox5.TabIndex = 8;
+            this.groupBox5.TabStop = false;
+            this.groupBox5.Text = "Sampling Rate";
+            // 
+            // txtSamplingRate
+            // 
+            this.txtSamplingRate.Frequency = ((long)(0));
+            this.txtSamplingRate.Location = new System.Drawing.Point(6, 16);
+            this.txtSamplingRate.Name = "txtSamplingRate";
+            this.txtSamplingRate.Size = new System.Drawing.Size(100, 20);
+            this.txtSamplingRate.TabIndex = 0;
+            this.txtSamplingRate.Text = "0.000.000.000 Hz";
+            this.txtSamplingRate.FrequencyChanged += new System.EventHandler(this.txtSamplingRate_FrequencyChanged);
+            // 
             // groupBox6
             // 
             this.groupBox6.Controls.Add(this.radioPhase);
             this.groupBox6.Controls.Add(this.radioPower);
             this.groupBox6.Location = new System.Drawing.Point(131, 6);
             this.groupBox6.Name = "groupBox6";
-            this.groupBox6.Size = new System.Drawing.Size(131, 46);
+            this.groupBox6.Size = new System.Drawing.Size(138, 46);
             this.groupBox6.TabIndex = 9;
             this.groupBox6.TabStop = false;
             this.groupBox6.Text = "Process";
@@ -151,25 +196,16 @@
             this.radioPower.UseVisualStyleBackColor = true;
             this.radioPower.CheckedChanged += new System.EventHandler(this.radioPower_CheckedChanged);
             // 
-            // groupBox5
+            // tabPage2
             // 
-            this.groupBox5.Controls.Add(this.txtSamplingRate);
-            this.groupBox5.Location = new System.Drawing.Point(6, 6);
-            this.groupBox5.Name = "groupBox5";
-            this.groupBox5.Size = new System.Drawing.Size(119, 46);
-            this.groupBox5.TabIndex = 8;
-            this.groupBox5.TabStop = false;
-            this.groupBox5.Text = "Sampling Rate";
-            // 
-            // txtSamplingRate
-            // 
-            this.txtSamplingRate.Frequency = ((long)(0));
-            this.txtSamplingRate.Location = new System.Drawing.Point(6, 16);
-            this.txtSamplingRate.Name = "txtSamplingRate";
-            this.txtSamplingRate.Size = new System.Drawing.Size(100, 20);
-            this.txtSamplingRate.TabIndex = 0;
-            this.txtSamplingRate.Text = "0.000.000.000 Hz";
-            this.txtSamplingRate.FrequencyChanged += new System.EventHandler(this.txtSamplingRate_FrequencyChanged);
+            this.tabPage2.Controls.Add(this.groupBox4);
+            this.tabPage2.Location = new System.Drawing.Point(4, 22);
+            this.tabPage2.Name = "tabPage2";
+            this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPage2.Size = new System.Drawing.Size(989, 58);
+            this.tabPage2.TabIndex = 1;
+            this.tabPage2.Text = "Pre-Processing";
+            this.tabPage2.UseVisualStyleBackColor = true;
             // 
             // groupBox4
             // 
@@ -200,91 +236,16 @@
             this.cmbLowPass.TabIndex = 6;
             this.cmbLowPass.SelectedIndexChanged += new System.EventHandler(this.cmbLowPass_SelectedIndexChanged);
             // 
-            // groupBox3
+            // tabPage3
             // 
-            this.groupBox3.Controls.Add(this.lblBufferTime);
-            this.groupBox3.Controls.Add(this.txtBufferTime);
-            this.groupBox3.Controls.Add(this.label3);
-            this.groupBox3.Location = new System.Drawing.Point(6, 6);
-            this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(174, 46);
-            this.groupBox3.TabIndex = 5;
-            this.groupBox3.TabStop = false;
-            this.groupBox3.Text = "Buffer Size";
-            // 
-            // lblBufferTime
-            // 
-            this.lblBufferTime.AutoSize = true;
-            this.lblBufferTime.Location = new System.Drawing.Point(117, 20);
-            this.lblBufferTime.Name = "lblBufferTime";
-            this.lblBufferTime.Size = new System.Drawing.Size(34, 13);
-            this.lblBufferTime.TabIndex = 4;
-            this.lblBufferTime.Text = "(unk.)";
-            // 
-            // txtBufferTime
-            // 
-            this.txtBufferTime.Location = new System.Drawing.Point(6, 16);
-            this.txtBufferTime.LowerLimit = ((long)(512));
-            this.txtBufferTime.Name = "txtBufferTime";
-            this.txtBufferTime.Size = new System.Drawing.Size(47, 20);
-            this.txtBufferTime.TabIndex = 3;
-            this.txtBufferTime.Text = "10000";
-            this.txtBufferTime.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.txtBufferTime.UpperLimit = ((long)(1000000));
-            this.txtBufferTime.Value = ((long)(10000));
-            this.txtBufferTime.ValueChanged += new System.EventHandler(this.txtBufferTime_ValueChanged);
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(59, 20);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(62, 13);
-            this.label3.TabIndex = 1;
-            this.label3.Text = "Samples, = ";
-            // 
-            // groupBox2
-            // 
-            this.groupBox2.Controls.Add(this.lblPreTrigTime);
-            this.groupBox2.Controls.Add(this.txtPreTrigSamples);
-            this.groupBox2.Controls.Add(this.label4);
-            this.groupBox2.Location = new System.Drawing.Point(260, 6);
-            this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(172, 46);
-            this.groupBox2.TabIndex = 4;
-            this.groupBox2.TabStop = false;
-            this.groupBox2.Text = "Pre-Trigger";
-            // 
-            // lblPreTrigTime
-            // 
-            this.lblPreTrigTime.AutoSize = true;
-            this.lblPreTrigTime.Location = new System.Drawing.Point(117, 20);
-            this.lblPreTrigTime.Name = "lblPreTrigTime";
-            this.lblPreTrigTime.Size = new System.Drawing.Size(34, 13);
-            this.lblPreTrigTime.TabIndex = 4;
-            this.lblPreTrigTime.Text = "(unk.)";
-            // 
-            // txtPreTrigSamples
-            // 
-            this.txtPreTrigSamples.Location = new System.Drawing.Point(6, 16);
-            this.txtPreTrigSamples.LowerLimit = ((long)(-100000));
-            this.txtPreTrigSamples.Name = "txtPreTrigSamples";
-            this.txtPreTrigSamples.Size = new System.Drawing.Size(47, 20);
-            this.txtPreTrigSamples.TabIndex = 3;
-            this.txtPreTrigSamples.Text = "0";
-            this.txtPreTrigSamples.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.txtPreTrigSamples.UpperLimit = ((long)(100000));
-            this.txtPreTrigSamples.Value = ((long)(0));
-            this.txtPreTrigSamples.ValueChanged += new System.EventHandler(this.txtPreTrigSamples_ValueChanged);
-            // 
-            // label4
-            // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(59, 20);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(62, 13);
-            this.label4.TabIndex = 1;
-            this.label4.Text = "Samples, = ";
+            this.tabPage3.Controls.Add(this.groupBox1);
+            this.tabPage3.Controls.Add(this.groupBox2);
+            this.tabPage3.Location = new System.Drawing.Point(4, 22);
+            this.tabPage3.Name = "tabPage3";
+            this.tabPage3.Size = new System.Drawing.Size(989, 58);
+            this.tabPage3.TabIndex = 2;
+            this.tabPage3.Text = "Triggering";
+            this.tabPage3.UseVisualStyleBackColor = true;
             // 
             // groupBox1
             // 
@@ -353,62 +314,101 @@
             this.chkTriggerRising.UseVisualStyleBackColor = true;
             this.chkTriggerRising.CheckedChanged += new System.EventHandler(this.chkTriggerRising_CheckedChanged);
             // 
-            // tabControl
+            // groupBox2
             // 
-            this.tabControl.Controls.Add(this.tabPage1);
-            this.tabControl.Controls.Add(this.tabPage2);
-            this.tabControl.Controls.Add(this.tabPage3);
-            this.tabControl.Controls.Add(this.tabPage4);
-            this.tabControl.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tabControl.Location = new System.Drawing.Point(0, 0);
-            this.tabControl.Name = "tabControl";
-            this.tabControl.SelectedIndex = 0;
-            this.tabControl.Size = new System.Drawing.Size(997, 87);
-            this.tabControl.TabIndex = 10;
+            this.groupBox2.Controls.Add(this.lblPreTrigTime);
+            this.groupBox2.Controls.Add(this.txtPreTrigSamples);
+            this.groupBox2.Controls.Add(this.label4);
+            this.groupBox2.Location = new System.Drawing.Point(260, 6);
+            this.groupBox2.Name = "groupBox2";
+            this.groupBox2.Size = new System.Drawing.Size(172, 46);
+            this.groupBox2.TabIndex = 4;
+            this.groupBox2.TabStop = false;
+            this.groupBox2.Text = "Pre-Trigger";
             // 
-            // tabPage1
+            // lblPreTrigTime
             // 
-            this.tabPage1.Controls.Add(this.groupBox5);
-            this.tabPage1.Controls.Add(this.groupBox6);
-            this.tabPage1.Location = new System.Drawing.Point(4, 22);
-            this.tabPage1.Name = "tabPage1";
-            this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(437, 56);
-            this.tabPage1.TabIndex = 0;
-            this.tabPage1.Text = "Source Signal";
-            this.tabPage1.UseVisualStyleBackColor = true;
+            this.lblPreTrigTime.AutoSize = true;
+            this.lblPreTrigTime.Location = new System.Drawing.Point(117, 20);
+            this.lblPreTrigTime.Name = "lblPreTrigTime";
+            this.lblPreTrigTime.Size = new System.Drawing.Size(34, 13);
+            this.lblPreTrigTime.TabIndex = 4;
+            this.lblPreTrigTime.Text = "(unk.)";
             // 
-            // tabPage2
+            // txtPreTrigSamples
             // 
-            this.tabPage2.Controls.Add(this.groupBox4);
-            this.tabPage2.Location = new System.Drawing.Point(4, 22);
-            this.tabPage2.Name = "tabPage2";
-            this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(437, 56);
-            this.tabPage2.TabIndex = 1;
-            this.tabPage2.Text = "Pre-Processing";
-            this.tabPage2.UseVisualStyleBackColor = true;
+            this.txtPreTrigSamples.Location = new System.Drawing.Point(6, 16);
+            this.txtPreTrigSamples.LowerLimit = ((long)(-100000));
+            this.txtPreTrigSamples.Name = "txtPreTrigSamples";
+            this.txtPreTrigSamples.Size = new System.Drawing.Size(47, 20);
+            this.txtPreTrigSamples.TabIndex = 3;
+            this.txtPreTrigSamples.Text = "0";
+            this.txtPreTrigSamples.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.txtPreTrigSamples.UpperLimit = ((long)(100000));
+            this.txtPreTrigSamples.Value = ((long)(0));
+            this.txtPreTrigSamples.ValueChanged += new System.EventHandler(this.txtPreTrigSamples_ValueChanged);
             // 
-            // tabPage3
+            // label4
             // 
-            this.tabPage3.Controls.Add(this.groupBox1);
-            this.tabPage3.Controls.Add(this.groupBox2);
-            this.tabPage3.Location = new System.Drawing.Point(4, 22);
-            this.tabPage3.Name = "tabPage3";
-            this.tabPage3.Size = new System.Drawing.Size(437, 56);
-            this.tabPage3.TabIndex = 2;
-            this.tabPage3.Text = "Triggering";
-            this.tabPage3.UseVisualStyleBackColor = true;
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(59, 20);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(62, 13);
+            this.label4.TabIndex = 1;
+            this.label4.Text = "Samples, = ";
             // 
             // tabPage4
             // 
             this.tabPage4.Controls.Add(this.groupBox3);
             this.tabPage4.Location = new System.Drawing.Point(4, 22);
             this.tabPage4.Name = "tabPage4";
-            this.tabPage4.Size = new System.Drawing.Size(989, 61);
+            this.tabPage4.Size = new System.Drawing.Size(989, 58);
             this.tabPage4.TabIndex = 3;
             this.tabPage4.Text = "Buffering";
             this.tabPage4.UseVisualStyleBackColor = true;
+            // 
+            // groupBox3
+            // 
+            this.groupBox3.Controls.Add(this.lblBufferTime);
+            this.groupBox3.Controls.Add(this.txtBufferTime);
+            this.groupBox3.Controls.Add(this.label3);
+            this.groupBox3.Location = new System.Drawing.Point(6, 6);
+            this.groupBox3.Name = "groupBox3";
+            this.groupBox3.Size = new System.Drawing.Size(174, 46);
+            this.groupBox3.TabIndex = 5;
+            this.groupBox3.TabStop = false;
+            this.groupBox3.Text = "Buffer Size";
+            // 
+            // lblBufferTime
+            // 
+            this.lblBufferTime.AutoSize = true;
+            this.lblBufferTime.Location = new System.Drawing.Point(117, 20);
+            this.lblBufferTime.Name = "lblBufferTime";
+            this.lblBufferTime.Size = new System.Drawing.Size(34, 13);
+            this.lblBufferTime.TabIndex = 4;
+            this.lblBufferTime.Text = "(unk.)";
+            // 
+            // txtBufferTime
+            // 
+            this.txtBufferTime.Location = new System.Drawing.Point(6, 16);
+            this.txtBufferTime.LowerLimit = ((long)(512));
+            this.txtBufferTime.Name = "txtBufferTime";
+            this.txtBufferTime.Size = new System.Drawing.Size(47, 20);
+            this.txtBufferTime.TabIndex = 3;
+            this.txtBufferTime.Text = "10000";
+            this.txtBufferTime.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.txtBufferTime.UpperLimit = ((long)(1000000));
+            this.txtBufferTime.Value = ((long)(10000));
+            this.txtBufferTime.ValueChanged += new System.EventHandler(this.txtBufferTime_ValueChanged);
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(59, 20);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(62, 13);
+            this.label3.TabIndex = 1;
+            this.label3.Text = "Samples, = ";
             // 
             // Oscilloscope
             // 
@@ -420,22 +420,22 @@
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel2.ResumeLayout(false);
             this.splitContainer1.ResumeLayout(false);
-            this.groupBox6.ResumeLayout(false);
-            this.groupBox6.PerformLayout();
-            this.groupBox5.ResumeLayout(false);
-            this.groupBox5.PerformLayout();
-            this.groupBox4.ResumeLayout(false);
-            this.groupBox3.ResumeLayout(false);
-            this.groupBox3.PerformLayout();
-            this.groupBox2.ResumeLayout(false);
-            this.groupBox2.PerformLayout();
-            this.groupBox1.ResumeLayout(false);
-            this.groupBox1.PerformLayout();
             this.tabControl.ResumeLayout(false);
             this.tabPage1.ResumeLayout(false);
+            this.groupBox5.ResumeLayout(false);
+            this.groupBox5.PerformLayout();
+            this.groupBox6.ResumeLayout(false);
+            this.groupBox6.PerformLayout();
             this.tabPage2.ResumeLayout(false);
+            this.groupBox4.ResumeLayout(false);
             this.tabPage3.ResumeLayout(false);
+            this.groupBox1.ResumeLayout(false);
+            this.groupBox1.PerformLayout();
+            this.groupBox2.ResumeLayout(false);
+            this.groupBox2.PerformLayout();
             this.tabPage4.ResumeLayout(false);
+            this.groupBox3.ResumeLayout(false);
+            this.groupBox3.PerformLayout();
             this.ResumeLayout(false);
 
         }

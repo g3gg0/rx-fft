@@ -134,17 +134,20 @@ namespace DemodulatorCollection
                 {
                     for (int pos = 0; pos < SampleSource.SamplesRead; pos++)
                     {
-                        double I = SampleSource.SourceSamplesI[pos];
-                        double Q = SampleSource.SourceSamplesQ[pos];
-
-                        if (Demodulator != null)
+                        lock (SampleSource.SampleBufferLock)
                         {
-                            try
+                            double I = SampleSource.SourceSamplesI[pos];
+                            double Q = SampleSource.SourceSamplesQ[pos];
+
+                            if (Demodulator != null)
                             {
-                                Demodulator.Process(I, Q);
-                            }
-                            catch (Exception e)
-                            {
+                                try
+                                {
+                                    Demodulator.Process(I, Q);
+                                }
+                                catch (Exception e)
+                                {
+                                }
                             }
                         }
                     }

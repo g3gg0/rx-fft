@@ -229,6 +229,17 @@ namespace LibRXFFT.Components.DirectX
             }
         }
 
+        public void ClearProcessData(double[] samples)
+        {
+            lock (SampleValues)
+            {
+                SampleValues.Clear();
+                for (int pos = 0; pos < samples.Length; pos++)
+                    SampleValues.Add(samples[pos]);
+
+                NeedsUpdate = true;
+            }
+        }
 
         public void ProcessData(double level, bool forcePlot)
         {
@@ -787,7 +798,7 @@ namespace LibRXFFT.Components.DirectX
             NeedsUpdate = true;
         }
 
-        internal override void PrepareLinePoints()
+        public override void PrepareLinePoints()
         {
             lock (SampleValues)
             {

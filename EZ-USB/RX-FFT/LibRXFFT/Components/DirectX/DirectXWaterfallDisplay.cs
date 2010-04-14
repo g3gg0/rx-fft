@@ -496,7 +496,7 @@ namespace LibRXFFT.Components.DirectX
             SmallFont.DrawString(null, string.Format("{0:0.0} dB", LeveldBBlack), 27, barTop + blackYPos - 6, (int)colorBarLower);
         }
 
-        internal override void PrepareLinePoints()
+        public override void PrepareLinePoints()
         {
             bool resetAverage = !LinePointsUpdated;
             double maxLevel = double.MinValue;

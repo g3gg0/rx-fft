@@ -399,7 +399,7 @@ LIBRXFFT_NATIVE_API void SamplesFromBinary(unsigned char *dataBuffer, int bytesR
 				break;
 		}
 
-		if (invertedSpectrum)
+		if (!invertedSpectrum)
 			I = -I;
 
 		samplesI[pos] = I;

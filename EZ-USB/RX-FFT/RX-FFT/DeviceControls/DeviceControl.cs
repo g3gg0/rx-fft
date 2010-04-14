@@ -16,6 +16,7 @@ namespace RX_FFT.DeviceControls
 
         double BlocksPerSecond { get; set; }
         bool ScanFrequenciesEnabled { get; set; }
+        bool AllowsMultipleReaders { get; }
         int ShmemChannel { get; }
 
         void Close();

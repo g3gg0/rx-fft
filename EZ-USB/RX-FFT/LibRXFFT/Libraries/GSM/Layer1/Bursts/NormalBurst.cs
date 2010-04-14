@@ -25,6 +25,10 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
         public const double HUBitsPos = SyncBitsPos + SyncBits;
         public const double Data2BitsPos = HUBitsPos + HUBits;
 
+        public long DummyBursts = 0;
+        public long DataBursts = 0;
+        public long CryptedBursts = 0;
+
 
         public bool[] DummyBurstBits = new[] { true, true, true, true, true, false, true, true, false, true, true, true, false, true, true, false, false, false, false, false, true, false, true, false, false, true, false, false, true, true, true, false, false, false, false, false, true, false, false, true, false, false, false, true, false, false, false, false, false, false, false, true, true, true, true, true, false, false, false, true, true, true, false, false, false, true, false, true, true, true, false, false, false, true, false, true, true, true, false, false, false, true, false, true, false, true, true, true, false, true, false, false, true, false, true, false, false, false, true, true, false, false, true, true, false, false, true, true, true, false, false, true, true, true, true, false, true, false, false, true, true, true, true, true, false, false, false, true, false, false, true, false, true, true, true, true, true, false, true, false, true, false };
 

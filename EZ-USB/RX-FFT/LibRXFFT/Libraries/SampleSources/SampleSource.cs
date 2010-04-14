@@ -1,15 +1,18 @@
 ﻿using System;
 using System.IO;
 using LibRXFFT.Libraries.SignalProcessing;
+using LibRXFFT.Libraries.ShmemChain;
 
 namespace LibRXFFT.Libraries.SampleSources
 {
-
     public class SampleSource
     {
+        public string SourceName = "<unnamed>";
         public bool InvertedSpectrum = false;
         protected Oversampler IOversampler;
         protected Oversampler QOversampler;
+
+        public SharedMem OutputShmemChannel;
 
         private BinaryWriter SavingFile = null;
         private string _SavingFileName = "output.dat";
@@ -17,6 +20,7 @@ namespace LibRXFFT.Libraries.SampleSources
         private ByteUtil.eSampleFormat SavingDataType = ByteUtil.eSampleFormat.Direct16BitIQFixedPoint;
         private int SavingBytesPerSample = 2;
 
+        public bool BufferOverrun = false;
 
         public static eOversamplingType DefaultOversamplingType = eOversamplingType.SinX;
         public eOversamplingType OversamplingType
@@ -139,6 +143,33 @@ namespace LibRXFFT.Libraries.SampleSources
             }
         }
 
+        public bool ForwardEnabled 
+        {
+            get
+            {
+                return OutputShmemChannel != null;
+            }
+
+            set
+            {
+                if (value == ForwardEnabled)
+                {
+                    return;
+                }
+
+                if (value)
+                {
+                    OutputShmemChannel = new SharedMem(-2, 0, SourceName);
+                }
+                else
+                {
+                    OutputShmemChannel.Close();
+                    OutputShmemChannel = null;
+                }
+            }
+        }
+
+
         public bool SamplingRateHasChanged;
         public event EventHandler SamplingRateChanged;
 
@@ -177,6 +208,14 @@ namespace LibRXFFT.Libraries.SampleSources
             }
         }
 
+        protected virtual void ForwardData(byte[] buffer)
+        {
+            if (ForwardEnabled)
+            {
+                OutputShmemChannel.Write(buffer);
+            }
+        }
+
         public virtual void Flush()
         {
         }
@@ -188,6 +227,17 @@ namespace LibRXFFT.Libraries.SampleSources
 
         public virtual void Close()
         {
+            if (OutputShmemChannel == null)
+            {
+                OutputShmemChannel.Close();
+                OutputShmemChannel.Dispose();
+                OutputShmemChannel = null;
+            }
+        }
+        
+        public virtual bool Restart()
+        {
+            return true;
         }
 
         public virtual void ForceInputRate(double rate)
@@ -205,6 +255,5 @@ namespace LibRXFFT.Libraries.SampleSources
             ByteUtil.SamplesToBinary(BinarySaveData, SamplesRead, SourceSamplesI, SourceSamplesQ, SavingDataType, false);
             SavingFile.Write(BinarySaveData);
         }
-
     }
 }

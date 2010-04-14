@@ -8,6 +8,10 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
     {
         public static bool DumpRawData = false;
 
+        public readonly DateTime AllocationTime = DateTime.Now;
+        public bool Released = false;
+        public DateTime ReleaseTime;
+
         public string ErrorMessage = "";
         public string StatusMessage = null;
 
@@ -79,6 +83,12 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
         public virtual eSuccessState ParseRawBurst(GSMParameters Parameters, double[] rawBurst, double[] rawBurstStrength)
         {
             return eSuccessState.Unknown;
+        }
+
+        public virtual void Release()
+        {
+            ReleaseTime = DateTime.Now;
+            Released = true;
         }
     }
 }

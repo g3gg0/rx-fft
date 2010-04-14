@@ -75,6 +75,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
 
             if (IsDummy(decodedBurst))
             {
+                DummyBursts++;
                 if (DumpRawData)
                     StatusMessage = "Dummy Burst";
                 return eSuccessState.Succeeded;
@@ -128,6 +129,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                         bool[] crc = CRC.Calc(parityBits, 0, 53, CRC.PolynomialTCHFR);
                         if (CRC.Matches(crc))
                         {
+                            DataBursts++;
                             success = eSuccessState.Succeeded;
 
                             /* GSM frame magic */
@@ -154,10 +156,16 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                             StatusMessage = "GSM 06.10 Voice data (" + OutFile.Name + ")";
                         }
                         else
+                        {
+                            CryptedBursts++;
                             ErrorMessage = "(TCH/F Class Ia: CRC Error)";
+                        }
                     }
                     else
+                    {
+                        CryptedBursts++;
                         ErrorMessage = "(TCH/F Class I: Error in ConvolutionalCoder)";
+                    }
                 }
 
 
@@ -169,21 +177,37 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                  */
 
                 if (success == eSuccessState.Succeeded)
+                {
                     BurstShiftCount = 4;
+                }
                 
                 /* save the last n bursts for the next block */
                 for (int pos = 0; pos < BurstShiftCount; pos++)
+                {
                     Array.Copy(BurstBufferI[(8 - BurstShiftCount) + pos], 0, BurstBufferI[pos], 0, BurstBufferI[pos].Length);
+                }
 
                 /* and continue at position n (so we will read another 8-n bursts) */
                 TCHSeq = BurstShiftCount;
 
                 /* only when in sync, return error flag */
                 if (BurstShiftCount == 4)
+                {
                     return success;
+                }
             }
 
             return eSuccessState.Unknown;
+        }
+
+        public override void Release()
+        {
+            base.Release();
+
+            if (OutFile != null)
+            {
+                OutFile.Close();
+            }
         }
 
 

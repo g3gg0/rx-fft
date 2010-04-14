@@ -7,12 +7,16 @@ namespace LibRXFFT.Libraries.SampleSources
     {
         private byte[] InBuffer;
         private FileStream InputStream;
+       
 
         public USRPSampleSource(string fileName, int oversampling) : base(oversampling)
         {
+            SourceName = fileName;
+
             /* USRP has an inverted spectrum */
             InvertedSpectrum = true;
-            DataFormat = ByteUtil.eSampleFormat.Direct64BitIQFloat64k;
+            //DataFormat = ByteUtil.eSampleFormat.Direct64BitIQFloat64k;
+            DataFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPoint;
 
             InBuffer = new byte[SamplesPerBlock * BytesPerSamplePair];
 
@@ -34,6 +38,25 @@ namespace LibRXFFT.Libraries.SampleSources
             InputStream.Close();
         }
 
+        public override bool Restart()
+        {
+            InputStream.Seek(0, SeekOrigin.Begin);
+
+            return true;
+        }
+        
+        public double GetPosition()
+        {
+            return (double)InputStream.Position / (double)InputStream.Length;
+        }
+
+        public void Seek(double pos)
+        {
+            long offset = (long)(pos * InputStream.Length);
+
+            InputStream.Seek(offset - (offset % BytesPerSamplePair), SeekOrigin.Begin);
+        }
+
         public override bool Read()
         {
             lock (SampleBufferLock)
@@ -45,6 +68,8 @@ namespace LibRXFFT.Libraries.SampleSources
                     SamplesRead = 0;
                     return false;
                 }
+
+                ForwardData(InBuffer);
 
                 if (InternalOversampling > 1)
                 {
@@ -64,5 +89,8 @@ namespace LibRXFFT.Libraries.SampleSources
             }
             return true;
         }
+
+
+
     }
 }

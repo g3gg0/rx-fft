@@ -7,7 +7,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 {
     public class BO35 : SerialPortTuner
     {
-        public static bool DeviceTypeDisabled = true;
+        public static bool DeviceTypeDisabled = false;
 
         public BO35(bool autoDetect)
             : base(autoDetect)
@@ -232,7 +232,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                 return "BO-35 " + FrequencyFormatter.FreqToString(FilterWidth) + " hard limit";
             }
         }
-        public override bool InvertedSpectrum { get { return GetFrequency() > 3000000000; } }
+        public override bool InvertedSpectrum { get { return GetFrequency() < 3000000000; } }
 
         public override string[] Name
         {

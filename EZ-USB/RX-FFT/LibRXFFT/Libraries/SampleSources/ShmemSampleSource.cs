@@ -8,6 +8,8 @@ namespace LibRXFFT.Libraries.SampleSources
         private byte[] InBuffer;
         private byte[] NextInBuffer;
         private bool NextInBufferAvailable;
+        private static double DefaultRate = 2184533;
+        private static long DefaultBufferSize = 32 * 1024 * 1024;
 
         public override int SamplesPerBlock
         {
@@ -23,22 +25,19 @@ namespace LibRXFFT.Libraries.SampleSources
             }
         }
 
-        
-
         public ShmemSampleSource(string name, int oversampling)
-            : this(name, oversampling, 2184533)
-        {
-        }
+            : this(name, oversampling, DefaultRate) { }
 
         public ShmemSampleSource(string name, int oversampling, double samplingRate)
-            : this(name, 0, oversampling, samplingRate)
-        {
-        }
+            : this(name, 0, oversampling, samplingRate) { }
 
         public ShmemSampleSource(string name, int srcChan, int oversampling, double samplingRate)
+            : this(name, srcChan, oversampling, samplingRate, DefaultBufferSize) { }
+
+        public ShmemSampleSource(string name, int srcChan, int oversampling, double samplingRate, long bufferSize)
             : base(oversampling)
         {
-            ShmemChannel = new SharedMem(srcChan, -1, name, 32 * 1024 * 1024);
+            ShmemChannel = new SharedMem(srcChan, -1, name, bufferSize);
             ShmemChannel.ReadTimeout = 100;
             ShmemChannel.ReadMode = eReadMode.TimeLimited;
 
@@ -55,16 +54,24 @@ namespace LibRXFFT.Libraries.SampleSources
 
         public override void Flush()
         {
+            BufferOverrun = false;
             ShmemChannel.Flush();
         }
 
         public override void Close()
         {
+            BufferOverrun = false;
             ShmemChannel.Unregister();
         }
 
         public override bool Read()
         {
+            /* buffer overrun? */
+            if (ShmemChannel.Length > ShmemChannel.bufferSize * 0.9f)
+            {
+                BufferOverrun = true;
+            }
+
             /* in case we should use some other input buffer */
             if (NextInBufferAvailable)
             {

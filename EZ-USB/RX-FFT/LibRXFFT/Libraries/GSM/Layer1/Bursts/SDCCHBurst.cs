@@ -52,6 +52,8 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
         {
             if (IsDummy(decodedBurst))
             {
+                DummyBursts++;
+
                 if (DumpRawData)
                     StatusMessage = "Dummy Burst";
                 return eSuccessState.Succeeded;
@@ -80,8 +82,11 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                             DumpBits(BurstBufferC);
                         }
                         else
+                        {
                             StatusMessage = "(Error in ConvolutionalCoder, maybe encrypted)";
+                        }
                     }
+                    CryptedBursts++;
                     return eSuccessState.Unknown;
                 }
 
@@ -100,12 +105,15 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                 /* convert u[] to d[] bytes */
                 PackBytes();
 
+                DataBursts++;
                 L2.Handle(this, L3, BurstBufferD);
 
                 return eSuccessState.Succeeded;
             }
             else
+            {
                 StatusMessage = null;
+            }
 
             return eSuccessState.Unknown;
         }

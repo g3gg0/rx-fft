@@ -14,15 +14,21 @@ namespace LibRXFFT.Libraries.Misc
 
         public void WaitOne()
         {
-            Mutex.WaitOne();
-            Trace = Environment.StackTrace;
-            Locked = true;
+            lock (Mutex)
+            {
+                Mutex.WaitOne();
+                Trace = Environment.StackTrace;
+                Locked = true;
+            }
         }
 
         public void ReleaseMutex()
         {
-            Locked = false;
-            Mutex.ReleaseMutex();
+            lock (Mutex)
+            {
+                Locked = false;
+                Mutex.ReleaseMutex();
+            }
         }
     }
 }

@@ -382,7 +382,7 @@ namespace LibRXFFT.Libraries
                             return;
                     }
 
-                    if (invertedSpectrum)
+                    if (!invertedSpectrum)
                         I = -I;
 
                     samplesI[pos] = I;

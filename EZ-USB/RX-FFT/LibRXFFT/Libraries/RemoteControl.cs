@@ -114,7 +114,7 @@ namespace LibRXFFT.Libraries
 
         private void HandleClient(Socket s)
         {
-            Thread clientThread = new Thread(new ThreadStart(delegate()
+            Thread clientThread = new Thread(() =>
             {
                 long StartFreq = 0;
                 bool Dragging = false;
@@ -143,7 +143,7 @@ namespace LibRXFFT.Libraries
                             case 0xFF0000BC:
                             case 0xFF0000BB:
                                 int drag = (int)ReceiveFrame(s);
-                                if(!Dragging)
+                                if (!Dragging)
                                 {
                                     StartFreq = Tuner.GetFrequency();
                                     Dragging = true;
@@ -186,7 +186,7 @@ namespace LibRXFFT.Libraries
                     OpenSockets.Remove(s);
                 }
 
-            }));
+            });
 
             lock (ClientThreads)
             {
@@ -206,7 +206,7 @@ namespace LibRXFFT.Libraries
                     for (int pos = 0; pos < ClientBuffer.Length; pos++)
                     {
                         int dataPos = Math.Min(FFTResult.Length - 1, (int)(pos * scale));
-                        ClientBuffer[pos] = (byte)(Math.Min(0xFF,Math.Max(0,DBTools.SquaredSampleTodB(FFTResult[dataPos]) * 2 + 255)));
+                        ClientBuffer[pos] = (byte)(Math.Min(0xFF, Math.Max(0, DBTools.SquaredSampleTodB(FFTResult[dataPos]) * 2 + 255)));
                     }
 
                     Client.Send(ClientBuffer);

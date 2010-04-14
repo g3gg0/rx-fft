@@ -34,68 +34,48 @@ namespace LibRXFFT.Libraries.ShmemChain
         protected int dstChan;
         protected eReadMode readMode = eReadMode.Blocking;
         protected int readTimeout = 1000;
+        public long bufferSize;
+        public string name;
 
+        public SharedMem() : this("") {}
 
-        public SharedMem()
+        public SharedMem(string name) : this(-1, -1, name){}
+
+        public SharedMem(int srcChan, int dstChan) : this(srcChan, dstChan, "") { }
+
+        public SharedMem(int srcChan, int dstChan, string name) : this(srcChan, dstChan, name, defaultBufferSize) { }
+
+        public SharedMem(int srcChan, int dstChan, string name, long bufferSize)
         {
-            this.srcChan = -1;
-            this.dstChan = -1;
-            shmemID = SharedMemNative.shmemchain_register_node(srcChan, dstChan);
+            if (name == null || name == "")
+            {
+                name = "Unnamed Channel";
+            }
 
-            if (shmemID < 0)
-                throw new NotSupportedException("Failed to register shmem node. Error code #" + SharedMemNative.shmemchain_get_last_error() + " #" + SharedMemNative.shmemchain_get_last_errorcode());
-        }
-
-        public SharedMem(string name)
-        {
-            this.srcChan = -1;
-            this.dstChan = -1;
-
+            this.name = name;
+            this.srcChan = srcChan;
+            this.dstChan = dstChan;
+            this.bufferSize = bufferSize;
+            
             byte[] dBytes = new byte[name.Length];
             ASCIIEncoding enc = new ASCIIEncoding();
 
-            shmemID = SharedMemNative.shmemchain_register_node_special(srcChan, dstChan, defaultBufferSize, enc.GetBytes(name));
+            shmemID = SharedMemNative.shmemchain_register_node_special(srcChan, dstChan, (int)bufferSize, enc.GetBytes(name));
+
+            /* try to get the real channel ids */
+            foreach(NodeInfo info in GetNodeInfos())
+            {
+                if (info.shmemID== shmemID)
+                {
+                    this.srcChan = info.srcChan;
+                    this.dstChan = info.dstChan;
+                }
+            }
 
             if (shmemID < 0)
+            {
                 throw new NotSupportedException("Failed to register shmem node. Error code #" + SharedMemNative.shmemchain_get_last_error() + " #" + SharedMemNative.shmemchain_get_last_errorcode());
-        }
-
-        public SharedMem(int srcChan, int dstChan)
-        {
-            this.srcChan = srcChan;
-            this.dstChan = dstChan;
-            shmemID = SharedMemNative.shmemchain_register_node(srcChan, dstChan);
-
-            if (shmemID < 0)
-                throw new NotSupportedException("Failed to register shmem node. Error code #" + SharedMemNative.shmemchain_get_last_error() + " #" + SharedMemNative.shmemchain_get_last_errorcode());
-        }
-
-        public SharedMem(int srcChan, int dstChan, string name)
-        {
-            this.srcChan = srcChan;
-            this.dstChan = dstChan;
-
-            byte[] dBytes = new byte[name.Length];
-            ASCIIEncoding enc = new ASCIIEncoding();
-
-            shmemID = SharedMemNative.shmemchain_register_node_special(srcChan, dstChan, defaultBufferSize, enc.GetBytes(name));
-
-            if (shmemID < 0)
-                throw new NotSupportedException("Failed to register shmem node. Error code #" + SharedMemNative.shmemchain_get_last_error() + " #" + SharedMemNative.shmemchain_get_last_errorcode());
-        }
-
-        public SharedMem(int srcChan, int dstChan, string name, int bufferSize)
-        {
-            this.srcChan = srcChan;
-            this.dstChan = dstChan;
-
-            byte[] dBytes = new byte[name.Length];
-            ASCIIEncoding enc = new ASCIIEncoding();
-
-            shmemID = SharedMemNative.shmemchain_register_node_special(srcChan, dstChan, bufferSize, enc.GetBytes(name));
-
-            if (shmemID < 0)
-                throw new NotSupportedException("Failed to register shmem node. Error code #" + SharedMemNative.shmemchain_get_last_error() + " #" + SharedMemNative.shmemchain_get_last_errorcode());
+            }
         }
 
         public static NodeInfo[] GetNodeInfos()

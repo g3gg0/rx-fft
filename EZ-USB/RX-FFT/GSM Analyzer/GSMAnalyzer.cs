@@ -22,8 +22,6 @@ namespace GSM_Analyzer
 {
     public partial class GSMAnalyzer : Form
     {
-        internal ArrayList Statistics = new ArrayList(8192);
-
         public SampleSource Source;
         private Tuner _Device;
         public Tuner Device
@@ -98,11 +96,12 @@ namespace GSM_Analyzer
             Log.Init();
             ChannelHandler = new RadioChannelHandler(Device);
             ChannelHandler.FrequencyOffset = 0;
-            ChannelHandler.AddBand(new FrequencyBand("P-GSM", 935000000, 200000, 1, 124));
-            ChannelHandler.AddBand(new FrequencyBand("E-GSM a", 925000000, 200000, 975, 1023));
-            ChannelHandler.AddBand(new FrequencyBand("E-GSM b", 924800000, 200000, 0, 0));
-            ChannelHandler.AddBand(new FrequencyBand("T-GSM 900", 915400000, 200000, 1024, 1052));
-            ChannelHandler.AddBand(new FrequencyBand("DCS 1800", 1805000000, 200000, 512, 885));
+
+            /* from: http://de.wikipedia.org/wiki/ARFCN */
+            ChannelHandler.AddBand(new FrequencyBand("E-GSM a", 935000000, 200000, 0, 124));
+            ChannelHandler.AddBand(new FrequencyBand("E-GSM b", 925200000, 200000, 975, 1023));
+            ChannelHandler.AddBand(new FrequencyBand("T-GSM 900", 915600000, 200000, 1024, 1052));
+            ChannelHandler.AddBand(new FrequencyBand("DCS 1800", 1805200000, 200000, 512, 885));
 
             txtArfcn.Value = ChannelHandler.LowestChannel;
 
@@ -166,31 +165,14 @@ namespace GSM_Analyzer
             int.TryParse(lacString, out lac);
             int.TryParse(cellIdentString, out cellIdent);
 
+            Parameters.MCC = mcc;
+            Parameters.MNC = mnc;
+            Parameters.LAC = lac;
+            Parameters.CellIdent = cellIdent;
+
             UpdateCellInfo(mcc, mnc, lac, cellIdent, Parameters.CBCH);
         }
 
-
-        public void AddMessage(String msg)
-        {
-            try
-            {
-                this.BeginInvoke(new addMessageDelegate(AddMessageFunc), new object[] { msg });
-            }
-            catch (Exception)
-            {
-            }
-        }
-
-        public void UpdateCellInfo(int mcc, int mnc, long lac, long cellIdent, eTriState hasCBCH)
-        {
-            try
-            {
-                this.BeginInvoke(new updateCellInfoDelegate(UpdateCellInfoFunc), new object[] { mcc, mnc, lac, cellIdent, hasCBCH });
-            }
-            catch (Exception)
-            {
-            }
-        }
 
         private void UpdateCellInfoFunc(int mcc, int mnc, long lac, long cellident, eTriState hasCBCH)
         {
@@ -216,11 +198,6 @@ namespace GSM_Analyzer
             else
                 lblCellBroadcast.Text = "---";
         }
-
-        delegate void addMessageDelegate(String msg);
-        delegate void updateErrorSuccessDelegate(long err, long succ, long TN, long T1, long T2, long T3);
-        delegate void updateFreqOffsetDelegate(double offset);
-        delegate void updateCellInfoDelegate(int mcc, int mnc, long lac, long cellIdent, eTriState hasCBCH);
 
         public void AddMessageFunc(String msg)
         {
@@ -359,16 +336,51 @@ namespace GSM_Analyzer
                 lblTN.Text = "---";
         }
 
+
+        public void AddMessage(String msg)
+        {
+            try
+            {
+                this.BeginInvoke(new Action(() => AddMessageFunc(msg)));
+            }
+            catch (Exception)
+            {
+            }
+        }
+
+        public void UpdateCellInfo(int mcc, int mnc, long lac, long cellIdent, eTriState hasCBCH)
+        {
+            try
+            {
+                BeginInvoke(new Action(() => UpdateCellInfoFunc(mcc, mnc, lac, cellIdent, hasCBCH)));
+            }
+            catch (Exception)
+            {
+            }
+        }
+
         void UpdateStats(GSMParameters param)
         {
-            BeginInvoke(new MethodInvoker(() => UpdatePowerDetails(param.AveragePower, param.AverageIdlePower)));
-            BeginInvoke(new updateErrorSuccessDelegate(UpdateErrorSuccess), new object[] { param.TotalErrors, param.TotalSuccess, param.TN, param.T1, param.T2, param.T3 });
-            BeginInvoke(new updateFreqOffsetDelegate(UpdateFreqOffset), new object[] { param.PhaseOffsetFrequency });
+            try
+            {
+                BeginInvoke(new Action(() => UpdatePowerDetails(param.AveragePower, param.AverageIdlePower)));
+                BeginInvoke(new Action(() => UpdateErrorSuccess(param.TotalErrors, param.TotalSuccess, param.TN, param.T1, param.T2, param.T3)));
+                BeginInvoke(new Action(() => UpdateFreqOffset(param.PhaseOffsetFrequency)));
+            }
+            catch (Exception)
+            {
+            }
         }
 
         void ResetStats()
         {
-            BeginInvoke(new updateErrorSuccessDelegate(UpdateErrorSuccess), new object[] { -1, -1, -1, -1, -1, -1 });
+            try
+            {
+                BeginInvoke(new Action(() => UpdateErrorSuccess(-1, -1, -1, -1, -1, -1)));
+            }
+            catch (Exception)
+            {
+            }
         }
 
         private void btnOpen_Click(object sender, EventArgs e)
@@ -515,9 +527,19 @@ namespace GSM_Analyzer
                 while (ThreadActive)
                 {
                     if (!Source.Read())
+                    {
                         Thread.Sleep(100);
+                    }
                     else
                     {
+                        if(Source.BufferOverrun)
+                        {
+                            AddMessage("----------------------------------------------------------------------------------------------------------------------------" + Environment.NewLine);
+                            AddMessage("  Important: Input buffer overrun. Your computer might be too slow. Please close some applications and/or visualizations" + Environment.NewLine);
+                            AddMessage("----------------------------------------------------------------------------------------------------------------------------" + Environment.NewLine);
+                            AddMessage(Environment.NewLine);
+                            Source.Flush();
+                        }
                         Demodulator.ProcessData(Source.SourceSamplesI, Source.SourceSamplesQ, sourceSignal, sourceStrength);
 
                         /* to allow external rate change */
@@ -618,10 +640,11 @@ namespace GSM_Analyzer
                                     currentPosition = 0;
                                     finder.Reset();
 
-                                    Parameters.State = eGSMState.FCCHSearch;
+                                    Parameters.Reset();
                                     Parameters.ResetError();
-                                    Parameters.PhaseOffsetValue = 0;
+                                    Parameters.State = eGSMState.FCCHSearch;
 
+                                    InitTimeSlotHandler(); 
                                     ResetStats();
                                     UpdateUIStatus(Parameters);
                                     break;
@@ -847,18 +870,15 @@ namespace GSM_Analyzer
 
         private void DumpStatistics()
         {
-            AddMessage(Environment.NewLine);
-            AddMessage(Parameters.GetSlotUsage());
+            StringBuilder stats = new StringBuilder();
 
-            AddMessage(Environment.NewLine);
-            AddMessage(Parameters.GetTimeslotDetails());
+            stats.Append(Environment.NewLine);
+            stats.Append(Parameters.GetSlotUsage());
 
-            AddMessage(Environment.NewLine);
+            stats.Append(Environment.NewLine);
+            stats.Append(Parameters.GetTimeslotDetails());
 
-            foreach (double value in Statistics)
-            {
-                AddMessage(value + Environment.NewLine);
-            }
+            AddMessage(stats.ToString());
         }
 
         private void InitTimeSlotHandler()
@@ -998,6 +1018,7 @@ namespace GSM_Analyzer
                 txtArfcn.BackColor = Color.White;
                 ChannelHandler.Channel = txtArfcn.Value;
                 Source.Flush();
+                Parameters.ARFCN = txtArfcn.Value;
                 Parameters.State = eGSMState.Reset;
             }
             else

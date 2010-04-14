@@ -58,6 +58,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
         {
             if (IsDummy(decodedBurst))
             {
+                DummyBursts++;
                 if (DumpRawData)
                     StatusMessage = "Dummy Burst";
                 return eSuccessState.Succeeded;
@@ -69,6 +70,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
 
             if (FN[0] + 1 == FN[1] && FN[1] + 1 == FN[2] && FN[2] + 1 == FN[3])
             {
+                DataBursts++;
                 Array.Clear(FN, 0, 4);
 
                 /* deinterleave the 4 bursts. the result is a 456 bit block. i[] to c[] */

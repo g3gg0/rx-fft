@@ -5,6 +5,6 @@
         void SPIInit();
         bool SPIResetDevice();
         bool SPITransfer(byte[] dataWrite, byte[] dataRead);
-        bool SPIReset(int state);
+        bool SPIReset(bool state);
     }
 }

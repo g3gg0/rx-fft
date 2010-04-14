@@ -4,6 +4,8 @@ namespace LibRXFFT.Libraries.ShmemChain
 {
     public class SharedMemNative
     {
+        public const int DEFAULT_BUFFER_SIZE = 8 * 1024 * 1024;
+
         public const int MODE_PARTIAL = 0;			// try to read up to n bytes (or less or zero)
         public const int MODE_NOPARTIAL = 1;			// try to read n bytes (or zero)
         public const int MODE_BLOCKING = 2;			// read n bytes (wait until we read them)

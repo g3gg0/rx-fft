@@ -65,4 +65,4 @@ LIBRXFFT_NATIVE_API int *DownmixInit(double *cosTable, double *sinTable, int ent
 LIBRXFFT_NATIVE_API void DownmixFree(int *ctx);
 LIBRXFFT_NATIVE_API void DownmixProcess(int *ctx, double *iDataIn, double *qDataIn, double *iDataOut, double *qDataOut, int samples);
 
-LIBRXFFT_NATIVE_API void SamplesFromBinary(unsigned char *dataBuffer, int bytesRead, double *samplesI, double *samplesQ, int dataFormat, int invertedSpectrum);
+LIBRXFFT_NATIVE_API void SamplesFromBinary(unsigned char *dataBuffer, int bytesRead, int destSize, double *samplesI, double *samplesQ, int dataFormat, int invertedSpectrum);

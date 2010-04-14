@@ -46,6 +46,7 @@ namespace RX_FFT
             this.openBO35Menu = new System.Windows.Forms.ToolStripMenuItem();
             this.openBO35PlainMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.openShMemMenu = new System.Windows.Forms.ToolStripMenuItem();
+            this.openFileMenu = new System.Windows.Forms.ToolStripMenuItem();            
             this.openRandomDataMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.pauseMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.saveMenu = new System.Windows.Forms.ToolStripMenuItem();
@@ -221,6 +222,7 @@ namespace RX_FFT
             this.openMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.openBO35Menu,
             this.openBO35PlainMenu,
+            this.openFileMenu,
             this.openShMemMenu,
             this.openRandomDataMenu});
             this.openMenu.Name = "openMenu";
@@ -240,6 +242,16 @@ namespace RX_FFT
             this.openBO35PlainMenu.Size = new System.Drawing.Size(214, 22);
             this.openBO35PlainMenu.Text = "BO-35digi (w/o ext. Tuner)";
             this.openBO35PlainMenu.Click += new System.EventHandler(this.openBO35PlainMenu_Click);
+
+
+            
+            // 
+            // openShMemMenu
+            // 
+            this.openFileMenu.Name = "openFileMenu";
+            this.openFileMenu.Size = new System.Drawing.Size(214, 22);
+            this.openFileMenu.Text = "File on Disk";
+            this.openFileMenu.Click += new System.EventHandler(this.openFileMenu_Click);
             // 
             // openShMemMenu
             // 
@@ -652,6 +664,8 @@ namespace RX_FFT
         private System.Windows.Forms.ToolStripMenuItem openMenu;
         private System.Windows.Forms.ToolStripMenuItem openBO35Menu;
         private System.Windows.Forms.ToolStripMenuItem openShMemMenu;
+        private System.Windows.Forms.ToolStripMenuItem openFileMenu;
+        
         private System.Windows.Forms.ToolStripMenuItem closeMenu;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripMenuItem quitMenu;

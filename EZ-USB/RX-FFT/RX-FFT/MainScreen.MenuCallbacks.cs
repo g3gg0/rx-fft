@@ -371,7 +371,7 @@ namespace RX_FFT
 
         private void gsmAnalyzerMenu_Click(object sender, EventArgs e)
         {
-            if (!(Device is USBRXDeviceControl))
+            if (!Device.AllowsMultipleReaders)
             {
                 MessageBox.Show("Further analysis is not possible with the opened device.");
                 return;
@@ -385,14 +385,14 @@ namespace RX_FFT
             GsmAnalyzerWindow.Show();
             if (Device != null)
             {
-                GsmAnalyzerWindow.OpenSharedMem(((USBRXDeviceControl)Device).ShmemChannel);
+                GsmAnalyzerWindow.OpenSharedMem(Device.ShmemChannel);
                 GsmAnalyzerWindow.Device = Device;
             }
         }
 
         private void digitalDemodulatorsMenu_Click(object sender, EventArgs e)
         {
-            if (!(Device is USBRXDeviceControl))
+            if (!Device.AllowsMultipleReaders)
             {
                 MessageBox.Show("Further analysis is not possible with the opened device.");
                 return;
@@ -406,14 +406,14 @@ namespace RX_FFT
             DemodulatorWindow.Show();
             if (Device != null)
             {
-                DemodulatorWindow.SharedMemoryChannel = ((USBRXDeviceControl)Device).ShmemChannel;
+                DemodulatorWindow.SharedMemoryChannel = Device.ShmemChannel;
             }
         }
 
 
         private void oscilloscopeMenu_Click(object sender, EventArgs e)
         {
-            if(!(Device is USBRXDeviceControl))
+            if (!Device.AllowsMultipleReaders)
             {
                 MessageBox.Show("Further analysis is not possible with the opened device.");
                 return;
@@ -427,7 +427,7 @@ namespace RX_FFT
             OscilloscopeWindow.Show();
             if (Device != null)
             {
-                OscilloscopeWindow.OpenSharedMem(((USBRXDeviceControl)Device).ShmemChannel);
+                OscilloscopeWindow.OpenSharedMem(Device.ShmemChannel);
             }
         }
 

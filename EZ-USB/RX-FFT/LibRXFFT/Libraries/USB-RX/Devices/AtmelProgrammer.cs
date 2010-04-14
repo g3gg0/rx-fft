@@ -5,25 +5,138 @@ using LibRXFFT.Libraries.USB_RX.Misc;
 
 namespace LibRXFFT.Libraries.USB_RX.Devices
 {
+    internal struct sAtmelTypes
+    {
+        internal uint Sig0;
+        internal uint Sig1;
+        internal uint Sig2;
+        internal uint FlashPages;
+        internal uint FlashPageSize; /* words */
+        internal uint EEPROMPages;
+        internal uint EEPROMPageSize; /* byte */
+        internal string Name;
+
+        public sAtmelTypes(uint Sig, uint FlashPages, uint FlashPageSize, uint EEPROMPages, uint EEPROMPageSize, string Name) : this((Sig >> 16) & 0xFF, (Sig >> 8) & 0xFF, Sig & 0xFF, FlashPages, FlashPageSize, EEPROMPages, EEPROMPageSize, Name) { }
+
+        public sAtmelTypes(uint Sig0, uint Sig1, uint Sig2, uint FlashPages, uint FlashPageSize, uint EEPROMPages, uint EEPROMPageSize, string Name)
+        {
+            this.Sig0 = Sig0;
+            this.Sig1 = Sig1;
+            this.Sig2 = Sig2;
+            this.FlashPages = FlashPages;
+            this.FlashPageSize = FlashPageSize;
+            this.EEPROMPages = EEPROMPages;
+            this.EEPROMPageSize = EEPROMPageSize;
+            this.Name = Name;
+        }
+    }
+
     public class AtmelProgrammer
     {
+        /* from 
+         * http://www.wiki.elektronik-projekt.de/mikrocontroller/avr/signature_bytes 
+         * http://www.mikrocontroller.net/topic/85100
+         */
+        private sAtmelTypes[] AtmelTypes =
+        {            
+            new sAtmelTypes ( 0x1E5106, 0, 0, 0, 0, "AT89S51" ),
+            new sAtmelTypes ( 0x1E5206, 0, 0, 0, 0, "AT89S52" ),
+            new sAtmelTypes ( 0x1E9001, 0, 0, 0, 0, "AT90S1200" ),
+            new sAtmelTypes ( 0x1E9004, 0, 0, 0, 0, "ATtiny11" ),
+            new sAtmelTypes ( 0x1E9005, 0, 0, 0, 0, "ATtiny12" ),
+            new sAtmelTypes ( 0x1E9006, 0, 0, 0, 0, "ATtiny15" ),
+            new sAtmelTypes ( 0x1E9007, 0, 0, 0, 0, "ATtiny13" ),
+            new sAtmelTypes ( 0x1E9101, 0, 0, 0, 0, "AT90S2313" ),
+            new sAtmelTypes ( 0x1E9102, 0, 0, 0, 0, "AT90S2323" ),
+            new sAtmelTypes ( 0x1E9103, 0, 0, 0, 0, "AT90S2343" ),
+            new sAtmelTypes ( 0x1E9106, 0, 0, 0, 0, "ATtiny22" ),
+            new sAtmelTypes ( 0x1E9107, 0, 0, 0, 0, "ATtiny28" ),
+            new sAtmelTypes ( 0x1E9108, 0, 0, 0, 0, "ATtiny25" ),
+            new sAtmelTypes ( 0x1E9109, 0, 0, 0, 0, "ATtiny26" ),
+            new sAtmelTypes ( 0x1E910A, 0, 0, 0, 0, "ATtiny2313" ),
+            new sAtmelTypes ( 0x1E910B, 0, 0, 0, 0, "ATtiny24" ),
+            new sAtmelTypes ( 0x1E910C, 0, 0, 0, 0, "ATtiny261" ),
+            new sAtmelTypes ( 0x1E9181, 0, 0, 0, 0, "AT86RF401" ),
+            new sAtmelTypes ( 0x1E9201, 0, 0, 0, 0, "AT90S4414" ),
+            new sAtmelTypes ( 0x1E9203, 0, 0, 0, 0, "AT90S4433" ),
+            new sAtmelTypes ( 0x1E9205, 0, 0, 0, 0, "ATmega48" ),
+            new sAtmelTypes ( 0x1E9206, 0, 0, 0, 0, "ATtiny45" ),
+            new sAtmelTypes ( 0x1E9207, 0, 0, 0, 0, "ATtiny44" ),
+            new sAtmelTypes ( 0x1E9208, 0, 0, 0, 0, "ATtiny461" ),
+            new sAtmelTypes ( 0x1E920A, 0, 0, 0, 0, "ATmega48P" ),
+            new sAtmelTypes ( 0x1E9301, 0, 0, 0, 0, "AT90S8515" ),
+            new sAtmelTypes ( 0x1E9301, 0, 0, 0, 0, "AT90S8515comp" ),
+            new sAtmelTypes ( 0x1E9303, 0, 0, 0, 0, "AT90S4434/AT90S8535" ),
+            new sAtmelTypes ( 0x1E9306, 0, 0, 0, 0, "ATmega8515" ),
+            new sAtmelTypes ( 0x1E9307, 0, 0, 0, 0, "ATmega8" ),
+            new sAtmelTypes ( 0x1E9308, 0, 0, 0, 0, "ATmega8535" ),
+            new sAtmelTypes ( 0x1E930A, 0, 0, 0, 0, "ATmega88" ),
+            new sAtmelTypes ( 0x1E930B, 0, 0, 0, 0, "ATtiny85" ),
+            new sAtmelTypes ( 0x1E930C, 0, 0, 0, 0, "ATtiny84" ),
+            new sAtmelTypes ( 0x1E930D, 0, 0, 0, 0, "ATtiny861" ),
+            new sAtmelTypes ( 0x1E930F, 0, 0, 0, 0, "ATmega88P" ),
+            new sAtmelTypes ( 0x1E9381, 0, 0, 0, 0, "AT90PWM2/AT90PWM3" ),
+            new sAtmelTypes ( 0x1E9383, 0, 0, 0, 0, "AT90PWM2B/AT90PWM3B" ),
+            new sAtmelTypes ( 0x1E9401, 0, 0, 0, 0, "ATmega161" ),
+            new sAtmelTypes ( 0x1E9402, 0, 0, 0, 0, "ATmega163" ),
+            new sAtmelTypes ( 0x1E9403, 0, 0, 0, 0, "ATmega16" ),
+            new sAtmelTypes ( 0x1E9404, 0, 0, 0, 0, "ATmega162" ),
+            new sAtmelTypes ( 0x1E9405, 0, 0, 0, 0, "ATmega169" ),
+            new sAtmelTypes ( 0x1E9405, 0, 0, 0, 0, "ATmega169P" ),
+            new sAtmelTypes ( 0x1E9406, 0, 0, 0, 0, "ATmega168" ),
+            new sAtmelTypes ( 0x1E9407, 0, 0, 0, 0, "ATmega165/P" ),
+            new sAtmelTypes ( 0x1E940A, 0, 0, 0, 0, "ATmega164P" ),
+            new sAtmelTypes ( 0x1E940B, 0, 0, 0, 0, "ATmega168P" ),
+            new sAtmelTypes ( 0x1E9482, 0, 0, 0, 0, "AT90USB162" ),
+            new sAtmelTypes ( 0x1E9482, 0, 0, 0, 0, "AT90USB162" ),
+            new sAtmelTypes ( 0x1E9501, 0, 0, 0, 0, "ATmega323" ),
+            new sAtmelTypes ( 0x1E9502, 256, 64, 256, 4, "ATMega32" ), /* used in USB-RX */
+            new sAtmelTypes ( 0x1E9503, 0, 0, 0, 0, "ATmega329/P" ),
+            new sAtmelTypes ( 0x1E9504, 0, 0, 0, 0, "ATmega3290/P" ),
+            new sAtmelTypes ( 0x1E9505, 0, 0, 0, 0, "ATmega325/P" ),
+            new sAtmelTypes ( 0x1E9506, 0, 0, 0, 0, "ATmega3250/P" ),
+            new sAtmelTypes ( 0x1E9507, 0, 0, 0, 0, "ATmega406" ),
+            new sAtmelTypes ( 0x1E9508, 0, 0, 0, 0, "ATmega324P" ),
+            new sAtmelTypes ( 0x1E9581, 0, 0, 0, 0, "AT90CAN32" ),
+            new sAtmelTypes ( 0x1E9588, 0, 0, 0, 0, "ATMega32U6" ),
+            new sAtmelTypes ( 0x1E9602, 0, 0, 0, 0, "ATmega64" ),
+            new sAtmelTypes ( 0x1E9603, 0, 0, 0, 0, "ATmega649" ),
+            new sAtmelTypes ( 0x1E9604, 0, 0, 0, 0, "ATmega6490" ),
+            new sAtmelTypes ( 0x1E9605, 0, 0, 0, 0, "ATmega645" ),
+            new sAtmelTypes ( 0x1E9606, 0, 0, 0, 0, "ATmega6450" ),
+            new sAtmelTypes ( 0x1E9608, 0, 0, 0, 0, "ATmega640" ),
+            new sAtmelTypes ( 0x1E9609, 256, 128, 256, 8, "ATMega644" ), /* used in USB-RX */
+            new sAtmelTypes ( 0x1E960A, 256, 128, 256, 8, "ATMega644P" ), /* used in USB-RX */
+            new sAtmelTypes ( 0x1E964E, 0, 0, 0, 0, "ATxmega64A1" ),
+            new sAtmelTypes ( 0x1E9681, 0, 0, 0, 0, "AT90CAN64" ),
+            new sAtmelTypes ( 0x1E9682, 0, 0, 0, 0, "AT90USB64x" ),
+            new sAtmelTypes ( 0x1E9701, 0, 0, 0, 0, "ATmega103" ),
+            new sAtmelTypes ( 0x1E9702, 0, 0, 0, 0, "ATmega128" ),
+            new sAtmelTypes ( 0x1E9703, 0, 0, 0, 0, "ATmega1280" ),
+            new sAtmelTypes ( 0x1E9704, 0, 0, 0, 0, "ATmega1281" ),
+            new sAtmelTypes ( 0x1E974C, 0, 0, 0, 0, "ATxmega128A1" ),
+            new sAtmelTypes ( 0x1E974E, 0, 0, 0, 0, "ATxmega192A1" ),
+            new sAtmelTypes ( 0x1E9781, 0, 0, 0, 0, "AT90CAN128" ),
+            new sAtmelTypes ( 0x1E9782, 0, 0, 0, 0, "AT90USB128x" ),
+            new sAtmelTypes ( 0x1E9801, 0, 0, 0, 0, "ATmega2560" ),
+            new sAtmelTypes ( 0x1E9802, 0, 0, 0, 0, "ATmega2561" ),
+            new sAtmelTypes ( 0x1E9846, 0, 0, 0, 0, "ATxmega256A1" ),
+        };
+
         public class DeviceErrorException : Exception
         {
         }
 
-        SPIInterface device;
+        private sAtmelTypes AtmelType;
+        private SPIInterface device;
         private int lastExtendedByte = -1;
-
-        // flash/eeprom block sizes
-        private int pageSizeFlash = 128;
-        private int pageSizeEEPROM = 8;
 
         // transfer up to 7 words - 14 bytes
         // restriction: USB packet may not exceed 0x40 bytes
         //
         // thats 14*4 bytes = 56 bytes plus 3 bytes command header
         //
-        private int transferBlockSize = 7;
+        private uint transferBlockSize = 7;
         private bool slowProgramming = false;
 
         private bool deviceSupportsXFuses = false;
@@ -40,14 +153,16 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             try
             {
                 device.SPIInit();
-                device.SPIReset(0);
+                device.SPIReset(false);
                 Thread.Sleep(20);
-                device.SPIReset(1);
+                device.SPIReset(true);
                 Thread.Sleep(20);
 
                 byte[] dataRead = sendCommandPlain(0xAC, 0x53, 0x00, 0x00);
                 if (dataRead[2] != 0x53)
                     return false;
+
+                AtmelType = FindDevice();
 
             }
             catch (Exception e)
@@ -59,7 +174,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
         public bool leaveProgrammingMode()
         {
-            device.SPIReset(0);
+            device.SPIReset(false);
             return true;
         }
 
@@ -165,11 +280,44 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             return dataRead[3];
         }
 
+        private sAtmelTypes FindDevice()
+        {
+            uint sig0 = readDeviceVendorCode();
+            uint sig1 = readDeviceFamilyCode();
+            uint sig2 = readDevicePartNumberCode();
+
+            foreach (sAtmelTypes type in AtmelTypes)
+            {
+                if (sig0 == type.Sig0 && sig1 == type.Sig1 && sig2 == type.Sig2)
+                {
+                    return type;
+                }
+            }
+
+            return new sAtmelTypes(sig0, sig1, sig2, 0, 0, 0, 0, "Unknown device");
+        }
+
+        public string DeviceName
+        {
+            get
+            {
+                return FindDevice().Name;
+            }
+        }
+
         public uint FlashSize
         {
             get
             {
                 return (uint)Math.Pow(2, (readDeviceFamilyCode() & 0x0F)) * 1024;
+            }
+        }
+
+        public uint FlashStart
+        {
+            get
+            {
+                return 0;
             }
         }
 
@@ -269,22 +417,22 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             throw new DeviceErrorException();
         }
 
-        public void loadExtendedAddressByte(int addr)
+        public void loadExtendedAddressByte(uint addr)
         {
             if (this.lastExtendedByte == addr)
                 return;
 
             sendCommand(0x4D, 0x00, (byte)addr, 0x00);
-            this.lastExtendedByte = addr;
+            this.lastExtendedByte = (int)addr;
             return;
         }
 
         public void programFlash(MemoryDump16BitLE dump)
         {
-            int posFlash = 0;
+            uint posFlash = 0;
 
             // create data struct, aligned to flash size
-            uint dataSize = (uint)(((dump.Length + (pageSizeFlash - 1)) / pageSizeFlash) * pageSizeFlash);
+            uint dataSize = (uint)(((dump.Length + (AtmelType.FlashPageSize - 1)) / AtmelType.FlashPageSize) * AtmelType.FlashPageSize);
             ushort[] data = new ushort[dataSize];
 
             for (int pos = 0; pos < dataSize; pos++)
@@ -301,27 +449,27 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             // then flash the given data
             while (posFlash < data.Length)
             {
-                int posTemp = 0;
+                uint posTemp = 0;
 
                 // skip empty pages
-                if (!isEmptyPage(data, posFlash, this.pageSizeFlash))
+                if (!isEmptyPage(data, posFlash, AtmelType.FlashPageSize))
                 {
                     // program byte-wise
                     if (slowProgramming)
                     {
-                        while (posTemp < this.pageSizeFlash && posFlash + posTemp < data.Length)
+                        while (posTemp < AtmelType.FlashPageSize && posFlash + posTemp < data.Length)
                         {
                             loadProgramMemoryPage(posTemp, data[posFlash + (posTemp++)]);
                         }
                     }
                     else
                     {
-                        int blockSize = transferBlockSize;
-                        while (posTemp < this.pageSizeFlash && posFlash + posTemp < data.Length)
+                        uint blockSize = transferBlockSize;
+                        while (posTemp < AtmelType.FlashPageSize && posFlash + posTemp < data.Length)
                         {
-                            if (posTemp + blockSize > this.pageSizeFlash)
+                            if (posTemp + blockSize > AtmelType.FlashPageSize)
                             {
-                                blockSize = this.pageSizeFlash - posTemp;
+                                blockSize = AtmelType.FlashPageSize - posTemp;
                             }
                             loadProgramMemoryPageMulti(posTemp, data, posFlash + posTemp, blockSize);
                             posTemp += blockSize;
@@ -333,7 +481,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                     waitReady(100);
                 }
 
-                posFlash += this.pageSizeFlash;
+                posFlash += AtmelType.FlashPageSize;
             }
         }
 
@@ -349,7 +497,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             }
         }
 
-        private bool isEmptyPage(ushort[] data, int posFlash, int pageSize)
+        private bool isEmptyPage(ushort[] data, uint posFlash, uint pageSize)
         {
             for (int pos = 0; pos < pageSize; pos++)
             {
@@ -360,7 +508,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             return true;
         }
 
-        private void loadProgramMemoryPageMulti(int address, ushort[] data, int offset, int blockSize)
+        private void loadProgramMemoryPageMulti(uint address, ushort[] data, uint offset, uint blockSize)
         {
             byte[] dataWrite = new byte[blockSize * 8];
             byte[] dataRead = new byte[blockSize * 8];
@@ -384,7 +532,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                 throw new DeviceErrorException();
         }
 
-        public void loadProgramMemoryPage(int address, ushort data)
+        public void loadProgramMemoryPage(uint address, ushort data)
         {
             // send byte to page buffer
             // first LSB
@@ -393,7 +541,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             sendCommand(0x48, (byte)(address >> 8), (byte)(address & 0xFF), (byte)(data >> 8));
         }
 
-        public void writeProgramMemoryPage(int address)
+        public void writeProgramMemoryPage(uint address)
         {
             // make sure extended address byte is loaded
             // not needed for ATMega644?
@@ -409,24 +557,24 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             waitReady(100);
         }
 
-        public int getPageSizeFlash()
+        public uint getPageSizeFlash()
         {
-            return pageSizeFlash;
+            return AtmelType.FlashPageSize;
         }
 
-        public void setPageSizeFlash(int pageSizeFlash)
+        public void setPageSizeFlash(uint pageSizeFlash)
         {
-            this.pageSizeFlash = pageSizeFlash;
+            AtmelType.EEPROMPageSize = pageSizeFlash;
         }
 
-        public int getPageSizeEEPROM()
+        public uint getPageSizeEEPROM()
         {
-            return pageSizeEEPROM;
+            return AtmelType.EEPROMPageSize;
         }
 
-        public void setPageSizeEEPROM(int pageSizeEEPROM)
+        public void setPageSizeEEPROM(uint pageSizeEEPROM)
         {
-            this.pageSizeEEPROM = pageSizeEEPROM;
+            AtmelType.EEPROMPageSize = pageSizeEEPROM;
         }
 
         public bool isSlowProgramming()

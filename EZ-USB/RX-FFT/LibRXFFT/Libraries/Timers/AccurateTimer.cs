@@ -89,8 +89,14 @@ namespace LibRXFFT.Libraries.Timers
         /// The timer elapsed event
         /// </summary>
         public event EventHandler Timer;
+
+        public static string LastTimerTrace = "none yet";
+        public string StackTrace = "";
+
         protected virtual void OnTimer(EventArgs e)
         {
+            LastTimerTrace = StackTrace;
+
             HandlerActive = true;
 
             if (Timer != null)
@@ -101,6 +107,7 @@ namespace LibRXFFT.Libraries.Timers
 
         public AccurateTimer()
         {
+            StackTrace = Environment.StackTrace;
             //Initialize the API callback
             thisCB = CBFunc;
         }

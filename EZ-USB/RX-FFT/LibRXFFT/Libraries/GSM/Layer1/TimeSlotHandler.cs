@@ -3,6 +3,7 @@ using LibRXFFT.Libraries.GSM.Layer1.Bursts;
 using LibRXFFT.Libraries.GSM.Layer1.ChannelCoding;
 using LibRXFFT.Libraries.GSM.Layer1.GMSK;
 using LibRXFFT.Libraries.GSM.Layer3;
+using System.Collections.Generic;
 
 namespace LibRXFFT.Libraries.GSM.Layer1
 {
@@ -17,6 +18,8 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
 
         public AddMessageDelegate AddMessage { get; set; }
+
+
 
         public readonly GMSKDecoder Decoder;
         public readonly L3Handler L3;
@@ -47,6 +50,9 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             SCH = new SCHBurst(param);
             BCCH = new BCCHBurst(L3);
             CCCH = new CCCHBurst(L3);
+
+            Parameters.UsedBursts.AddLast(BCCH);
+            Parameters.UsedBursts.AddLast(CCCH);
 
             L3.PDUDataTriggers.Add("CCCH-CONF", TriggerCCCHCONF);
             L3.PDUDataTriggers.Add("ChannelAssignment", TriggerChannelAssignment);
@@ -81,6 +87,9 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                     TCHBurst tch = new TCHBurst(L3, "TCH" + timeSlot + "/F", (int)timeSlot);
                     SACCHBurst sacch = new SACCHBurst(L3, "SACCH/TCH" + timeSlot, (int)timeSlot, true);
 
+                    Parameters.UsedBursts.AddLast(tch);
+                    Parameters.UsedBursts.AddLast(sacch);
+
                     for (int frame = 0; frame < 25; frame++)
                     {
                         if (frame == 12)
@@ -98,6 +107,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             eTimeSlotType channelType;
             long subChannel;
             long timeSlot;
+            sTimeslotReference reference;
 
             lock (L3Handler.PDUDataFields)
             {
@@ -108,59 +118,129 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                 if (!L3Handler.PDUDataRawFields.ContainsKey("TimeSlot"))
                     return;
 
+                if (!L3Handler.PDUDataRawFields.ContainsKey("RefT1"))
+                    return;
+
+                if (!L3Handler.PDUDataRawFields.ContainsKey("RefT2"))
+                    return;
+
+                if (!L3Handler.PDUDataRawFields.ContainsKey("RefT3"))
+                    return;
+
                 channelType = (eTimeSlotType)L3Handler.PDUDataRawFields["ChannelType"];
                 subChannel = L3Handler.PDUDataRawFields["SubChannel"];
                 timeSlot = L3Handler.PDUDataRawFields["TimeSlot"];
+
+                reference.T1 = L3Handler.PDUDataRawFields["RefT1"];
+                reference.T2 = L3Handler.PDUDataRawFields["RefT2"];
+                reference.T3 = L3Handler.PDUDataRawFields["RefT3"];
             }
 
             /* assigned time slot type does not match? */
-            if (Parameters.TimeSlotHandlers[timeSlot] == null || Parameters.TimeSlotInfo[timeSlot].Type != channelType)
+            if (true || Parameters.TimeSlotHandlers[timeSlot] == null || Parameters.TimeSlotInfo[timeSlot].Type != channelType)
             {
                 lock (Parameters.TimeSlotHandlers)
                 {
+
                     switch (channelType)
                     {
                         case eTimeSlotType.TCHF:
-                            AddMessage("   [L1] TimeSlot " + timeSlot + " now configured as TCH/F (was " + Parameters.TimeSlotInfo[timeSlot].Type + ")" + Environment.NewLine);
-                            Parameters.TimeSlotHandlers[timeSlot] = new sTimeSlotParam[26];
-
-                            TCHBurst tch = new TCHBurst(L3, "TCH" + timeSlot + "/F", (int)timeSlot);
-                            SACCHBurst sacch = new SACCHBurst(L3, "SACCH/TCH" + timeSlot, (int)timeSlot, true);
-
-                            for (int frame = 0; frame < 25; frame++)
+                            if (Parameters.TimeSlotHandlers[timeSlot] != null && Parameters.TimeSlotHandlers[timeSlot][0].Reference == reference)
                             {
-                                if (frame == 12)
-                                    Parameters.TimeSlotHandlers[timeSlot][frame] = new sTimeSlotParam(sacch, 0);
-                                else
-                                    Parameters.TimeSlotHandlers[timeSlot][frame] = new sTimeSlotParam(tch, 0);
+                                AddMessage("   [L1] TimeSlot " + timeSlot + " already configured as TCH/F (was " + Parameters.TimeSlotInfo[timeSlot].Type + ")" + Environment.NewLine);
+                            }
+                            else
+                            {
+                                if (Parameters.TimeSlotHandlers[timeSlot] == null)
+                                {
+                                    Parameters.TimeSlotHandlers[timeSlot] = new sTimeSlotParam[26];
+                                }
+
+                                /* release the old bursts first */
+                                for (int frame = 0; frame < Parameters.TimeSlotHandlers[timeSlot].Length; frame++)
+                                {
+                                    Burst burst = Parameters.TimeSlotHandlers[timeSlot][frame].Burst;
+                                    if (burst != null && !burst.Released)
+                                    {
+                                        burst.Release();
+                                    }                                
+                                }
+
+                                AddMessage("   [L1] TimeSlot " + timeSlot + " now configured as TCH/F (was " + Parameters.TimeSlotInfo[timeSlot].Type + ")" + Environment.NewLine);
+
+                                TCHBurst tch = new TCHBurst(L3, "TCH" + timeSlot + "/F", (int)timeSlot);
+                                SACCHBurst sacch = new SACCHBurst(L3, "SACCH/TCH" + timeSlot, (int)timeSlot, true);
+
+                                Parameters.UsedBursts.AddLast(tch);
+                                Parameters.UsedBursts.AddLast(sacch);
+
+                                for (int frame = 0; frame < 25; frame++)
+                                {
+                                    if (frame == 12)
+                                        Parameters.TimeSlotHandlers[timeSlot][frame] = new sTimeSlotParam(sacch, 0);
+                                    else
+                                        Parameters.TimeSlotHandlers[timeSlot][frame] = new sTimeSlotParam(tch, 0);
+
+                                    Parameters.TimeSlotHandlers[timeSlot][frame].Reference = reference;
+                                }
                             }
                             break;
 
                         case eTimeSlotType.TCHH:
-                            AddMessage("   [L1] TimeSlot " + timeSlot + " now configured as TCH/H (was " + Parameters.TimeSlotInfo[timeSlot].Type + ")" + Environment.NewLine);
-                            Parameters.TimeSlotHandlers[timeSlot] = new sTimeSlotParam[26];
-
-                            TCHBurst tch1 = new TCHBurst(L3, "TCH" + timeSlot + "/H 1", (int)timeSlot);
-                            TCHBurst tch2 = new TCHBurst(L3, "TCH" + timeSlot + "/H 2", (int)timeSlot);
-                            SACCHBurst sacch1 = new SACCHBurst(L3, "SACCH1/TCH" + timeSlot, (int)timeSlot, true);
-                            SACCHBurst sacch2 = new SACCHBurst(L3, "SACCH2/TCH" + timeSlot, (int)timeSlot, true);
-
-                            for (int frame = 0; frame < 26; frame++)
+                            /* TODO: this is wrong! have to check subchannel reference! */
+                            if (Parameters.TimeSlotHandlers[timeSlot] != null && Parameters.TimeSlotHandlers[timeSlot][0].Reference == reference)
                             {
-                                if (frame == 12)
-                                    Parameters.TimeSlotHandlers[timeSlot][frame] = new sTimeSlotParam(sacch1, 0);
-                                else if (frame == 25)
-                                    Parameters.TimeSlotHandlers[timeSlot][frame] = new sTimeSlotParam(sacch2, 0);
-                                else if ((frame & 1) == 0)
-                                    Parameters.TimeSlotHandlers[timeSlot][frame] = new sTimeSlotParam(tch1, 0);
-                                else
-                                    Parameters.TimeSlotHandlers[timeSlot][frame] = new sTimeSlotParam(tch2, 0);
+                                AddMessage("   [L1] TimeSlot " + timeSlot + " already configured as TCH/H (was " + Parameters.TimeSlotInfo[timeSlot].Type + ")" + Environment.NewLine);
+                            }
+                            else
+                            {
+                                if (Parameters.TimeSlotHandlers[timeSlot] == null)
+                                {
+                                    Parameters.TimeSlotHandlers[timeSlot] = new sTimeSlotParam[26];
+                                }
+
+                                /* release the old bursts first */
+                                for (int frame = 0; frame < Parameters.TimeSlotHandlers[timeSlot].Length; frame++)
+                                {
+                                    Burst burst = Parameters.TimeSlotHandlers[timeSlot][frame].Burst;
+                                    if (burst != null && !burst.Released)
+                                    {
+                                        burst.Release();
+                                    }
+                                }
+
+                                AddMessage("   [L1] TimeSlot " + timeSlot + " now configured as TCH/H (was " + Parameters.TimeSlotInfo[timeSlot].Type + ")" + Environment.NewLine);
+
+                                TCHBurst tch1 = new TCHBurst(L3, "TCH" + timeSlot + "/H 1", (int)timeSlot);
+                                TCHBurst tch2 = new TCHBurst(L3, "TCH" + timeSlot + "/H 2", (int)timeSlot);
+                                SACCHBurst sacch1 = new SACCHBurst(L3, "SACCH1/TCH" + timeSlot, (int)timeSlot, true);
+                                SACCHBurst sacch2 = new SACCHBurst(L3, "SACCH2/TCH" + timeSlot, (int)timeSlot, true);
+
+                                Parameters.UsedBursts.AddLast(tch1);
+                                Parameters.UsedBursts.AddLast(tch2);
+                                Parameters.UsedBursts.AddLast(sacch1);
+                                Parameters.UsedBursts.AddLast(sacch2);
+
+                                for (int frame = 0; frame < 26; frame++)
+                                {
+                                    if (frame == 12)
+                                        Parameters.TimeSlotHandlers[timeSlot][frame] = new sTimeSlotParam(sacch1, 0);
+                                    else if (frame == 25)
+                                        Parameters.TimeSlotHandlers[timeSlot][frame] = new sTimeSlotParam(sacch2, 0);
+                                    else if ((frame & 1) == 0)
+                                        Parameters.TimeSlotHandlers[timeSlot][frame] = new sTimeSlotParam(tch1, 0);
+                                    else
+                                        Parameters.TimeSlotHandlers[timeSlot][frame] = new sTimeSlotParam(tch2, 0);
+
+                                    Parameters.TimeSlotHandlers[timeSlot][frame].Reference = reference;
+                                }
                             }
                             break;
 
                         case eTimeSlotType.SDCCH8:
                             if (timeSlot != 0)
                             {
+#if false
                                 AddMessage("   [L1] TimeSlot " + timeSlot + " now configured as SDCCH/8 (was " + Parameters.TimeSlotInfo[timeSlot].Type + ")" + Environment.NewLine);
                                 Parameters.TimeSlotHandlers[timeSlot] = new sTimeSlotParam[51];
 
@@ -168,6 +248,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                                 for (int chan = 0; chan < 8; chan++)
                                 {
                                     SDCCHBurst tmpSDCCH = new SDCCHBurst(L3, chan);
+                                    Parameters.UsedBursts.AddLast(tmpSDCCH);
                                     Parameters.TimeSlotHandlers[timeSlot][chan * 4 + 0] = new sTimeSlotParam(tmpSDCCH, 0);
                                     Parameters.TimeSlotHandlers[timeSlot][chan * 4 + 1] = new sTimeSlotParam(tmpSDCCH, 1);
                                     Parameters.TimeSlotHandlers[timeSlot][chan * 4 + 2] = new sTimeSlotParam(tmpSDCCH, 2);
@@ -178,11 +259,65 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                                 for (int chan = 0; chan < 4; chan++)
                                 {
                                     SACCHBurst tmpSACCH = new SACCHBurst(L3, "SACCH " + chan + "/" + (chan + 4), chan);
+                                    Parameters.UsedBursts.AddLast(tmpSACCH);
                                     Parameters.TimeSlotHandlers[timeSlot][(chan + 8) * 4 + 0] = new sTimeSlotParam(tmpSACCH, 0);
                                     Parameters.TimeSlotHandlers[timeSlot][(chan + 8) * 4 + 1] = new sTimeSlotParam(tmpSACCH, 1);
                                     Parameters.TimeSlotHandlers[timeSlot][(chan + 8) * 4 + 2] = new sTimeSlotParam(tmpSACCH, 2);
                                     Parameters.TimeSlotHandlers[timeSlot][(chan + 8) * 4 + 3] = new sTimeSlotParam(tmpSACCH, 3);
                                 }
+#else
+                                if (Parameters.TimeSlotHandlers[timeSlot] == null)
+                                {
+                                    Parameters.TimeSlotHandlers[timeSlot] = new sTimeSlotParam[51];
+                                }
+
+                                if (Parameters.TimeSlotHandlers[timeSlot][subChannel * 4].Reference == reference)
+                                {
+                                    AddMessage("   [L1] TimeSlot " + timeSlot + " already configured as SDCCH/8 (was " + Parameters.TimeSlotInfo[timeSlot].Type + ")" + Environment.NewLine);
+                                }
+                                else
+                                {
+                                    AddMessage("   [L1] TimeSlot " + timeSlot + " now configured as SDCCH/8 (was " + Parameters.TimeSlotInfo[timeSlot].Type + ")" + Environment.NewLine);
+                                    int sdcchFrame = (int)subChannel * 4;
+                                    int sacchFrame = (int)(subChannel / 2 + 8) * 4;
+                                    int sacchChannel1 = (int)subChannel / 2;
+                                    int sacchChannel2 = sacchChannel1 + 4;
+
+                                    /* release the old burst first */
+                                    Burst burst = Parameters.TimeSlotHandlers[timeSlot][sdcchFrame].Burst;
+                                    if (burst != null && !burst.Released)
+                                    {
+                                        burst.Release();
+                                    }
+
+                                    /* we are releasing a SACCH even if it may be still used by the other SDCCH using it */
+                                    burst = Parameters.TimeSlotHandlers[timeSlot][sacchFrame].Burst;
+                                    if (burst != null && !burst.Released)
+                                    {
+                                        burst.Release();
+                                    }
+
+                                    /* allocate a new SDCCH */
+                                    SDCCHBurst tmpSDCCH = new SDCCHBurst(L3, (int)subChannel);
+                                    Parameters.UsedBursts.AddLast(tmpSDCCH);
+                                    int sequence = 0;
+                                    for (int pos = sdcchFrame; pos < sdcchFrame + 4; pos++)
+                                    {
+                                        Parameters.TimeSlotHandlers[timeSlot][pos] = new sTimeSlotParam(tmpSDCCH, sequence++);
+                                        Parameters.TimeSlotHandlers[timeSlot][pos].Reference = reference;
+                                    }
+
+                                    /* we are allocating a new SACCH even if it may be used by the other SDCCH using it */
+                                    SACCHBurst tmpSACCH = new SACCHBurst(L3, "SACCH " + sacchChannel1 + "/" + sacchChannel2, (int)sacchChannel1);
+                                    Parameters.UsedBursts.AddLast(tmpSACCH);
+                                    sequence = 0;
+                                    for (int pos = sacchFrame; pos < sacchFrame + 4; pos++)
+                                    {
+                                        Parameters.TimeSlotHandlers[timeSlot][pos] = new sTimeSlotParam(tmpSACCH, sequence++);
+                                        Parameters.TimeSlotHandlers[timeSlot][pos].Reference = reference;
+                                    }                                    
+                                }
+#endif
                             }
                             else
                             {
@@ -191,7 +326,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                             break;
 
                         default:
-                            AddMessage("   [L1] TimeSlot " + timeSlot + " cannot get configured. Type: " + (int)channelType + Environment.NewLine);
+                            AddMessage("   [L1] TimeSlot " + timeSlot + " cannot get configured. Type: " + channelType + Environment.NewLine);
                             break;
                     }
 
@@ -202,7 +337,9 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
             Parameters.TimeSlotInfo[timeSlot].Assignments++;
             if (subChannel >= 0)
+            {
                 Parameters.TimeSlotInfo[timeSlot].SubChanAssignments[subChannel]++;
+            }
         }
 
         private void TriggerCBCHReset(L3Handler L3Handler)
@@ -268,8 +405,9 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
             Parameters.CBCH = eTriState.Yes;
 
-            CBCHBurst Burst = new CBCHBurst(L3, (int)subChannel);
             long frame = 0;
+            CBCHBurst Burst = new CBCHBurst(L3, (int)subChannel);
+            Parameters.UsedBursts.AddLast(Burst);
 
             /* type 4 is in timeslot 0 and shared with BCCH, CCCH and SDCCH */
             if (channelType == 4)
@@ -283,6 +421,19 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
             lock (Parameters.TimeSlotHandlers)
             {
+                if (Parameters.TimeSlotHandlers[timeSlot] == null)
+                {
+                    Parameters.TimeSlotHandlers[timeSlot] = new sTimeSlotParam[51];
+                }
+
+                for (long pos = frame; pos < frame + 4; pos++)
+                {
+                    Burst burst = Parameters.TimeSlotHandlers[timeSlot][pos].Burst;
+                    if (burst != null && !burst.Released)
+                    {
+                        burst.Release();
+                    }
+                }
                 Parameters.TimeSlotHandlers[timeSlot][frame + 0] = new sTimeSlotParam(Burst, 0);
                 Parameters.TimeSlotHandlers[timeSlot][frame + 1] = new sTimeSlotParam(Burst, 1);
                 Parameters.TimeSlotHandlers[timeSlot][frame + 2] = new sTimeSlotParam(Burst, 2);
@@ -358,12 +509,14 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                             Parameters.TimeSlotHandlers[0][block * 10 + 1] = new sTimeSlotParam(SCH, 0);
 
                             SDCCHBurst tmpSDCCH1 = new SDCCHBurst(L3, (block - 2) * 2);
+                            Parameters.UsedBursts.AddLast(tmpSDCCH1);
                             Parameters.TimeSlotHandlers[0][block * 10 + 2] = new sTimeSlotParam(tmpSDCCH1, 0);
                             Parameters.TimeSlotHandlers[0][block * 10 + 3] = new sTimeSlotParam(tmpSDCCH1, 1);
                             Parameters.TimeSlotHandlers[0][block * 10 + 4] = new sTimeSlotParam(tmpSDCCH1, 2);
                             Parameters.TimeSlotHandlers[0][block * 10 + 5] = new sTimeSlotParam(tmpSDCCH1, 3);
 
                             SDCCHBurst tmpSDCCH2 = new SDCCHBurst(L3, (block - 2) * 2 + 1);
+                            Parameters.UsedBursts.AddLast(tmpSDCCH2);
                             Parameters.TimeSlotHandlers[0][block * 10 + 6] = new sTimeSlotParam(tmpSDCCH2, 0);
                             Parameters.TimeSlotHandlers[0][block * 10 + 7] = new sTimeSlotParam(tmpSDCCH2, 1);
                             Parameters.TimeSlotHandlers[0][block * 10 + 8] = new sTimeSlotParam(tmpSDCCH2, 2);
@@ -377,12 +530,14 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                             Parameters.TimeSlotHandlers[0][block * 10 + 1] = new sTimeSlotParam(SCH, 0);
 
                             SACCHBurst tmpSACCH1 = new SACCHBurst(L3, "SACCH 0/2", 0);
+                            Parameters.UsedBursts.AddLast(tmpSACCH1);
                             Parameters.TimeSlotHandlers[0][block * 10 + 2] = new sTimeSlotParam(tmpSACCH1, 0);
                             Parameters.TimeSlotHandlers[0][block * 10 + 3] = new sTimeSlotParam(tmpSACCH1, 1);
                             Parameters.TimeSlotHandlers[0][block * 10 + 4] = new sTimeSlotParam(tmpSACCH1, 2);
                             Parameters.TimeSlotHandlers[0][block * 10 + 5] = new sTimeSlotParam(tmpSACCH1, 3);
 
                             SACCHBurst tmpSACCH2 = new SACCHBurst(L3, "SACCH 1/3", 1);
+                            Parameters.UsedBursts.AddLast(tmpSACCH2);
                             Parameters.TimeSlotHandlers[0][block * 10 + 6] = new sTimeSlotParam(tmpSACCH2, 0);
                             Parameters.TimeSlotHandlers[0][block * 10 + 7] = new sTimeSlotParam(tmpSACCH2, 1);
                             Parameters.TimeSlotHandlers[0][block * 10 + 8] = new sTimeSlotParam(tmpSACCH2, 2);
@@ -621,7 +776,15 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
                     /* only show L1 when one of L2/L3 has a message */
                     if (showL2 || showL3 || handler.StatusMessage != null)
+                    {
+                        AddMessage("   [L1] [ARFCN: " + Parameters.ARFCN + "] ");
+                        AddMessage("[MCC: " + Parameters.MCC + "] ");
+                        AddMessage("[MNC: " + Parameters.MNC + "] ");
+                        AddMessage("[LAC: " + Parameters.LAC + "] ");
+                        AddMessage("[CellID: " + Parameters.CellIdent + "] ");
+                        AddMessage(Environment.NewLine);
                         AddMessage("   [L1] [" + handler.Name + "] - [" + Parameters + "]" + Environment.NewLine);
+                    }
 
                     if (handler.StatusMessage != null)
                     {

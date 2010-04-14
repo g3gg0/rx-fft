@@ -102,6 +102,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DeviceControls\FileSourceDeviceControl.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DeviceControls\FileSourceDeviceControl.Designer.cs">
+      <DependentUpon>FileSourceDeviceControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="Dialogs\DemodulationDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -150,6 +156,9 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="DeviceControls\FileSourceDeviceControl.resx">
+      <DependentUpon>FileSourceDeviceControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Dialogs\DemodulationDialog.resx">
       <DependentUpon>DemodulationDialog.cs</DependentUpon>
       <SubType>Designer</SubType>

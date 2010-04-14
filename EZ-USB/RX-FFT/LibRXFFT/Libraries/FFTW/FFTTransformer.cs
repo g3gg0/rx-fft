@@ -75,6 +75,7 @@ namespace LibRXFFT.Libraries.FFTW
             VarsFFTW = new FFTServerVars<double>(FFTSize);
             VarsKISS = new FFTServerVars<float>(FFTSize);
 
+            /* try to use FFTW, fallback to KISS */
             try
             {
                 VarsFFTW.fplan = fftw.dft_1d(FFTSize, VarsFFTW.hinAddr, VarsFFTW.houtAddr, fftw_direction.Forward, fftw_flags.Estimate);

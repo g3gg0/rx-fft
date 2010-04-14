@@ -42,7 +42,7 @@ namespace GaussGenerator
             this.txtSequence = new System.Windows.Forms.TextBox();
             this.btnCreate = new System.Windows.Forms.Button();
             this.btnOpen = new System.Windows.Forms.Button();
-            this.waveformDisplay = new DirectXWaveformDisplayOld();
+            this.waveformDisplay = new DirectXWaveformDisplay();
             this.label3 = new System.Windows.Forms.Label();
             this.txtOversampling = new System.Windows.Forms.TextBox();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -179,7 +179,7 @@ namespace GaussGenerator
 
         #endregion
 
-        private DirectXWaveformDisplayOld waveformDisplay;
+        private DirectXWaveformDisplay waveformDisplay;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.Button btnCreate;
         private System.Windows.Forms.Button btnOpen;

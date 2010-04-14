@@ -66,6 +66,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
             if (ConvolutionalCoder.DecodeViterbi(burstBufferC, BurstBufferU) == null)
             {
                 ErrorMessage = "(FACCH: Error in ConvolutionalCoder, maybe encrypted)";
+                CryptedBursts++;
                 return eSuccessState.Unknown;
             }
 
@@ -83,6 +84,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
 
             /* convert u[] to d[] bytes */
             PackBytes();
+            DataBursts++;
 
             L2.Handle(this, L3, BurstBufferD);
 

@@ -21,6 +21,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
         {
             if (IsDummy(decodedBurst))
             {
+                DummyBursts++;
                 if (DumpRawData)
                     StatusMessage = "Dummy Burst";
                 return eSuccessState.Succeeded;
@@ -32,6 +33,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
             {
                 /* deinterleave the 4 bursts. the result is a 456 bit block. i[] to c[] */
                 Deinterleave();
+                DataBursts++;
 
                 if (!Deconvolution())
                 {

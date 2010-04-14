@@ -6,7 +6,7 @@ using System.Threading;
 using System.Windows.Forms;
 using SlimDX.Direct3D9;
 using Font = SlimDX.Direct3D9.Font;
-using Mutex = LibRXFFT.Libraries.Misc.TraceMutex;
+//using Mutex = LibRXFFT.Libraries.Misc.TraceMutex;
 using LibRXFFT.Components.DirectX.Drawables;
 using LibRXFFT.Components.DirectX.Drawables.Docks;
 using RX_FFT.Components.GDI;
@@ -665,7 +665,7 @@ namespace LibRXFFT.Components.DirectX
             SmallFont.DrawString(null, XLabelFromSampleNum(endPos), endPos + 10, 40, ColorFont.ToArgb());
         }
 
-        internal virtual void PrepareLinePoints()
+        public virtual void PrepareLinePoints()
         {
         }
 
@@ -686,7 +686,7 @@ namespace LibRXFFT.Components.DirectX
         }
 
 
-        internal virtual void Render()
+        public virtual void Render()
         {
             if (!DirectXAvailable)
             {
@@ -715,11 +715,10 @@ namespace LibRXFFT.Components.DirectX
                 return;
             }
 
+            DirectXLock.WaitOne();
             try
             {
-                DirectXLock.WaitOne();
                 Device.BeginScene();
-
                 RenderCore();
 
                 lock (Drawables)
@@ -739,17 +738,16 @@ namespace LibRXFFT.Components.DirectX
 
                 Device.EndScene();
                 Device.Present();
-                DirectXLock.ReleaseMutex();
             }
             catch (Direct3D9Exception e)
             {
                 DirectXAvailable = false;
-                DirectXLock.ReleaseMutex();
             }
             catch (Exception e)
             {
-                DirectXLock.ReleaseMutex();
             }
+
+            DirectXLock.ReleaseMutex();
         }
 
         protected virtual void RenderPlotVerts()

@@ -135,7 +135,7 @@ namespace LibRXFFT.Components.DirectX
             }
         }
 
-        internal override void PrepareLinePoints()
+        public override void PrepareLinePoints()
         {
             lock (SampleValues)
             {

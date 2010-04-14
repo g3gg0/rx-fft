@@ -29,11 +29,9 @@ namespace RX_FFT.Dialogs
             UpdateMarkerListInternal();
         }
 
-        delegate void delegateUpdateMarkerList();
-
         public void UpdateMarkerList()
         {
-            BeginInvoke(new delegateUpdateMarkerList(UpdateMarkerListInternal));
+            BeginInvoke(new Action(() => UpdateMarkerListInternal()));
         }
 
         private void UpdateMarkerListInternal()

@@ -438,7 +438,6 @@ namespace RX_FFT
             }
         }
 
-        delegate void setRateDelegate(double rate);
         void setRateTextbox(double rate)
         {
             samplingRateLabel.Text = FrequencyFormatter.FreqToStringAccurate(rate);
@@ -463,11 +462,12 @@ namespace RX_FFT
                 case eUserEvent.MousePosX:
                     {
                         double relative = FFTDisplay.RelativeCursorXPos;
-
+                        /*
                         if (Device != null && Device.InvertedSpectrum)
                         {
                             relative -= relative;
                         }
+                        */
 
                         DemodOptions.DemodulationDownmixer.TimeStep = relative * (2 * Math.PI);
                     }
@@ -841,7 +841,6 @@ namespace RX_FFT
 
         void FFTReadFunc()
         {
-
             try
             {
                 double lastRate = 0;
@@ -850,7 +849,6 @@ namespace RX_FFT
                 double[] inputQ;
 
                 DateTime lastStrengthUpdate = DateTime.Now;
-
 
                 int spectPart = 0;
                 //FFTDisplay.SpectParts = ScanFrequencies.Count;
@@ -943,7 +941,7 @@ namespace RX_FFT
 
                                         try
                                         {
-                                            this.BeginInvoke(new setRateDelegate(setRateTextbox), rate);
+                                            BeginInvoke(new Action(() => setRateTextbox(rate)));
                                         }
                                         catch (Exception)
                                         {
@@ -1010,10 +1008,17 @@ namespace RX_FFT
             }
         }
 
-
         private void OpenBO35Device()
         {
+            OpenBO35Device(true);
+        }
+
+        private void OpenBO35Device(bool useTuners)
+        {
             USBRXDeviceControl dev = new USBRXDeviceControl();
+
+            dev.UseBO35 = useTuners;
+            dev.UseMT2131 = useTuners;
 
             if (!dev.OpenTuner())
             {
@@ -1039,6 +1044,27 @@ namespace RX_FFT
             CurrentFrequency = dev.GetFrequency();
         }
 
+        public void OpenFileDevice()
+        {
+            FileSourceDeviceControl dev = new FileSourceDeviceControl();
+
+            if (!dev.Connected)
+            {
+                MessageBox.Show("Failed to open the device. Reason: " + dev.ErrorMessage);
+                return;
+            }
+
+            Device = dev;
+
+            dev.FrequencyChanged += new EventHandler(Device_FrequencyChanged);
+            dev.SamplingRateChanged += new EventHandler(Device_RateChanged);
+            dev.FilterWidthChanged += new EventHandler(Device_FilterWidthChanged);
+            dev.SamplesPerBlock = Math.Max(1, SamplesToAverage) * FFTSize;
+
+            StartThreads();
+
+            DeviceOpened = true;
+        }
 
         public void OpenSharedMem(int srcChan)
         {
@@ -1222,7 +1248,7 @@ namespace RX_FFT
                 StopThreads();
 
                 DeviceOpened = false;
-                Device = null;
+                // Device = null;
 
                 dev.CloseTuner();
 
@@ -1231,7 +1257,7 @@ namespace RX_FFT
                     if (dev.OpenTuner())
                     {
                         StartThreads();
-                        Device = oldDevice;
+                        //Device = oldDevice;
                         DeviceOpened = true;
                     }
                 }
@@ -1292,16 +1318,17 @@ namespace RX_FFT
 
         private void openBO35Menu_Click(object sender, EventArgs e)
         {
-            MT2131.DeviceTypeDisabled = false;
-            BO35.DeviceTypeDisabled = false;
-            OpenBO35Device();
+            OpenBO35Device(true);
         }
 
         private void openBO35PlainMenu_Click(object sender, EventArgs e)
         {
-            MT2131.DeviceTypeDisabled = true;
-            BO35.DeviceTypeDisabled = true;
-            OpenBO35Device();
+            OpenBO35Device(false);
+        }
+
+        private void openFileMenu_Click(object sender, EventArgs e)
+        {
+            OpenFileDevice();
         }
 
         private void openShMemMenu_Click(object sender, EventArgs e)

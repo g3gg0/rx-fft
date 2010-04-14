@@ -34,6 +34,15 @@ namespace RX_FFT.DeviceControls
 
         #region DeviceControl Member
 
+
+        public bool AllowsMultipleReaders
+        {
+            get
+            {
+                return true;
+            }
+        }
+
         public event EventHandler TransferModeChanged;
 
         public eTransferMode TransferMode

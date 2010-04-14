@@ -27,10 +27,26 @@ namespace RX_FFT.DeviceControls
         private double BoardAmplification = 0;
         private FilterInformation CurrentFilter;
 
+        
+        public bool UseBO35 = true;
+        public bool UseMT2131 = true;
+
+
+
         public USBRXDeviceControl()
         {
             InitializeComponent();
+
+            radioAcqOff.MouseUp += new MouseEventHandler(radioAcqOff_MouseUp);
             Hide();
+        }
+
+        void radioAcqOff_MouseUp(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+                USBRX.ShowConsole(true);
+            }
         }
 
         public int ShmemChannel
@@ -206,6 +222,8 @@ namespace RX_FFT.DeviceControls
             
             USBRX = new USBRXDevice();
             USBRX.ShowConsole(false);
+            USBRX.UseBO35 = UseBO35;
+            USBRX.UseMT2131 = UseMT2131;
 
             try
             {
@@ -473,6 +491,14 @@ namespace RX_FFT.DeviceControls
 
         }
 
+        public bool AllowsMultipleReaders
+        {
+            get
+            {
+                return true;
+            }
+        }
+
 
         public event EventHandler TransferModeChanged;
 
@@ -525,7 +551,6 @@ namespace RX_FFT.DeviceControls
             }
         }
 
-        delegate void setFreqDelegate(double freq);
         void SetFreqTextbox(double freq)
         {
             frequencySelector1.Frequency = (long)freq;
@@ -540,7 +565,7 @@ namespace RX_FFT.DeviceControls
                 CurrentFrequency = frequency;
                 if (!ScanFrequenciesEnabled)
                 {
-                    this.BeginInvoke(new setFreqDelegate(SetFreqTextbox), frequency);
+                    this.BeginInvoke(new Action(() => SetFreqTextbox(frequency)));
                 }
                 if (FrequencyChanged != null)
                     FrequencyChanged(this, null);
@@ -556,8 +581,6 @@ namespace RX_FFT.DeviceControls
                 return 0;
 
             return CurrentFrequency;
-
-            //return USBRX.Tuner.GetFrequency();
         }
 
         public bool InvertedSpectrum

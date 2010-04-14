@@ -43,17 +43,17 @@ namespace LibRXFFT.Libraries.Misc
             string[] scale = { "", "k", "M", "G", "T" };
             int fact = 0;
 
-            if (frequency > 0)
+            if (Math.Abs(frequency) > 0)
             {
                 /* get the highest scale without decimals */
-                while (frequency / 1000 == ((long)(frequency / 1000)))
+                while (Math.Abs(frequency) / 1000 == ((long)(Math.Abs(frequency) / 1000)))
                 {
                     frequency /= 1000;
                     fact++;
                 }
 
                 /* if still above 1000, choose the next higher scale */
-                if (frequency > 1000)
+                if (Math.Abs(frequency) > 1000)
                 {
                     frequency /= 1000;
                     fact++;
@@ -71,7 +71,6 @@ namespace LibRXFFT.Libraries.Misc
 
         public static string FreqToStringSimple(decimal frequency)
         {
-
             return String.Format("{0:0,000,000,000} Hz", frequency);
         }
 
@@ -104,6 +103,5 @@ namespace LibRXFFT.Libraries.Misc
 
             return String.Format("{0:0.##}", time) + " " + scale[fact] + "s";
         }
-
     }
 }

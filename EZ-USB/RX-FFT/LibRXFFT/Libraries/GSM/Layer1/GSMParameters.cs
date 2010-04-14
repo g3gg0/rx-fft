@@ -1,5 +1,7 @@
 ﻿using System;
 using LibRXFFT.Libraries.GSM.Layer1.Bursts;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace LibRXFFT.Libraries.GSM.Layer1
 {
@@ -31,22 +33,41 @@ namespace LibRXFFT.Libraries.GSM.Layer1
         public int[] SubChanAssignments;
     }
 
+    public struct sTimeslotReference
+    {
+        public long T1;
+        public long T2;
+        public long T3;
+
+        public static bool operator == (sTimeslotReference x, sTimeslotReference y)
+        {
+            return (x.T1 == y.T1) && (x.T2 == y.T2) && (x.T3 == y.T3);
+        }
+
+        public static bool operator != (sTimeslotReference x, sTimeslotReference y)
+        {
+            return (x.T1 != y.T1) || (x.T2 != y.T2) || (x.T3 != y.T3);
+        }
+    }
 
     public struct sTimeSlotParam
     {
         public readonly Burst Burst;
         public readonly int Sequence;
+        public sTimeslotReference Reference;
 
         public sTimeSlotParam(Burst burst, int seq)
         {
             Burst = burst;
             Sequence = seq;
+            Reference = new sTimeslotReference();
         }
     }
 
 
     public class GSMParameters
     {
+        public LinkedList<NormalBurst> UsedBursts = new LinkedList<NormalBurst>();
         public sTimeSlotParam[][] TimeSlotHandlers;
         public sTimeSlotInfo[] TimeSlotInfo;
 
@@ -103,9 +124,17 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
         public void Reset()
         {
+            State = eGSMState.Reset;
             TotalErrors = 0;
             TotalSuccess = 0;
-            State = eGSMState.Reset;
+            PhaseOffsetValue = 0;
+            FN = -1;
+            MNC = -1;
+            MCC = -1;
+            LAC = -1;
+            CellIdent = -1;
+
+            UsedBursts.Clear();
             TimeSlotInfo = new sTimeSlotInfo[8];
             TimeSlotHandlers = new sTimeSlotParam[8][];
         }
@@ -132,6 +161,12 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             Type 20  Not fixed  Not fixed
          */
 
+        public long ARFCN;
+        public long MNC;
+        public long MCC;
+        public long LAC;
+        public long CellIdent;
+        
         public long TC
         {
             get { return (FN / 51) % 8; }
@@ -191,13 +226,13 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
         public string GetTimeslotDetails()
         {
+            Hashtable handlers = new Hashtable();
             string retVal = "";
 
             retVal += "  ------------------------------------------------------------------------------------ - -  -  -" + Environment.NewLine;
             retVal += " | TS || Handlers (FC=FCCH, SC=SCH, BC=BCCH, CC=CCCH, SD=SDCCH, SA=SACCH, TC=TCH" + Environment.NewLine;
             retVal += " |----||------------------------------------------------------------------------------ - -  -  -" + Environment.NewLine;
-
-
+            
             lock (TimeSlotHandlers)
             {
                 for (int slot = 0; slot < 8; slot++)
@@ -233,9 +268,21 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             }
 
             retVal += "  ------------------------------------------------------------------------------------ - -  -  -" + Environment.NewLine;
+            retVal += Environment.NewLine;
+            retVal += "Handler details:" + Environment.NewLine;
+
+            ArrayList lines = new ArrayList();
+
+            foreach (NormalBurst burst in UsedBursts)
+            {
+                retVal += string.Format("  {0,12}:  [Data: {1,6}]  [Crypt: {2,6}]  [Dummy: {3,6}]   [{4}] - [{5}]" + Environment.NewLine, burst.Name, burst.DataBursts, burst.CryptedBursts, burst.DummyBursts, burst.AllocationTime, burst.Released?burst.ReleaseTime.ToString():"now");
+            }
+
+            retVal += Environment.NewLine;
 
             return retVal;
         }
+
         public string GetSlotUsage()
         {
             string retVal = "";
@@ -314,6 +361,8 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
             return retVal;
         }
+
+
 
 
 

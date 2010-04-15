@@ -67,6 +67,7 @@ namespace RX_FFT.DeviceControls
 
             e.Cancel = false;
             TransferMode = eTransferMode.Stopped;
+            Timer.Stop();
 
             if (DeviceDisappeared != null)
             {
@@ -269,7 +270,8 @@ namespace RX_FFT.DeviceControls
 
         public void CloseTuner()
         {
-            return;
+            TransferMode = eTransferMode.Stopped;
+            Timer.Stop();
         }
 
         public bool SetFrequency(long frequency)

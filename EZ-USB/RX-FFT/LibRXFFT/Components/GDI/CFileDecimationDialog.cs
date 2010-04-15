@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 
-namespace GSM_Analyzer
+namespace LibRXFFT.Components.GDI
 {
     public partial class CFileDecimationDialog : Form
     {
@@ -12,8 +12,7 @@ namespace GSM_Analyzer
             InitializeComponent();
 
             txtDecimation.Select();
-            txtDecimation.KeyPress += new KeyPressEventHandler(txtDecimation_KeyPress);
-                
+            txtDecimation.KeyPress += new KeyPressEventHandler(txtDecimation_KeyPress);                
         }
 
         public void EstimateDecimation(string fileName)
@@ -39,8 +38,11 @@ namespace GSM_Analyzer
 
         void txtDecimation_KeyPress(object sender, KeyPressEventArgs e)
         {
+            e.Handled = true;
             if (e.KeyChar == 0x0d)
+            {
                 Close();
+            }
         }
 
         private void btnOk_Click(object sender, EventArgs e)

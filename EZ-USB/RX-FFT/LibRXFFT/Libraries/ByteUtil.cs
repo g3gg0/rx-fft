@@ -313,7 +313,8 @@ namespace LibRXFFT.Libraries
         {
             Direct16BitIQFixedPoint = 0,
             Direct64BitIQFloat = 1,
-            Direct64BitIQFloat64k = 2
+            Direct64BitIQFloat64k = 2,
+            Unknown = 3
         }
         
         public static void SamplesFromBinary(byte[] dataBuffer, double[] samplesI, double[] samplesQ, eSampleFormat dataFormat, bool InvertedSpectrum)

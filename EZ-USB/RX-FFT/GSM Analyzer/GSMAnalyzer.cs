@@ -422,7 +422,7 @@ namespace GSM_Analyzer
 
             if (dlg.ShowDialog() == DialogResult.OK)
             {
-                Source = new USRPSampleSource(dlg.FileName, InternalOversampling);
+                Source = new FileSampleSource(dlg.FileName, InternalOversampling);
 
                 txtLog.Clear();
                 ThreadActive = true;

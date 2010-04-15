@@ -87,7 +87,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         {
             try
             {
-                ShowConsole(true);
+                //ShowConsole(true);
 
                 Tuner mainTuner = null;
                 long stepSize = 0;

@@ -14,6 +14,7 @@ namespace LibRXFFT.Components.GDI
         public long CurrentFrequency = 0;
 
         public event EventHandler FrequencyChanged;
+        public event EventHandler EnterPresed;
 
         public FrequencySelector()
             : base()
@@ -45,8 +46,12 @@ namespace LibRXFFT.Components.GDI
                 {
                     ForeColor = Color.Red;
                 }
+
                 if (FrequencyChanged != null)
                     FrequencyChanged(this, null);
+
+                if (EnterPresed != null)
+                    EnterPresed(this, null);
 
                 e.Handled = true;
             }
@@ -202,7 +207,11 @@ namespace LibRXFFT.Components.GDI
             }
         }
 
-
+        public bool FixedLengthString
+        {
+            get;
+            set;
+        }
 
         public long Frequency
         {
@@ -215,7 +224,14 @@ namespace LibRXFFT.Components.GDI
             }
             set
             {
-                Text = FrequencyFormatter.FreqToStringSimple(value);
+                if (FixedLengthString)
+                {
+                    Text = FrequencyFormatter.FreqToStringSimple(value);
+                }
+                else
+                {
+                    Text = FrequencyFormatter.FreqToStringAccurate(value);
+                }
                 ParseFrequency();
             }
         }

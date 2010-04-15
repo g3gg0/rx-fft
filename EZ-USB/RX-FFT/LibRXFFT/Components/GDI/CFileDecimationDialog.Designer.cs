@@ -1,4 +1,4 @@
-﻿namespace GSM_Analyzer
+﻿namespace LibRXFFT.Components.GDI
 {
     partial class CFileDecimationDialog
     {

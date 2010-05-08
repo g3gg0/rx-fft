@@ -3,6 +3,7 @@ using System.Collections;
 using System.Text;
 using LibRXFFT.Libraries.SignalProcessing;
 using RX_FFT.Components.GDI;
+using DemodulatorCollection.Interfaces;
 
 /* 
  * Pulse keying demodulator 
@@ -14,7 +15,7 @@ using RX_FFT.Components.GDI;
  * |   Inactive    |     Active    |
  * 
  */
-namespace DemodulatorCollection
+namespace DemodulatorCollection.Demodulators
 {
     public class PKDemodulator : DigitalDemodulator
     {
@@ -28,6 +29,7 @@ namespace DemodulatorCollection
         public int MinDbDistance = 8;
         public int MinBitLength = 10;
         public double _SamplingRate = 0;
+        public BitClockSink BitSink { get; set; }
 
         private int SignalStrengthUpdateRate = 100000000;
         private int NoiseFloorUpdateRate = 100000;

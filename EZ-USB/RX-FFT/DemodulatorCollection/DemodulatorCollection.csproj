@@ -47,6 +47,14 @@
     <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="lua51, Version=0.0.0.0, Culture=neutral, PublicKeyToken=1e1fb15b02227b8a, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>.\lua51.dll</HintPath>
+    </Reference>
+    <Reference Include="LuaInterface, Version=2.0.0.16708, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>.\LuaInterface.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -64,18 +72,23 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ASKDemodulator.cs" />
-    <Compile Include="BitClockSink.cs" />
+    <Compile Include="BitClockSinks\BiphaseDecoder.cs" />
+    <Compile Include="BitClockSinks\ScriptableSink.cs" />
+    <Compile Include="Demodulators\ASKDemodulator.cs" />
+    <Compile Include="Demodulators\GMSKDemodulator.cs" />
+    <Compile Include="Demodulators\ScriptableDemodulator.cs" />
+    <Compile Include="Interfaces\BitClockSink.cs" />
     <Compile Include="DemodulatorDialog.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="DemodulatorDialog.Designer.cs">
       <DependentUpon>DemodulatorDialog.cs</DependentUpon>
     </Compile>
-    <Compile Include="DigitalDemodulator.cs" />
-    <Compile Include="PKDemodulator.cs" />
-    <Compile Include="PDDemodulator.cs" />
-    <Compile Include="POCSAGDecoder.cs" />
+    <Compile Include="Interfaces\DigitalDemodulator.cs" />
+    <Compile Include="Demodulators\PKDemodulator.cs" />
+    <Compile Include="Demodulators\PDDemodulator.cs" />
+    <Compile Include="BitClockSinks\POCSAGDecoder.cs" />
+    <Compile Include="LuaHelpers.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="DemodulatorDialog.resx">
@@ -101,7 +114,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Compile Include="PSKDemodulator.cs" />
+    <Compile Include="Demodulators\PSKDemodulator.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\LibRXFFT\LibRXFFT.csproj">

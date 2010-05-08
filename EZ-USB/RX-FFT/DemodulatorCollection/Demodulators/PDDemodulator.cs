@@ -3,11 +3,12 @@ using System.Collections;
 using System.Text;
 using LibRXFFT.Libraries.SignalProcessing;
 using RX_FFT.Components.GDI;
+using DemodulatorCollection.Interfaces;
 
 /* 
  * Pulse distance demodulator 
  */
-namespace DemodulatorCollection
+namespace DemodulatorCollection.Demodulators
 {
     public class PDDemodulator : DigitalDemodulator
     {
@@ -21,6 +22,7 @@ namespace DemodulatorCollection
         public int MinDbDistance = 8;
         public int MinBitLength = 10;
         public double _SamplingRate = 0;
+        public BitClockSink BitSink { get; set; }
 
         private int SignalStrengthUpdateRate = 100000000;
         private int NoiseFloorUpdateRate = 100000;
@@ -218,6 +220,10 @@ namespace DemodulatorCollection
 
                     if (!Transmission)
                     {
+                        if (BitSink != null)
+                        {
+                            BitSink.TransmissionStart();
+                        }
                         //Log.AddMessage("Transmission Start");
                         Transmission = true;
                         FirstTransmission = true;
@@ -252,6 +258,10 @@ namespace DemodulatorCollection
                     if (diffToLastActive > DelayEnd)
                     {
                         //Log.AddMessage("Transmission STOP");
+                        if (BitSink != null)
+                        {
+                            BitSink.TransmissionEnd();
+                        }
                         Transmission = false;
                         DumpBits();
                     }
@@ -273,10 +283,18 @@ namespace DemodulatorCollection
                         }
                         else if (diffToLastActive > DelayLongBit)
                         {
+                            if (BitSink != null)
+                            {
+                                BitSink.ClockBit(true);
+                            }
                             Bits.Add(true);
                         }
                         else if (diffToLastActive > DelayShortBit)
                         {
+                            if (BitSink != null)
+                            {
+                                BitSink.ClockBit(false);
+                            }
                             Bits.Add(false);
                         }
                     }

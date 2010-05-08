@@ -3,18 +3,10 @@ using System.Collections;
 using System.Text;
 using LibRXFFT.Libraries.SignalProcessing;
 using RX_FFT.Components.GDI;
+using DemodulatorCollection.Interfaces;
 
-/* 
- * Pulse keying demodulator 
- *      ______      ___         ___
- *     |      |    |   |       |   |   
- * ____|      |____|   |_______|   |__ _ _
- * |<------------->|<------------->|      Constant symbol length
- * |               |               |
- * |   Inactive    |     Active    |
- * 
- */
-namespace DemodulatorCollection
+
+namespace DemodulatorCollection.Demodulators
 {
     public class ASKDemodulator : DigitalDemodulator
     {
@@ -32,9 +24,14 @@ namespace DemodulatorCollection
         private static string Desc4 = "|              |______________|       ";
         private static string Desc5 = "|<------------>|<------------>|       ";
 
+        public int BaudRate = 1200;
         public int MinDbDistance = 10;
         public int MinBitLength = 10;
         public double _SamplingRate = 0;
+        public BitClockSink BitSink { get; set; }
+
+        public bool BitTimeLocked = false;
+        public bool SignalStrengthLocked = false;
 
         private int SignalStrengthUpdateRate = 100000000;
         private int NoiseFloorUpdateRate = 100000;
@@ -58,8 +55,7 @@ namespace DemodulatorCollection
         private bool TransmissionFirstSample = false;
 
         private bool Initialized = false;
-        private eLearningState Learning = eLearningState.Idle;
-        private bool BitTimeLocked = false;
+        private eLearningState State = eLearningState.Idle;
         private bool EnableAGC = true;
 
         private int LearnBits = 0;
@@ -91,10 +87,12 @@ namespace DemodulatorCollection
             {
                 if (SamplingRate != value)
                 {
-                    Log.AddMessage("Initializing Demodulator");
+                    Log.AddMessage("ASKDemodulator", "Initializing Demodulator");
+                    _SamplingRate = value;
                     Init();
                 }
-                _SamplingRate = value;
+
+                SymbolDistance = (long)(value / BaudRate);
             }
         }
 
@@ -123,7 +121,6 @@ namespace DemodulatorCollection
 
         public void Init()
         {
-            Learning = eLearningState.BackgroundNoise;
             BitTimeLocked = false;
             TransmittingSamplesMax = 0;
             NoiseFloor = 0;
@@ -138,7 +135,15 @@ namespace DemodulatorCollection
 
             Initialized = true;
 
-            Log.AddMessage("Enter learning mode...");
+            if (SamplingRate == 0)
+            {
+                Log.AddMessage("ASKDemodulator", "Idle");
+                State = eLearningState.Idle;
+                return;
+            }
+
+            State = eLearningState.BackgroundNoise;
+            Log.AddMessage("ASKDemodulator", "Enter background noise learning mode...");
         }
 
         public void Process(double iValue, double qValue)
@@ -156,7 +161,7 @@ namespace DemodulatorCollection
                 SignalStrength = (SignalStrength * SignalStrengthUpdateRate) / (SignalStrengthUpdateRate + 1);
             }
 
-            switch (Learning)
+            switch (State)
             {
                 case eLearningState.Idle:
                     break;
@@ -165,8 +170,16 @@ namespace DemodulatorCollection
                     NoiseFloor = Math.Max(sampleValue, NoiseFloor);
                     if (SampleNum > SamplingRate)
                     {
-                        Log.AddMessage("Learned Noise. Please start transmission now.");
-                        Learning = eLearningState.SignalStrength;
+                        Log.AddMessage("Learned noise level. You may start transmission now.");
+                        if (!SignalStrengthLocked)
+                        {
+                            State = eLearningState.SignalStrength;
+                        }
+                        else
+                        {
+                            SignalStrength = DBTools.SampleFromdB(DBTools.SampleTodB(NoiseFloor) + MinDbDistance);
+                            State = eLearningState.BitTiming;
+                        }
                     }
                     break;
 
@@ -184,7 +197,7 @@ namespace DemodulatorCollection
                         if (LearnBits > 3)
                         {
                             LearnedPower();
-                            Learning = eLearningState.BitTiming;
+                            State = eLearningState.BitTiming;
                         }
                         else
                         {
@@ -210,11 +223,10 @@ namespace DemodulatorCollection
                     break;
 
                 case eLearningState.BitTiming:
-                    Learning = eLearningState.Done;
+                    State = eLearningState.Done;
                     break;
 
                 case eLearningState.Done:
-
                     bool transmitting = false;
                     if (sampleValue > DecisionValue)
                     {
@@ -260,7 +272,12 @@ namespace DemodulatorCollection
                     {
                         if (TransmissionFirstSample)
                         {
-                            DumpBits();
+
+                            if (BitSink != null)
+                            {
+                                BitSink.TransmissionStart();
+                            }
+                            //DumpBits();
                             LastBitSample = SampleNum;
                             ConsecutiveZeros = 0;
                             TransmissionFirstSample = false;
@@ -272,23 +289,32 @@ namespace DemodulatorCollection
                             {
                                 NextSamplePoint = SampleNum + SymbolDistance;
                                 //Log.AddMessage("Bit: " + (transmitting ? "1" : "0") + " at " + SampleNum);
-                                Bits.Add(transmitting);
+                                if (BitSink != null)
+                                {
+                                    BitSink.ClockBit(transmitting);
+                                }
+                                //Bits.Add(transmitting);
 
                                 if (!transmitting)
                                 {
                                     if (++ConsecutiveZeros > 7)
                                     {
+                                        Transmission = false;
+
                                         if (!BitTimeLocked)
                                         {
                                             BitTimeLocked = true;
-                                            Transmission = false;
                                             LearnedTiming();
-                                            Bits.Clear();
+                                            //Bits.Clear();
                                         }
                                         else
                                         {
-                                            Transmission = false;
-                                            DumpBits();
+                                            //DumpBits();
+                                        }
+
+                                        if (BitSink != null)
+                                        {
+                                            BitSink.TransmissionEnd();
                                         }
                                         return;
                                     }
@@ -318,7 +344,7 @@ namespace DemodulatorCollection
 
             msg.Length = 0;
             msg.Append(Desc5);
-            msg.Append(string.Format("{0,3} samples, {1:0.###} µs", SymbolDistance, (SymbolDistance / SamplingRate) * 1000000));
+            msg.Append(string.Format("{0,3} samples, {1:0.###} µs, Baud rate: {2:0}", SymbolDistance, (SymbolDistance / SamplingRate) * 1000000, 1.0 / ((SymbolDistance / SamplingRate))));
             Log.AddMessage(msg.ToString());
             Log.AddMessage("");
         }

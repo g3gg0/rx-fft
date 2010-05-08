@@ -517,7 +517,7 @@ namespace LibRXFFT.Components.DirectX
             const int bytePerSample = 2;
             const int channels = 2;
 
-            if (FFTDisplay.EnoughData)
+            if (FFTDisplay.EnoughData && WaterfallDisplay.EnoughData)
                 return;
 
             lock (FFTLock)
@@ -553,7 +553,8 @@ namespace LibRXFFT.Components.DirectX
         {
             FpsBlocksReceived++;
 
-            if (FFTDisplay.EnoughData || WaterfallDisplay.EnoughData)
+            /* TODO: waterfall display sometimes holds "EnoughData" and doesnt reset */
+            if (FFTDisplay.EnoughData && WaterfallDisplay.EnoughData)
                 return;
             
             FpsBlocksProcessed++;

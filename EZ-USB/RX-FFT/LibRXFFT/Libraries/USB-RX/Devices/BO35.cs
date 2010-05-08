@@ -39,7 +39,6 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                 {
                     Power = true;
                 }
-
             }
             catch (ArgumentException e)
             {
@@ -122,6 +121,27 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             }
         }
 
+        public double PingDelay
+        {
+            get
+            {
+                int tries = 100;
+                double avgDelay = 0;
+
+                /* Datasheet says, send empty command, read empty answer several times */
+                for (int num = 0; num < tries; num++)
+                {
+                    Send("");
+                    if (Receive() != "")
+                    {
+                        return 0;
+                    }
+                    avgDelay += TransmitDuration;
+                }
+
+                return avgDelay / tries;
+            }
+        }
 
         #region Communication abstraction
 
@@ -232,7 +252,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                 return "BO-35 " + FrequencyFormatter.FreqToString(FilterWidth) + " hard limit";
             }
         }
-        public override bool InvertedSpectrum { get { return GetFrequency() < 3000000000; } }
+        public override bool InvertedSpectrum { get { return GetFrequency() > 3000000000; } }
 
         public override string[] Name
         {
@@ -244,7 +264,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         }
         public override string[] Details
         {
-            get { return new[] { "Version: " + SystemVersion }; }
+            get { return new[] { "Version: " + SystemVersion, "Ping delay: " + PingDelay }; }
         }
 
         public override long LowestFrequency { get { return 10000; } }

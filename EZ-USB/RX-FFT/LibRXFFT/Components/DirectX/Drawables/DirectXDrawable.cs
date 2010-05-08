@@ -45,10 +45,50 @@ namespace LibRXFFT.Components.DirectX.Drawables
 
     public class DirectXDrawable : DirectXDrawBase
     {
-        public virtual int AbsoluteHeight { get; set; }
-        public virtual int AbsoluteWidth { get; set; }
-        public virtual int AbsoluteXPosition { get; set; }
-        public virtual int AbsoluteYPosition { get; set; }
+        public virtual int AbsoluteHeight 
+        {
+            get
+            {
+                return (int)(MainPlot.DirectXHeight * Height);
+            }
+            set
+            {
+                Height = (double)value / MainPlot.DirectXHeight;
+            }
+        }
+        public virtual int AbsoluteWidth 
+        {
+            get
+            {
+                return (int)(MainPlot.DirectXWidth * Width);
+            }
+            set
+            {
+                Width = (double)value / MainPlot.DirectXWidth;
+            }
+        }
+        public virtual int AbsoluteXPosition
+        {
+            get
+            {
+                return (int)(MainPlot.DirectXWidth * XPosition);
+            }
+            set
+            {
+                XPosition = (double)value / MainPlot.DirectXWidth;
+            }
+        }
+        public virtual int AbsoluteYPosition
+        {
+            get
+            {
+                return (int)(MainPlot.DirectXHeight * YPosition);
+            }
+            set
+            {
+                YPosition = (double)value / MainPlot.DirectXHeight;
+            }
+        }
 
         private double _Width = 0;
         public virtual double Width
@@ -60,7 +100,6 @@ namespace LibRXFFT.Components.DirectX.Drawables
 
             set
             {
-                AbsoluteWidth = (int)(MainPlot.DirectXWidth * value);
                 _Width = value;
                 PositionUpdated = true;
             }
@@ -75,7 +114,6 @@ namespace LibRXFFT.Components.DirectX.Drawables
 
             set
             {
-                AbsoluteHeight = (int)(MainPlot.DirectXHeight * value);
                 _Height = value;
                 PositionUpdated = true;
             }
@@ -90,7 +128,6 @@ namespace LibRXFFT.Components.DirectX.Drawables
 
             set
             {
-                AbsoluteXPosition = (int)(MainPlot.DirectXWidth * value);
                 _XPosition = value;
                 PositionUpdated = true;
             }
@@ -105,7 +142,6 @@ namespace LibRXFFT.Components.DirectX.Drawables
 
             set
             {
-                AbsoluteYPosition = (int)(MainPlot.DirectXHeight * value);
                 _YPosition = value;
                 PositionUpdated = true;
             }

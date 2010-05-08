@@ -46,7 +46,7 @@ namespace LibRXFFT.Libraries
             }
             catch (Exception e)
             {
-                Console.WriteLine("Exception: " + e);
+                //Console.WriteLine("Exception: " + e);
             }
         }
 

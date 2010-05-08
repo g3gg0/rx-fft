@@ -189,7 +189,7 @@ namespace LibRXFFT.Components.DirectX
                     SlavePlot.Render();
                 Render();
 
-                Thread.Sleep(1000/60);
+                Thread.Sleep((int)(1000 / DefaultRefreshRate));
             }
         }
     }

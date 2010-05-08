@@ -68,7 +68,7 @@
             for (uint pos = 0; pos < dump.Length; pos++)
             {
                 newDump.Data[2 * pos] = (byte)(dump.Data[pos] & 0xFF);
-                newDump.Data[2 * pos + 1] = (byte)(dump.Data[pos] << 8);
+                newDump.Data[2 * pos + 1] = (byte)(dump.Data[pos] >> 8);
             }
 
             return newDump;

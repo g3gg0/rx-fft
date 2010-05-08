@@ -50,6 +50,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         public event EventHandler InvertedSpectrumChanged;
         public event EventHandler DeviceDisappeared;
         public event EventHandler FilterWidthChanged;
+        public event EventHandler DeviceClosed;
 
         public bool OpenTuner()
         {

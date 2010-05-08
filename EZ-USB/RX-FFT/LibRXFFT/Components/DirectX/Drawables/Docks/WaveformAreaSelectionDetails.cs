@@ -1,4 +1,6 @@
-﻿using System;
+﻿
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,12 +11,12 @@ using LibRXFFT.Libraries.Misc;
 
 namespace LibRXFFT.Components.DirectX.Drawables.Docks
 {
-    public class FFTAreaSelectionDetails : Dock
+    public class WaveformAreaSelectionDetails : Dock
     {
         public Color4 TextColor = Color.Cyan;
         public Color4 ShadowColor = Color.Black;
 
-        protected FFTAreaSelection Selection;
+        protected WaveformAreaSelection Selection;
 
         protected bool DataUpdated = false;
         protected SlimDX.Direct3D9.Font DisplayFontNormal;
@@ -30,7 +32,7 @@ namespace LibRXFFT.Components.DirectX.Drawables.Docks
 
 
 
-        public FFTAreaSelectionDetails(FFTAreaSelection selection, DockPanel panel)
+        public WaveformAreaSelectionDetails(WaveformAreaSelection selection, DockPanel panel)
             : base(panel)
         {
             Title = "Selection";
@@ -112,13 +114,13 @@ namespace LibRXFFT.Components.DirectX.Drawables.Docks
             TextRect.Y += FontSizeRect.Height;
             TextShadowRect.Y += FontSizeRect.Height;
 
-            text = "  from " + FrequencyFormatter.FreqToStringAccurate(Selection.FreqStart);
+            text = "  from " + FrequencyFormatter.TimeToString(Selection.SelectionStart);
             DisplayFontNormal.DrawString(null, text, TextShadowRect, DrawTextFormat.Left | DrawTextFormat.Top, (int)ShadowColor);
             DisplayFontNormal.DrawString(null, text, TextRect, DrawTextFormat.Left | DrawTextFormat.Top, (int)TextColor);
             TextRect.Y += FontSizeRect.Height;
             TextShadowRect.Y += FontSizeRect.Height;
 
-            text = "    to " + FrequencyFormatter.FreqToStringAccurate(Selection.FreqEnd);
+            text = "    to " + FrequencyFormatter.TimeToString(Selection.SelectionEnd);
             DisplayFontNormal.DrawString(null, text, TextShadowRect, DrawTextFormat.Left | DrawTextFormat.Top, (int)ShadowColor);
             DisplayFontNormal.DrawString(null, text, TextRect, DrawTextFormat.Left | DrawTextFormat.Top, (int)TextColor);
             TextRect.Y += FontSizeRect.Height;
@@ -130,11 +132,24 @@ namespace LibRXFFT.Components.DirectX.Drawables.Docks
             TextRect.Y += FontSizeRect.Height;
             TextShadowRect.Y += FontSizeRect.Height;
 
-            text = "       " + FrequencyFormatter.FreqToStringAccurate(Selection.FreqWidth);
+            text = "       " + FrequencyFormatter.TimeToString(Selection.SelectionWidth);
             DisplayFontNormal.DrawString(null, text, TextShadowRect, DrawTextFormat.Left | DrawTextFormat.Top, (int)ShadowColor);
             DisplayFontNormal.DrawString(null, text, TextRect, DrawTextFormat.Left | DrawTextFormat.Top, (int)TextColor);
             TextRect.Y += FontSizeRect.Height;
             TextShadowRect.Y += FontSizeRect.Height;
+
+            text = "Information: ";
+            DisplayFontBold.DrawString(null, text, TextShadowRect, DrawTextFormat.Left | DrawTextFormat.Top, (int)ShadowColor);
+            DisplayFontBold.DrawString(null, text, TextRect, DrawTextFormat.Left | DrawTextFormat.Top, (int)TextColor);
+            TextRect.Y += FontSizeRect.Height;
+            TextShadowRect.Y += FontSizeRect.Height;
+
+            text = "       " + String.Format("{0:0.##} Hz", 1/Selection.SelectionWidth);
+            DisplayFontNormal.DrawString(null, text, TextShadowRect, DrawTextFormat.Left | DrawTextFormat.Top, (int)ShadowColor);
+            DisplayFontNormal.DrawString(null, text, TextRect, DrawTextFormat.Left | DrawTextFormat.Top, (int)TextColor);
+            TextRect.Y += FontSizeRect.Height;
+            TextShadowRect.Y += FontSizeRect.Height;
+
         }
     }
 }

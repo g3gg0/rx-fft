@@ -83,7 +83,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
 
         internal bool Deconvolution()
         {
-            return ConvolutionalCoder.DecodeViterbi(BurstBufferC, BurstBufferU) != null;
+            return ConvolutionalCoder.Decode(BurstBufferC, BurstBufferU) != null;
         }
 
         internal eCRCState CRCCheck()

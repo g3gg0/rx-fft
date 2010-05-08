@@ -77,6 +77,9 @@ namespace LibRXFFT.Libraries.GSM.Layer1.GMSK
                  * too much CPU power. 
                  * thats okay since the strength is just used qualitative.
                  * the *exact* value doesnt matter.
+                 * 
+                 * wrong - using strength for power display...
+                 * but we are doing sqrt there
                  */
                 double strength = (I * I + Q * Q);
                 double phase;

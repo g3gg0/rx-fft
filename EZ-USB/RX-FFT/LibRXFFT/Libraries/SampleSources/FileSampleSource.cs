@@ -6,16 +6,8 @@ namespace LibRXFFT.Libraries.SampleSources
 {
     public class FileSampleSource : SampleSource
     {
-        public enum eFileType
-        {
-            Unknown,
-            WAV,
-            RawIQ,
-            CFile
-        }
-
         private byte[] InBuffer;
-        private FileStream InputStream;
+        private WaveFileReader InputStream;
 
         public FileSampleSource(string fileName) : this(fileName, 1) { }
 
@@ -26,7 +18,6 @@ namespace LibRXFFT.Libraries.SampleSources
             switch (EstimateType(fileName))
             {
                 case eFileType.CFile:
-
                     /* USRP has an inverted spectrum */
                     InvertedSpectrum = true;
 
@@ -43,10 +34,11 @@ namespace LibRXFFT.Libraries.SampleSources
                     }
 
                     InputSamplingRate = 64000000d / dec.Decimation;
+                    InputStream = new WaveFileReader(fileName, eFileType.CFile);
+
                     break;
 
                 case eFileType.RawIQ:
-
                     InvertedSpectrum = false;
 
                     FileFormatDialog dlg = new FileFormatDialog();
@@ -56,18 +48,26 @@ namespace LibRXFFT.Libraries.SampleSources
 
                     InputSamplingRate = dlg.SamplingRate;
                     DataFormat = dlg.SampleFormat;
+                    InputStream = new WaveFileReader(fileName, eFileType.RawIQ);
 
                     break;
 
                 case eFileType.WAV:
+                    InputStream = new WaveFileReader(fileName, eFileType.WAV);
+                    InputSamplingRate = InputStream.SamplingRate;
+                    DataFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPoint;
                     break;
 
                 case eFileType.Unknown:
-                    break;
+                    return;
             }
 
+        }
+
+        protected override void AllocateBuffers()
+        {
             InBuffer = new byte[SamplesPerBlock * BytesPerSamplePair];
-            InputStream = new FileStream(fileName, FileMode.Open);            
+            base.AllocateBuffers();
         }
 
         private static eFileType EstimateType(string name)
@@ -87,6 +87,7 @@ namespace LibRXFFT.Libraries.SampleSources
         public override void Close()
         {
             InputStream.Close();
+            base.Close();
         }
 
         public override bool Restart()
@@ -108,7 +109,7 @@ namespace LibRXFFT.Libraries.SampleSources
 
         public void Seek(double pos)
         {
-            long offset = (long)(pos * InputStream.Length);
+            int offset = (int)(pos * InputStream.Length);
 
             InputStream.Seek(offset - (offset % BytesPerSamplePair), SeekOrigin.Begin);
         }

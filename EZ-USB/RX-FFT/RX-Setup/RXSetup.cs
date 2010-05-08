@@ -6,31 +6,56 @@ using LibRXFFT.Libraries.USB_RX.Misc;
 using RX_FFT.Components.GDI;
 using System.Threading;
 using LibRXFFT.Libraries.Timers;
+using System.IO;
 
 namespace RX_Setup
 {
     public partial class RXSetup : Form
     {
-        USBRXDevice Device;
+        private DateTime TestStartTime = DateTime.Now;
+        private long TotalTransfers = 0;
+        private Thread StatsThread;
+        private USBRXDevice Device;
+
+        private double TransfersPerSecond = 0.0f;
 
         public RXSetup()
         {
             InitializeComponent();
             Log.Init();
+
+            StatsThread = new Thread(() =>
+            {
+                while (true)
+                {
+                    Thread.Sleep(100);
+
+                    TransfersPerSecond = (TotalTransfers / (DateTime.Now - TestStartTime).TotalMilliseconds) * 1000;
+                    BeginInvoke(new Action(() => lblStats.Text = "Transfers/s: " + TransfersPerSecond.ToString("0.00")));
+                }
+            });
+            StatsThread.Start();
         }
 
         protected override void OnClosing(CancelEventArgs e)
         {
+            if (WorkerThread != null)
+            {
+                WorkerThread.Abort();
+                WorkerThread = null;
+            }
+
             if (Device != null)
             {
                 if (Device.AtmelProgrammer != null)
                 {
-                    Device.AtmelProgrammer.leaveProgrammingMode();
+                    Device.AtmelProgrammer.SetProgrammingMode(false);
                 }
                 Device.Close();
                 Device = null;
             }
 
+            StatsThread.Abort();
             base.OnClosing(e);
         }
 
@@ -42,7 +67,7 @@ namespace RX_Setup
 
                 Device = new USBRXDevice();
                 Device.ShowConsole(true);
-                Device.I2CRetries = 0;
+                Device.TunerCombination = USBRXDevice.eCombinationType.None;
 
                 if (!Device.Init())
                 {
@@ -51,17 +76,20 @@ namespace RX_Setup
                 }
                 else
                 {
+                    Device.I2CSleep = 0;
+                    Device.I2CRetries = 0;
+                    Device.I2CSetTimeout(1, 0);
                     btnConnect.Text = "Disconnect";
                 }
             }
             else
             {
                 AbortStressTest = true;
-                if (TestThread != null)
+                if (WorkerThread != null)
                 {
-                    TestThread.Abort();
-                    TestThread.Join(50);
-                    TestThread = null;
+                    WorkerThread.Abort();
+                    WorkerThread.Join(50);
+                    WorkerThread = null;
                 }
 
                 Device.Close();
@@ -95,35 +123,33 @@ namespace RX_Setup
             try
             {
                 Log.AddMessage("Programming mode...");
-                if (!Device.AtmelProgrammer.enterProgrammingMode())
+                if (!Device.AtmelProgrammer.SetProgrammingMode(true))
                 {
                     Log.AddMessage("Programming mode failed");
-                    return;
                 }
-                Log.AddMessage("  Device Name:  " + Device.AtmelProgrammer.DeviceName);
+                else
+                {
+                    Log.AddMessage("  Device Name:  " + Device.AtmelProgrammer.DeviceName);
 
-                Log.AddMessage("  Vendor:  " + string.Format("{0:x4}", Device.AtmelProgrammer.readDeviceVendorCode()));
-                Log.AddMessage("  Family:  " + string.Format("{0:x4}", Device.AtmelProgrammer.readDeviceFamilyCode()));
-                Log.AddMessage("  Part No: " + string.Format("{0:x4}", Device.AtmelProgrammer.readDevicePartNumberCode()));
+                    Log.AddMessage("  Vendor:  " + string.Format("{0:x4}", Device.AtmelProgrammer.VendorCode));
+                    Log.AddMessage("  Family:  " + string.Format("{0:x4}", Device.AtmelProgrammer.FamilyCode));
+                    Log.AddMessage("  Part No: " + string.Format("{0:x4}", Device.AtmelProgrammer.PartNumberCode));
 
-                Log.AddMessage("  Fuses:   " + string.Format("{0:x4}", Device.AtmelProgrammer.readFuseBits()));
-                Log.AddMessage("  XFuses:  " + string.Format("{0:x4}", Device.AtmelProgrammer.readXFuseBits()));
-                Log.AddMessage("  Locks:   " + string.Format("{0:x4}", Device.AtmelProgrammer.readLockBits()));
-
-                if (!Device.AtmelProgrammer.leaveProgrammingMode())
+                    Log.AddMessage("  Fuses:   " + string.Format("{0:x4}", Device.AtmelProgrammer.FuseBits));
+                    Log.AddMessage("  XFuses:  " + string.Format("{0:x4}", Device.AtmelProgrammer.XFuseBits));
+                    Log.AddMessage("  Locks:   " + string.Format("{0:x4}", Device.AtmelProgrammer.LockBits));
+                }
+                if (!Device.AtmelProgrammer.SetProgrammingMode(false))
                 {
                     Log.AddMessage("Normal mode failed");
-                    return;
                 }
 
-                Thread.Sleep(750);
+                Thread.Sleep(800);
                 Log.AddMessage("");
                 Log.AddMessage("Normal mode...");
                 Log.AddMessage("  Atmel Serial: " + Device.Atmel.SerialNumber);
                 Log.AddMessage("  AD6636 TCXO:  " + Device.Atmel.TCXOFreq);
                 Log.AddMessage("");
-
-                // 
             }
             catch (AtmelProgrammer.DeviceErrorException ex)
             {
@@ -133,30 +159,159 @@ namespace RX_Setup
 
         private void btnFirmwareRead_Click(object sender, EventArgs e)
         {
-            MemoryDump data = Device.AtmelProgrammer.readFlash(Device.AtmelProgrammer.FlashStart, Device.AtmelProgrammer.FlashSize);
+            if (WorkerThread != null)
+            {
+                MessageBox.Show("Test already running. Stopping...");
+                AbortStressTest = true;
+                return;
+            }
 
+            if (Device == null || !Device.AtmelProgrammer.SetProgrammingMode(true) || Device.AtmelProgrammer.VendorCode != 0x1E)
+            {
+                MessageBox.Show("Failed to enter programming mode.");
+                return;
+            }
 
+            string oldText = btnFirmwareRead.Text;
+            TotalTransfers = 0;
+            TestStartTime = DateTime.Now;
+            WorkerThread = new Thread(() =>
+            {
+                MemoryDump16BitLE data = Device.AtmelProgrammer.ReadFlash(Device.AtmelProgrammer.FlashStart, Device.AtmelProgrammer.FlashSize, (AtmelProgrammer.BlockProcessInfo info) =>
+                {
+                    TotalTransfers++;
+                    BeginInvoke(new Action(() =>
+                    {
+                        btnFirmwareRead.Text = (uint)((info.BlockNum * 100) / info.BlockCount) + "%";
+                    }));
+                    if (AbortStressTest)
+                    {
+                        info.Cancel = true;
+                    }
+                });
+
+                BeginInvoke(new Action(() =>
+                {
+                    btnFirmwareRead.Text = oldText;
+                }));
+
+                Device.AtmelProgrammer.SetProgrammingMode(false);
+
+                if (data == null)
+                {
+                    MessageBox.Show("Read was aborted");
+                    return;
+                }
+
+                BeginInvoke(new Action(() =>
+                {
+                    FileDialog dlg = new SaveFileDialog();
+
+                    dlg.DefaultExt = ".bin";
+                    if (dlg.ShowDialog() == DialogResult.OK)
+                    {
+                        FileStream writeFile = null;
+                        BinaryWriter writer = null;
+                        try
+                        {
+                            writeFile = File.OpenWrite(dlg.FileName);
+                            writer = new BinaryWriter(writeFile);
+
+                            writer.Write(((MemoryDump8Bit)data).Data);
+                            writer.Close();
+                        }
+                        catch (Exception ex)
+                        {
+                            if (writer != null)
+                            {
+                                writer.Close();
+                            }
+                            else if (writeFile != null)
+                            {
+                                writeFile.Close();
+                            }
+                            MessageBox.Show("Could not save the file. Reason: " + ex.GetType().ToString(), "Saving failed");
+                        }
+                    }
+
+                }));
+
+                WorkerThread = null;
+            });
+
+            WorkerThread.Start();
         }
 
         private void btnFirmwareProgram_Click(object sender, EventArgs e)
         {
+            if (WorkerThread != null)
+            {
+                MessageBox.Show("Test already running. Stopping...");
+                AbortStressTest = true;
+                return;
+            }
+
+            if (Device == null || !Device.AtmelProgrammer.SetProgrammingMode(true) || Device.AtmelProgrammer.VendorCode != 0x1E)
+            {
+                MessageBox.Show("Failed to enter programming mode.");
+                return;
+            }
+
             FileDialog dlg = new OpenFileDialog();
 
             dlg.DefaultExt = ".hex";
             if (dlg.ShowDialog() == DialogResult.OK)
             {
-                IntelHexFile hf = new IntelHexFile(dlg.FileName);
-                byte[] hex = hf.Parse();
+                MemoryDump16BitLE dump;
+                try
+                {
+                    IntelHexFile hf = new IntelHexFile(dlg.FileName);
+                    dump = hf.Parse();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Failed to read the hex-file");
+                    return;
+                }
+
+                string oldText = btnFirmwareProgram.Text;
+                TotalTransfers = 0;
+                TestStartTime = DateTime.Now;
+                WorkerThread = new Thread(() =>
+                {
+                    Device.AtmelProgrammer.ProgramFlash(dump, (AtmelProgrammer.BlockProcessInfo info) =>
+                    {
+                        TotalTransfers++;
+
+                        if (AbortStressTest)
+                        {
+                            info.Cancel = true;
+                        }
+
+                        BeginInvoke(new Action(() =>
+                        {
+                            btnFirmwareProgram.Text = (uint)((info.BlockNum * 100) / info.BlockCount) + "%";
+                        }));
+                    });
+                    BeginInvoke(new Action(() =>
+                    {
+                        btnFirmwareProgram.Text = oldText;
+                    }));
+
+                    Device.AtmelProgrammer.SetProgrammingMode(false);
+                    WorkerThread = null;
+                });
+                WorkerThread.Start();
             }
         }
 
         private bool AbortStressTest = false;
-        private Thread TestThread = null;
+        private Thread WorkerThread = null;
         private int I2CTestTransfers = 500;
         private int AtmelSPITestTransfers = 100;
         private int AtmelSerialTestTransfers = 500;
         private int AtmelMixedTestTransfers = 5000;
-        private int AtmelAD6636MixedTestTransfers = 500;
+        private int AtmelAD6636MixedTestTransfers = 200;
         private int AD6636MixedTestTransfers = 50;        
         
 
@@ -207,6 +362,27 @@ namespace RX_Setup
             Log.AddMessage("   - " + name + ":    [OK]");
         }
 
+        private bool ResetAtmelSleep()
+        {
+            /* this one may fail if there is no programming option */
+            if (!Device.AtmelProgrammer.SetProgrammingMode(true))
+            {
+                Device.AtmelProgrammer.SetProgrammingMode(false);
+                return true;
+            }
+
+            Device.AtmelProgrammer.SetProgrammingMode(false);
+
+            string serial = Device.Atmel.SerialNumber;
+
+            if (serial == null || serial == "")
+            {
+                return false;
+            }
+
+            return true;
+        }
+
         private void AtmelSPITest()
         {
             int transfer = 0;
@@ -218,13 +394,15 @@ namespace RX_Setup
                 transfer++;
                 try
                 {
-                    if (!Device.AtmelProgrammer.enterProgrammingMode())
+                    if (!Device.AtmelProgrammer.SetProgrammingMode(true))
                     {
-                        Log.AddMessage("Programming mode failed");
+                        Log.AddMessage("   - [FAIL]");
+                        Log.AddMessage("      Failed:  Programming mode failed");
+                        Device.AtmelProgrammer.SetProgrammingMode(false);
                         return;
                     }
 
-                    if (Device.AtmelProgrammer.readDeviceVendorCode() != 0x1E)
+                    if (Device.AtmelProgrammer.VendorCode != 0x1E)
                     {
                         failed++;
                     }
@@ -233,9 +411,10 @@ namespace RX_Setup
                         name = Device.AtmelProgrammer.DeviceName;
                     }
 
-                    if (!Device.AtmelProgrammer.leaveProgrammingMode())
+                    if (!Device.AtmelProgrammer.SetProgrammingMode(false))
                     {
-                        Log.AddMessage("Normal mode failed");
+                        Log.AddMessage("   - [FAIL]");
+                        Log.AddMessage("      Failed:  Normal mode failed");
                         return;
                     }
                 }
@@ -244,10 +423,7 @@ namespace RX_Setup
                     failed++;
                 }
             }
-            Device.AtmelProgrammer.leaveProgrammingMode();
-
-            /* let atmel recover... */
-            Thread.Sleep(750);
+            Device.AtmelProgrammer.SetProgrammingMode(false);
 
             if (failed > 0)
             {
@@ -296,6 +472,7 @@ namespace RX_Setup
                 bool success = true;
 
                 transfer++;
+                TotalTransfers++;
 
                 switch (rnd.Next(6))
                 {
@@ -349,6 +526,7 @@ namespace RX_Setup
                 bool success = true;
 
                 transfer++;
+                TotalTransfers++;
 
                 switch (rnd.Next(4))
                 {
@@ -427,6 +605,10 @@ namespace RX_Setup
                 bool success = true;
 
                 transfer++;
+                lock (this)
+                {
+                    TotalTransfers++;
+                }
 
                 switch (rnd.Next(20))
                 {
@@ -523,6 +705,10 @@ namespace RX_Setup
                         success &= Device.SetMgc(rnd.Next(96));
                         success &= Device.SetAgc(USBRXDevice.eAgcType.Manual);
                         success &= Device.SetMgc(rnd.Next(96));
+                        lock (this)
+                        {
+                            TotalTransfers += 7;
+                        }
                         break;
                 }
 
@@ -546,14 +732,14 @@ namespace RX_Setup
 
         private void btnStress_Click(object sender, EventArgs e)
         {
-            if (TestThread != null)
+            if (WorkerThread != null)
             {
                 MessageBox.Show("Test already running. Stopping...");
                 AbortStressTest = true;
                 return;
             }
 
-            TestThread = new Thread(() =>
+            WorkerThread = new Thread(() =>
             {
                 AbortStressTest = false;
 
@@ -562,42 +748,12 @@ namespace RX_Setup
                 try
                 {
                     Log.AddMessage("");
-                    Log.AddMessage(" I²C ACK");
-                    I2CTestAck(0x51, "EEPROM");
-                    I2CTestAck(0x20, "Atmel ");
-                    Log.AddMessage("");
-                    Log.AddMessage(" I²C Read (1 byte)");
-                    I2CTestRead(0x51, "EEPROM", 1);
-                    I2CTestRead(0x20, "Atmel ", 1);
-                    Log.AddMessage("");
-                    Log.AddMessage(" I²C Read (8 byte)");
-                    I2CTestRead(0x51, "EEPROM", 8);
-                    I2CTestRead(0x20, "Atmel ", 8);
-                    Log.AddMessage("");
-                    Log.AddMessage(" I²C Read (32 byte)");
-                    I2CTestRead(0x51, "EEPROM", 32);
-                    I2CTestRead(0x20, "Atmel ", 32);
-
-                    Log.AddMessage("");
-                    Log.AddMessage(" Atmel SPI programming");
-                    AtmelSPITest();
-
-                    Log.AddMessage("");
-                    Log.AddMessage(" Atmel serial number");
-                    AtmelSerialTest();
-
-                    Log.AddMessage("");
-                    Log.AddMessage(" Atmel mixed access");
-                    AtmelMixedTest();
-
-                    Log.AddMessage("");
-                    Log.AddMessage(" AD6636 mixed access");
-                    AD6636MixedTest();
-
-                    Log.AddMessage("");
                     Log.AddMessage(" Atmel+AD6636 extended mixed access");
-                    Log.AddMessage(" (press stress test button to finish test)");
-                     
+                    Log.AddMessage(" (press stress test button to abort test)");
+
+                    TotalTransfers = 0;
+                    TestStartTime = DateTime.Now;
+
                     Semaphore finished = new Semaphore(0, 2);
                     new Thread(() =>
                     {
@@ -624,10 +780,9 @@ namespace RX_Setup
                             finished.Release(1);
                         }
                     }).Start();
-
+                    
                     finished.WaitOne();
                     finished.WaitOne();
-
                 }
                 catch (Exception)
                 {
@@ -635,13 +790,412 @@ namespace RX_Setup
                 Log.AddMessage("------------------------------------");
                 Log.AddMessage(" Stress test finished");
 
-                TestThread = null;
+                WorkerThread = null;
             });
 
-            TestThread.Start();
+            WorkerThread.Start();
+        }
 
+        private void btnAtmelDelay_Click(object sender, EventArgs e)
+        {
+            if (WorkerThread != null)
+            {
+                MessageBox.Show("Test already running. Stopping...");
+                AbortStressTest = true;
+                return;
+            }
+
+            WorkerThread = new Thread(() =>
+            {
+                int filterCount = Device.Atmel.GetFilterCount();
+                int stepSize = 40;
+                int smallSteps = 0;
+                int delay = 50;
+                int lastSuccessDelay = 0;
+                bool lastSucceeded = true;
+
+                Log.AddMessage("AtmelDelay", "Atmel SetFilter delay test");
+
+                /* do 6 tries with 1ms increment */
+                while (smallSteps < 6)
+                {
+                    bool success = true;
+                    Device.Atmel.SetFilterDelay = delay;
+
+                    for (int loop = 0; loop < 1; loop++)
+                    {
+                        for (int filter = 0; filter < filterCount; filter++)
+                        {
+                            success &= Device.Atmel.SetFilter(filter);
+                            if (!success)
+                            {
+                                break;
+                            }
+                        }
+                        if (!success)
+                        {
+                            break;
+                        }
+                    }
+
+                    if (success)
+                    {
+                        lastSucceeded = true;
+                        lastSuccessDelay = delay;
+                        delay -= stepSize;
+                        delay = Math.Max(0, delay);
+                        Log.AddMessage("AtmelDelay", "Transmission succeeded. Trying with " + delay + " ms");
+                    }
+                    else
+                    {
+                        Thread.Sleep(150);
+
+                        delay += stepSize;
+                        Log.AddMessage("AtmelDelay", "Transmission failed. Trying with " + delay + " ms");
+
+                        /* decrease step size if failed, but the delay before was fine */
+                        if (lastSucceeded)
+                        {
+                            stepSize /= 2;
+                            stepSize = Math.Max(1, stepSize);
+                        }
+                        lastSucceeded = false;
+                    }
+
+                    if (stepSize == 1 || delay == 0)
+                    {
+                        smallSteps++;
+                    }
+                }
+                Device.Atmel.SetFilterDelay = lastSuccessDelay;
+
+
+                stepSize = 40;
+                smallSteps = 0;
+                delay = 50;
+                lastSuccessDelay = 0;
+                lastSucceeded = true;
+                Log.AddMessage("AtmelDelay", "Atmel SetAgc delay test");
+
+                /* do 6 tries with 1ms increment */
+                while (smallSteps < 6)
+                {
+                    bool success = true;
+                    Device.Atmel.ReadFilterDelay = delay;
+
+                    for (int loop = 0; loop < 1; loop++)
+                    {
+                        for (int filter = 0; filter < filterCount; filter++)
+                        {
+                            success &= Device.Atmel.ReadFilter(filter);
+                            if (!success)
+                            {
+                                break;
+                            }
+                        }
+                        if (!success)
+                        {
+                            break;
+                        }
+                    }
+
+                    if (success)
+                    {
+                        lastSucceeded = true;
+                        lastSuccessDelay = delay;
+                        delay -= stepSize;
+                        delay = Math.Max(0, delay);
+                        Log.AddMessage("AtmelDelay", "Transmission succeeded. Trying with " + delay + " ms");
+                    }
+                    else
+                    {
+                        Thread.Sleep(150);
+
+                        delay += stepSize;
+                        Log.AddMessage("AtmelDelay", "Transmission failed. Trying with " + delay + " ms");
+
+                        /* decrease step size if failed, but the delay before was fine */
+                        if (lastSucceeded)
+                        {
+                            stepSize /= 2;
+                            stepSize = Math.Max(1, stepSize);
+                        }
+                        lastSucceeded = false;
+                    }
+
+                    if (stepSize == 1 || delay == 0)
+                    {
+                        smallSteps++;
+                    }
+                }
+                Device.Atmel.ReadFilterDelay = lastSuccessDelay;
+
+
+                stepSize = 40;
+                smallSteps = 0;
+                delay = 50;
+                lastSuccessDelay = 0;
+                lastSucceeded = true;
+                Log.AddMessage("AtmelDelay", "Atmel SetAgc delay test");
+
+                /* do 6 tries with 1ms increment */
+                while (smallSteps < 6)
+                {
+                    bool success = true;
+                    Device.Atmel.SetAgcDelay = delay;
+
+                    for (int loop = 0; loop < 2; loop++)
+                    {
+                        success &= Device.Atmel.SetAgc(USBRXDevice.eAgcType.Fast);
+                        success &= Device.Atmel.SetAgc(USBRXDevice.eAgcType.Manual);
+                        success &= Device.Atmel.SetAgc(USBRXDevice.eAgcType.Medium);
+                        success &= Device.Atmel.SetAgc(USBRXDevice.eAgcType.Off);
+                        success &= Device.Atmel.SetAgc(USBRXDevice.eAgcType.Slow);
+                        if (!success)
+                        {
+                            break;
+                        }
+                    }
+
+                    if (success)
+                    {
+                        lastSucceeded = true;
+                        lastSuccessDelay = delay;
+                        delay -= stepSize;
+                        delay = Math.Max(0, delay);
+                        Log.AddMessage("AtmelDelay", "Transmission succeeded. Trying with " + delay + " ms");
+                    }
+                    else
+                    {                        
+                        Thread.Sleep(250);
+
+                        delay += stepSize;
+                        Log.AddMessage("AtmelDelay", "Transmission failed. Trying with " + delay + " ms");
+
+                        /* decrease step size if failed, but the delay before was fine */
+                        if (lastSucceeded)
+                        {
+                            stepSize /= 2;
+                            stepSize = Math.Max(1, stepSize);
+                        }
+                        lastSucceeded = false;
+                    }
+
+                    if (stepSize == 1 || delay == 0)
+                    {
+                        smallSteps++;
+                    }
+                }
+                Device.Atmel.SetAgcDelay = lastSuccessDelay;
+
+
+                stepSize = 40;
+                smallSteps = 0;
+                delay = 50;
+                lastSuccessDelay = 0;
+                lastSucceeded = true;
+                Log.AddMessage("AtmelDelay", "Atmel SetAtt delay test");
+
+                /* do 6 tries with 1ms increment */
+                while (smallSteps < 6)
+                {
+                    bool success = true;
+                    Device.Atmel.SetAttDelay = delay;
+
+                    for (int loop = 0; loop < 10; loop++)
+                    {
+                        success &= Device.Atmel.SetAtt(true);
+                        success &= Device.Atmel.SetAtt(false);
+                        success &= Device.Atmel.SetAtt(0);
+                        success &= Device.Atmel.SetAtt(1);
+                        if (!success)
+                        {
+                            break;
+                        }
+                    }
+
+                    if (success)
+                    {
+                        lastSucceeded = true;
+                        lastSuccessDelay = delay;
+                        delay -= stepSize;
+                        delay = Math.Max(0, delay);
+                        Log.AddMessage("AtmelDelay", "Transmission succeeded. Trying with " + delay + " ms");
+                    }
+                    else
+                    {
+                        Thread.Sleep(250);
+
+                        delay += stepSize;
+                        Log.AddMessage("AtmelDelay", "Transmission failed. Trying with " + delay + " ms");
+
+                        /* decrease step size if failed, but the delay before was fine */
+                        if (lastSucceeded)
+                        {
+                            stepSize /= 2;
+                            stepSize = Math.Max(1, stepSize);
+                        }
+                        lastSucceeded = false;
+                    }
+
+                    if (stepSize == 1 || delay == 0)
+                    {
+                        smallSteps++;
+                    }
+                }
+                Device.Atmel.SetAttDelay = lastSuccessDelay;
+
+
+
+                stepSize = 100;
+                smallSteps = 0;
+                delay = 750;
+                lastSuccessDelay = 0;
+                lastSucceeded = true;
+                Log.AddMessage("AtmelDelay", "Atmel reset delay test");
+
+                if (!Device.AtmelProgrammer.SetProgrammingMode(true))
+                {
+                    Log.AddMessage("AtmelDelay", "  -> skipping due to missing hardware option");
+                    Device.AtmelProgrammer.SetProgrammingMode(false);
+                }
+                else
+                {
+                    /* do 6 tries with 1ms increment */
+                    while (smallSteps < 6)
+                    {
+                        bool success = true;
+                        Device.AtmelProgrammer.RecoveryTime = delay;
+
+                        for (int loop = 0; loop < 2; loop++)
+                        {
+                            success &= ResetAtmelSleep();
+                            if (!success)
+                            {
+                                break;
+                            }
+                        }
+
+                        if (success)
+                        {
+                            lastSucceeded = true;
+                            lastSuccessDelay = delay;
+                            delay -= stepSize;
+                            delay = Math.Max(0, delay);
+                            Log.AddMessage("AtmelDelay", "Transmission succeeded. Trying with " + delay + " ms");
+                        }
+                        else
+                        {
+                            Thread.Sleep(800);
+
+                            delay += stepSize;
+                            Log.AddMessage("AtmelDelay", "Transmission failed. Trying with " + delay + " ms");
+
+                            /* decrease step size if failed, but the delay before was fine */
+                            if (lastSucceeded)
+                            {
+                                stepSize /= 2;
+                                stepSize = Math.Max(1, stepSize);
+                            }
+                            lastSucceeded = false;
+                        }
+
+                        if (stepSize == 1 || delay == 0)
+                        {
+                            smallSteps++;
+                        }
+                    }
+
+                    Device.AtmelProgrammer.RecoveryTime = lastSuccessDelay;
+                }
+
+
+                Log.AddMessage("AtmelDelay", "");
+                Log.AddMessage("AtmelDelay", "Test results:");
+                Log.AddMessage("AtmelDelay", "---------------------------------");
+                Log.AddMessage("AtmelDelay", "  Minimum SetFilterDelay: " + Device.Atmel.SetFilterDelay + " ms");
+                Log.AddMessage("AtmelDelay", "  Minimum ReadFilterDelay: " + Device.Atmel.ReadFilterDelay + " ms");
+                Log.AddMessage("AtmelDelay", "  Minimum SetAgcDelay: " + Device.Atmel.SetAgcDelay + " ms");
+                Log.AddMessage("AtmelDelay", "  Minimum SetAttDelay: " + Device.Atmel.SetAttDelay + " ms");
+                Log.AddMessage("AtmelDelay", "  Minimum reset delay: " + Device.AtmelProgrammer.RecoveryTime + " ms");
+                Log.AddMessage("AtmelDelay", "---------------------------------");
+
+                WorkerThread = null;
+            });
+            WorkerThread.Start();
         }
 
 
+
+        private void btnI2cTest_Click(object sender, EventArgs e)
+        {
+            if (WorkerThread != null)
+            {
+                MessageBox.Show("Test already running. Stopping...");
+                AbortStressTest = true;
+                return;
+            }
+
+            WorkerThread = new Thread(() =>
+            {
+                AbortStressTest = false;
+
+                Log.AddMessage(" I²C test starting");
+                Log.AddMessage("------------------------------------");
+                try
+                {
+                    Log.AddMessage("");
+                    Log.AddMessage(" I²C ACK");
+                    I2CTestAck(0x51, "EEPROM");
+                    I2CTestAck(0x20, "Atmel ");
+                    Log.AddMessage("");
+                    Log.AddMessage(" I²C Read (1 byte)");
+                    I2CTestRead(0x51, "EEPROM", 1);
+                    I2CTestRead(0x20, "Atmel ", 1);
+                    Log.AddMessage("");
+                    Log.AddMessage(" I²C Read (8 byte)");
+                    I2CTestRead(0x51, "EEPROM", 8);
+                    I2CTestRead(0x20, "Atmel ", 8);
+                    Log.AddMessage("");
+                    Log.AddMessage(" I²C Read (32 byte)");
+                    I2CTestRead(0x51, "EEPROM", 32);
+                    I2CTestRead(0x20, "Atmel ", 32);
+
+
+                    Log.AddMessage("");
+                    Log.AddMessage(" Atmel SPI programming");
+                    AtmelSPITest();
+
+                    Log.AddMessage("");
+                    Log.AddMessage(" Atmel serial number");
+                    AtmelSerialTest();
+                    
+                    TotalTransfers = 0;
+                    TestStartTime = DateTime.Now;
+                    Log.AddMessage("");
+                    Log.AddMessage(" Atmel mixed access");
+                    AtmelMixedTest();
+                    Log.AddMessage("   - Transfers/s: " + TransfersPerSecond.ToString("0.00"));
+
+
+                    TotalTransfers = 0;
+                    TestStartTime = DateTime.Now;
+                    Log.AddMessage("");
+                    Log.AddMessage(" AD6636 mixed access");
+                    AD6636MixedTest();
+                    Log.AddMessage("   - Transfers/s: " + TransfersPerSecond.ToString("0.00"));
+
+                }
+                catch (Exception)
+                {
+                }
+                Log.AddMessage("------------------------------------");
+                Log.AddMessage(" I²C test finished");
+
+                WorkerThread = null;
+            });
+
+            WorkerThread.Start();
+        }
     }
 }

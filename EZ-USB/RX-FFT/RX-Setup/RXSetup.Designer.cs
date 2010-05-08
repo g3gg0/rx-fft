@@ -36,6 +36,9 @@
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.btnStress = new System.Windows.Forms.Button();
+            this.lblStats = new System.Windows.Forms.Label();
+            this.btnAtmelDelay = new System.Windows.Forms.Button();
+            this.btnI2cTest = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -43,7 +46,7 @@
             // 
             this.btnConnect.Location = new System.Drawing.Point(13, 13);
             this.btnConnect.Name = "btnConnect";
-            this.btnConnect.Size = new System.Drawing.Size(75, 23);
+            this.btnConnect.Size = new System.Drawing.Size(81, 23);
             this.btnConnect.TabIndex = 0;
             this.btnConnect.Text = "Connect";
             this.btnConnect.UseVisualStyleBackColor = true;
@@ -52,18 +55,18 @@
             // txtStatus
             // 
             this.txtStatus.Enabled = false;
-            this.txtStatus.Location = new System.Drawing.Point(94, 15);
+            this.txtStatus.Location = new System.Drawing.Point(129, 15);
             this.txtStatus.Name = "txtStatus";
-            this.txtStatus.Size = new System.Drawing.Size(122, 20);
+            this.txtStatus.Size = new System.Drawing.Size(110, 20);
             this.txtStatus.TabIndex = 1;
             // 
             // btnDetails
             // 
-            this.btnDetails.Location = new System.Drawing.Point(13, 43);
+            this.btnDetails.Location = new System.Drawing.Point(13, 42);
             this.btnDetails.Name = "btnDetails";
-            this.btnDetails.Size = new System.Drawing.Size(75, 23);
+            this.btnDetails.Size = new System.Drawing.Size(110, 23);
             this.btnDetails.TabIndex = 2;
-            this.btnDetails.Text = "Details";
+            this.btnDetails.Text = "Board details";
             this.btnDetails.UseVisualStyleBackColor = true;
             this.btnDetails.Click += new System.EventHandler(this.btnDetails_Click);
             // 
@@ -91,43 +94,75 @@
             // 
             this.groupBox1.Controls.Add(this.btnFirmwareRead);
             this.groupBox1.Controls.Add(this.btnFirmwareProgram);
-            this.groupBox1.Location = new System.Drawing.Point(13, 93);
+            this.groupBox1.Location = new System.Drawing.Point(13, 141);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(173, 57);
+            this.groupBox1.Size = new System.Drawing.Size(226, 57);
             this.groupBox1.TabIndex = 4;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Firmware";
             // 
             // groupBox2
             // 
-            this.groupBox2.Location = new System.Drawing.Point(13, 157);
+            this.groupBox2.Location = new System.Drawing.Point(13, 205);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(200, 100);
+            this.groupBox2.Size = new System.Drawing.Size(226, 95);
             this.groupBox2.TabIndex = 5;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "I²C";
             // 
             // btnStress
             // 
-            this.btnStress.Location = new System.Drawing.Point(100, 43);
+            this.btnStress.Location = new System.Drawing.Point(129, 71);
             this.btnStress.Name = "btnStress";
-            this.btnStress.Size = new System.Drawing.Size(75, 23);
+            this.btnStress.Size = new System.Drawing.Size(110, 23);
             this.btnStress.TabIndex = 0;
-            this.btnStress.Text = "Stress test";
+            this.btnStress.Text = "Stress Test";
             this.btnStress.UseVisualStyleBackColor = true;
             this.btnStress.Click += new System.EventHandler(this.btnStress_Click);
+            // 
+            // lblStats
+            // 
+            this.lblStats.AutoSize = true;
+            this.lblStats.Location = new System.Drawing.Point(134, 47);
+            this.lblStats.Name = "lblStats";
+            this.lblStats.Size = new System.Drawing.Size(0, 13);
+            this.lblStats.TabIndex = 6;
+            // 
+            // btnAtmelDelay
+            // 
+            this.btnAtmelDelay.Location = new System.Drawing.Point(13, 100);
+            this.btnAtmelDelay.Name = "btnAtmelDelay";
+            this.btnAtmelDelay.Size = new System.Drawing.Size(110, 23);
+            this.btnAtmelDelay.TabIndex = 7;
+            this.btnAtmelDelay.Text = "Atmel delay test";
+            this.btnAtmelDelay.UseVisualStyleBackColor = true;
+            this.btnAtmelDelay.Click += new System.EventHandler(this.btnAtmelDelay_Click);
+            // 
+            // btnI2cTest
+            // 
+            this.btnI2cTest.Location = new System.Drawing.Point(13, 71);
+            this.btnI2cTest.Name = "btnI2cTest";
+            this.btnI2cTest.Size = new System.Drawing.Size(110, 23);
+            this.btnI2cTest.TabIndex = 8;
+            this.btnI2cTest.Text = "I²C/Atmel Test";
+            this.btnI2cTest.UseVisualStyleBackColor = true;
+            this.btnI2cTest.Click += new System.EventHandler(this.btnI2cTest_Click);
             // 
             // RXSetup
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(443, 419);
+            this.ClientSize = new System.Drawing.Size(251, 316);
+            this.Controls.Add(this.btnI2cTest);
+            this.Controls.Add(this.btnAtmelDelay);
+            this.Controls.Add(this.lblStats);
             this.Controls.Add(this.btnStress);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.btnDetails);
             this.Controls.Add(this.txtStatus);
             this.Controls.Add(this.btnConnect);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.Name = "RXSetup";
             this.Text = "RXSetup";
             this.groupBox1.ResumeLayout(false);
@@ -146,6 +181,9 @@
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.Button btnStress;
+        private System.Windows.Forms.Label lblStats;
+        private System.Windows.Forms.Button btnAtmelDelay;
+        private System.Windows.Forms.Button btnI2cTest;
     }
 }
 

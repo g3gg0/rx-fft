@@ -9,6 +9,9 @@ using LibRXFFT.Libraries.Misc;
 using LibRXFFT.Libraries.SampleSources;
 using LibRXFFT.Libraries.ShmemChain;
 using RX_FFT.Components.GDI;
+using DemodulatorCollection.BitClockSinks;
+using DemodulatorCollection.Demodulators;
+using DemodulatorCollection.Interfaces;
 
 namespace DemodulatorCollection
 {
@@ -18,8 +21,6 @@ namespace DemodulatorCollection
         private Thread ProcessThread;
         private bool Processing;
         private DigitalDemodulator Demodulator;
-
-        public int SharedMemoryChannel = 0;
 
         public DemodulatorDialog()
         {
@@ -86,10 +87,26 @@ namespace DemodulatorCollection
                 return;
 
             DigitalDemodulator demod = new PSKDemodulator();
-            ((PSKDemodulator)demod).BitSink = new POCSAGDecoder();
+            demod.BitSink = new POCSAGDecoder();
 
             demod.SamplingRate = SampleSource.OutputSamplingRate;
             demod.Init();
+            Demodulator = demod;
+        }
+
+
+        private void btnLua_Click(object sender, EventArgs e)
+        {
+            CloseDemod();
+            
+            if (SampleSource == null)
+                return;
+
+            DigitalDemodulator demod = new ScriptableDemodulator();
+
+            demod.SamplingRate = SampleSource.OutputSamplingRate;
+            demod.Init();
+
             Demodulator = demod;
         }
 
@@ -119,11 +136,11 @@ namespace DemodulatorCollection
 
         void SampleSource_SamplingRateChanged(object sender, EventArgs e)
         {
+            Log.AddMessage("Sampling rate changed: " + FrequencyFormatter.FreqToStringAccurate(SampleSource.OutputSamplingRate));
             if (Demodulator != null)
             {
                 Demodulator.SamplingRate = SampleSource.OutputSamplingRate;
             }
-            Log.AddMessage("Sampling rate: " + FrequencyFormatter.FreqToStringAccurate(SampleSource.OutputSamplingRate));
         }
 
         private void ProcessMain()
@@ -233,6 +250,7 @@ namespace DemodulatorCollection
             btnOpen.ContextMenu = menu;
             btnOpen.ContextMenu.Show(btnOpen, new Point(10, 10));
         }
+
 
 
     }

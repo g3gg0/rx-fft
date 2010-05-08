@@ -39,13 +39,16 @@
             this.txtAmplitudeShiftKeying = new System.Windows.Forms.TextBox();
             this.btnOpen = new System.Windows.Forms.Button();
             this.btnPocsag = new System.Windows.Forms.Button();
+            this.btnLua = new System.Windows.Forms.Button();
+            this.txtPocsag = new System.Windows.Forms.TextBox();
+            this.txtLua = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // btnOpenPulseDelay
             // 
             this.btnOpenPulseDelay.Location = new System.Drawing.Point(12, 50);
             this.btnOpenPulseDelay.Name = "btnOpenPulseDelay";
-            this.btnOpenPulseDelay.Size = new System.Drawing.Size(79, 23);
+            this.btnOpenPulseDelay.Size = new System.Drawing.Size(75, 23);
             this.btnOpenPulseDelay.TabIndex = 0;
             this.btnOpenPulseDelay.Text = "Pulse Delay";
             this.btnOpenPulseDelay.UseVisualStyleBackColor = true;
@@ -55,7 +58,7 @@
             // 
             this.btnOpenPulseKeying.Location = new System.Drawing.Point(12, 160);
             this.btnOpenPulseKeying.Name = "btnOpenPulseKeying";
-            this.btnOpenPulseKeying.Size = new System.Drawing.Size(79, 23);
+            this.btnOpenPulseKeying.Size = new System.Drawing.Size(75, 23);
             this.btnOpenPulseKeying.TabIndex = 0;
             this.btnOpenPulseKeying.Text = "Pulse Keying";
             this.btnOpenPulseKeying.UseVisualStyleBackColor = true;
@@ -85,7 +88,7 @@
             // 
             this.btnOpenASK.Location = new System.Drawing.Point(12, 270);
             this.btnOpenASK.Name = "btnOpenASK";
-            this.btnOpenASK.Size = new System.Drawing.Size(79, 23);
+            this.btnOpenASK.Size = new System.Drawing.Size(75, 23);
             this.btnOpenASK.TabIndex = 2;
             this.btnOpenASK.Text = "ASK";
             this.btnOpenASK.UseVisualStyleBackColor = true;
@@ -113,7 +116,7 @@
             // 
             // btnPocsag
             // 
-            this.btnPocsag.Location = new System.Drawing.Point(13, 382);
+            this.btnPocsag.Location = new System.Drawing.Point(12, 382);
             this.btnPocsag.Name = "btnPocsag";
             this.btnPocsag.Size = new System.Drawing.Size(75, 23);
             this.btnPocsag.TabIndex = 4;
@@ -121,11 +124,46 @@
             this.btnPocsag.UseVisualStyleBackColor = true;
             this.btnPocsag.Click += new System.EventHandler(this.btnPocsag_Click);
             // 
+            // btnLua
+            // 
+            this.btnLua.Location = new System.Drawing.Point(12, 415);
+            this.btnLua.Name = "btnLua";
+            this.btnLua.Size = new System.Drawing.Size(75, 23);
+            this.btnLua.TabIndex = 5;
+            this.btnLua.Text = "LUA";
+            this.btnLua.UseVisualStyleBackColor = true;
+            this.btnLua.Click += new System.EventHandler(this.btnLua_Click);
+            // 
+            // txtPocsag
+            // 
+            this.txtPocsag.Font = new System.Drawing.Font("Courier New", 8.25F);
+            this.txtPocsag.Location = new System.Drawing.Point(99, 382);
+            this.txtPocsag.Multiline = true;
+            this.txtPocsag.Name = "txtPocsag";
+            this.txtPocsag.ReadOnly = true;
+            this.txtPocsag.Size = new System.Drawing.Size(476, 20);
+            this.txtPocsag.TabIndex = 6;
+            this.txtPocsag.Text = "POCSAG Decoder";
+            // 
+            // txtLua
+            // 
+            this.txtLua.Font = new System.Drawing.Font("Courier New", 8.25F);
+            this.txtLua.Location = new System.Drawing.Point(99, 417);
+            this.txtLua.Multiline = true;
+            this.txtLua.Name = "txtLua";
+            this.txtLua.ReadOnly = true;
+            this.txtLua.Size = new System.Drawing.Size(476, 20);
+            this.txtLua.TabIndex = 6;
+            this.txtLua.Text = "LUA script based demodulator";
+            // 
             // DemodulatorDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(592, 422);
+            this.ClientSize = new System.Drawing.Size(592, 452);
+            this.Controls.Add(this.txtLua);
+            this.Controls.Add(this.txtPocsag);
+            this.Controls.Add(this.btnLua);
             this.Controls.Add(this.btnPocsag);
             this.Controls.Add(this.btnOpen);
             this.Controls.Add(this.btnOpenASK);
@@ -134,7 +172,11 @@
             this.Controls.Add(this.txtPulseDelay);
             this.Controls.Add(this.btnOpenPulseKeying);
             this.Controls.Add(this.btnOpenPulseDelay);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
+            this.MaximizeBox = false;
+            this.MaximumSize = new System.Drawing.Size(598, 476);
+            this.MinimizeBox = false;
+            this.MinimumSize = new System.Drawing.Size(598, 476);
             this.Name = "DemodulatorDialog";
             this.Text = "Demodulators";
             this.ResumeLayout(false);
@@ -153,6 +195,9 @@
         private System.Windows.Forms.TextBox txtAmplitudeShiftKeying;
         private System.Windows.Forms.Button btnOpen;
         private System.Windows.Forms.Button btnPocsag;
+        private System.Windows.Forms.Button btnLua;
+        private System.Windows.Forms.TextBox txtPocsag;
+        private System.Windows.Forms.TextBox txtLua;
     }
 }
 

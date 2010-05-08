@@ -9,6 +9,7 @@ using LibRXFFT.Libraries.SignalProcessing;
 using SlimDX.Direct3D9;
 using Timer = LibRXFFT.Libraries.Timers.AccurateTimer;
 using LibRXFFT.Components.DirectX.Drawables;
+using RX_FFT.Components.GDI;
 
 namespace LibRXFFT.Components.DirectX
 {
@@ -125,7 +126,7 @@ namespace LibRXFFT.Components.DirectX
                 if (!double.IsNaN(RenderSleepDelay) && !double.IsInfinity(RenderSleepDelay) && LinePointUpdateTimer != null)
                 {
                     LinePointUpdateTimer.Interval = (uint)RenderSleepDelay;
-                    ScreenRefreshTimer.Interval = (uint)((value < 60) ? (1000 / 60) : RenderSleepDelay);
+                    ScreenRefreshTimer.Interval = (uint)((value < MinRefreshRate) ? (1000 / MinRefreshRate) : RenderSleepDelay);
                 }
             }
         }
@@ -168,7 +169,7 @@ namespace LibRXFFT.Components.DirectX
             if (!slaveMode)
             {
                 ScreenRefreshTimer = new Timer();
-                ScreenRefreshTimer.Interval = 1000 / 60;
+                ScreenRefreshTimer.Interval = (uint)(1000 / DefaultRefreshRate);
                 ScreenRefreshTimer.Timer += new EventHandler(ScreenRefreshTimer_Func);
                 ScreenRefreshTimer.Start();
 
@@ -177,8 +178,6 @@ namespace LibRXFFT.Components.DirectX
                 LinePointUpdateTimer.Timer += new EventHandler(LinePointUpdateTimer_Func);
                 LinePointUpdateTimer.Start();
             }
-
-
         }
 
         protected override void CreateVertexBufferForPoints(Point[] points, int numPoints)
@@ -188,40 +187,35 @@ namespace LibRXFFT.Components.DirectX
 
             try
             {
-                DirectXLock.WaitOne();
+                uint colorFG = ((uint)ColorFG.ToArgb()) & 0xFFFFFF;
 
-                if (Device != null)
+                if (numPoints > 0)
                 {
-                    uint colorFG = ((uint)ColorFG.ToArgb()) & 0xFFFFFF;
-
-                    if (numPoints > 0)
+                    if (numPoints > PlotVerts.Length)
                     {
-                        if (numPoints > PlotVerts.Length)
+                        PlotVerts = new Vertex[numPoints];
+                        PlotVertsOverview = new Vertex[numPoints];
+                    }
+
+                    PlotVertsEntries = numPoints - 1;
+
+                    for (int pos = 0; pos < numPoints; pos++)
+                    {
+                        double xPos = ((double)points[pos].X / (double)numPoints) * DirectXWidth;
+
+                        PlotVerts[pos].PositionRhw.X = (float)((XAxisSampleOffset + xPos) * XZoomFactor - DisplayXOffset);
+                        PlotVerts[pos].PositionRhw.Y = (float)(-sampleToDBScale(points[pos].Y - BaseAmplification));
+                        PlotVerts[pos].PositionRhw.Z = 0.5f;
+                        PlotVerts[pos].PositionRhw.W = 1;
+                        PlotVerts[pos].Color = 0x9F000000 | colorFG;
+
+                        if (OverviewModeEnabled)
                         {
-                            PlotVerts = new Vertex[numPoints];
-                            PlotVertsOverview = new Vertex[numPoints];
-                        }
-
-                        PlotVertsEntries = numPoints - 1;
-
-                        for (int pos = 0; pos < numPoints; pos++)
-                        {
-                            double xPos = ((double)points[pos].X / (double)numPoints) * DirectXWidth;
-
-                            PlotVerts[pos].PositionRhw.X = (float)((XAxisSampleOffset + xPos) * XZoomFactor - DisplayXOffset);
-                            PlotVerts[pos].PositionRhw.Y = (float)(-sampleToDBScale(points[pos].Y - BaseAmplification));
-                            PlotVerts[pos].PositionRhw.Z = 0.5f;
-                            PlotVerts[pos].PositionRhw.W = 1;
-                            PlotVerts[pos].Color = 0x9F000000 | colorFG;
-
-                            if (OverviewModeEnabled)
-                            {
-                                PlotVertsOverview[pos].PositionRhw.X = (float)(XAxisSampleOffset + xPos);
-                                PlotVertsOverview[pos].PositionRhw.Y = PlotVerts[pos].PositionRhw.Y;
-                                PlotVertsOverview[pos].PositionRhw.Z = PlotVerts[pos].PositionRhw.Z;
-                                PlotVertsOverview[pos].PositionRhw.W = PlotVerts[pos].PositionRhw.W;
-                                PlotVertsOverview[pos].Color = PlotVerts[pos].Color;
-                            }
+                            PlotVertsOverview[pos].PositionRhw.X = (float)(XAxisSampleOffset + xPos);
+                            PlotVertsOverview[pos].PositionRhw.Y = PlotVerts[pos].PositionRhw.Y;
+                            PlotVertsOverview[pos].PositionRhw.Z = PlotVerts[pos].PositionRhw.Z;
+                            PlotVertsOverview[pos].PositionRhw.W = PlotVerts[pos].PositionRhw.W;
+                            PlotVertsOverview[pos].Color = PlotVerts[pos].Color;
                         }
                     }
                 }
@@ -230,10 +224,7 @@ namespace LibRXFFT.Components.DirectX
             {
                 return;
             }
-            finally
-            {
-                DirectXLock.ReleaseMutex();
-            }
+
         }
 
         public struct IconInfo
@@ -328,17 +319,26 @@ namespace LibRXFFT.Components.DirectX
                                 SampleValues[spectPart * spectSize + pos] += amplitudes[pos];
                         }
 
-                        if (spectPart + 1 == spectParts)
-                        {
-                            SampleValuesAveraged++;
-                        }
+
+                        SampleValuesAveraged++;
+
                     }
 
-                    // to reduce CPU load
-                    if (SampleValuesAveraged >= SamplesToAverage)
+                    /* to reduce CPU load */
+                    lock (SampleValues)
                     {
-                        EnoughData = true;
-                        NeedsUpdate = true;
+                        if (SampleValuesAveraged >= SamplesToAverage)
+                        {
+                            if (spectPart + 1 == spectParts)
+                            {
+                                EnoughData = true;
+                                NeedsUpdate = true;
+                            }
+                            else
+                            {
+                                SampleValuesAveraged = 0;
+                            }
+                        }
                     }
                 }
             }
@@ -973,30 +973,46 @@ namespace LibRXFFT.Components.DirectX
                         }
                     }
                     SampleValuesAveraged = 0;
-                    EnoughDataReset = true;
-                    EnoughData = false;
                 }
+                EnoughDataReset = true;
+                EnoughData = false;
             }
         }
 
         private void LinePointUpdateTimer_Func(object sender, EventArgs e)
         {
-            if (NeedsUpdate)
+            lock (SampleValues)
             {
-                NeedsUpdate = false;
-                if (SlavePlot != null)
-                    SlavePlot.PrepareLinePoints();
-                PrepareLinePoints();
+                if (NeedsUpdate)
+                {
+                    try
+                    {
+                        NeedsUpdate = false;
+                        if (SlavePlot != null)
+                            SlavePlot.PrepareLinePoints();
+                        PrepareLinePoints();
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.AddMessage(ex.ToString());
+                    }
+                }
             }
         }
 
         private void ScreenRefreshTimer_Func(object sender, EventArgs e)
         {
-            if (SlavePlot != null)
-                SlavePlot.Render();
+            try
+            {
+                if (SlavePlot != null)
+                    SlavePlot.Render();
 
-            Render();
+                Render();
+            }
+            catch (Exception ex)
+            {
+                Log.AddMessage(ex.ToString());
+            }
         }
-
     }
 }

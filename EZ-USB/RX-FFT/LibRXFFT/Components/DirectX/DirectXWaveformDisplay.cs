@@ -7,6 +7,8 @@ using LibRXFFT.Libraries;
 using LibRXFFT.Libraries.Misc;
 using SlimDX.Direct3D9;
 using Timer = LibRXFFT.Libraries.Timers.AccurateTimer;
+using LibRXFFT.Components.DirectX.Drawables;
+using RX_FFT.Components.GDI;
 
 namespace LibRXFFT.Components.DirectX
 {
@@ -17,6 +19,9 @@ namespace LibRXFFT.Components.DirectX
         protected Vertex[] CursorVertexesHor = new Vertex[3];
         protected Vertex[] ScaleVertexes = new Vertex[100];
         protected Vertex[] OverlayVertexes = new Vertex[100];
+
+
+        public bool RealTimeMode = false;
 
         /* the cursor rectangle that contains signal information */
         protected Vertex[] CursorRectVertexes = new Vertex[4];
@@ -101,7 +106,7 @@ namespace LibRXFFT.Components.DirectX
                 if (!double.IsNaN(RenderSleepDelay) && !double.IsInfinity(RenderSleepDelay) && LinePointUpdateTimer != null)
                 {
                     LinePointUpdateTimer.Interval = (uint)RenderSleepDelay;
-                    ScreenRefreshTimer.Interval = (uint)((value < 60) ? (1000 / 60) : RenderSleepDelay);
+                    ScreenRefreshTimer.Interval = (uint)((value < MinRefreshRate) ? (1000 / MinRefreshRate) : RenderSleepDelay);
                 }
             }
         }
@@ -120,7 +125,6 @@ namespace LibRXFFT.Components.DirectX
             ColorCursor = Color.Red;
 
             YAxisCentered = false;
-
             YZoomFactor = 1.0f;
             XZoomFactor = 1.0f;
 
@@ -144,7 +148,7 @@ namespace LibRXFFT.Components.DirectX
             if (!slaveMode)
             {
                 ScreenRefreshTimer = new Timer();
-                ScreenRefreshTimer.Interval = 1000 / 60;
+                ScreenRefreshTimer.Interval = (uint)(1000 / DefaultRefreshRate);
                 ScreenRefreshTimer.Timer += new EventHandler(ScreenRefreshTimer_Func);
                 ScreenRefreshTimer.Start();
 
@@ -162,42 +166,54 @@ namespace LibRXFFT.Components.DirectX
 
             try
             {
-                DirectXLock.WaitOne();
+                uint colorFG = ((uint)ColorFG.ToArgb()) & 0xFFFFFF;
 
-                if (Device != null)
+                if (numPoints > 0)
                 {
-                    uint colorFG = ((uint)ColorFG.ToArgb()) & 0xFFFFFF;
-
-                    if (numPoints > 0)
+                    if (PlotVerts == null || numPoints > PlotVerts.Length)
                     {
-                        if (numPoints > PlotVerts.Length)
+                        PlotVerts = new Vertex[numPoints];
+                    }
+                    if (numPoints > PlotVertsOverview.Length)
+                    {
+                        PlotVertsOverview = new Vertex[numPoints];
+                    }
+
+                    PlotVertsEntries = numPoints - 1;
+
+                    for (int pos = 0; pos < numPoints; pos++)
+                    {
+                        double yVal = points[pos].Y;
+                        double xPos = ((double)points[pos].X / (double)PlotVertsEntries) * DirectXWidth;
+
+                        PlotVerts[pos].PositionRhw.X = (float)((XAxisSampleOffset + xPos) * XZoomFactor - DisplayXOffset);
+                        PlotVerts[pos].PositionRhw.Y = (float)yVal;
+                        PlotVerts[pos].PositionRhw.Z = 0.5f;
+                        PlotVerts[pos].PositionRhw.W = 1;
+                        PlotVerts[pos].Color = 0x9F000000 | colorFG;
+
+                        if (OverviewModeEnabled)
                         {
-                            PlotVerts = new Vertex[numPoints];
-                            PlotVertsOverview = new Vertex[numPoints];
+                            PlotVertsOverview[pos].PositionRhw.X = (float)(XAxisSampleOffset + xPos);
+                            PlotVertsOverview[pos].PositionRhw.Y = PlotVerts[pos].PositionRhw.Y;
+                            PlotVertsOverview[pos].PositionRhw.Z = PlotVerts[pos].PositionRhw.Z;
+                            PlotVertsOverview[pos].PositionRhw.W = PlotVerts[pos].PositionRhw.W;
+                            PlotVertsOverview[pos].Color = PlotVerts[pos].Color;
                         }
+                    }
 
-                        PlotVertsEntries = numPoints - 1;
-
-                        for (int pos = 0; pos < numPoints; pos++)
+                    try
+                    {
+                        foreach (DirectXDrawable drawable in Drawables)
                         {
-                            double yVal = points[pos].Y;
-                            double xPos = ((double)points[pos].X / (double)numPoints) * DirectXWidth;
-
-                            PlotVerts[pos].PositionRhw.X = (float)((XAxisSampleOffset + xPos) * XZoomFactor - DisplayXOffset);
-                            PlotVerts[pos].PositionRhw.Y = (float)yVal;
-                            PlotVerts[pos].PositionRhw.Z = 0.5f;
-                            PlotVerts[pos].PositionRhw.W = 1;
-                            PlotVerts[pos].Color = 0x9F000000 | colorFG;
-
-                            if (OverviewModeEnabled)
+                            if (drawable is PlotVertsSink)
                             {
-                                PlotVertsOverview[pos].PositionRhw.X = (float)(XAxisSampleOffset + xPos);
-                                PlotVertsOverview[pos].PositionRhw.Y = PlotVerts[pos].PositionRhw.Y;
-                                PlotVertsOverview[pos].PositionRhw.Z = PlotVerts[pos].PositionRhw.Z;
-                                PlotVertsOverview[pos].PositionRhw.W = PlotVerts[pos].PositionRhw.W;
-                                PlotVertsOverview[pos].Color = PlotVerts[pos].Color;
+                                ((PlotVertsSink)drawable).ProcessPlotVerts(PlotVerts, PlotVertsEntries);
                             }
                         }
+                    }
+                    catch (Exception e)
+                    {
                     }
                 }
             }
@@ -205,11 +221,9 @@ namespace LibRXFFT.Components.DirectX
             {
                 return;
             }
-            finally
-            {
-                DirectXLock.ReleaseMutex();
-            }
         }
+
+
 
         public struct IconInfo
         {
@@ -243,10 +257,31 @@ namespace LibRXFFT.Components.DirectX
 
         public void ProcessData(double level, bool forcePlot)
         {
-            lock (SampleValues)
+            try
             {
-                SampleValues.Add(level);
-                NeedsUpdate = true;
+                lock (SampleValues)
+                {
+                    SampleValues.Add(level);
+
+                    if (RealTimeMode && SampleValues.Count >= MaxSamples)
+                    {
+                        if (SlavePlot != null)
+                            SlavePlot.PrepareLinePoints();
+                        PrepareLinePoints();
+                        SampleValues.Clear();
+                        lock (LinePointsLock)
+                        {
+                            CreateVertexBufferForPoints(LinePoints, LinePointEntries);
+                        }
+                    }
+                    else
+                    {
+                        NeedsUpdate = true;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
             }
         }
 
@@ -263,12 +298,34 @@ namespace LibRXFFT.Components.DirectX
             if (SampleValues.Count > 2 * MaxSamples)
                 return;
 
-            lock (SampleValues)
+            try
             {
-                for (int pos = 0; pos < samples.Length; pos++)
-                    SampleValues.Add(samples[pos]);
+                lock (SampleValues)
+                {
+                    for (int pos = 0; pos < samples.Length; pos++)
+                    {
+                        SampleValues.Add(samples[pos]);
 
-                NeedsUpdate = true;
+                        if (RealTimeMode && SampleValues.Count >= MaxSamples)
+                        {
+                            if (SlavePlot != null)
+                                SlavePlot.PrepareLinePoints();
+                            PrepareLinePoints();
+                            SampleValues.Clear();
+                            lock (LinePointsLock)
+                            {
+                                CreateVertexBufferForPoints(LinePoints, LinePointEntries);
+                            }
+                        }
+                        else
+                        {
+                            NeedsUpdate = true;
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
             }
         }
 
@@ -288,8 +345,23 @@ namespace LibRXFFT.Components.DirectX
                 for (int pos = 0; pos < dataBuffer.Length / bytePerSample; pos++)
                 {
                     SampleValues.Add(ByteUtil.getDoubleFromBytes(dataBuffer, byteOffset + bytePerSample * pos));
+
+                    if (RealTimeMode && SampleValues.Count >= MaxSamples)
+                    {
+                        if (SlavePlot != null)
+                            SlavePlot.PrepareLinePoints();
+                        PrepareLinePoints();
+                        SampleValues.Clear();
+                        lock (LinePointsLock)
+                        {
+                            CreateVertexBufferForPoints(LinePoints, LinePointEntries);
+                        }
+                    }
+                    else
+                    {
+                        NeedsUpdate = true;
+                    }
                 }
-                NeedsUpdate = true;
             }
         }
 
@@ -305,7 +377,6 @@ namespace LibRXFFT.Components.DirectX
 
             XMaximum = DirectXWidth;
         }
-
 
         protected double SampleToYPos(double sampleValue)
         {
@@ -747,6 +818,29 @@ namespace LibRXFFT.Components.DirectX
             }
         }
 
+        public double CursorTime
+        {
+            get
+            {
+                if (SamplingRate != 0)
+                {
+                    double offset = ((DisplayXOffset + LastMousePos.X) / (XZoomFactor * DirectXWidth)) - 0.5f - XAxisSampleOffset;
+
+                    int sampleNum = (int)((offset + 0.5) * LinePointEntries);
+                    return (sampleNum / SamplingRate);
+                }
+
+                return 0;
+            }
+        }
+
+
+        public double XPosFromTime(double time)
+        {
+            return XPosFromSampleNum(time * SamplingRate);
+        }
+
+
         public double XPosFromSampleNum(double sampleNum)
         {
             /* offset (-0.5 ... 0.5) */
@@ -827,7 +921,6 @@ namespace LibRXFFT.Components.DirectX
                             LinePoints[pos].Y = posY;
                         }
 
-
                         LinePointEntries = samples;
                         LinePointsUpdated = true;
                     }
@@ -837,22 +930,34 @@ namespace LibRXFFT.Components.DirectX
 
         private void LinePointUpdateTimer_Func(object sender, EventArgs e)
         {
-            if (NeedsUpdate)
+            if (NeedsUpdate && !RealTimeMode)
             {
-                NeedsUpdate = false;
-                if (SlavePlot != null)
-                    SlavePlot.PrepareLinePoints();
-                PrepareLinePoints();
+                try
+                {
+                    NeedsUpdate = false;
+                    if (SlavePlot != null)
+                        SlavePlot.PrepareLinePoints();
+                    PrepareLinePoints();
+                }
+                catch (Exception ex)
+                {
+                    Log.AddMessage(ex.ToString());
+                }
             }
         }
 
         private void ScreenRefreshTimer_Func(object sender, EventArgs e)
         {
-            if (SlavePlot != null)
-                SlavePlot.Render();
-            Render();
+            try
+            {
+                if (SlavePlot != null)
+                    SlavePlot.Render();
+                Render();
+            }
+            catch (Exception ex)
+            {
+                Log.AddMessage(ex.ToString());
+            }
         }
-
-
     }
 }

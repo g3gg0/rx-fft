@@ -24,8 +24,9 @@ namespace LibRXFFT.Libraries.GSM.Layer1.ChannelCoding
                 bool bit1 = Bit(srcData, 2 * bitPos) ^ Bit(dstData, bitPos - 3) ^ Bit(dstData, bitPos - 4);
                 bool bit2 = Bit(srcData, 2 * bitPos + 1) ^ Bit(dstData, bitPos - 1) ^ Bit(dstData, bitPos - 3) ^ Bit(dstData, bitPos - 4);
 
+                /* decoding failed? use viterbi to decode */
                 if (bit1 != bit2)
-                    return null;
+                    return DecodeViterbi(srcData, dstData);
 
                 dstData[bitPos] = bit1;
             }
@@ -147,6 +148,11 @@ namespace LibRXFFT.Libraries.GSM.Layer1.ChannelCoding
 
         public static bool[] DecodeViterbi(bool[] srcData, bool[] dstData)
         {
+            if (srcData.Length != 2 * CONV_INPUT_SIZE + 1)
+            {
+                return null;
+            }
+
             if (dstData == null)
                 dstData = new bool[srcData.Length / 2];
 

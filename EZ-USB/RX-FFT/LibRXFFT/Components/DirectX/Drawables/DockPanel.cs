@@ -35,19 +35,22 @@ namespace LibRXFFT.Components.DirectX.Drawables
         public double VisiblePart = 0;
     }
 
-    public class DockPanel : DirectXDrawable
+    public class DockPanel : DirectXDrawable, PlotVertsSink
     {
         public eOrientation Orientation = eOrientation.RightBorder;
         public LinkedList<Dock> Docks = new LinkedList<Dock>();
         public bool FadeOutByDistance = true;
-        public int FadeOutDistance = 200;
+        public int FadeOutDistance = 80;
 
-        protected bool DocksChanged = false;
+        public bool DocksChanged = false;
         protected SlimDX.Direct3D9.Font DisplayFont;
         protected int FontSize = 9;
         protected int BorderSpaceVert = 2;
         protected int BorderSpaceHor = 4;
-        protected int DockStartY = 15;
+
+        protected int DockStartX = 0;
+        protected int DockStartY = 0;
+
         protected double DockSlideFact = 6;
         protected bool HasDocks = false;
 
@@ -57,7 +60,16 @@ namespace LibRXFFT.Components.DirectX.Drawables
         protected uint TitleBorder = 0x0505050;
         protected uint TitleColorHigh1 = 0x00707070;
         protected uint TitleColorHigh2 = 0x00505050;
-        protected uint CurrentAlpha = 0xFF000000;
+        protected double WantedTitleBarAlpha = 0;
+        protected double CurrentTitleBarAlpha = 0;
+
+        protected uint TitleBarAlpha
+        {
+            get
+            {
+                return ((uint)(255.0f * CurrentTitleBarAlpha)) << 24;
+            }
+        }
 
         protected int LeftMostPosition;
         protected int RightMostPosition;
@@ -186,6 +198,7 @@ namespace LibRXFFT.Components.DirectX.Drawables
                     break;
             }
         }
+
         public override bool ProcessInputEvent(InputEvent evt)
         {
             if (!HasDocks)
@@ -203,20 +216,39 @@ namespace LibRXFFT.Components.DirectX.Drawables
                 switch (evt.Type)
                 {
                     case eInputEventType.MouseLeave:
-                        CurrentAlpha = 0;
+                        WantedTitleBarAlpha = 0;
                         DocksChanged = true;
                         break;
 
                     case eInputEventType.MouseMoved:
-                        double distance = LeftMostPosition - mousePos.X;
+                        double distance;
+
+                        switch (Orientation)
+                        {
+                            case eOrientation.RightBorder:
+                                distance = LeftMostPosition - mousePos.X;
+                                break;
+                            case eOrientation.LeftBorder:
+                                distance = RightMostPosition - mousePos.X;
+                                break;
+                            case eOrientation.TopBorder:
+                                distance = BottomMostPosition - mousePos.Y;
+                                break;
+                            case eOrientation.BottomBorder:
+                                distance = TopMostPosition - mousePos.Y;
+                                break;
+                            default:
+                                distance = 0;
+                                break;
+                        }
 
                         /* calculate alpha value by distance */
                         distance = Math.Min(1, (Math.Max(0, distance)) / FadeOutDistance);
-                        uint newAlpha = ((uint)(255.0f * (1 - distance))) << 24;
+                        double newAlpha = (1 - distance);
 
-                        if (newAlpha != CurrentAlpha)
+                        if (newAlpha != WantedTitleBarAlpha)
                         {
-                            CurrentAlpha = newAlpha;
+                            WantedTitleBarAlpha = newAlpha;
                             DocksChanged = true;
                         }
                         break;
@@ -242,7 +274,7 @@ namespace LibRXFFT.Components.DirectX.Drawables
                     /* check if hovering over title bar */
                     if (hoveringTitle || hoveringBackTitle)
                     {
-                        defaultCursor = true;
+                        //defaultCursor = true;
                         priv.TitleHighlighted = true;
                         DocksChanged = true;
                         handled = true;
@@ -254,6 +286,29 @@ namespace LibRXFFT.Components.DirectX.Drawables
                         }
                     }
                 }
+            }
+
+            if (!handled)
+            {
+                lock (Docks)
+                {
+                    foreach (Dock dock in Docks)
+                    {
+                        if (dock.State == eDockState.Expanded)
+                        {
+                            if (mousePos.X > dock.XPosition && mousePos.X < (dock.XPosition + dock.Width)
+                                && mousePos.Y > dock.YPosition && mousePos.Y < (dock.YPosition + dock.Height))
+                            {
+                                handled = dock.ProcessUserEvent(evt);
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (handled)
+            {
+                defaultCursor = true;
             }
 
             /* need to set default cursor? */
@@ -273,6 +328,7 @@ namespace LibRXFFT.Components.DirectX.Drawables
                 SetDefaultCursor = false;
             }
 
+
             return handled;
         }
 
@@ -283,6 +339,20 @@ namespace LibRXFFT.Components.DirectX.Drawables
             if (!HasDocks)
             {
                 return;
+            }
+
+            /* fade alpha value */
+            if (WantedTitleBarAlpha >= CurrentTitleBarAlpha)
+            {
+                CurrentTitleBarAlpha = WantedTitleBarAlpha;
+            }
+            else
+            {
+                if (CurrentTitleBarAlpha > 0)
+                {
+                    CurrentTitleBarAlpha = Math.Max(0, CurrentTitleBarAlpha - 0.02f);
+                    DocksChanged = true;
+                }
             }
 
             int xPos = 0;
@@ -301,13 +371,13 @@ namespace LibRXFFT.Components.DirectX.Drawables
                     break;
 
                 case eOrientation.TopBorder:
-                    xPos = DockStartY;
+                    xPos = DockStartX;
                     yPos = 0;
                     break;
 
                 case eOrientation.BottomBorder:
-                    xPos = MainPlot.DirectXHeight;
-                    yPos = 0;
+                    xPos = DockStartX;
+                    yPos = MainPlot.DirectXHeight;
                     break;
             }
 
@@ -341,8 +411,16 @@ namespace LibRXFFT.Components.DirectX.Drawables
                                 /* add some space around the text */
                                 priv.TitleHitRect.Width = sizeRect.Width + BorderSpaceHor * 2;
                                 priv.TitleHitRect.Height = sizeRect.Height + BorderSpaceVert * 2;
-                                priv.BackTitleHitRect.Width = sizeRect.Width + BorderSpaceHor * 2;
-                                priv.BackTitleHitRect.Height = sizeRect.Height + BorderSpaceVert * 2;
+                                if (dock.HideBackTitle)
+                                {
+                                    priv.BackTitleHitRect.Width = 0;
+                                    priv.BackTitleHitRect.Height = 0;
+                                }
+                                else
+                                {
+                                    priv.BackTitleHitRect.Width = sizeRect.Width + BorderSpaceHor * 2;
+                                    priv.BackTitleHitRect.Height = sizeRect.Height + BorderSpaceVert * 2;
+                                }
                                 break;
 
                             case eOrientation.LeftBorder:
@@ -350,8 +428,16 @@ namespace LibRXFFT.Components.DirectX.Drawables
                                 /* add some space around the text */
                                 priv.TitleHitRect.Width = sizeRect.Height + BorderSpaceVert * 2;
                                 priv.TitleHitRect.Height = sizeRect.Width + BorderSpaceHor * 2;
-                                priv.BackTitleHitRect.Width = sizeRect.Height + BorderSpaceVert * 2;
-                                priv.BackTitleHitRect.Height = sizeRect.Width + BorderSpaceHor * 2;
+                                if (dock.HideBackTitle)
+                                {
+                                    priv.BackTitleHitRect.Width = 0;
+                                    priv.BackTitleHitRect.Height = 0;
+                                }
+                                else
+                                {
+                                    priv.BackTitleHitRect.Width = sizeRect.Height + BorderSpaceVert * 2;
+                                    priv.BackTitleHitRect.Height = sizeRect.Width + BorderSpaceHor * 2;
+                                }
                                 break;
                         }
 
@@ -408,14 +494,14 @@ namespace LibRXFFT.Components.DirectX.Drawables
                         priv.BackTitleHitRect.Y = DockBackTitleY(dock);
 
                         /* draw the title bar */
-                        uint color1 = TitleColor1 | CurrentAlpha;
-                        uint color2 = TitleColor2 | CurrentAlpha;
-                        uint colorBorder = TitleBorder | CurrentAlpha;
+                        uint color1 = TitleColor1 | TitleBarAlpha;
+                        uint color2 = TitleColor2 | TitleBarAlpha;
+                        uint colorBorder = TitleBorder | TitleBarAlpha;
 
                         if (priv.TitleHighlighted)
                         {
-                            color1 = TitleColorHigh1 | CurrentAlpha;
-                            color2 = TitleColorHigh2 | CurrentAlpha;
+                            color1 = TitleColorHigh1 | TitleBarAlpha;
+                            color2 = TitleColorHigh2 | TitleBarAlpha;
                         }
 
                         int titleX = DockTitleX(dock);
@@ -424,6 +510,8 @@ namespace LibRXFFT.Components.DirectX.Drawables
                         int backTitleY = DockBackTitleY(dock);
                         int titleW = priv.TitleHitRect.Width;
                         int titleH = priv.TitleHitRect.Height;
+                        int backTitleW = priv.BackTitleHitRect.Width;
+                        int backTitleH = priv.BackTitleHitRect.Height;
 
                         if (FadeOutByDistance)
                         {
@@ -433,25 +521,20 @@ namespace LibRXFFT.Components.DirectX.Drawables
                             BottomMostPosition = Math.Max(titleY, BottomMostPosition);
                         }
 
+                        priv.TitleBodyVertexesUsed = BuildFilledRectangle(priv.TitleBodyVertexes, priv.TitleBodyVertexesUsed, titleX, titleX + titleW, titleY, titleY + titleH, color1, color1, color2, color2);
+                        priv.TitleBorderVertexesUsed = BuildRectangle(priv.TitleBorderVertexes, priv.TitleBorderVertexesUsed, titleX, titleX + titleW, titleY, titleY + titleH, colorBorder);
+                        priv.BackTitleBodyVertexesUsed = BuildFilledRectangle(priv.BackTitleBodyVertexes, priv.BackTitleBodyVertexesUsed, backTitleX, backTitleX + backTitleW, backTitleY, backTitleY + backTitleH, color1, color1, color2, color2);
+                        priv.BackTitleBorderVertexesUsed = BuildRectangle(priv.BackTitleBorderVertexes, priv.BackTitleBorderVertexesUsed, backTitleX, backTitleX + backTitleW, backTitleY, backTitleY + backTitleH, colorBorder);
+
                         switch (Orientation)
                         {
                             case eOrientation.BottomBorder:
                             case eOrientation.TopBorder:
-                                priv.TitleBodyVertexesUsed = BuildFilledRectangle(priv.TitleBodyVertexes, priv.TitleBodyVertexesUsed, titleX, titleX + titleW, titleY, titleY + titleH, color1, color1, color2, color2);
-                                priv.TitleBorderVertexesUsed = BuildRectangle(priv.TitleBorderVertexes, priv.TitleBorderVertexesUsed, titleX, titleX + titleW, titleY, titleY + titleH, colorBorder);
-                                priv.BackTitleBodyVertexesUsed = BuildFilledRectangle(priv.BackTitleBodyVertexes, priv.BackTitleBodyVertexesUsed, backTitleX, backTitleX + titleW, backTitleY, backTitleY + titleH, color1, color1, color2, color2);
-                                priv.BackTitleBorderVertexesUsed = BuildRectangle(priv.BackTitleBorderVertexes, priv.BackTitleBorderVertexesUsed, backTitleX, backTitleX + titleW, backTitleY, backTitleY + titleH, colorBorder);
-
                                 xPos += priv.TitleHitRect.Width;
                                 break;
 
                             case eOrientation.LeftBorder:
                             case eOrientation.RightBorder:
-                                priv.TitleBodyVertexesUsed = BuildFilledRectangle(priv.TitleBodyVertexes, priv.TitleBodyVertexesUsed, titleX, titleX + titleW, titleY, titleY + titleH, color1, color2, color1, color2);
-                                priv.TitleBorderVertexesUsed = BuildRectangle(priv.TitleBorderVertexes, priv.TitleBorderVertexesUsed, titleX, titleX + titleW, titleY, titleY + titleH, colorBorder);
-                                priv.BackTitleBodyVertexesUsed = BuildFilledRectangle(priv.BackTitleBodyVertexes, priv.BackTitleBodyVertexesUsed, backTitleX, backTitleX + titleW, backTitleY, backTitleY + titleH, color1, color2, color1, color2);
-                                priv.BackTitleBorderVertexesUsed = BuildRectangle(priv.BackTitleBorderVertexes, priv.BackTitleBorderVertexesUsed, backTitleX, backTitleX + titleW, backTitleY, backTitleY + titleH, colorBorder);
-
                                 yPos += priv.TitleHitRect.Height;
                                 break;
                         }
@@ -505,7 +588,7 @@ namespace LibRXFFT.Components.DirectX.Drawables
                             case eOrientation.BottomBorder:
                             case eOrientation.TopBorder:
                                 /* draw the text */
-                                DisplayFont.DrawString(priv.TitleSprite, dock.Title, priv.TitleHitRect.X + BorderSpaceHor, priv.TitleHitRect.Y + BorderSpaceVert, (int)(TextColor | CurrentAlpha));
+                                DisplayFont.DrawString(priv.TitleSprite, dock.Title, priv.TitleHitRect.X + BorderSpaceHor, priv.TitleHitRect.Y + BorderSpaceVert, (int)(TextColor | TitleBarAlpha));
                                 break;
                             case eOrientation.LeftBorder:
                             case eOrientation.RightBorder:
@@ -513,7 +596,7 @@ namespace LibRXFFT.Components.DirectX.Drawables
                                 priv.TitleSprite.Transform = Matrix.RotationZ(-(float)Math.PI / 2);
 
                                 /* draw the text */
-                                DisplayFont.DrawString(priv.TitleSprite, dock.Title, -priv.TitleHitRect.Y - priv.TitleHitRect.Height + BorderSpaceHor, priv.TitleHitRect.X + BorderSpaceVert, (int)(TextColor | CurrentAlpha));
+                                DisplayFont.DrawString(priv.TitleSprite, dock.Title, -priv.TitleHitRect.Y - priv.TitleHitRect.Height + BorderSpaceHor, priv.TitleHitRect.X + BorderSpaceVert, (int)(TextColor | TitleBarAlpha));
                                 break;
                         }
 
@@ -585,7 +668,7 @@ namespace LibRXFFT.Components.DirectX.Drawables
 
         private int DockX(int xPos, Dock dock)
         {
-            int dockWidthTotal = dock.Width + dock.Private.TitleHitRect.Width;
+            double dockWidthTotal = dock.Width + dock.Private.BackTitleHitRect.Width;
 
             switch (Orientation)
             {
@@ -593,7 +676,7 @@ namespace LibRXFFT.Components.DirectX.Drawables
                     return (int)(MainPlot.DirectXWidth - dockWidthTotal * dock.Private.VisiblePart);
 
                 case eOrientation.LeftBorder:
-                    return (int)(dock.Private.TitleHitRect.Width + dockWidthTotal * (dock.Private.VisiblePart - 1));
+                    return (int)(dock.Private.BackTitleHitRect.Width + dockWidthTotal * (dock.Private.VisiblePart - 1));
 
                 default:
                     return xPos;
@@ -602,7 +685,7 @@ namespace LibRXFFT.Components.DirectX.Drawables
 
         private int DockY(int yPos, Dock dock)
         {
-            int dockHeightTotal = dock.Height + dock.Private.TitleHitRect.Height;
+            double dockHeightTotal = dock.Height + dock.Private.BackTitleHitRect.Height;
 
             switch (Orientation)
             {
@@ -616,6 +699,26 @@ namespace LibRXFFT.Components.DirectX.Drawables
                     return yPos;
             }
         }
+
+
+        #region PlotVertsSink Member
+
+
+        public void ProcessPlotVerts(Vertex[] verts, int vertsCount)
+        {
+            lock (Docks)
+            {
+                foreach (Dock dock in Docks)
+                {
+                    if (dock is PlotVertsSink)
+                    {
+                        ((PlotVertsSink)dock).ProcessPlotVerts(verts, vertsCount);
+                    }
+                }
+            }
+        }
+
+        #endregion
 
     }
 }

@@ -8,6 +8,7 @@ using LibRXFFT.Libraries.Misc;
 using SlimDX.Direct3D9;
 using Timer = LibRXFFT.Libraries.Timers.AccurateTimer;
 using RX_FFT.Components.GDI;
+using LibRXFFT.Components.DirectX.Drawables;
 
 
 namespace LibRXFFT.Components.DirectX
@@ -106,7 +107,7 @@ namespace LibRXFFT.Components.DirectX
                 if (!double.IsNaN(RenderSleepDelay) && !double.IsInfinity(RenderSleepDelay) && LinePointUpdateTimer != null)
                 {
                     LinePointUpdateTimer.Interval = (uint)RenderSleepDelay;
-                    ScreenRefreshTimer.Interval = (uint)((value < 60) ? (1000 / 60) : RenderSleepDelay);
+                    ScreenRefreshTimer.Interval = (uint)((value < MinRefreshRate) ? (1000 / MinRefreshRate) : RenderSleepDelay);
                 }
             }
         }
@@ -149,7 +150,7 @@ namespace LibRXFFT.Components.DirectX
             if (!slaveMode)
             {
                 ScreenRefreshTimer = new Timer();
-                ScreenRefreshTimer.Interval = 1000 / 60;
+                ScreenRefreshTimer.Interval = (uint)(1000 / DefaultRefreshRate);
                 ScreenRefreshTimer.Timer += new EventHandler(ScreenRefreshTimer_Func);
                 ScreenRefreshTimer.Start();
 
@@ -160,7 +161,6 @@ namespace LibRXFFT.Components.DirectX
             }
         }
 
-
         protected override void CreateVertexBufferForPoints(Point[] points, int numPoints)
         {
             if (points == null)
@@ -168,32 +168,35 @@ namespace LibRXFFT.Components.DirectX
 
             try
             {
-                DirectXLock.WaitOne();
+                uint colorFG = ((uint)ColorFG.ToArgb()) & 0xFFFFFF;
 
-                if (Device != null)
+                if (numPoints > 0)
                 {
-                    uint colorFG = ((uint)ColorFG.ToArgb()) & 0xFFFFFF;
-
-                    if (numPoints > 0)
+                    if (numPoints > PlotVerts.Length)
                     {
-                        if (numPoints > PlotVerts.Length)
+                        PlotVerts = new Vertex[numPoints];
+                        PlotVertsOverview = new Vertex[numPoints];
+                    }
+
+                    PlotVertsEntries = numPoints - 1;
+
+                    for (int pos = 0; pos < numPoints; pos++)
+                    {
+                        double xPos = DirectXWidth / 2 * (1 + points[pos].X / 2 * XZoomFactor);
+                        double yPos = DirectXHeight / 2 * (1 + points[pos].Y / 2 * YZoomFactor);
+
+                        PlotVerts[pos].PositionRhw.X = (float)((float)xPos - DisplayXOffset);
+                        PlotVerts[pos].PositionRhw.Y = (float)((float)yPos - DisplayYOffset);
+                        PlotVerts[pos].PositionRhw.Z = 0.5f;
+                        PlotVerts[pos].PositionRhw.W = 1;
+                        PlotVerts[pos].Color = 0x9F000000 | colorFG;
+                    }
+
+                    foreach (DirectXDrawable drawable in Drawables)
+                    {
+                        if (drawable is PlotVertsSink)
                         {
-                            PlotVerts = new Vertex[numPoints];
-                            PlotVertsOverview = new Vertex[numPoints];
-                        }
-
-                        PlotVertsEntries = numPoints - 1;
-
-                        for (int pos = 0; pos < numPoints; pos++)
-                        {
-                            double xPos = DirectXWidth / 2 * (1 + points[pos].X / 2 * XZoomFactor);
-                            double yPos = DirectXHeight / 2 * (1 + points[pos].Y / 2 * YZoomFactor);
-
-                            PlotVerts[pos].PositionRhw.X = (float)((float)xPos - DisplayXOffset);
-                            PlotVerts[pos].PositionRhw.Y = (float)((float)yPos - DisplayYOffset);
-                            PlotVerts[pos].PositionRhw.Z = 0.5f;
-                            PlotVerts[pos].PositionRhw.W = 1;
-                            PlotVerts[pos].Color = 0x9F000000 | colorFG;
+                            ((PlotVertsSink)drawable).ProcessPlotVerts(PlotVerts, PlotVertsEntries);
                         }
                     }
                 }
@@ -201,10 +204,6 @@ namespace LibRXFFT.Components.DirectX
             catch (Exception e)
             {
                 return;
-            }
-            finally
-            {
-                DirectXLock.ReleaseMutex();
             }
         }
 

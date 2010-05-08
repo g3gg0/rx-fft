@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Windows.Forms;
 using LibRXFFT.Libraries.Misc;
+using System.Globalization;
 
 namespace LibRXFFT.Components.GDI
 {
@@ -16,11 +17,52 @@ namespace LibRXFFT.Components.GDI
         public event EventHandler FrequencyChanged;
         public event EventHandler EnterPresed;
 
+        private char DecimalSeparatorChar;
+        private string FixedLengthFormat = "";
+
         public FrequencySelector()
             : base()
         {
             this.MouseWheel += new MouseEventHandler(FrequencySelector_MouseWheel);
             this.KeyPress += new KeyPressEventHandler(FrequencySelector_KeyPress);
+
+            FixedLengthString = false;
+            FixedLengthDecades = 10;
+            DecimalSeparatorChar = DecimalSeparator();
+        }
+
+        private string BuildFixedLengthFormat(int decades)
+        {
+            int groups = decades / 3;
+            int remain = decades % 3;
+            string format = "";
+
+            /* "{0:0,000,000,000} Hz" */
+
+            for (int pos = 0; pos < groups; pos++)
+            {
+                if (pos == 0)
+                {
+                    format = "000" + format;
+                }
+                else
+                {
+                    format = "000," + format;
+                }
+            }
+            for (int pos = 0; pos < remain; pos++)
+            {
+                if (pos == 0 && groups > 0)
+                {
+                    format = "0," + format;
+                }
+                else
+                {
+                    format = "0" + format;
+                }
+            }
+
+            return "{0:" + format + "} Hz";
         }
 
         void FrequencySelector_KeyPress(object sender, KeyPressEventArgs e)
@@ -57,6 +99,11 @@ namespace LibRXFFT.Components.GDI
             }
         }
 
+        public static char DecimalSeparator()
+        {
+            return CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator.ToCharArray()[0];
+        }
+
         void FrequencySelector_MouseWheel(object sender, MouseEventArgs e)
         {
             if (ReadOnly)
@@ -68,14 +115,31 @@ namespace LibRXFFT.Components.GDI
             int oldSelectionStart = SelectionStart;
             long origFreq = Frequency;
             long newFreq = origFreq;
-            int freqDecades = 10;// origFreq.ToString().Length;
-            int decade = freqDecades;
+            int freqDecades = 0;
+
+            /* get the number of decades for the current frequency */
+            for (int pos = 0; pos < origText.Length; pos++)
+            {
+                if (char.IsDigit(origText[pos]))
+                {
+                    freqDecades++;
+                }
+
+                if (origText[pos] == DecimalSeparatorChar)
+                {
+                    break;
+                }
+            }
+            freqDecades += FrequencyUnitDecades;
 
             /* check at which decade the cursor is positioned */
+            int decade = freqDecades;
             for (int pos = 0; pos < origText.Length; pos++)
             {
                 if (pos < oldSelectionStart && char.IsDigit(origText[pos]))
+                {
                     decade--;
+                }
             }
 
             /* add/subtract the mouse wheel actions */
@@ -158,24 +222,31 @@ namespace LibRXFFT.Components.GDI
         {
             get
             {
+                return (long)Math.Pow(10, FrequencyUnitDecades);
+            }
+        }
+
+        public int FrequencyUnitDecades
+        {
+            get
+            {
                 long factor = 1;
 
                 switch (FrequencyUnitString.ToLower())
                 {
                     case "hz":
-                        return 1;
+                        return 0;
                     case "khz":
-                        return 1000;
+                        return 3;
                     case "mhz":
-                        return 1000000;
+                        return 6;
                     case "ghz":
-                        return 1000000000;
+                        return 9;
                     default:
-                        return 1;
+                        return 0;
                 }
             }
         }
-
 
         public string FrequencyUnitString
         {
@@ -207,6 +278,20 @@ namespace LibRXFFT.Components.GDI
             }
         }
 
+        private int _FixedLengthDecades;
+        public int FixedLengthDecades
+        {
+            get
+            {
+                return _FixedLengthDecades;
+            }
+            set
+            {
+                _FixedLengthDecades = value;
+                FixedLengthFormat = BuildFixedLengthFormat(FixedLengthDecades);
+            }
+        }
+
         public bool FixedLengthString
         {
             get;
@@ -226,7 +311,7 @@ namespace LibRXFFT.Components.GDI
             {
                 if (FixedLengthString)
                 {
-                    Text = FrequencyFormatter.FreqToStringSimple(value);
+                    Text = String.Format(FixedLengthFormat, value);
                 }
                 else
                 {

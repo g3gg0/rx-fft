@@ -26,6 +26,11 @@ namespace LibRXFFT.Libraries.USB_RX.Tuners
             this.MasterTuner = masterTuner;
             this.MasterTunerFreqSteps = masterTunerFreqSteps;
 
+            if (this.SlaveTuner.GetFrequency() == 0)
+            {
+                this.SlaveTuner.SetFrequency(this.MasterTuner.IntermediateFrequency);
+            }
+
             /* register for any filter width etc change */
             SlaveTuner.InvertedSpectrumChanged += new EventHandler(Tuner_InvertedSpectrumChanged);
             SlaveTuner.FrequencyChanged += new EventHandler(Tuner_FrequencyChanged);
@@ -103,6 +108,7 @@ namespace LibRXFFT.Libraries.USB_RX.Tuners
         public event EventHandler InvertedSpectrumChanged;
         public event EventHandler FilterWidthChanged;
         public event EventHandler DeviceDisappeared;
+        public event EventHandler DeviceClosed;
 
         public bool OpenTuner()
         {
@@ -280,14 +286,17 @@ namespace LibRXFFT.Libraries.USB_RX.Tuners
 
         public long GetFrequency()
         {
-            long frequency;
             long freqSlave = this.SlaveTuner.GetFrequency();
             long freqMaster = this.MasterTuner.GetFrequency();
 
-            if (InvertedSpectrum)
-                frequency = MasterTuner.IntermediateFrequency - freqSlave + freqMaster;
+            long frequency = freqMaster;
+
+            long delta = freqSlave - MasterTuner.IntermediateFrequency;
+
+            if (MasterTuner.InvertedSpectrum)
+                frequency += delta;
             else
-                frequency = MasterTuner.IntermediateFrequency - freqSlave - freqMaster;
+                frequency -= delta;
 
             CurrentFrequency = frequency;
 
@@ -297,19 +306,21 @@ namespace LibRXFFT.Libraries.USB_RX.Tuners
         public bool SetFrequency(long frequency)
         {
             long freqMaster = frequency;
-            long freqSlave;
+            long freqSlave = MasterTuner.IntermediateFrequency;
 
             if (MasterTunerFreqSteps > 0)
             {
                 freqMaster = (frequency / MasterTunerFreqSteps) * MasterTunerFreqSteps;
             }
 
-            if (InvertedSpectrum)
-                freqSlave = MasterTuner.IntermediateFrequency - (frequency - freqMaster);
-            else
-                freqSlave = MasterTuner.IntermediateFrequency + (frequency - freqMaster);
+            long delta = frequency - freqMaster;
 
-            //Log.AddMessage("M: " + freqMaster + " S: " + freqSlave);
+            if (MasterTuner.InvertedSpectrum)
+                freqSlave += delta;
+            else
+                freqSlave -= delta;
+
+            //Log.AddMessage("-> " + frequency + "  = M: " + freqMaster + " S: " + (freqSlave - MasterTuner.IntermediateFrequency));
 
             if (!SlaveTuner.SetFrequency(freqSlave))
                 return false;

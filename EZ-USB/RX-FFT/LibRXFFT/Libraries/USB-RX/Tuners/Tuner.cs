@@ -9,6 +9,7 @@ namespace LibRXFFT.Libraries.USB_RX.Tuners
         event EventHandler FrequencyChanged;
         event EventHandler InvertedSpectrumChanged;
         event EventHandler DeviceDisappeared;
+        event EventHandler DeviceClosed;
 
         bool OpenTuner();
         void CloseTuner();

@@ -10,6 +10,7 @@ using Font = SlimDX.Direct3D9.Font;
 using LibRXFFT.Components.DirectX.Drawables;
 using LibRXFFT.Components.DirectX.Drawables.Docks;
 using RX_FFT.Components.GDI;
+using LibRXFFT.Libraries.Misc;
 
 
 namespace LibRXFFT.Components.DirectX
@@ -21,7 +22,11 @@ namespace LibRXFFT.Components.DirectX
             get { return 1000 / RenderSleepDelay; }
             set { RenderSleepDelay = 1000 / value; }
         }
-        public double RenderSleepDelay = 1000 / 60;
+
+        public double DefaultRefreshRate = 60;
+        public double MinRefreshRate = 60;
+        public double RenderSleepDelay;
+
         public DirectXPlot SlavePlot = null;
 
         public bool KeepText = false;
@@ -135,7 +140,7 @@ namespace LibRXFFT.Components.DirectX
         private Cursor EmptyCursor;
         private Cursor DefaultCursor;
 
-        private LinkedList<DirectXDrawable> Drawables = new LinkedList<DirectXDrawable>();
+        protected LinkedList<DirectXDrawable> Drawables = new LinkedList<DirectXDrawable>();
         private InputEvent DrawableInputEvent = new InputEvent();
 
         public DirectXPlot()
@@ -163,6 +168,8 @@ namespace LibRXFFT.Components.DirectX
 
             DefaultCursor = this.Cursor;
             EmptyCursor = CreateEmptyCursor();
+
+            RenderSleepDelay = 1000 / DefaultRefreshRate;
 
             try
             {
@@ -240,80 +247,70 @@ namespace LibRXFFT.Components.DirectX
 
             try
             {
-                DirectXLock.WaitOne();
+                uint colorFG = ((uint)ColorFG.ToArgb()) & 0xFFFFFF;
 
-                if (Device != null)
+                if (numPoints > 0)
                 {
-                    uint colorFG = ((uint)ColorFG.ToArgb()) & 0xFFFFFF;
-
-                    if (numPoints > 0)
+                    if (numPoints > PlotVerts.Length)
                     {
-                        if (numPoints > PlotVerts.Length)
-                        {
-                            PlotVerts = new Vertex[numPoints];
-                            PlotVertsOverview = new Vertex[numPoints];
-                        }
-
-                        PlotVertsEntries = numPoints - 1;
-
-                        double maximum = 0;
-                        if (YAxisCentered)
-                        {
-                            for (int pos = 0; pos < numPoints; pos++)
-                            {
-                                PlotVerts[pos].PositionRhw.X = (float)((XAxisSampleOffset + points[pos].X) * XZoomFactor - DisplayXOffset);
-                                PlotVerts[pos].PositionRhw.Y = (float)(DirectXHeight - (DisplayYOffset + points[pos].Y * YZoomFactor)) / 2;
-                                PlotVerts[pos].PositionRhw.Z = 0.5f;
-                                PlotVerts[pos].PositionRhw.W = 1;
-                                PlotVerts[pos].Color = 0xFF000000 | colorFG;
-
-                                if (OverviewModeEnabled)
-                                {
-                                    PlotVertsOverview[pos].PositionRhw.X = (float)(XAxisSampleOffset + points[pos].X);
-                                    PlotVertsOverview[pos].PositionRhw.Y = PlotVerts[pos].PositionRhw.Y;
-                                    PlotVertsOverview[pos].PositionRhw.Z = PlotVerts[pos].PositionRhw.Z;
-                                    PlotVertsOverview[pos].PositionRhw.W = PlotVerts[pos].PositionRhw.W;
-                                    PlotVertsOverview[pos].Color = PlotVerts[pos].Color;
-                                }
-
-                                maximum = (int)Math.Max(points[pos].X, maximum);
-                            }
-                        }
-                        else
-                        {
-                            for (int pos = 0; pos < numPoints; pos++)
-                            {
-                                PlotVerts[pos].PositionRhw.X = (float)((XAxisSampleOffset + points[pos].X) * XZoomFactor - DisplayXOffset);
-                                PlotVerts[pos].PositionRhw.Y = (float)(DirectXHeight - (DisplayYOffset + points[pos].Y * YZoomFactor));
-                                PlotVerts[pos].PositionRhw.Z = 0.5f;
-                                PlotVerts[pos].PositionRhw.W = 1;
-                                PlotVerts[pos].Color = 0xFF000000 | colorFG;
-
-                                if (OverviewModeEnabled)
-                                {
-                                    PlotVertsOverview[pos].PositionRhw.X = (float)(XAxisSampleOffset + points[pos].X);
-                                    PlotVertsOverview[pos].PositionRhw.Y = PlotVerts[pos].PositionRhw.Y;
-                                    PlotVertsOverview[pos].PositionRhw.Z = PlotVerts[pos].PositionRhw.Z;
-                                    PlotVertsOverview[pos].PositionRhw.W = PlotVerts[pos].PositionRhw.W;
-                                    PlotVertsOverview[pos].Color = PlotVerts[pos].Color;
-                                }
-
-                                maximum = (int)Math.Max(points[pos].X, maximum);
-                            }
-                        }
-
-                        XMaximum = maximum;
+                        PlotVerts = new Vertex[numPoints];
+                        PlotVertsOverview = new Vertex[numPoints];
                     }
 
+                    PlotVertsEntries = numPoints - 1;
+
+                    double maximum = 0;
+                    if (YAxisCentered)
+                    {
+                        for (int pos = 0; pos < numPoints; pos++)
+                        {
+                            PlotVerts[pos].PositionRhw.X = (float)((XAxisSampleOffset + points[pos].X) * XZoomFactor - DisplayXOffset);
+                            PlotVerts[pos].PositionRhw.Y = (float)(DirectXHeight - (DisplayYOffset + points[pos].Y * YZoomFactor)) / 2;
+                            PlotVerts[pos].PositionRhw.Z = 0.5f;
+                            PlotVerts[pos].PositionRhw.W = 1;
+                            PlotVerts[pos].Color = 0xFF000000 | colorFG;
+
+                            if (OverviewModeEnabled)
+                            {
+                                PlotVertsOverview[pos].PositionRhw.X = (float)(XAxisSampleOffset + points[pos].X);
+                                PlotVertsOverview[pos].PositionRhw.Y = PlotVerts[pos].PositionRhw.Y;
+                                PlotVertsOverview[pos].PositionRhw.Z = PlotVerts[pos].PositionRhw.Z;
+                                PlotVertsOverview[pos].PositionRhw.W = PlotVerts[pos].PositionRhw.W;
+                                PlotVertsOverview[pos].Color = PlotVerts[pos].Color;
+                            }
+
+                            maximum = (int)Math.Max(points[pos].X, maximum);
+                        }
+                    }
+                    else
+                    {
+                        for (int pos = 0; pos < numPoints; pos++)
+                        {
+                            PlotVerts[pos].PositionRhw.X = (float)((XAxisSampleOffset + points[pos].X) * XZoomFactor - DisplayXOffset);
+                            PlotVerts[pos].PositionRhw.Y = (float)(DirectXHeight - (DisplayYOffset + points[pos].Y * YZoomFactor));
+                            PlotVerts[pos].PositionRhw.Z = 0.5f;
+                            PlotVerts[pos].PositionRhw.W = 1;
+                            PlotVerts[pos].Color = 0xFF000000 | colorFG;
+
+                            if (OverviewModeEnabled)
+                            {
+                                PlotVertsOverview[pos].PositionRhw.X = (float)(XAxisSampleOffset + points[pos].X);
+                                PlotVertsOverview[pos].PositionRhw.Y = PlotVerts[pos].PositionRhw.Y;
+                                PlotVertsOverview[pos].PositionRhw.Z = PlotVerts[pos].PositionRhw.Z;
+                                PlotVertsOverview[pos].PositionRhw.W = PlotVerts[pos].PositionRhw.W;
+                                PlotVertsOverview[pos].Color = PlotVerts[pos].Color;
+                            }
+
+                            maximum = (int)Math.Max(points[pos].X, maximum);
+                        }
+                    }
+
+                    XMaximum = maximum;
                 }
             }
             catch (Exception e)
             {
                 return;
-            }
-            finally
-            {
-                DirectXLock.ReleaseMutex();
             }
         }
 
@@ -672,7 +669,6 @@ namespace LibRXFFT.Components.DirectX
 
         protected virtual void RenderCore()
         {
-
             Device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, ColorBG, 1.0f, 0);
             Device.VertexFormat = VertexFormat.PositionRhw | VertexFormat.Diffuse;
 

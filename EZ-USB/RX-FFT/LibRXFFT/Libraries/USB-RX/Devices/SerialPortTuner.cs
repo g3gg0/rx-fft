@@ -274,6 +274,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         public event EventHandler FrequencyChanged;
         public event EventHandler InvertedSpectrumChanged;
         public event EventHandler DeviceDisappeared;
+        public event EventHandler DeviceClosed;
 
         private long Frequency = 0;
         protected bool IsOpened;

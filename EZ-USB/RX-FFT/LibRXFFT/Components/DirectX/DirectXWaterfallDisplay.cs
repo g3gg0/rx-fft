@@ -18,7 +18,7 @@ namespace LibRXFFT.Components.DirectX
         public double DynamicLimitFact = 0.1f;
         public double DynamicBaseLevel = 0;
         private bool DynamicBaseLevelChanged = false;
-        public bool DrawTimeStamps = false;
+        public bool DrawTimeStamps = true;
 
         /* DirectX related graphic stuff */
         protected override MultisampleType SuggestedMultisample { get { return MultisampleType.None; } }
@@ -534,8 +534,8 @@ namespace LibRXFFT.Components.DirectX
 
                             if (DynamicLimits)
                             {
-                                maxLevel = Math.Max(maxLevel, sampleValue);
-                                minLevel = Math.Min(minLevel, sampleValue);
+                                maxLevel = Math.Max(maxLevel, LinePoints[pos].Y);
+                                minLevel = Math.Min(minLevel, LinePoints[pos].Y);
                             }
                         }
                         resetAverage = false;
@@ -543,8 +543,9 @@ namespace LibRXFFT.Components.DirectX
                         LinePointsUpdated = true;
                     }
                     SampleValuesAveraged = 0;
-                    EnoughData = false;
                 }
+                EnoughDataReset = true;
+                EnoughData = false;
             }
 
             if (DynamicLimits)
@@ -552,8 +553,8 @@ namespace LibRXFFT.Components.DirectX
                 LeveldBBlack -= DynamicBaseLevel;
                 LeveldBWhite -= 10;
 
-                float dBmax = (float)((SquaredFFTData ? DBTools.SquaredSampleTodB(maxLevel) : DBTools.SampleTodB(maxLevel)) - BaseAmplification);
-                float dBmin = (float)((SquaredFFTData ? DBTools.SquaredSampleTodB(minLevel) : DBTools.SampleTodB(minLevel)) - BaseAmplification);
+                float dBmax = (float)(maxLevel - BaseAmplification);
+                float dBmin = (float)(minLevel - BaseAmplification);
 
                 LeveldBWhite = (LeveldBWhite + dBmax * DynamicLimitFact) / (1 + DynamicLimitFact);
                 ApproxMaxStrength = LeveldBWhite;
@@ -878,114 +879,106 @@ namespace LibRXFFT.Components.DirectX
 
             try
             {
-                DirectXLock.WaitOne();
-
-                if (Device != null)
+                if (numPoints > 0)
                 {
-                    if (numPoints > 0)
+                    if (numPoints != PlotVertsOverview.Length)
+                        PlotVertsOverview = new Vertex[numPoints];
+
+                    if (SavingEnabled)
                     {
-                        if (numPoints != PlotVertsOverview.Length)
-                            PlotVertsOverview = new Vertex[numPoints];
-
-                        if (SavingEnabled)
+                        for (int pos = 0; pos < numPoints; pos++)
                         {
-                            for (int pos = 0; pos < numPoints; pos++)
-                            {
-                                double yVal = points[pos].Y;
-                                float dB = (float)(yVal - BaseAmplification);
-                                double ampl = 1 - ((dB - LeveldBWhite) / (LeveldBBlack - LeveldBWhite));
+                            double yVal = points[pos].Y;
+                            float dB = (float)(yVal - BaseAmplification);
+                            double ampl = 1 - ((dB - LeveldBWhite) / (LeveldBBlack - LeveldBWhite));
 
-                                ampl = Math.Max(0, ampl);
-                                ampl = Math.Min(1, ampl);
+                            ampl = Math.Max(0, ampl);
+                            ampl = Math.Min(1, ampl);
 
-                                PlotVertsOverview[pos].PositionRhw.X = (float)(((float)pos / (float)numPoints) * SaveParameters.BackBufferWidth);
-                                PlotVertsOverview[pos].PositionRhw.Y = 0;
-                                PlotVertsOverview[pos].PositionRhw.Z = 0.5f;
-                                PlotVertsOverview[pos].PositionRhw.W = 1;
-                                PlotVertsOverview[pos].Color = (uint)(0xFF000000 | ColorTable.Lookup(ampl));
-                            }
-                        }
-
-                        /* get density */
-                        int density = 0;
-                        for (int pos = 0; (pos < numPoints) && (((double)points[pos].X / (double)numPoints) * DirectXWidth * XZoomFactor < 1); pos++)
-                        {
-                            density++;
-                        }
-
-                        /* calculate average on high density */
-                        if (density > 1)
-                        {
-                            int newNumPoints = (int)(((double)points[numPoints - 1].X / (double)numPoints) * DirectXWidth * XZoomFactor);
-                            double ratio = (double)numPoints / (double)newNumPoints;
-
-                            int startPos = 0;
-                            for (int pos = 0; (pos < numPoints) && (points[pos].X * XZoomFactor < 0); pos++)
-                                startPos++;
-
-                            if (newNumPoints != PlotVerts.Length)
-                                PlotVerts = new Vertex[newNumPoints];
-
-                            PlotVertsEntries = newNumPoints - 1;
-
-
-                            for (int pos = 0; pos < newNumPoints; pos++)
-                            {
-                                double maxAmpl = 0;
-
-                                for (int sample = (int)(pos * ratio); sample < (pos + 1) * ratio; sample++)
-                                {
-                                    double yVal = points[startPos + sample].Y;
-                                    float dB = (float)(yVal - BaseAmplification);
-                                    double ampl = 1 - ((dB - LeveldBWhite) / (LeveldBBlack - LeveldBWhite));
-
-                                    ampl = Math.Max(0, ampl);
-                                    ampl = Math.Min(1, ampl);
-
-                                    maxAmpl = Math.Max(ampl, maxAmpl);
-                                }
-
-                                PlotVerts[pos].PositionRhw.X = (float)(pos - DisplayXOffset);
-                                PlotVerts[pos].PositionRhw.Y = 0;
-                                PlotVerts[pos].PositionRhw.Z = 0.5f;
-                                PlotVerts[pos].PositionRhw.W = 1;
-                                PlotVerts[pos].Color = (uint)(0xFF000000 | ColorTable.Lookup(maxAmpl));
-                            }
-                        }
-                        else
-                        {
-                            if (numPoints != PlotVerts.Length)
-                                PlotVerts = new Vertex[numPoints];
-
-                            PlotVertsEntries = numPoints - 1;
-
-                            for (int pos = 0; pos < numPoints; pos++)
-                            {
-                                double yVal = points[pos].Y;
-                                float dB = (float)(yVal - BaseAmplification);
-                                double ampl = 1 - ((dB - LeveldBWhite) / (LeveldBBlack - LeveldBWhite));
-
-                                ampl = Math.Max(0, ampl);
-                                ampl = Math.Min(1, ampl);
-
-                                double xPos = ((double)points[pos].X / (double)numPoints) * DirectXWidth;
-                                PlotVerts[pos].PositionRhw.X = (float)((XAxisSampleOffset + xPos) * XZoomFactor - DisplayXOffset);
-                                PlotVerts[pos].PositionRhw.Y = 0;
-                                PlotVerts[pos].PositionRhw.Z = 0.5f;
-                                PlotVerts[pos].PositionRhw.W = 1;
-                                PlotVerts[pos].Color = (uint)(0xFF000000 | ColorTable.Lookup(ampl));
-                            }
+                            PlotVertsOverview[pos].PositionRhw.X = (float)(((float)pos / (float)numPoints) * SaveParameters.BackBufferWidth);
+                            PlotVertsOverview[pos].PositionRhw.Y = 0;
+                            PlotVertsOverview[pos].PositionRhw.Z = 0.5f;
+                            PlotVertsOverview[pos].PositionRhw.W = 1;
+                            PlotVertsOverview[pos].Color = (uint)(0xFF000000 | ColorTable.Lookup(ampl));
                         }
                     }
+
+                    /* get density */
+                    int density = 0;
+                    for (int pos = 0; (pos < numPoints) && (((double)points[pos].X / (double)numPoints) * DirectXWidth * XZoomFactor < 1); pos++)
+                    {
+                        density++;
+                    }
+
+                    /* calculate average on high density */
+                    if (density > 1)
+                    {
+                        int newNumPoints = (int)(((double)points[numPoints - 1].X / (double)numPoints) * DirectXWidth * XZoomFactor);
+                        double ratio = (double)numPoints / (double)newNumPoints;
+
+                        int startPos = 0;
+                        for (int pos = 0; (pos < numPoints) && (points[pos].X * XZoomFactor < 0); pos++)
+                            startPos++;
+
+                        if (newNumPoints != PlotVerts.Length)
+                            PlotVerts = new Vertex[newNumPoints];
+
+                        PlotVertsEntries = newNumPoints - 1;
+
+
+                        for (int pos = 0; pos < newNumPoints; pos++)
+                        {
+                            double maxAmpl = 0;
+
+                            for (int sample = (int)(pos * ratio); sample < (pos + 1) * ratio; sample++)
+                            {
+                                double yVal = points[startPos + sample].Y;
+                                float dB = (float)(yVal - BaseAmplification);
+                                double ampl = 1 - ((dB - LeveldBWhite) / (LeveldBBlack - LeveldBWhite));
+
+                                ampl = Math.Max(0, ampl);
+                                ampl = Math.Min(1, ampl);
+
+                                maxAmpl = Math.Max(ampl, maxAmpl);
+                            }
+
+                            PlotVerts[pos].PositionRhw.X = (float)(pos - DisplayXOffset);
+                            PlotVerts[pos].PositionRhw.Y = 0;
+                            PlotVerts[pos].PositionRhw.Z = 0.5f;
+                            PlotVerts[pos].PositionRhw.W = 1;
+                            PlotVerts[pos].Color = (uint)(0xFF000000 | ColorTable.Lookup(maxAmpl));
+                        }
+                    }
+                    else
+                    {
+                        if (numPoints != PlotVerts.Length)
+                            PlotVerts = new Vertex[numPoints];
+
+                        PlotVertsEntries = numPoints - 1;
+
+                        for (int pos = 0; pos < numPoints; pos++)
+                        {
+                            double yVal = points[pos].Y;
+                            float dB = (float)(yVal - BaseAmplification);
+                            double ampl = 1 - ((dB - LeveldBWhite) / (LeveldBBlack - LeveldBWhite));
+
+                            ampl = Math.Max(0, ampl);
+                            ampl = Math.Min(1, ampl);
+
+                            double xPos = ((double)points[pos].X / (double)numPoints) * DirectXWidth;
+                            PlotVerts[pos].PositionRhw.X = (float)((XAxisSampleOffset + xPos) * XZoomFactor - DisplayXOffset);
+                            PlotVerts[pos].PositionRhw.Y = 0;
+                            PlotVerts[pos].PositionRhw.Z = 0.5f;
+                            PlotVerts[pos].PositionRhw.W = 1;
+                            PlotVerts[pos].Color = (uint)(0xFF000000 | ColorTable.Lookup(ampl));
+                        }
+                    }
+
                 }
             }
             catch (Exception e)
             {
                 return;
-            }
-            finally
-            {
-                DirectXLock.ReleaseMutex();
             }
         }
 

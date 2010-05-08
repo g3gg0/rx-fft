@@ -101,6 +101,7 @@
     <Compile Include="Components\DirectX\DirectXBurstDisplay.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Include="Components\DirectX\Drawables\Docks\DensityMap.cs" />
     <Compile Include="Components\DirectX\Drawables\DirectXDrawable.cs" />
     <Compile Include="Components\DirectX\Drawables\DirectXDrawBase.cs" />
     <Compile Include="Components\DirectX\DirectXPhaseDisplay.cs">
@@ -120,12 +121,16 @@
     <Compile Include="Components\DirectX\Drawables\Docks\Dock.cs" />
     <Compile Include="Components\DirectX\Drawables\DockPanel.cs" />
     <Compile Include="Components\DirectX\Drawables\Docks\FFTAreaSelectionDetails.cs" />
+    <Compile Include="Components\DirectX\Drawables\Docks\WaveformAreaSelectionDetails.cs" />
     <Compile Include="Components\DirectX\Drawables\Docks\TestDock.cs" />
     <Compile Include="Components\DirectX\Drawables\Docks\PowerBarDock.cs" />
     <Compile Include="Components\DirectX\Drawables\FFTAreaSelection.cs" />
+    <Compile Include="Components\DirectX\Drawables\PlotVertsHistory.cs" />
     <Compile Include="Components\DirectX\Drawables\PowerBar.cs" />
     <Compile Include="Components\DirectX\Drawables\StaticText.cs" />
     <Compile Include="Components\DirectX\Drawables\ScrollingText.cs" />
+    <Compile Include="Components\DirectX\Drawables\PlotVertsSink.cs" />
+    <Compile Include="Components\DirectX\Drawables\WaveformAreaSelection.cs" />
     <Compile Include="Components\GDI\FileFormatDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -238,6 +243,7 @@
     <Compile Include="Libraries\Misc\TraceMutex.cs" />
     <Compile Include="Libraries\RemoteControl.cs" />
     <Compile Include="Libraries\SampleSources\RandomSampleSource.cs" />
+    <Compile Include="Libraries\SampleSources\WaveFileIO.cs" />
     <Compile Include="Libraries\SignalProcessing\AttenuationCorrection.cs" />
     <Compile Include="Libraries\SignalProcessing\Downmixer.cs" />
     <Compile Include="Libraries\Demodulators\FMDemodulator.cs" />
@@ -300,6 +306,7 @@
     <Compile Include="Libraries\USB-RX\Devices\Atmel.cs" />
     <Compile Include="Libraries\USB-RX\Devices\AtmelProgrammer.cs" />
     <Compile Include="Libraries\USB-RX\Devices\BO35.cs" />
+    <Compile Include="Libraries\USB-RX\Devices\VUHF_RX.cs" />
     <Compile Include="Libraries\USB-RX\Devices\SerialPortTuner.cs" />
     <Compile Include="Libraries\USB-RX\Interfaces\AD6636Interface.cs" />
     <Compile Include="Libraries\USB-RX\Interfaces\I2CInterface.cs" />

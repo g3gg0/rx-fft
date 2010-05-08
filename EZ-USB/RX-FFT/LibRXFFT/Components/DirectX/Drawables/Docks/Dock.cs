@@ -10,10 +10,12 @@ namespace LibRXFFT.Components.DirectX.Drawables.Docks
     public class Dock : DirectXDrawBase
     {
         public virtual string Title { get; set; }
-        public virtual int Height { get; set; }
-        public virtual int Width { get; set; }
+        public virtual float Height { get; set; }
+        public virtual float Width { get; set; }
         public virtual bool Sticky { get; set; }
         public virtual bool HideOthers { get; set; }
+        public virtual bool HideBackTitle { get; set; }
+        
 
         public int XPosition = 0;
         public int YPosition = 0;
@@ -32,7 +34,7 @@ namespace LibRXFFT.Components.DirectX.Drawables.Docks
             Panel.AddDock(this);
         }
 
-        public virtual bool ProcessUserEvent(Point mousePos, eUserEvent evt, double param)
+        public virtual bool ProcessUserEvent(InputEvent evt)
         {
             return false;
         }
@@ -47,6 +49,14 @@ namespace LibRXFFT.Components.DirectX.Drawables.Docks
 
         public virtual void ReleaseResources()
         {
+        }
+
+        public DirectXPlot MainPlot
+        {
+            get
+            {
+                return Panel.MainPlot;
+            }
         }
     }
 }

@@ -24,7 +24,7 @@ namespace LibRXFFT.Components.DirectX.Drawables.Docks
             }
         }
 
-        public override int Height
+        public override float Height
         {
             get { return Private.TitleHitRect.Height; }
         }
@@ -143,12 +143,12 @@ namespace LibRXFFT.Components.DirectX.Drawables.Docks
 
             TextRect.X = XPosition;
             TextRect.Y = YPosition;
-            TextRect.Width = Width;
-            TextRect.Height = Height;
+            TextRect.Width = (int)Width;
+            TextRect.Height = (int)Height;
             TextShadowRect.X = XPosition + 1;
             TextShadowRect.Y = YPosition + 1;
-            TextShadowRect.Width = Width;
-            TextShadowRect.Height = Height;
+            TextShadowRect.Width = (int)Width;
+            TextShadowRect.Height = (int)Height;
 
             string text = Power.ToString("#0.0 ") + Unit;
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.IO;
+using System.Collections;
 
 namespace LibRXFFT.Libraries.USB_RX.Misc
 {
@@ -8,19 +9,41 @@ namespace LibRXFFT.Libraries.USB_RX.Misc
     {
         private int MAX_CODE_LENGTH = 0x10000;
         private int DATA_RECORD = 0;
-        private TextReader hexFile;
+        private string[] HexLines;
 
         public IntelHexFile(string fileName)
         {
-            hexFile = new StreamReader(fileName);
+            TextReader hexFile = null;
+
+            try
+            {
+                hexFile = new StreamReader(fileName);
+
+                ArrayList records = new ArrayList();
+                string record;
+                while ((record = hexFile.ReadLine()) != null)
+                {
+                    records.Add(record);
+                }
+
+                HexLines = (string[])records.ToArray(typeof(string));
+            }
+            catch (Exception e)
+            {
+            }
+
+            if (hexFile != null)
+            {
+                hexFile.Close();
+            }
         }
 
-        public byte[] Parse()
+        public MemoryDump8Bit Parse()
         {
-            String record = "";
             int recordNum = 0;
             int dataLength = 0;
             int maxAddress = 0;
+            int minAddress = MAX_CODE_LENGTH;
             byte[] hexVals = null;
             byte[] tempBuffer = new byte[MAX_CODE_LENGTH];
 
@@ -29,7 +52,7 @@ namespace LibRXFFT.Libraries.USB_RX.Misc
                 tempBuffer[pos] = 0xFF;
             }
 
-            while ((record = hexFile.ReadLine()) != null)
+            foreach (string record in HexLines)
             {
                 recordNum++;
                 hexVals = new byte[record.Length / 2];
@@ -46,12 +69,14 @@ namespace LibRXFFT.Libraries.USB_RX.Misc
                 {
                     int address = hexVals[1] * 0x0100 + hexVals[2];
 
+                    minAddress = Math.Min(minAddress, address);
+                    maxAddress = Math.Max(maxAddress, address + dataLength);
+
                     for (int pos = 0; pos < dataLength; pos++)
                     {
                         if (pos + address > MAX_CODE_LENGTH)
                             throw new Exception("invalid address: " + pos + " in record " + recordNum);
                         tempBuffer[pos + address] = hexVals[4 + pos];
-                        maxAddress = Math.Max(maxAddress, pos + address);
                     }
 
                     if (checksum(hexVals) != hexVals[4 + dataLength])
@@ -59,13 +84,17 @@ namespace LibRXFFT.Libraries.USB_RX.Misc
                 }
             }
 
-            byte[] buffer = new byte[maxAddress + 1];
+            byte[] buffer = new byte[maxAddress + 1 - minAddress];
             for (int pos = 0; pos < maxAddress + 1; pos++)
             {
-                buffer[pos] = tempBuffer[pos];
+                buffer[pos] = tempBuffer[minAddress + pos];
             }
 
-            return buffer;
+            MemoryDump8Bit memDump = new MemoryDump8Bit();
+            memDump.Data = buffer;
+            memDump.StartAddress = (uint)minAddress;
+
+            return memDump;
         }
 
         public int checksum(byte[] data)

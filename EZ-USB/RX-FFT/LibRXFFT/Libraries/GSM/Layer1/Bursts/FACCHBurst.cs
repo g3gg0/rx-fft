@@ -63,7 +63,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
         public override eSuccessState ParseData(GSMParameters param, bool[] burstBufferC, int sequence)
         {
             /* decode */
-            if (ConvolutionalCoder.DecodeViterbi(burstBufferC, BurstBufferU) == null)
+            if (ConvolutionalCoder.Decode(burstBufferC, BurstBufferU) == null)
             {
                 ErrorMessage = "(FACCH: Error in ConvolutionalCoder, maybe encrypted)";
                 CryptedBursts++;

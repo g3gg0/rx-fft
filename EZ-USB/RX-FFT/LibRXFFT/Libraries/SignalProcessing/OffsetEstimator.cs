@@ -6,7 +6,7 @@ namespace LibRXFFT.Libraries.SignalProcessing
     public class OffsetEstimator
     {
         /* estimate offset by checking the zero-line crossings */
-        public static double EstimateOffset ( double[] srcData, int startPos, int samples, double oversampling )
+        public static double EstimateOffset(double[] srcData, int startPos, int samples, double oversampling)
         {
             double lastSampleValue = 0;
             double sampleValue = 0;
@@ -14,20 +14,24 @@ namespace LibRXFFT.Libraries.SignalProcessing
 
             for (int pos = startPos; pos < samples; pos++)
             {
-                if(startPos+pos > 0 && startPos + pos < srcData.Length)
+                if (startPos + pos > 0 && startPos + pos < srcData.Length)
                     sampleValue = srcData[startPos + pos];
                 else
                     sampleValue = 0;
 
-                if (( lastSampleValue<0 && sampleValue>0) || (lastSampleValue > 0 && sampleValue < 0))
+                if ((lastSampleValue < 0 && sampleValue > 0) || (lastSampleValue > 0 && sampleValue < 0))
                 {
                     /* low->high or high->low */
-                    double delta = lastSampleValue/(lastSampleValue - sampleValue);
 
-                    double transition = startPos + (pos-1) + delta;
-                    transition += oversampling / 2;
+                    /* interpolate zero position */
+                    double delta = lastSampleValue / (lastSampleValue - sampleValue);
+
+                    /* get the offset where we have this transition */
+                    double transition = startPos + (pos - 1) + delta;
+
+                    //transition += oversampling / 2;
                     transition %= oversampling;
-                    transition -= oversampling / 2;
+                    //transition -= oversampling / 2;
 
                     averages.Add(transition);
                 }
@@ -47,7 +51,7 @@ namespace LibRXFFT.Libraries.SignalProcessing
             }
 
             /* offset too high or we didnt have any zero-line crossings */
-            if (Math.Abs(average) > oversampling / 4 || averages.Count == 0)
+            if (/*Math.Abs(average) > oversampling / 4 ||*/ averages.Count == 0)
                 return 0;
 
             return average;

@@ -14,7 +14,7 @@ namespace LibRXFFT.Libraries.SampleSources
 
         public SharedMem OutputShmemChannel;
 
-        private BinaryWriter SavingFile = null;
+        private WaveFileWriter SavingFile = null;
         private string _SavingFileName = "output.dat";
         private bool _SavingEnabled = false;
         private ByteUtil.eSampleFormat SavingDataType = ByteUtil.eSampleFormat.Direct16BitIQFixedPoint;
@@ -76,15 +76,17 @@ namespace LibRXFFT.Libraries.SampleSources
         public object SampleBufferLock = new object();
 
         public int SamplesRead;
+        protected int _SamplesPerBlock;
         public virtual int SamplesPerBlock
         {
             set
             {
+                _SamplesPerBlock = value;
                 AllocateBuffers();
             }
             get
             {
-                return 1024;
+                return _SamplesPerBlock;
             }
         }
 
@@ -126,18 +128,25 @@ namespace LibRXFFT.Libraries.SampleSources
             }
             set
             {
-                _SavingEnabled = value;
-
-                if (SavingEnabled)
+                if (value)
                 {
-                    SavingFile = new BinaryWriter(File.Create(SavingFileName));
+                    lock (this)
+                    {
+                        SavingFile = new WaveFileWriter(SavingFileName);
+                        SavingFile.SamplingRate = (int)OutputSamplingRate;
+                        _SavingEnabled = true;
+                    }
                 }
                 else
                 {
-                    if (SavingFile != null)
+                    lock (this)
                     {
-                        SavingFile.Close();
-                        SavingFile = null;
+                        _SavingEnabled = false;
+                        if (SavingFile != null)
+                        {
+                            SavingFile.Close();
+                            SavingFile = null;
+                        }
                     }
                 }
             }
@@ -163,6 +172,7 @@ namespace LibRXFFT.Libraries.SampleSources
                 }
                 else
                 {
+                    OutputShmemChannel.Unregister();
                     OutputShmemChannel.Close();
                     OutputShmemChannel = null;
                 }
@@ -191,7 +201,7 @@ namespace LibRXFFT.Libraries.SampleSources
             SamplingRateHasChanged = true;
         }
 
-        protected void AllocateBuffers()
+        protected virtual void AllocateBuffers()
         {
             int samplesPerBlock = SamplesPerBlock;
             int oversampling = InternalOversampling;
@@ -212,7 +222,18 @@ namespace LibRXFFT.Libraries.SampleSources
         {
             if (ForwardEnabled)
             {
-                OutputShmemChannel.Write(buffer);
+                OutputShmemChannel.Rate = (long)OutputSamplingRate * 2;
+
+                /* convert to our standard format */
+                if (DataFormat != SavingDataType)
+                {
+                    ByteUtil.SamplesToBinary(BinarySaveData, SamplesRead, SourceSamplesI, SourceSamplesQ, SavingDataType, false);
+                    OutputShmemChannel.Write(BinarySaveData);
+                }
+                else
+                {
+                    OutputShmemChannel.Write(buffer);
+                }
             }
         }
 
@@ -227,12 +248,8 @@ namespace LibRXFFT.Libraries.SampleSources
 
         public virtual void Close()
         {
-            if (OutputShmemChannel == null)
-            {
-                OutputShmemChannel.Close();
-                OutputShmemChannel.Dispose();
-                OutputShmemChannel = null;
-            }
+            /* this will unregister etc */
+            ForwardEnabled = false;
         }
         
         public virtual bool Restart()
@@ -250,10 +267,13 @@ namespace LibRXFFT.Libraries.SampleSources
 
         internal void SaveData()
         {
-            if (!SavingEnabled)
-                return;
-            ByteUtil.SamplesToBinary(BinarySaveData, SamplesRead, SourceSamplesI, SourceSamplesQ, SavingDataType, false);
-            SavingFile.Write(BinarySaveData);
+            lock (this)
+            {
+                if (!SavingEnabled)
+                    return;
+                ByteUtil.SamplesToBinary(BinarySaveData, SamplesRead, SourceSamplesI, SourceSamplesQ, SavingDataType, false);
+                SavingFile.Write(BinarySaveData);
+            }
         }
     }
 }

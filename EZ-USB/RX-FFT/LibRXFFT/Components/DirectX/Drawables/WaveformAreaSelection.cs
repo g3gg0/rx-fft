@@ -6,9 +6,9 @@ using SlimDX.Direct3D9;
 
 namespace LibRXFFT.Components.DirectX.Drawables
 {
-    public class FFTAreaSelection : DirectXDrawable
+    public class WaveformAreaSelection : DirectXDrawable
     {
-        protected new DirectXFFTDisplay MainPlot;
+        protected new DirectXWaveformDisplay MainPlot;
         protected Vertex[] BorderVertexes = new Vertex[16];
         protected int BorderVertexesUsed = 0;
         protected Vertex[] BodyVertexes = new Vertex[16];
@@ -21,37 +21,35 @@ namespace LibRXFFT.Components.DirectX.Drawables
         public bool Selected = false;
         public bool Visible = false;
 
-        public long StartFreq = 0;
-        public double StartStrength = 0;
-        public long EndFreq = 0;
-        public double EndStrength = 0;
+        public double StartTime = 0;
+        public double EndTime = 0;
 
-        public double FreqWidth
+        public double SelectionWidth
         {
             get
             {
-                return Math.Abs(EndFreq - StartFreq);
+                return Math.Abs(EndTime - StartTime);
             }
         }
-        public double FreqStart
+        public double SelectionStart
         {
             get
             {
-                return Math.Min(StartFreq, EndFreq);
+                return Math.Min(StartTime, EndTime);
             }
         }
-        public double FreqEnd
+        public double SelectionEnd
         {
             get
             {
-                return Math.Max(StartFreq, EndFreq);
+                return Math.Max(StartTime, EndTime);
             }
         }
 
         public event EventHandler SelectionUpdated;
 
 
-        public FFTAreaSelection(DirectXFFTDisplay mainPlot)
+        public WaveformAreaSelection(DirectXWaveformDisplay mainPlot)
             : base(mainPlot)
         {
             MainPlot = mainPlot;
@@ -86,12 +84,10 @@ namespace LibRXFFT.Components.DirectX.Drawables
                     {
                         UpdatePositions();
 
-                        if (StartFreq == EndFreq)
+                        if (StartTime == EndTime)
                         {
-                            StartFreq = 0;
-                            StartStrength = 0;
-                            EndFreq = 0;
-                            EndStrength = 0;
+                            StartTime = 0;
+                            EndTime = 0;
                             Visible = false;
                             Selected = false;
                         }
@@ -116,10 +112,9 @@ namespace LibRXFFT.Components.DirectX.Drawables
 
                         handled = true;
 
-                        StartFreq = MainPlot.CursorFrequency;
-                        StartStrength = MainPlot.CursorStrength;
-                        EndFreq = MainPlot.CursorFrequency;
-                        EndStrength = MainPlot.CursorStrength;
+                        StartTime = MainPlot.CursorTime;
+                        EndTime = MainPlot.CursorTime;
+
                         UpdatePositions();
 
                         MainPlot.CursorType(true);
@@ -132,10 +127,10 @@ namespace LibRXFFT.Components.DirectX.Drawables
                     else
                     {
                         /* if area selected */
-                        if (FreqWidth > 0)
+                        if (SelectionWidth > 0)
                         {
                             /* and cursor within area */
-                            if (MainPlot.CursorFrequency >= StartFreq && MainPlot.CursorFrequency <= EndFreq)
+                            if (MainPlot.CursorTime >= StartTime && MainPlot.CursorTime <= EndTime)
                             {
                                 Visible = true;
                                 Selected = true;
@@ -160,8 +155,7 @@ namespace LibRXFFT.Components.DirectX.Drawables
                 case eInputEventType.MouseMoved:
                     if (Dragging)
                     {
-                        EndFreq = MainPlot.CursorFrequency;
-                        EndStrength = MainPlot.CursorStrength;
+                        EndTime = MainPlot.CursorTime;
                         UpdatePositions();
 
                         if (SelectionUpdated != null)
@@ -169,7 +163,7 @@ namespace LibRXFFT.Components.DirectX.Drawables
                             SelectionUpdated(this, null);
                         }
                     }
-                    else if (!Selected && (FreqWidth > 0 && MainPlot.CursorFrequency >= StartFreq && MainPlot.CursorFrequency <= EndFreq))
+                    else if (!Selected && (SelectionWidth > 0 && MainPlot.CursorTime >= StartTime && MainPlot.CursorTime <= EndTime))
                     {
                         Selected = true;
                         if (SelectionUpdated != null)
@@ -185,10 +179,10 @@ namespace LibRXFFT.Components.DirectX.Drawables
 
         public override void UpdatePositions()
         {
-            int xPos1 = (int)MainPlot.XPosFromFrequency(StartFreq);
-            int xPos2 = (int)MainPlot.XPosFromFrequency(EndFreq);
-            int yPos1 = (int)MainPlot.YPosFromStrength(StartStrength);
-            int yPos2 = (int)MainPlot.YPosFromStrength(EndStrength);
+            int xPos1 = (int)MainPlot.XPosFromTime(StartTime);
+            int xPos2 = (int)MainPlot.XPosFromTime(EndTime);
+            int yPos1 = 0;
+            int yPos2 = (int)MainPlot.DirectXHeight;
 
             int xPosStart = Math.Min(xPos1, xPos2);
             int xPosEnd = Math.Max(xPos1, xPos2);

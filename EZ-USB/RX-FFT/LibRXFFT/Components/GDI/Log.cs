@@ -26,5 +26,17 @@ namespace RX_FFT.Components.GDI
 
             LogWindow.AddMessage(string.Format("{0:HH}:{0:mm}:{0:ss}:{0:ffff}", now) + " " + msg);
         }
+
+        public static void AddMessage(string sender, string msg)
+        {
+            if (!Enabled || LogWindow == null)
+            {
+                return;
+            }
+
+            DateTime now = DateTime.Now;
+
+            LogWindow.AddMessage(string.Format("{0:HH}:{0:mm}:{0:ss}:{0:ffff}", now) + " [" + sender + "] " + msg);
+        }
     }
 }

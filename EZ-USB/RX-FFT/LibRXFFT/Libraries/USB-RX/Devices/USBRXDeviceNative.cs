@@ -141,5 +141,10 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         [DllImport("usb2.dll", CallingConvention = CallingConvention.StdCall)]
         public static extern bool SetSlaveFifoParams(bool SyncFifo, int IfClkMode, int BitWidth);
 
+        [DllImport("usb2.dll", CallingConvention = CallingConvention.StdCall)]
+        public static extern bool ResetEpFifo(int DevNum);
+        [DllImport("usb2.dll", CallingConvention = CallingConvention.StdCall)]
+        public static extern bool SetFifoFlushing(bool state);
+
     }
 }

@@ -15,6 +15,22 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         private long AGCCorrectionOffset;
         private long AGCCorrectionGain;
 
+        /*
+            20:20:03:3380   Atmel Serial: RX22 ADS5547
+            20:20:03:3390   AD6636 TCXO:  98304000
+            20:24:45:2870 [AtmelDelay] Test results:
+            20:24:45:2870 [AtmelDelay] ---------------------------------
+            20:24:45:2870 [AtmelDelay]   Minimum SetFilterDelay: 102 ms
+            20:24:45:2870 [AtmelDelay]   Minimum ReadFilterDelay: 0 ms
+            20:24:45:2870 [AtmelDelay]   Minimum SetAgcDelay: 8 ms
+            20:24:45:2870 [AtmelDelay]   Minimum SetAttDelay: 6 ms
+            20:24:45:2870 [AtmelDelay] ---------------------------------
+        */
+        public int SetFilterDelay = 105;
+        public int ReadFilterDelay = 0;
+        public int SetAgcDelay = 10;
+        public int SetAttDelay = 10;
+        
 
         internal class ad6636RegCacheEntry
         {
@@ -36,6 +52,14 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             this.BusID = busID;
         }
 
+        public bool Exists
+        {
+            get
+            {
+                return I2CDevice.I2CWriteByte(BusID, 0x00);
+            }
+        }
+
         // FIFO Functions
         public bool FIFOReset(bool state)
         {
@@ -45,7 +69,8 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             }
         }
 
-        public bool FIFOReset()
+        /* do not use since reset would happen asynchronously */
+        private bool FIFOReset()
         {
             lock (this)
             {
@@ -100,7 +125,8 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                 if (!I2CDevice.I2CWriteBytes(BusID, cmd))
                     return false;
 
-                WaitMs(100);
+                /* make sure the atmel is done */
+                WaitMs(SetFilterDelay);
 
                 if (!I2CDevice.I2CReadBytes(BusID, buf))
                     return false;
@@ -139,7 +165,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                 if (!I2CDevice.I2CWriteBytes(BusID, cmd))
                     return false;
 
-                WaitMs(50);
+                WaitMs(ReadFilterDelay);
 
                 if (!I2CDevice.I2CReadBytes(BusID, buf))
                     return false;
@@ -198,8 +224,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                 return;
             }
         }
-
-
+        
         public int GetRBW()
         {
             byte[] buf = new byte[4];
@@ -274,7 +299,66 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                 }
             }
         }
-        
+
+        public string InternalSerialNumber
+        {
+            get
+            {
+                byte[] buf = new byte[34];
+                lock (this)
+                {
+                    if (I2CDevice.I2CWriteByte(BusID, 207) != true)
+                        return null;
+
+                    if (I2CDevice.I2CReadBytes(BusID, buf) != true)
+                        return null;
+                }
+                int length = buf[0];
+                if (length > 32)
+                    length = 0;
+
+                char[] array = new char[length];
+                for (int i = 0; i < length; i++)
+                    array[i] = (char)buf[1 + i];
+
+                return new string(array);
+            }
+
+            set
+            {
+                char[] array = value.ToCharArray();
+                byte[] buffer = new byte[2 + array.Length];
+
+                buffer[0] = 208;
+                buffer[1] = (byte)array.Length;
+
+                for (int i = 0; i < array.Length; i++)
+                    buffer[2 + i] = (byte)array[i];
+                lock (this)
+                {
+                    if (!I2CDevice.I2CWriteBytes(BusID, buffer))
+                        return;
+                }
+            }
+        }
+        public double Temperature
+        {
+            get
+            {
+                byte[] buf = new byte[2];
+                lock (this)
+                {
+                    if (I2CDevice.I2CWriteByte(BusID, 209) != true)
+                        return 0;
+
+                    if (I2CDevice.I2CReadBytes(BusID, buf) != true)
+                        return 0;
+                }
+
+                return (buf[1]<<8) | buf[0];
+            }
+        }
+
         public bool SetRfSource(USBRXDevice.eRfSource source)
         {
             lock (this)
@@ -314,6 +398,19 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             }
         }
 
+        public bool SetAtt(int value)
+        {
+            lock (this)
+            {
+                byte[] buffer = new byte[2] { 0x23, (byte)value };
+                bool ret = I2CDevice.I2CWriteBytes(BusID, buffer);
+
+                Thread.Sleep(SetAttDelay);
+
+                return ret;
+            }
+        }
+
         public bool SetPreAmp(bool state)
         {
             lock (this)
@@ -321,7 +418,16 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                 return I2CDevice.I2CWriteByte(BusID, (byte)(state ? 0x15 : 0x16));
             }
         }
-
+        /*
+        public bool SetPreAmp(int value)
+        {
+            lock (this)
+            {
+                byte[] buffer = new byte[2] { 0x35, (byte)value };
+                return I2CDevice.I2CWriteBytes(BusID, buffer);
+            }
+        }
+        */
         public bool SetMgc(int dB)
         {
             if (dB < 1 || dB > 96)
@@ -370,7 +476,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                             return false;
                         break;
                 }
-                WaitMs(50);
+                WaitMs(SetAgcDelay);
             }
             CurrentAgcType = type;
             return true;
@@ -537,7 +643,6 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             {
                 if (!I2CDevice.I2CWriteBytes(BusID, cmd))
                     return false;
-                //WaitMs(1);
             }
             return true;
         }

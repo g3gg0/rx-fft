@@ -134,6 +134,7 @@
     <Compile Include="Dialogs\MarkerListDialog.Designer.cs">
       <DependentUpon>MarkerListDialog.cs</DependentUpon>
     </Compile>
+    <Compile Include="FrequencyMarkerList.cs" />
     <Compile Include="Icons.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

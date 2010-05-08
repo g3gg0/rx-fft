@@ -12,6 +12,7 @@ using System.Threading;
 using LibRXFFT.Libraries.Timers;
 using LibRXFFT.Libraries.Misc;
 using LibRXFFT.Libraries.USB_RX.Tuners;
+using System.IO;
 
 namespace RX_FFT.DeviceControls
 {
@@ -19,37 +20,100 @@ namespace RX_FFT.DeviceControls
     {
         private FileSampleSource Source;
         private bool Repeat = false;
-        private bool Closing = false;
         private double LastPosition = 0;
         private object ReadTick = new object();
-
+        private object AccessLock = new object();
         private string FileName = "none";
-
         private AccurateTimer Timer;
 
-        public FileSourceDeviceControl()
+        public double ReadFrameRate = 0.05f;
+
+        public FileSourceDeviceControl() : this(null) { }
+
+        public FileSourceDeviceControl(string fileName)
         {
             InitializeComponent();
 
+            if (fileName == null)
+            {
+                FileDialog dlg = new OpenFileDialog();
+
+                if (dlg.ShowDialog() == DialogResult.OK)
+                {
+                    fileName = dlg.FileName;
+                }
+            }
+
+            Timer = new AccurateTimer();
+            Timer.Periodic = true;
+            Timer.Timer += new EventHandler(Timer_Timer);
+
+            if (fileName != null)
+            {
+                FileName = fileName;
+                Source = new FileSampleSource(FileName);
+                Source.ForwardEnabled = true;
+                Source.SamplesPerBlock = (int)(ReadFrameRate * Source.OutputSamplingRate);
+
+                trackBar.Maximum = (int)(Source.GetTotalTime() / 0.01f);
+
+                Timer.Interval = (uint)((double)(Source.OutputBlockSize * 1000.0f) / Source.OutputSamplingRate);
+            }
+
+            UpdateDisplay();
+            Timer.Start();
+            Show();
+        }
+
+
+        internal void LoadFile(string fileName)
+        {
+            try
+            {
+                /* try to open the file */
+                FileSampleSource source = new FileSampleSource(fileName);
+                source.ForwardEnabled = true;
+                source.SamplesPerBlock = (int)(ReadFrameRate * source.OutputSamplingRate);
+
+                /* succeeded, use this filesource */
+                lock (AccessLock)
+                {
+                    eTransferMode lastMode = TransferMode;
+
+                    TransferMode = eTransferMode.Stopped;
+                    Source.Close();
+                    FileName = fileName;
+                    Source = source;
+                    TransferMode = lastMode;
+
+                    /* update trackbar */
+                    trackBar.Maximum = (int)(Source.GetTotalTime() / 0.01f);
+
+                    /* reconfigure timer */
+                    Timer.Stop();
+                    Timer.Interval = (uint)((double)(Source.OutputBlockSize * 1000.0f) / Source.OutputSamplingRate);
+                    Timer.Start();
+                }
+                UpdateDisplay();
+            }
+            catch (InvalidDataException ex)
+            {
+                MessageBox.Show("File format not supported. (" + ex.Message + ")");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Could not open the file. (" + ex.Message + ")");
+            }
+        }
+
+
+        private void btnSelectFile_Click(object sender, EventArgs e)
+        {
             FileDialog dlg = new OpenFileDialog();
 
             if (dlg.ShowDialog() == DialogResult.OK)
             {
-                FileName = dlg.FileName;
-                Source = new FileSampleSource(FileName, 1);
-                Source.ForwardEnabled = true;
-
-                trackBar.Maximum = (int)(Source.GetTotalTime() / 0.01f);
-
-                Timer = new AccurateTimer();
-                Timer.Periodic = true;
-                Timer.Interval = (uint)((double)(Source.OutputBlockSize * 1000.0f) / Source.OutputSamplingRate);
-                Timer.Timer += new EventHandler(Timer_Timer);
-                Timer.Start();
-
-                UpdateDisplay();
-
-                Show();
+                LoadFile(dlg.FileName);
             }
         }
 
@@ -63,17 +127,22 @@ namespace RX_FFT.DeviceControls
 
         protected override void OnClosing(CancelEventArgs e)
         {
-            Closing = true;
-
             e.Cancel = false;
             TransferMode = eTransferMode.Stopped;
             Timer.Stop();
 
-            if (DeviceDisappeared != null)
+            if (DeviceClosed != null)
             {
-                DeviceDisappeared(this, null);
+                DeviceClosed(this, null);
             }
             base.OnClosing(e);
+        }
+
+
+        public void Close()
+        {
+            CloseTuner();
+            base.Close();
         }
 
         #region DeviceControl Member
@@ -90,24 +159,22 @@ namespace RX_FFT.DeviceControls
         {
             get
             {
-                if (Source != null)
+                lock (AccessLock)
                 {
-                    return Source.SamplesPerBlock;
+                    if (Source != null)
+                    {
+                        return Source.SamplesPerBlock;
+                    }
+                    return 0;
                 }
-                return 0;
             }
             set
             {
-                if (Source != null)
-                {
-                    Source.SamplesPerBlock = value;
-                }
             }
         }
 
         public event EventHandler TransferModeChanged;
         private eTransferMode CurrentTransferMode;
-
 
         public eTransferMode TransferMode
         {
@@ -136,7 +203,7 @@ namespace RX_FFT.DeviceControls
             }
         }
 
-        public LibRXFFT.Libraries.SampleSources.SampleSource SampleSource
+        public SampleSource SampleSource
         {
             get { return Source; }
         }
@@ -186,34 +253,37 @@ namespace RX_FFT.DeviceControls
                     Monitor.Wait(ReadTick);
                 }
 
-                if (Closing)
+                if (Source == null)
                 {
                     return false;
                 }
 
             } while (TransferMode == eTransferMode.Stopped);
 
-            success = SampleSource.Read();
-
-            /* if failed, maybe we reached the end */
-            if (!success)
+            lock (AccessLock)
             {
-                if (Repeat)
-                {
-                    SampleSource.Restart();
-                    success = SampleSource.Read();
-                }
-                else
-                {
-                    /* seems to have reached the end. stop playback */
-                    TransferMode = eTransferMode.Stopped;
-                }
-            }
+                success = Source.Read();
 
-            if (Source.GetPosition() != LastPosition)
-            {
-                LastPosition = Source.GetPosition();
-                BeginInvoke(new Action(() => { UpdateDisplay(); }));
+                /* if failed, maybe we reached the end */
+                if (!success)
+                {
+                    if (Repeat)
+                    {
+                        Source.Restart();
+                        success = Source.Read();
+                    }
+                    else
+                    {
+                        /* seems to have reached the end. stop playback */
+                        TransferMode = eTransferMode.Stopped;
+                    }
+                }
+
+                if (Source.GetPosition() != LastPosition)
+                {
+                    LastPosition = Source.GetPosition();
+                    BeginInvoke(new Action(() => { UpdateDisplay(); }));
+                }
             }
 
             return success;
@@ -221,15 +291,18 @@ namespace RX_FFT.DeviceControls
 
         private void UpdateDisplay()
         {
-            int newPos = (int)(trackBar.Maximum * Source.GetPosition());
-            if(newPos!= trackBar.Value)
+            lock (AccessLock)
             {
-                trackBar.Value = newPos;
-            }
+                int newPos = (int)(trackBar.Maximum * Source.GetPosition());
+                if (newPos != trackBar.Value)
+                {
+                    trackBar.Value = newPos;
+                }
 
-            lblStartPos.Text = "0 s";
-            lblEndPos.Text = FrequencyFormatter.TimeToString(Source.GetTotalTime());
-            lblCurrentPos.Text = FrequencyFormatter.TimeToString(Source.GetTotalTime() * Source.GetPosition());
+                lblStartPos.Text = "0 s";
+                lblEndPos.Text = String.Format("{0:0.000} s", Source.GetTotalTime());
+                lblCurrentPos.Text = String.Format("{0:0.000} s", Source.GetTotalTime() * Source.GetPosition());
+            }
         }
 
         #endregion
@@ -242,7 +315,10 @@ namespace RX_FFT.DeviceControls
             {
                 if (Source != null)
                 {
-                    return (long)Source.OutputSamplingRate;
+                    lock (AccessLock)
+                    {
+                        return (long)Source.OutputSamplingRate;
+                    }
                 }
 
                 return 0;
@@ -256,12 +332,10 @@ namespace RX_FFT.DeviceControls
         #region Tuner Member
 
         public event EventHandler FilterWidthChanged;
-
         public event EventHandler FrequencyChanged;
-
         public event EventHandler InvertedSpectrumChanged;
-
         public event EventHandler DeviceDisappeared;
+        public event EventHandler DeviceClosed;
 
         public bool OpenTuner()
         {
@@ -270,8 +344,10 @@ namespace RX_FFT.DeviceControls
 
         public void CloseTuner()
         {
+            Source.Close();
             TransferMode = eTransferMode.Stopped;
             Timer.Stop();
+            Source = null;
         }
 
         public bool SetFrequency(long frequency)
@@ -387,15 +463,10 @@ namespace RX_FFT.DeviceControls
 
         private void Seek(double pos)
         {
-            Source.Seek(pos);
-
-            /* read one block */
-            if (TransferMode == eTransferMode.Stopped)
+            lock (AccessLock)
             {
-                Source.Read();
+                Source.Seek(pos);
             }
-
-            Source.Seek(pos);
         }
 
         private void btnPlayPause_Click(object sender, EventArgs e)
@@ -422,5 +493,6 @@ namespace RX_FFT.DeviceControls
             Seek(0);
             UpdateDisplay();
         }
+
     }
 }

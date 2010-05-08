@@ -32,9 +32,16 @@
             this.waveForm = new LibRXFFT.Components.DirectX.DirectXWaveformDisplay();
             this.tabControl = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.lblBufferTime = new System.Windows.Forms.Label();
+            this.txtBufferTime = new LibRXFFT.Components.GDI.TextBoxMouseScroll();
+            this.label3 = new System.Windows.Forms.Label();
             this.groupBox5 = new System.Windows.Forms.GroupBox();
             this.txtSamplingRate = new LibRXFFT.Components.GDI.FrequencySelector();
             this.groupBox6 = new System.Windows.Forms.GroupBox();
+            this.txtEyePlotBlocks = new LibRXFFT.Components.GDI.TextBoxMouseScroll();
+            this.chkEyePlot = new System.Windows.Forms.CheckBox();
+            this.label5 = new System.Windows.Forms.Label();
             this.radioPhase = new System.Windows.Forms.RadioButton();
             this.radioPower = new System.Windows.Forms.RadioButton();
             this.tabPage2 = new System.Windows.Forms.TabPage();
@@ -51,16 +58,12 @@
             this.lblPreTrigTime = new System.Windows.Forms.Label();
             this.txtPreTrigSamples = new LibRXFFT.Components.GDI.TextBoxMouseScroll();
             this.label4 = new System.Windows.Forms.Label();
-            this.tabPage4 = new System.Windows.Forms.TabPage();
-            this.groupBox3 = new System.Windows.Forms.GroupBox();
-            this.lblBufferTime = new System.Windows.Forms.Label();
-            this.txtBufferTime = new LibRXFFT.Components.GDI.TextBoxMouseScroll();
-            this.label3 = new System.Windows.Forms.Label();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
             this.tabControl.SuspendLayout();
             this.tabPage1.SuspendLayout();
+            this.groupBox3.SuspendLayout();
             this.groupBox5.SuspendLayout();
             this.groupBox6.SuspendLayout();
             this.tabPage2.SuspendLayout();
@@ -68,8 +71,6 @@
             this.tabPage3.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
-            this.tabPage4.SuspendLayout();
-            this.groupBox3.SuspendLayout();
             this.SuspendLayout();
             // 
             // splitContainer1
@@ -88,7 +89,7 @@
             // 
             this.splitContainer1.Panel2.Controls.Add(this.tabControl);
             this.splitContainer1.Size = new System.Drawing.Size(997, 511);
-            this.splitContainer1.SplitterDistance = 430;
+            this.splitContainer1.SplitterDistance = 425;
             this.splitContainer1.SplitterWidth = 1;
             this.splitContainer1.TabIndex = 1;
             // 
@@ -105,7 +106,7 @@
             this.waveForm.MaxSamples = 10000;
             this.waveForm.Name = "waveForm";
             this.waveForm.SamplingRate = 0;
-            this.waveForm.Size = new System.Drawing.Size(997, 430);
+            this.waveForm.Size = new System.Drawing.Size(997, 425);
             this.waveForm.SpectParts = 1;
             this.waveForm.TabIndex = 0;
             this.waveForm.UpdateRate = 25;
@@ -113,7 +114,7 @@
             this.waveForm.XZoomFactorMax = 2000;
             this.waveForm.XZoomFactorMin = 1;
             this.waveForm.YZoomFactor = 0.0070000002160668373;
-            this.waveForm.YZoomFactorMax = 0.5;
+            this.waveForm.YZoomFactorMax = 10;
             this.waveForm.YZoomFactorMin = 0.005;
             // 
             // tabControl
@@ -121,65 +122,146 @@
             this.tabControl.Controls.Add(this.tabPage1);
             this.tabControl.Controls.Add(this.tabPage2);
             this.tabControl.Controls.Add(this.tabPage3);
-            this.tabControl.Controls.Add(this.tabPage4);
             this.tabControl.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl.Location = new System.Drawing.Point(0, 0);
             this.tabControl.Name = "tabControl";
             this.tabControl.SelectedIndex = 0;
-            this.tabControl.Size = new System.Drawing.Size(997, 80);
+            this.tabControl.Size = new System.Drawing.Size(997, 85);
             this.tabControl.TabIndex = 10;
             // 
             // tabPage1
             // 
+            this.tabPage1.Controls.Add(this.groupBox3);
             this.tabPage1.Controls.Add(this.groupBox5);
             this.tabPage1.Controls.Add(this.groupBox6);
             this.tabPage1.Location = new System.Drawing.Point(4, 22);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(989, 54);
+            this.tabPage1.Size = new System.Drawing.Size(989, 59);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "Source Signal";
             this.tabPage1.UseVisualStyleBackColor = true;
+            // 
+            // groupBox3
+            // 
+            this.groupBox3.Controls.Add(this.lblBufferTime);
+            this.groupBox3.Controls.Add(this.txtBufferTime);
+            this.groupBox3.Controls.Add(this.label3);
+            this.groupBox3.Location = new System.Drawing.Point(410, 6);
+            this.groupBox3.Name = "groupBox3";
+            this.groupBox3.Size = new System.Drawing.Size(167, 46);
+            this.groupBox3.TabIndex = 5;
+            this.groupBox3.TabStop = false;
+            this.groupBox3.Text = "Buffer/Block Size";
+            // 
+            // lblBufferTime
+            // 
+            this.lblBufferTime.AutoSize = true;
+            this.lblBufferTime.Location = new System.Drawing.Point(117, 20);
+            this.lblBufferTime.Name = "lblBufferTime";
+            this.lblBufferTime.Size = new System.Drawing.Size(34, 13);
+            this.lblBufferTime.TabIndex = 4;
+            this.lblBufferTime.Text = "(unk.)";
+            // 
+            // txtBufferTime
+            // 
+            this.txtBufferTime.Location = new System.Drawing.Point(6, 16);
+            this.txtBufferTime.LowerLimit = ((long)(2));
+            this.txtBufferTime.Name = "txtBufferTime";
+            this.txtBufferTime.Size = new System.Drawing.Size(47, 20);
+            this.txtBufferTime.TabIndex = 3;
+            this.txtBufferTime.Text = "1000";
+            this.txtBufferTime.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.txtBufferTime.UpperLimit = ((long)(1000000));
+            this.txtBufferTime.Value = ((long)(1000));
+            this.txtBufferTime.ValueChanged += new System.EventHandler(this.txtBufferTime_ValueChanged);
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(59, 20);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(62, 13);
+            this.label3.TabIndex = 1;
+            this.label3.Text = "Samples, = ";
             // 
             // groupBox5
             // 
             this.groupBox5.Controls.Add(this.txtSamplingRate);
             this.groupBox5.Location = new System.Drawing.Point(6, 6);
             this.groupBox5.Name = "groupBox5";
-            this.groupBox5.Size = new System.Drawing.Size(119, 46);
+            this.groupBox5.Size = new System.Drawing.Size(107, 46);
             this.groupBox5.TabIndex = 8;
             this.groupBox5.TabStop = false;
             this.groupBox5.Text = "Sampling Rate";
             // 
             // txtSamplingRate
             // 
-            this.txtSamplingRate.Frequency = ((long)(0));
+            this.txtSamplingRate.FixedLengthDecades = 10;
+            this.txtSamplingRate.FixedLengthString = false;
+            this.txtSamplingRate.Frequency = ((long)(48000));
             this.txtSamplingRate.Location = new System.Drawing.Point(6, 16);
             this.txtSamplingRate.Name = "txtSamplingRate";
-            this.txtSamplingRate.Size = new System.Drawing.Size(100, 20);
+            this.txtSamplingRate.Size = new System.Drawing.Size(91, 20);
             this.txtSamplingRate.TabIndex = 0;
-            this.txtSamplingRate.Text = "0.000.000.000 Hz";
+            this.txtSamplingRate.Text = "48 kHz";
+            this.txtSamplingRate.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.txtSamplingRate.FrequencyChanged += new System.EventHandler(this.txtSamplingRate_FrequencyChanged);
             // 
             // groupBox6
             // 
+            this.groupBox6.Controls.Add(this.txtEyePlotBlocks);
+            this.groupBox6.Controls.Add(this.chkEyePlot);
+            this.groupBox6.Controls.Add(this.label5);
             this.groupBox6.Controls.Add(this.radioPhase);
             this.groupBox6.Controls.Add(this.radioPower);
-            this.groupBox6.Location = new System.Drawing.Point(131, 6);
+            this.groupBox6.Location = new System.Drawing.Point(119, 6);
             this.groupBox6.Name = "groupBox6";
-            this.groupBox6.Size = new System.Drawing.Size(138, 46);
+            this.groupBox6.Size = new System.Drawing.Size(285, 46);
             this.groupBox6.TabIndex = 9;
             this.groupBox6.TabStop = false;
             this.groupBox6.Text = "Process";
+            // 
+            // txtEyePlotBlocks
+            // 
+            this.txtEyePlotBlocks.Location = new System.Drawing.Point(198, 15);
+            this.txtEyePlotBlocks.LowerLimit = ((long)(0));
+            this.txtEyePlotBlocks.Name = "txtEyePlotBlocks";
+            this.txtEyePlotBlocks.Size = new System.Drawing.Size(33, 20);
+            this.txtEyePlotBlocks.TabIndex = 1;
+            this.txtEyePlotBlocks.Text = "1";
+            this.txtEyePlotBlocks.UpperLimit = ((long)(10000));
+            this.txtEyePlotBlocks.Value = ((long)(1));
+            this.txtEyePlotBlocks.ValueChanged += new System.EventHandler(this.txtEyePlotBlocks_ValueChanged);
+            // 
+            // chkEyePlot
+            // 
+            this.chkEyePlot.AutoSize = true;
+            this.chkEyePlot.Location = new System.Drawing.Point(136, 17);
+            this.chkEyePlot.Name = "chkEyePlot";
+            this.chkEyePlot.Size = new System.Drawing.Size(66, 17);
+            this.chkEyePlot.TabIndex = 0;
+            this.chkEyePlot.Text = "Eye with";
+            this.chkEyePlot.UseVisualStyleBackColor = true;
+            this.chkEyePlot.CheckedChanged += new System.EventHandler(this.chkEyePlot_CheckedChanged);
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(237, 19);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(39, 13);
+            this.label5.TabIndex = 1;
+            this.label5.Text = "Blocks";
             // 
             // radioPhase
             // 
             this.radioPhase.AutoSize = true;
             this.radioPhase.Location = new System.Drawing.Point(68, 16);
             this.radioPhase.Name = "radioPhase";
-            this.radioPhase.Size = new System.Drawing.Size(55, 17);
+            this.radioPhase.Size = new System.Drawing.Size(62, 17);
             this.radioPhase.TabIndex = 0;
-            this.radioPhase.Text = "Phase";
+            this.radioPhase.Text = "ΔPhase";
             this.radioPhase.UseVisualStyleBackColor = true;
             this.radioPhase.CheckedChanged += new System.EventHandler(this.radioPhase_CheckedChanged);
             // 
@@ -357,59 +439,6 @@
             this.label4.TabIndex = 1;
             this.label4.Text = "Samples, = ";
             // 
-            // tabPage4
-            // 
-            this.tabPage4.Controls.Add(this.groupBox3);
-            this.tabPage4.Location = new System.Drawing.Point(4, 22);
-            this.tabPage4.Name = "tabPage4";
-            this.tabPage4.Size = new System.Drawing.Size(989, 58);
-            this.tabPage4.TabIndex = 3;
-            this.tabPage4.Text = "Buffering";
-            this.tabPage4.UseVisualStyleBackColor = true;
-            // 
-            // groupBox3
-            // 
-            this.groupBox3.Controls.Add(this.lblBufferTime);
-            this.groupBox3.Controls.Add(this.txtBufferTime);
-            this.groupBox3.Controls.Add(this.label3);
-            this.groupBox3.Location = new System.Drawing.Point(6, 6);
-            this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(174, 46);
-            this.groupBox3.TabIndex = 5;
-            this.groupBox3.TabStop = false;
-            this.groupBox3.Text = "Buffer Size";
-            // 
-            // lblBufferTime
-            // 
-            this.lblBufferTime.AutoSize = true;
-            this.lblBufferTime.Location = new System.Drawing.Point(117, 20);
-            this.lblBufferTime.Name = "lblBufferTime";
-            this.lblBufferTime.Size = new System.Drawing.Size(34, 13);
-            this.lblBufferTime.TabIndex = 4;
-            this.lblBufferTime.Text = "(unk.)";
-            // 
-            // txtBufferTime
-            // 
-            this.txtBufferTime.Location = new System.Drawing.Point(6, 16);
-            this.txtBufferTime.LowerLimit = ((long)(512));
-            this.txtBufferTime.Name = "txtBufferTime";
-            this.txtBufferTime.Size = new System.Drawing.Size(47, 20);
-            this.txtBufferTime.TabIndex = 3;
-            this.txtBufferTime.Text = "10000";
-            this.txtBufferTime.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.txtBufferTime.UpperLimit = ((long)(1000000));
-            this.txtBufferTime.Value = ((long)(10000));
-            this.txtBufferTime.ValueChanged += new System.EventHandler(this.txtBufferTime_ValueChanged);
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(59, 20);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(62, 13);
-            this.label3.TabIndex = 1;
-            this.label3.Text = "Samples, = ";
-            // 
             // Oscilloscope
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -422,6 +451,8 @@
             this.splitContainer1.ResumeLayout(false);
             this.tabControl.ResumeLayout(false);
             this.tabPage1.ResumeLayout(false);
+            this.groupBox3.ResumeLayout(false);
+            this.groupBox3.PerformLayout();
             this.groupBox5.ResumeLayout(false);
             this.groupBox5.PerformLayout();
             this.groupBox6.ResumeLayout(false);
@@ -433,9 +464,6 @@
             this.groupBox1.PerformLayout();
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
-            this.tabPage4.ResumeLayout(false);
-            this.groupBox3.ResumeLayout(false);
-            this.groupBox3.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -470,6 +498,8 @@
         private System.Windows.Forms.TabPage tabPage1;
         private System.Windows.Forms.TabPage tabPage2;
         private System.Windows.Forms.TabPage tabPage3;
-        private System.Windows.Forms.TabPage tabPage4;
+        private LibRXFFT.Components.GDI.TextBoxMouseScroll txtEyePlotBlocks;
+        private System.Windows.Forms.CheckBox chkEyePlot;
+        private System.Windows.Forms.Label label5;
     }
 }

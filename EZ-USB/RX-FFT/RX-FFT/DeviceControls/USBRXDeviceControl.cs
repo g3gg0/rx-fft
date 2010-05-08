@@ -27,10 +27,8 @@ namespace RX_FFT.DeviceControls
         private double BoardAmplification = 0;
         private FilterInformation CurrentFilter;
 
-        
-        public bool UseBO35 = true;
-        public bool UseMT2131 = true;
 
+        public USBRXDevice.eCombinationType TunerCombination = USBRXDevice.eCombinationType.None;
 
 
         public USBRXDeviceControl()
@@ -212,6 +210,7 @@ namespace RX_FFT.DeviceControls
         public event EventHandler FilterWidthChanged;
         public event EventHandler InvertedSpectrumChanged;
         public event EventHandler DeviceDisappeared;
+        public event EventHandler DeviceClosed;
 
         public virtual bool OpenTuner()
         {
@@ -222,8 +221,7 @@ namespace RX_FFT.DeviceControls
             
             USBRX = new USBRXDevice();
             USBRX.ShowConsole(false);
-            USBRX.UseBO35 = UseBO35;
-            USBRX.UseMT2131 = UseMT2131;
+            USBRX.TunerCombination = TunerCombination;
 
             try
             {
@@ -233,7 +231,7 @@ namespace RX_FFT.DeviceControls
                     waitDlg.Close();
                     Close();
                     return false;
-                }
+                }                
             }
             catch (BadImageFormatException e)
             {
@@ -336,14 +334,17 @@ namespace RX_FFT.DeviceControls
                     val -= 30;
                 }
 
-                if (val > 20)
+                if (false)
                 {
-                    if (!PreampEnabled)
+                    if (val > 20)
                     {
-                        USBRX.SetPreAmp(true);
-                        BeginInvoke(new MethodInvoker(() => chkPreAmp.Checked = true));
+                        if (!PreampEnabled)
+                        {
+                            USBRX.SetPreAmp(true);
+                            BeginInvoke(new MethodInvoker(() => chkPreAmp.Checked = true));
+                        }
+                        val -= 20;
                     }
-                    val -= 20;
                 }
 
                 /* try to set main tuner amplification */
@@ -457,8 +458,10 @@ namespace RX_FFT.DeviceControls
                     if (USBRX.Atmel != null)
                     {
                         lines.Add("Hardware details:");
-                        lines.Add("    Serial: " + USBRX.Atmel.SerialNumber);
-                        lines.Add("    TCXOFreq: " + USBRX.Atmel.TCXOFreq);
+                        lines.Add("    Temperature:    " + USBRX.Atmel.Temperature);
+                        lines.Add("    Serial:         " + USBRX.Atmel.SerialNumber);
+                        lines.Add("    InternalSerial: " + USBRX.Atmel.InternalSerialNumber);
+                        lines.Add("    TCXOFreq:       " + USBRX.Atmel.TCXOFreq);
                     }
 
                     if (USBRX.Tuner != null)
@@ -723,6 +726,12 @@ namespace RX_FFT.DeviceControls
             {
                 USBRX.SetRfSource(USBRXDevice.eRfSource.Tuner);
             }
+        }
+
+        void txtAtt_ValueChanged(object sender, System.EventArgs e)
+        {
+            BoardAttenuation = txtAtt.Value;
+            USBRX.SetAtt((int)BoardAttenuation);
         }
 
         private void chkAtt_CheckedChanged(object sender, EventArgs e)

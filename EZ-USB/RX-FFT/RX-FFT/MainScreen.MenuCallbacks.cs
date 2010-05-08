@@ -140,7 +140,7 @@ namespace RX_FFT
         {
             
             ScanFrequencies.Clear();
-            foreach (FrequencyMarker marker in Markers)
+            foreach (FrequencyMarker marker in MarkerList.Markers)
             {
                 ScanFrequencies.AddLast(marker);
             }
@@ -347,6 +347,11 @@ namespace RX_FFT
 
         private void saveMenu_Click(object sender, EventArgs e)
         {
+            if (!DeviceOpened)
+            {
+                MessageBox.Show("Open a device or file first.");
+                return;
+            }
             if (Device.SampleSource.SavingEnabled)
             {
                 Device.SampleSource.SavingEnabled = false;
@@ -357,7 +362,7 @@ namespace RX_FFT
                 try
                 {
                     SaveFileDialog dlg = new SaveFileDialog();
-                    dlg.Filter = "Raw complex data files (*.dat)|*.dat|All files (*.*)|*.*";
+                    dlg.Filter = "Raw complex data files (*.dat)|*.dat|Stereo WAV file (*.wav)|*.wav|USRP CFile (*.cfile)|*.cfile|All files (*.*)|*.*";
                     if (dlg.ShowDialog() == DialogResult.OK)
                     {
                         EnableSaving(dlg.FileName);
@@ -371,6 +376,11 @@ namespace RX_FFT
 
         private void gsmAnalyzerMenu_Click(object sender, EventArgs e)
         {
+            if (!DeviceOpened)
+            {
+                MessageBox.Show("Open a device or file first.");
+                return;
+            }
             if (!Device.AllowsMultipleReaders)
             {
                 MessageBox.Show("Further analysis is not possible with the opened device.");
@@ -392,6 +402,11 @@ namespace RX_FFT
 
         private void digitalDemodulatorsMenu_Click(object sender, EventArgs e)
         {
+            if (!DeviceOpened)
+            {
+                MessageBox.Show("Open a device or file first.");
+                return;
+            }
             if (!Device.AllowsMultipleReaders)
             {
                 MessageBox.Show("Further analysis is not possible with the opened device.");
@@ -406,13 +421,19 @@ namespace RX_FFT
             DemodulatorWindow.Show();
             if (Device != null)
             {
-                DemodulatorWindow.SharedMemoryChannel = Device.ShmemChannel;
+                DemodulatorWindow.OpenSharedMem(Device.ShmemChannel);
             }
         }
 
 
         private void oscilloscopeMenu_Click(object sender, EventArgs e)
         {
+            if (!DeviceOpened)
+            {
+                MessageBox.Show("Open a device or file first.");
+                return;
+            }
+
             if (!Device.AllowsMultipleReaders)
             {
                 MessageBox.Show("Further analysis is not possible with the opened device.");

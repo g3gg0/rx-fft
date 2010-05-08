@@ -102,6 +102,8 @@ namespace GSM_Analyzer
             this.label5 = new System.Windows.Forms.Label();
             this.lblMCCMNC = new System.Windows.Forms.Label();
             this.txtLog = new System.Windows.Forms.TextBox();
+            this.label19 = new System.Windows.Forms.Label();
+            this.lblSnr = new System.Windows.Forms.Label();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -453,8 +455,10 @@ namespace GSM_Analyzer
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.lblSnr);
             this.groupBox2.Controls.Add(this.lblIdlePower);
             this.groupBox2.Controls.Add(this.lblPower);
+            this.groupBox2.Controls.Add(this.label19);
             this.groupBox2.Controls.Add(this.label18);
             this.groupBox2.Controls.Add(this.label17);
             this.groupBox2.Controls.Add(this.label6);
@@ -680,6 +684,24 @@ namespace GSM_Analyzer
             this.txtLog.Size = new System.Drawing.Size(949, 394);
             this.txtLog.TabIndex = 1;
             // 
+            // label19
+            // 
+            this.label19.AutoSize = true;
+            this.label19.Location = new System.Drawing.Point(87, 44);
+            this.label19.Name = "label19";
+            this.label19.Size = new System.Drawing.Size(33, 13);
+            this.label19.TabIndex = 15;
+            this.label19.Text = "SNR:";
+            // 
+            // lblSnr
+            // 
+            this.lblSnr.AutoSize = true;
+            this.lblSnr.Location = new System.Drawing.Point(119, 44);
+            this.lblSnr.Name = "lblSnr";
+            this.lblSnr.Size = new System.Drawing.Size(16, 13);
+            this.lblSnr.TabIndex = 15;
+            this.lblSnr.Text = "---";
+            // 
             // GSMAnalyzer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -765,6 +787,8 @@ namespace GSM_Analyzer
         private System.Windows.Forms.Label label17;
         private System.Windows.Forms.Label lblIdlePower;
         private System.Windows.Forms.Label label18;
+        private System.Windows.Forms.Label lblSnr;
+        private System.Windows.Forms.Label label19;
     }
 }
 

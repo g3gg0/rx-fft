@@ -125,6 +125,7 @@ namespace RX_FFT.DeviceControls
         public event EventHandler FrequencyChanged;
         public event EventHandler InvertedSpectrumChanged;
         public event EventHandler DeviceDisappeared;
+        public event EventHandler DeviceClosed;
 
         public bool OpenTuner()
         {

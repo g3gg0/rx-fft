@@ -5,6 +5,8 @@ using LibRXFFT.Components.DirectX;
 using LibRXFFT.Libraries.Filters;
 using LibRXFFT.Libraries.Misc;
 using LibRXFFT.Libraries.SignalProcessing;
+using LibRXFFT.Components.DirectX.Drawables;
+using LibRXFFT.Components.DirectX.Drawables.Docks;
 
 namespace RX_Oscilloscope.Components
 {
@@ -12,13 +14,18 @@ namespace RX_Oscilloscope.Components
     {
         private int SamplesTotal = 10000;
 
-        private IIRFilter LowPass = null;
-        private double LastPhase;
 
         public IQPlot()
         {
             InitializeComponent();
             waveForm.KeepText = true;
+
+            DockPanel panel = new DockPanel(waveForm, eOrientation.RightBorder);
+            new DensityMap(panel).Granularity = 32;
+
+            panel = new DockPanel(waveForm, eOrientation.BottomBorder);
+            new DensityMap(panel).Granularity = 32;
+
             UpdateScale();
         }
 

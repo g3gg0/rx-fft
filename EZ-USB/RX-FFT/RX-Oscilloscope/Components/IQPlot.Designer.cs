@@ -65,7 +65,7 @@
             // 
             this.splitContainer1.Panel2.Controls.Add(this.tabControl);
             this.splitContainer1.Size = new System.Drawing.Size(997, 511);
-            this.splitContainer1.SplitterDistance = 427;
+            this.splitContainer1.SplitterDistance = 425;
             this.splitContainer1.SplitterWidth = 1;
             this.splitContainer1.TabIndex = 1;
             // 
@@ -82,7 +82,7 @@
             this.waveForm.MaxSamples = 10000;
             this.waveForm.Name = "waveForm";
             this.waveForm.SamplingRate = 0;
-            this.waveForm.Size = new System.Drawing.Size(997, 427);
+            this.waveForm.Size = new System.Drawing.Size(997, 425);
             this.waveForm.SpectParts = 1;
             this.waveForm.TabIndex = 0;
             this.waveForm.UpdateRate = 25;
@@ -101,7 +101,7 @@
             this.tabControl.Location = new System.Drawing.Point(0, 0);
             this.tabControl.Name = "tabControl";
             this.tabControl.SelectedIndex = 0;
-            this.tabControl.Size = new System.Drawing.Size(997, 81);
+            this.tabControl.Size = new System.Drawing.Size(997, 85);
             this.tabControl.TabIndex = 10;
             // 
             // tabPage1
@@ -110,7 +110,7 @@
             this.tabPage1.Location = new System.Drawing.Point(4, 22);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(989, 57);
+            this.tabPage1.Size = new System.Drawing.Size(989, 59);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "Source Signal";
             this.tabPage1.UseVisualStyleBackColor = true;
@@ -120,19 +120,22 @@
             this.groupBox5.Controls.Add(this.txtSamplingRate);
             this.groupBox5.Location = new System.Drawing.Point(6, 6);
             this.groupBox5.Name = "groupBox5";
-            this.groupBox5.Size = new System.Drawing.Size(119, 55);
+            this.groupBox5.Size = new System.Drawing.Size(109, 51);
             this.groupBox5.TabIndex = 8;
             this.groupBox5.TabStop = false;
             this.groupBox5.Text = "Sampling Rate";
             // 
             // txtSamplingRate
             // 
-            this.txtSamplingRate.Frequency = ((long)(0));
+            this.txtSamplingRate.FixedLengthDecades = 10;
+            this.txtSamplingRate.FixedLengthString = false;
+            this.txtSamplingRate.Frequency = ((long)(48000));
             this.txtSamplingRate.Location = new System.Drawing.Point(6, 16);
             this.txtSamplingRate.Name = "txtSamplingRate";
-            this.txtSamplingRate.Size = new System.Drawing.Size(100, 20);
+            this.txtSamplingRate.Size = new System.Drawing.Size(93, 20);
             this.txtSamplingRate.TabIndex = 0;
-            this.txtSamplingRate.Text = "0.000.000.000 Hz";
+            this.txtSamplingRate.Text = "48 kHz";
+            this.txtSamplingRate.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.txtSamplingRate.FrequencyChanged += new System.EventHandler(this.txtSamplingRate_FrequencyChanged);
             // 
             // tabPage4
@@ -140,7 +143,7 @@
             this.tabPage4.Controls.Add(this.groupBox3);
             this.tabPage4.Location = new System.Drawing.Point(4, 22);
             this.tabPage4.Name = "tabPage4";
-            this.tabPage4.Size = new System.Drawing.Size(989, 52);
+            this.tabPage4.Size = new System.Drawing.Size(989, 54);
             this.tabPage4.TabIndex = 3;
             this.tabPage4.Text = "Buffering";
             this.tabPage4.UseVisualStyleBackColor = true;
@@ -169,14 +172,14 @@
             // txtBufferTime
             // 
             this.txtBufferTime.Location = new System.Drawing.Point(6, 16);
-            this.txtBufferTime.LowerLimit = ((long)(512));
+            this.txtBufferTime.LowerLimit = ((long)(2));
             this.txtBufferTime.Name = "txtBufferTime";
             this.txtBufferTime.Size = new System.Drawing.Size(47, 20);
             this.txtBufferTime.TabIndex = 3;
-            this.txtBufferTime.Text = "10000";
+            this.txtBufferTime.Text = "1000";
             this.txtBufferTime.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.txtBufferTime.UpperLimit = ((long)(1000000));
-            this.txtBufferTime.Value = ((long)(10000));
+            this.txtBufferTime.Value = ((long)(1000));
             this.txtBufferTime.ValueChanged += new System.EventHandler(this.txtBufferTime_ValueChanged);
             // 
             // label3

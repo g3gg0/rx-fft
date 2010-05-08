@@ -31,6 +31,7 @@
             this.chkRepeat = new System.Windows.Forms.CheckBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.btnSelectFile = new System.Windows.Forms.Button();
             this.btnRewind = new System.Windows.Forms.Button();
             this.btnPlayPause = new System.Windows.Forms.Button();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
@@ -53,7 +54,7 @@
             // chkRepeat
             // 
             this.chkRepeat.AutoSize = true;
-            this.chkRepeat.Location = new System.Drawing.Point(124, 7);
+            this.chkRepeat.Location = new System.Drawing.Point(215, 7);
             this.chkRepeat.Name = "chkRepeat";
             this.chkRepeat.Size = new System.Drawing.Size(61, 17);
             this.chkRepeat.TabIndex = 0;
@@ -84,6 +85,7 @@
             // 
             // splitContainer1.Panel1
             // 
+            this.splitContainer1.Panel1.Controls.Add(this.btnSelectFile);
             this.splitContainer1.Panel1.Controls.Add(this.btnRewind);
             this.splitContainer1.Panel1.Controls.Add(this.chkRepeat);
             this.splitContainer1.Panel1.Controls.Add(this.btnPlayPause);
@@ -95,9 +97,19 @@
             this.splitContainer1.SplitterDistance = 36;
             this.splitContainer1.TabIndex = 4;
             // 
+            // btnSelectFile
+            // 
+            this.btnSelectFile.Location = new System.Drawing.Point(3, 3);
+            this.btnSelectFile.Name = "btnSelectFile";
+            this.btnSelectFile.Size = new System.Drawing.Size(85, 23);
+            this.btnSelectFile.TabIndex = 3;
+            this.btnSelectFile.Text = "Change File...";
+            this.btnSelectFile.UseVisualStyleBackColor = true;
+            this.btnSelectFile.Click += new System.EventHandler(this.btnSelectFile_Click);
+            // 
             // btnRewind
             // 
-            this.btnRewind.Location = new System.Drawing.Point(3, 3);
+            this.btnRewind.Location = new System.Drawing.Point(94, 3);
             this.btnRewind.Name = "btnRewind";
             this.btnRewind.Size = new System.Drawing.Size(60, 23);
             this.btnRewind.TabIndex = 1;
@@ -107,7 +119,7 @@
             // 
             // btnPlayPause
             // 
-            this.btnPlayPause.Location = new System.Drawing.Point(69, 3);
+            this.btnPlayPause.Location = new System.Drawing.Point(160, 3);
             this.btnPlayPause.Name = "btnPlayPause";
             this.btnPlayPause.Size = new System.Drawing.Size(49, 23);
             this.btnPlayPause.TabIndex = 2;
@@ -239,5 +251,6 @@
         private System.Windows.Forms.Label lblStartPos;
         private System.Windows.Forms.Label lblEndPos;
         private System.Windows.Forms.Label lblCurrentPos;
+        private System.Windows.Forms.Button btnSelectFile;
     }
 }

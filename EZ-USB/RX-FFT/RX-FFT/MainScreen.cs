@@ -24,6 +24,7 @@ using Timer = System.Threading.Timer;
 using LibRXFFT.Components.DirectX.Drawables;
 using LibRXFFT.Components.DirectX.Drawables.Docks;
 using LibRXFFT.Components.Generic;
+using System.IO;
 
 namespace RX_FFT
 {
@@ -112,7 +113,7 @@ namespace RX_FFT
         double LastSamplingRate = 48000;
         long MouseDragStartFreq;
 
-        private LinkedList<FrequencyMarker> Markers = new LinkedList<FrequencyMarker>();
+        private FrequencyMarkerList MarkerList = new FrequencyMarkerList();
         private LinkedList<FrequencyMarker> ScanFrequencies = new LinkedList<FrequencyMarker>();
 
         ShmemSampleSource AudioShmem;
@@ -164,10 +165,16 @@ namespace RX_FFT
             this.averageSamplesText.KeyPress += new KeyPressEventHandler(this.averageSamplesText_KeyPress);
             this.verticalSmoothMenuText.KeyPress += new KeyPressEventHandler(this.verticalSmoothMenuText_KeyPress);
 
+
+            DragEnter += new DragEventHandler(MainScreen_DragEnter);
+            DragDrop += new DragEventHandler(MainScreen_DragDrop);
+
             updateRateText_KeyPress(null, null);
             averageSamplesText_KeyPress(null, null);
             verticalSmoothMenuText_KeyPress(null, null);
 
+            MarkerList.MarkersChanged += new EventHandler(MarkerDialog_MarkersChanged);
+            FFTDisplay.Markers = MarkerList.Markers;
 
             /* register callback functions */
             FFTDisplay.UserEventCallback = UserEventCallbackFunc;
@@ -244,6 +251,40 @@ namespace RX_FFT
             Remote.FFTSizeChanged += new EventHandler(Remote_FFTSizeChanged);
             FFTDisplay.Remote = Remote;
 
+        }
+
+        void MainScreen_DragDrop(object sender, DragEventArgs e)
+        {
+            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+
+            if (files.Length == 1)
+            {
+                if (DeviceOpened)
+                {
+                    if (Device is FileSourceDeviceControl)
+                    {
+                        ((FileSourceDeviceControl)Device).LoadFile(files[0]);
+                    }
+                    else
+                    {
+                        StopThreads();
+                        CloseDevice();
+                        OpenFileDevice(files[0]);
+                    }
+                }
+                else
+                {
+                    OpenFileDevice(files[0]);
+                }
+            }
+        }
+
+        void MainScreen_DragEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop, false) == true)
+            {
+                e.Effect = DragDropEffects.All;
+            }
         }
 
         void Remote_FFTSizeChanged(object sender, EventArgs e)
@@ -369,7 +410,9 @@ namespace RX_FFT
             set
             {
                 if (Device != null)
+                {
                     Device.SamplesPerBlock = value * Math.Max(1, SamplesToAverage);
+                }
 
                 if (FFTDisplay.FFTSize != value)
                 {
@@ -398,7 +441,9 @@ namespace RX_FFT
             set
             {
                 if (Device != null)
+                {
                     Device.SamplesPerBlock = Math.Max(1, value) * FFTSize;
+                }
                 FFTDisplay.SamplesToAverage = value;
             }
         }
@@ -572,14 +617,8 @@ namespace RX_FFT
                 return;
             }
 
-            Markers.AddLast(marker);
-            FFTDisplay.Markers = Markers;
-
-            /* notify marker window */
-            if (MarkerDialog != null && !MarkerDialog.IsDisposed)
-            {
-                MarkerDialog.UpdateMarkerList();
-            }
+            MarkerList.Add(marker);
+            FFTDisplay.Markers = MarkerList.Markers;
         }
 
         void AudioReadFunc()
@@ -1008,17 +1047,11 @@ namespace RX_FFT
             }
         }
 
-        private void OpenBO35Device()
-        {
-            OpenBO35Device(true);
-        }
-
-        private void OpenBO35Device(bool useTuners)
+        private void OpenBO35Device(USBRXDevice.eCombinationType type)
         {
             USBRXDeviceControl dev = new USBRXDeviceControl();
 
-            dev.UseBO35 = useTuners;
-            dev.UseMT2131 = useTuners;
+            dev.TunerCombination = type;
 
             if (!dev.OpenTuner())
             {
@@ -1035,18 +1068,24 @@ namespace RX_FFT
             dev.TransferModeChanged += new EventHandler(Device_TransferModeChanged);
             dev.InvertedSpectrumChanged += new EventHandler(Device_InvertedSpectrumChanged);
             dev.DeviceDisappeared += new EventHandler(Device_DeviceDisappeared);
+            dev.DeviceClosed += new EventHandler(Device_DeviceClosed);
             dev.SamplesPerBlock = Math.Max(1, SamplesToAverage) * FFTSize;
 
             StartThreads();
 
-            DeviceOpened = true;
-
             CurrentFrequency = dev.GetFrequency();
+
+            DeviceOpened = true;
         }
 
         public void OpenFileDevice()
         {
-            FileSourceDeviceControl dev = new FileSourceDeviceControl();
+            OpenFileDevice(null);
+        }
+
+        public void OpenFileDevice(string fileName)
+        {
+            FileSourceDeviceControl dev = new FileSourceDeviceControl(fileName);
 
             if (!dev.Connected)
             {
@@ -1059,12 +1098,15 @@ namespace RX_FFT
             dev.FrequencyChanged += new EventHandler(Device_FrequencyChanged);
             dev.SamplingRateChanged += new EventHandler(Device_RateChanged);
             dev.FilterWidthChanged += new EventHandler(Device_FilterWidthChanged);
+            dev.DeviceDisappeared += new EventHandler(Device_DeviceDisappeared);
+            dev.DeviceClosed += new EventHandler(Device_DeviceClosed);
             dev.SamplesPerBlock = Math.Max(1, SamplesToAverage) * FFTSize;
 
             StartThreads();
 
             DeviceOpened = true;
         }
+
 
         public void OpenSharedMem(int srcChan)
         {
@@ -1081,6 +1123,7 @@ namespace RX_FFT
             dev.FrequencyChanged += new EventHandler(Device_FrequencyChanged);
             dev.SamplingRateChanged += new EventHandler(Device_RateChanged);
             dev.FilterWidthChanged += new EventHandler(Device_FilterWidthChanged);
+            dev.DeviceClosed += new EventHandler(Device_DeviceClosed);
             dev.SamplesPerBlock = Math.Max(1, SamplesToAverage) * FFTSize;
 
             StartThreads();
@@ -1147,6 +1190,7 @@ namespace RX_FFT
             dev.FrequencyChanged += new EventHandler(Device_FrequencyChanged);
             dev.SamplingRateChanged += new EventHandler(Device_RateChanged);
             dev.FilterWidthChanged += new EventHandler(Device_FilterWidthChanged);
+            dev.DeviceClosed += new EventHandler(Device_DeviceClosed);
 
             StartThreads();
 
@@ -1238,6 +1282,12 @@ namespace RX_FFT
             }
         }
 
+        void Device_DeviceClosed(object sender, EventArgs e)
+        {
+            StopThreads();
+            CloseDevice();
+        }
+
         void Device_DeviceDisappeared(object sender, EventArgs e)
         {
             Tuner dev = (Tuner)sender;
@@ -1318,17 +1368,28 @@ namespace RX_FFT
 
         private void openBO35Menu_Click(object sender, EventArgs e)
         {
-            OpenBO35Device(true);
+            OpenBO35Device(USBRXDevice.eCombinationType.BO35);
         }
 
         private void openBO35PlainMenu_Click(object sender, EventArgs e)
         {
-            OpenBO35Device(false);
+            OpenBO35Device(USBRXDevice.eCombinationType.Automatic);
         }
 
         private void openFileMenu_Click(object sender, EventArgs e)
         {
-            OpenFileDevice();
+            try
+            {
+                OpenFileDevice();
+            }
+            catch (InvalidDataException ex)
+            {
+                MessageBox.Show("File format not supported. (" + ex.Message + ")");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Could not open the file. (" + ex.Message + ")");
+            }
         }
 
         private void openShMemMenu_Click(object sender, EventArgs e)
@@ -1345,9 +1406,8 @@ namespace RX_FFT
         {
             if (MarkerDialog == null || MarkerDialog.IsDisposed)
             {
-                MarkerDialog = new MarkerListDialog(Markers);
+                MarkerDialog = new MarkerListDialog(MarkerList);
                 MarkerDialog.GetTuner = MarkerDialog_GetTuner;
-                MarkerDialog.MarkersChanged += new EventHandler(MarkerDialog_MarkersChanged);
                 MarkerDialog.Show();
             }
             else
@@ -1364,7 +1424,7 @@ namespace RX_FFT
         private void MarkerDialog_MarkersChanged(object sender, EventArgs e)
         {
             /* the markers were changed. update this in FFT */
-            FFTDisplay.Markers = Markers;
+            FFTDisplay.Markers = MarkerList.Markers;
         }
 
         private void EnableSaving(string fileName)

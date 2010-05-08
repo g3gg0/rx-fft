@@ -45,8 +45,8 @@ namespace RX_FFT
             this.openMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.openBO35Menu = new System.Windows.Forms.ToolStripMenuItem();
             this.openBO35PlainMenu = new System.Windows.Forms.ToolStripMenuItem();
+            this.openFileMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.openShMemMenu = new System.Windows.Forms.ToolStripMenuItem();
-            this.openFileMenu = new System.Windows.Forms.ToolStripMenuItem();            
             this.openRandomDataMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.pauseMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.saveMenu = new System.Windows.Forms.ToolStripMenuItem();
@@ -83,6 +83,7 @@ namespace RX_FFT
             this.dynamicWaterfallMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.fitSpectrumMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.displayFilterMarginsMenu = new System.Windows.Forms.ToolStripMenuItem();
+            this.agcMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.advancedMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.gsmAnalyzerMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.digitalDemodulatorsMenu = new System.Windows.Forms.ToolStripMenuItem();
@@ -92,7 +93,6 @@ namespace RX_FFT
             this.deviceInformationMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripContainer1 = new System.Windows.Forms.ToolStripContainer();
             this.FFTDisplay = new LibRXFFT.Components.DirectX.DirectXWaterfallFFTDisplay();
-            this.agcMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip1.SuspendLayout();
             this.mainMenu.SuspendLayout();
             this.toolStripContainer1.ContentPanel.SuspendLayout();
@@ -240,13 +240,10 @@ namespace RX_FFT
             // 
             this.openBO35PlainMenu.Name = "openBO35PlainMenu";
             this.openBO35PlainMenu.Size = new System.Drawing.Size(214, 22);
-            this.openBO35PlainMenu.Text = "BO-35digi (w/o ext. Tuner)";
+            this.openBO35PlainMenu.Text = "BO-35digi (autodetect ext. Tuner)";
             this.openBO35PlainMenu.Click += new System.EventHandler(this.openBO35PlainMenu_Click);
-
-
-            
             // 
-            // openShMemMenu
+            // openFileMenu
             // 
             this.openFileMenu.Name = "openFileMenu";
             this.openFileMenu.Size = new System.Drawing.Size(214, 22);
@@ -525,6 +522,13 @@ namespace RX_FFT
             this.displayFilterMarginsMenu.Text = "Display filter margins";
             this.displayFilterMarginsMenu.Click += new System.EventHandler(this.displayFilterMarginsMenu_Click);
             // 
+            // agcMenu
+            // 
+            this.agcMenu.Name = "agcMenu";
+            this.agcMenu.Size = new System.Drawing.Size(214, 22);
+            this.agcMenu.Text = "Automatic Gain Control";
+            this.agcMenu.Click += new System.EventHandler(this.agcMenu_Click);
+            // 
             // advancedMenu
             // 
             this.advancedMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -621,15 +625,9 @@ namespace RX_FFT
             this.FFTDisplay.VerticalSmooth = 1;
             this.FFTDisplay.WindowingFunction = LibRXFFT.Libraries.FFTW.FFTTransformer.eWindowingFunction.BlackmanHarris;
             // 
-            // agcMenu
-            // 
-            this.agcMenu.Name = "agcMenu";
-            this.agcMenu.Size = new System.Drawing.Size(214, 22);
-            this.agcMenu.Text = "Automatic Gain Control";
-            this.agcMenu.Click += new System.EventHandler(this.agcMenu_Click);
-            // 
             // MainScreen
             // 
+            this.AllowDrop = true;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(924, 412);

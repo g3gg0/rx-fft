@@ -35,6 +35,7 @@
         {
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.txtFilterRate = new System.Windows.Forms.TextBox();
+            this.label3 = new System.Windows.Forms.Label();
             this.txtFilterWidth = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.frequencySelector1 = new LibRXFFT.Components.GDI.FrequencySelector();
@@ -63,7 +64,8 @@
             this.radioAcqStream = new System.Windows.Forms.RadioButton();
             this.radioAcqBlock = new System.Windows.Forms.RadioButton();
             this.radioAcqOff = new System.Windows.Forms.RadioButton();
-            this.label3 = new System.Windows.Forms.Label();
+            this.txtAtt = new LibRXFFT.Components.GDI.TextBoxMouseScroll();
+            this.label1 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -103,6 +105,15 @@
             this.txtFilterRate.TabIndex = 5;
             this.txtFilterRate.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(7, 74);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(33, 13);
+            this.label3.TabIndex = 4;
+            this.label3.Text = "Rate:";
+            // 
             // txtFilterWidth
             // 
             this.txtFilterWidth.BackColor = System.Drawing.Color.Black;
@@ -127,6 +138,8 @@
             // frequencySelector1
             // 
             this.frequencySelector1.BackColor = System.Drawing.Color.Black;
+            this.frequencySelector1.FixedLengthDecades = 10;
+            this.frequencySelector1.FixedLengthString = true;
             this.frequencySelector1.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.frequencySelector1.ForeColor = System.Drawing.Color.Cyan;
             this.frequencySelector1.Frequency = ((long)(0));
@@ -243,11 +256,11 @@
             // 
             // txtMgcValue
             // 
-            this.txtMgcValue.Location = new System.Drawing.Point(85, 65);
+            this.txtMgcValue.Location = new System.Drawing.Point(95, 39);
             this.txtMgcValue.LowerLimit = ((long)(0));
             this.txtMgcValue.Name = "txtMgcValue";
             this.txtMgcValue.ReadOnly = true;
-            this.txtMgcValue.Size = new System.Drawing.Size(50, 20);
+            this.txtMgcValue.Size = new System.Drawing.Size(26, 20);
             this.txtMgcValue.TabIndex = 1;
             this.txtMgcValue.Text = "0";
             this.txtMgcValue.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
@@ -272,10 +285,9 @@
             this.radioAgcManual.AutoSize = true;
             this.radioAgcManual.Location = new System.Drawing.Point(75, 42);
             this.radioAgcManual.Name = "radioAgcManual";
-            this.radioAgcManual.Size = new System.Drawing.Size(60, 17);
+            this.radioAgcManual.Size = new System.Drawing.Size(14, 13);
             this.radioAgcManual.TabIndex = 16;
             this.radioAgcManual.TabStop = true;
-            this.radioAgcManual.Text = "Manual";
             this.radioAgcManual.UseVisualStyleBackColor = true;
             this.radioAgcManual.CheckedChanged += new System.EventHandler(this.radioAgcManual_CheckedChanged);
             // 
@@ -320,6 +332,8 @@
             // 
             // groupBox4
             // 
+            this.groupBox4.Controls.Add(this.label1);
+            this.groupBox4.Controls.Add(this.txtAtt);
             this.groupBox4.Controls.Add(this.radioTuner);
             this.groupBox4.Controls.Add(this.chkAtt);
             this.groupBox4.Controls.Add(this.radioRf1);
@@ -349,7 +363,7 @@
             // chkAtt
             // 
             this.chkAtt.AutoSize = true;
-            this.chkAtt.Location = new System.Drawing.Point(4, 19);
+            this.chkAtt.Location = new System.Drawing.Point(80, 89);
             this.chkAtt.Name = "chkAtt";
             this.chkAtt.Size = new System.Drawing.Size(47, 17);
             this.chkAtt.TabIndex = 5;
@@ -464,14 +478,28 @@
             this.radioAcqOff.UseVisualStyleBackColor = true;
             this.radioAcqOff.CheckedChanged += new System.EventHandler(this.radioAcqOff_CheckedChanged);
             // 
-            // label3
+            // txtAtt
             // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(7, 74);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(33, 13);
-            this.label3.TabIndex = 4;
-            this.label3.Text = "Rate:";
+            this.txtAtt.Location = new System.Drawing.Point(37, 17);
+            this.txtAtt.LowerLimit = ((long)(0));
+            this.txtAtt.Name = "txtAtt";
+            this.txtAtt.Size = new System.Drawing.Size(27, 20);
+            this.txtAtt.TabIndex = 12;
+            this.txtAtt.Text = "0";
+            this.txtAtt.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.txtAtt.UpperLimit = ((long)(31));
+            this.txtAtt.Value = ((long)(0));
+            this.txtAtt.ValueChanged +=new System.EventHandler(txtAtt_ValueChanged);
+
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(7, 20);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(28, 13);
+            this.label1.TabIndex = 13;
+            this.label1.Text = "ATT";
             // 
             // USBRXDeviceControl
             // 
@@ -538,5 +566,7 @@
         private System.Windows.Forms.Button btnAtmel;
         private System.Windows.Forms.Button btnFiles;
         private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Label label1;
+        private LibRXFFT.Components.GDI.TextBoxMouseScroll txtAtt;
     }
 }

@@ -5,6 +5,8 @@ using LibRXFFT.Components.DirectX;
 using LibRXFFT.Libraries.Filters;
 using LibRXFFT.Libraries.Misc;
 using LibRXFFT.Libraries.SignalProcessing;
+using LibRXFFT.Components.DirectX.Drawables;
+using LibRXFFT.Components.DirectX.Drawables.Docks;
 
 namespace RX_Oscilloscope.Components
 {
@@ -27,6 +29,7 @@ namespace RX_Oscilloscope.Components
 
         private LabelledLine TriggerLevelBar = new LabelledLine("Trig lvl", -1000, Color.BlueViolet);
         private LabelledLine TriggerSampleBar = new LabelledLine("Trig", -1000, Color.Yellow);
+        private PlotVertsHistory History;
 
         private IIRFilter LowPass = null;
         private double LastPhase;
@@ -41,6 +44,14 @@ namespace RX_Oscilloscope.Components
             waveForm.MaxSamples = SamplesTotal;
             waveForm.LabelledHorLines.AddLast(TriggerLevelBar);
             waveForm.LabelledVertLines.AddLast(TriggerSampleBar);
+
+            History = new PlotVertsHistory(waveForm);
+            History.HistLength = 1;
+
+            DockPanel panel = new DockPanel(waveForm, eOrientation.RightBorder);
+            new DensityMap(panel).Granularity = 32;
+            new WaveformAreaSelectionDetails(new WaveformAreaSelection(waveForm), panel);
+
 
             UpdateScale();
         }
@@ -322,6 +333,10 @@ namespace RX_Oscilloscope.Components
                 waveForm.ScaleTextDistance = 20;
                 waveForm.ScaleUnit = "dB";
             }
+
+            waveForm.UpdateAxis = true;
+            waveForm.UpdateCursor = true;
+            waveForm.UpdateOverlays = true;
         }
 
         private void radioPower_CheckedChanged(object sender, EventArgs e)
@@ -335,5 +350,19 @@ namespace RX_Oscilloscope.Components
             UpdateScale();
         }
 
+        private void txtEyePlotBlocks_ValueChanged(object sender, System.EventArgs e)
+        {
+            History.HistLength = txtEyePlotBlocks.Value;
+
+            //waveForm.HistLength = txtEyePlotBlocks.Value;
+        }
+
+        private void chkEyePlot_CheckedChanged(object sender, EventArgs e)
+        {
+            txtEyePlotBlocks.Enabled = chkEyePlot.Checked;
+            waveForm.RealTimeMode = chkEyePlot.Checked;
+            History.HistLength = txtEyePlotBlocks.Value;
+            History.Enabled = chkEyePlot.Checked;
+        }
     }
 }

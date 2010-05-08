@@ -30,10 +30,10 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.scope = new RX_Oscilloscope.Components.Oscilloscope();
             this.btnOpen = new System.Windows.Forms.Button();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
+            this.scope = new RX_Oscilloscope.Components.Oscilloscope();
             this.iqPlot = new RX_Oscilloscope.Components.IQPlot();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -42,14 +42,6 @@
             this.splitContainer2.Panel2.SuspendLayout();
             this.splitContainer2.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // scope
-            // 
-            this.scope.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.scope.Location = new System.Drawing.Point(0, 0);
-            this.scope.Name = "scope";
-            this.scope.Size = new System.Drawing.Size(537, 361);
-            this.scope.TabIndex = 0;
             // 
             // btnOpen
             // 
@@ -77,7 +69,7 @@
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.splitContainer2);
-            this.splitContainer1.Size = new System.Drawing.Size(992, 395);
+            this.splitContainer1.Size = new System.Drawing.Size(869, 395);
             this.splitContainer1.SplitterDistance = 30;
             this.splitContainer1.TabIndex = 5;
             // 
@@ -94,23 +86,33 @@
             // splitContainer2.Panel2
             // 
             this.splitContainer2.Panel2.Controls.Add(this.iqPlot);
-            this.splitContainer2.Size = new System.Drawing.Size(992, 361);
-            this.splitContainer2.SplitterDistance = 537;
+            this.splitContainer2.Size = new System.Drawing.Size(869, 361);
+            this.splitContainer2.SplitterDistance = 594;
             this.splitContainer2.TabIndex = 1;
             // 
-            // iqPlot1
+            // scope
+            // 
+            this.scope.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.scope.Location = new System.Drawing.Point(0, 0);
+            this.scope.Name = "scope";
+            this.scope.SamplingRate = 0;
+            this.scope.Size = new System.Drawing.Size(594, 361);
+            this.scope.TabIndex = 0;
+            // 
+            // iqPlot
             // 
             this.iqPlot.Dock = System.Windows.Forms.DockStyle.Fill;
             this.iqPlot.Location = new System.Drawing.Point(0, 0);
             this.iqPlot.Name = "iqPlot";
-            this.iqPlot.Size = new System.Drawing.Size(451, 361);
+            this.iqPlot.SamplingRate = 0;
+            this.iqPlot.Size = new System.Drawing.Size(271, 361);
             this.iqPlot.TabIndex = 0;
             // 
             // RXOscilloscope
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(992, 395);
+            this.ClientSize = new System.Drawing.Size(869, 395);
             this.Controls.Add(this.splitContainer1);
             this.Name = "RXOscilloscope";
             this.Text = "Oscilloscope";

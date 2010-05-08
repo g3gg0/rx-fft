@@ -295,6 +295,7 @@ namespace GSM_Analyzer
         {
             lblPower.Text = DBTools.SampleTodB(averagePower).ToString("#0.0 dB");
             lblIdlePower.Text = DBTools.SampleTodB(averageIdlePower).ToString("#0.0 dB");
+            lblSnr.Text = (DBTools.SampleTodB(averagePower) - DBTools.SampleTodB(averageIdlePower)).ToString("#0.0 dB");
         }
 
         /* intentionally dont pass GSMParameters due to thread safeness */
@@ -1077,7 +1078,7 @@ namespace GSM_Analyzer
                 }
 
                 /* wait for FCCH searching */
-                int waitForLock = 8;
+                int waitForLock = 2;
                 while (Parameters.State == eGSMState.FCCHSearch && --waitForLock > 0)
                 {
                     Thread.Sleep(100);
@@ -1086,7 +1087,7 @@ namespace GSM_Analyzer
                 /* when FCCH found, wait until CBCH found */
                 if (Parameters.State != eGSMState.FCCHSearch)
                 {
-                    int waitForDetails = 50;
+                    int waitForDetails = 30;
                     bool detailsfound = false;
 
                     while (!detailsfound && --waitForDetails > 0)
@@ -1121,6 +1122,9 @@ namespace GSM_Analyzer
                     Log.AddMessage("  LAC      : " + lacString);
                     Log.AddMessage("  CellIdent: " + cellIdentString);
                     Log.AddMessage("  CBCH     : " + Parameters.CBCH);
+                    Log.AddMessage("  Power    : " + DBTools.SampleTodB(Parameters.AveragePower));
+                    Log.AddMessage("  Idle Pwr : " + DBTools.SampleTodB(Parameters.AverageIdlePower));
+                    Log.AddMessage("  SNR      : " + (DBTools.SampleTodB(Parameters.AveragePower) - DBTools.SampleTodB(Parameters.AverageIdlePower)));
                 }
 
                 if (ChannelHandler.Channel == ChannelHandler.HighestChannel)

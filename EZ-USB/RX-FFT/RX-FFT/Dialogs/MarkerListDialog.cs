@@ -12,31 +12,25 @@ namespace RX_FFT.Dialogs
 {
     public partial class MarkerListDialog : Form
     {
-        private LinkedList<FrequencyMarker> Markers;
-
+        private FrequencyMarkerList MarkerList;
         private ListViewItem[] ListItems;
         private Dictionary<ListViewItem, FrequencyMarker> ItemMarkerMap;
 
         public MainScreen.delegateGetTuner GetTuner;
-        public event EventHandler MarkersChanged;
 
-        public MarkerListDialog(LinkedList<FrequencyMarker> markers)
+        public MarkerListDialog(FrequencyMarkerList markerList)
         {
             InitializeComponent();
 
-            this.Markers = markers;
+            MarkerList = markerList;
+            MarkerList.MarkersChanged += MarkerList_MarkersChanged;
 
-            UpdateMarkerListInternal();
+            UpdateMarkerList();
         }
 
-        public void UpdateMarkerList()
+        private void UpdateMarkerList()
         {
-            BeginInvoke(new Action(() => UpdateMarkerListInternal()));
-        }
-
-        private void UpdateMarkerListInternal()
-        {
-            FrequencyMarker[] markers = Markers.ToArray();
+            FrequencyMarker[] markers = MarkerList.Markers.ToArray();
 
             if (ListItems == null || ListItems.Length != markers.Length)
             {
@@ -58,11 +52,16 @@ namespace RX_FFT.Dialogs
             }
         }
 
-        private void UpdateMarkerTreeInternal()
+        protected override void OnClosed(EventArgs e)
         {
-
+            MarkerList.MarkersChanged -= MarkerList_MarkersChanged;
+            base.OnClosed(e);
         }
 
+        void MarkerList_MarkersChanged(object sender, EventArgs e)
+        {
+            UpdateMarkerList();
+        }
 
         void lstMarkers_MouseDoubleClick(object sender, MouseEventArgs e)
         {
@@ -87,7 +86,6 @@ namespace RX_FFT.Dialogs
             }
         }
 
-
         private void newEntryMenu_Click(object sender, EventArgs e)
         {
             long freq = 0;
@@ -106,14 +104,7 @@ namespace RX_FFT.Dialogs
                 return;
             }
 
-            Markers.AddLast(marker);
-
-            UpdateMarkerListInternal();
-
-            if (MarkersChanged != null)
-            {
-                MarkersChanged(null, null);
-            }
+            MarkerList.Add(marker);
         }
 
         private void editEntryMenu_Click(object sender, EventArgs e)
@@ -129,12 +120,6 @@ namespace RX_FFT.Dialogs
                     MarkerDetailsDialog dlg = new MarkerDetailsDialog(marker);
 
                     dlg.ShowDialog();
-                    UpdateMarkerListInternal();
-
-                    if (MarkersChanged != null)
-                    {
-                        MarkersChanged(null, null);
-                    }
                 }
             }
             catch (Exception)
@@ -152,52 +137,12 @@ namespace RX_FFT.Dialogs
                 {
                     FrequencyMarker marker = ItemMarkerMap[selectedMarkers[0]];
 
-                    Markers.Remove(marker);
-
-                    UpdateMarkerListInternal();
-
-                    if (MarkersChanged != null)
-                    {
-                        MarkersChanged(null, null);
-                    }
+                    MarkerList.Remove(marker);
                 }
             }
             catch (Exception)
             {
             }
-        }
-
-        private void LoadList(string file)
-        {
-            TextReader reader = new StreamReader(file);
-            XmlSerializer serializer = new XmlSerializer(typeof(FrequencyMarker[]));
-            FrequencyMarker[] markers = (FrequencyMarker[])serializer.Deserialize(reader);
-
-            if (markers != null)
-            {
-                Markers.Clear();
-                foreach (FrequencyMarker marker in markers)
-                {
-                    Markers.AddLast(marker);
-                }
-
-                UpdateMarkerListInternal();
-
-                if (MarkersChanged != null)
-                {
-                    MarkersChanged(null, null);
-                }
-            }
-        }
-
-        private void SaveList(string file)
-        {
-            TextWriter writer = new StreamWriter(file);
-            FrequencyMarker[] markers = Markers.ToArray<FrequencyMarker>();
-            XmlSerializer serializer = new XmlSerializer(typeof(FrequencyMarker[]));
-
-            serializer.Serialize(writer, markers);
-            writer.Close();
         }
 
         private void loadListMenu_Click(object sender, EventArgs e)
@@ -208,10 +153,10 @@ namespace RX_FFT.Dialogs
                 dlg.Filter = "xml files (*.xml)|*.xml|All files (*.*)|*.*";
                 if (dlg.ShowDialog() == DialogResult.OK)
                 {
-                    LoadList(dlg.FileName);
+                    MarkerList.Load(dlg.FileName);
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
             }
         }
@@ -224,20 +169,17 @@ namespace RX_FFT.Dialogs
                 dlg.Filter = "xml files (*.xml)|*.xml|All files (*.*)|*.*";
                 if (dlg.ShowDialog() == DialogResult.OK)
                 {
-                    SaveList(dlg.FileName);
+                    MarkerList.Save(dlg.FileName);
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
             }
         }
 
         private void clearListMenu_Click(object sender, EventArgs e)
         {
-            Markers.Clear();
-            UpdateMarkerListInternal();
+            MarkerList.Clear();
         }
-
-
     }
 }

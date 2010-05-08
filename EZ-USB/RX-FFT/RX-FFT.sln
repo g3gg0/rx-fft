@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RX-Oscilloscope", "RX-Oscil
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RX-Setup", "RX-Setup\RX-Setup.csproj", "{D3FBDF96-9334-45F3-AC8A-A0299EE235E0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RX-Analyzer", "RX-Analyzer\RX-Analyzer.csproj", "{8F3F3BF1-F9F2-4F44-BC50-55D8B441A2EB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -189,6 +191,24 @@ Global
 		{D3FBDF96-9334-45F3-AC8A-A0299EE235E0}.Release|x64.Build.0 = Release|x64
 		{D3FBDF96-9334-45F3-AC8A-A0299EE235E0}.Release|x86.ActiveCfg = Release|x86
 		{D3FBDF96-9334-45F3-AC8A-A0299EE235E0}.Release|x86.Build.0 = Release|x86
+		{8F3F3BF1-F9F2-4F44-BC50-55D8B441A2EB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8F3F3BF1-F9F2-4F44-BC50-55D8B441A2EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8F3F3BF1-F9F2-4F44-BC50-55D8B441A2EB}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{8F3F3BF1-F9F2-4F44-BC50-55D8B441A2EB}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{8F3F3BF1-F9F2-4F44-BC50-55D8B441A2EB}.Debug|Win32.ActiveCfg = Debug|Any CPU
+		{8F3F3BF1-F9F2-4F44-BC50-55D8B441A2EB}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{8F3F3BF1-F9F2-4F44-BC50-55D8B441A2EB}.Debug|x64.Build.0 = Debug|Any CPU
+		{8F3F3BF1-F9F2-4F44-BC50-55D8B441A2EB}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{8F3F3BF1-F9F2-4F44-BC50-55D8B441A2EB}.Debug|x86.Build.0 = Debug|Any CPU
+		{8F3F3BF1-F9F2-4F44-BC50-55D8B441A2EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8F3F3BF1-F9F2-4F44-BC50-55D8B441A2EB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8F3F3BF1-F9F2-4F44-BC50-55D8B441A2EB}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{8F3F3BF1-F9F2-4F44-BC50-55D8B441A2EB}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{8F3F3BF1-F9F2-4F44-BC50-55D8B441A2EB}.Release|Win32.ActiveCfg = Release|Any CPU
+		{8F3F3BF1-F9F2-4F44-BC50-55D8B441A2EB}.Release|x64.ActiveCfg = Release|x64
+		{8F3F3BF1-F9F2-4F44-BC50-55D8B441A2EB}.Release|x64.Build.0 = Release|x64
+		{8F3F3BF1-F9F2-4F44-BC50-55D8B441A2EB}.Release|x86.ActiveCfg = Release|x86
+		{8F3F3BF1-F9F2-4F44-BC50-55D8B441A2EB}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

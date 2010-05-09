@@ -126,7 +126,7 @@ namespace LibRXFFT.Components.DirectX
                 if (!double.IsNaN(RenderSleepDelay) && !double.IsInfinity(RenderSleepDelay) && LinePointUpdateTimer != null)
                 {
                     LinePointUpdateTimer.Interval = (uint)RenderSleepDelay;
-                    ScreenRefreshTimer.Interval = (uint)((value < MinRefreshRate) ? (1000 / MinRefreshRate) : RenderSleepDelay);
+                    ScreenRefreshTimer.Interval = (uint)(1000/MinRefreshRate);// ((value < MinRefreshRate) ? (1000 / MinRefreshRate) : RenderSleepDelay);
                 }
             }
         }
@@ -1004,6 +1004,5 @@ namespace LibRXFFT.Components.DirectX
                 }
             }
         }
-
     }
 }

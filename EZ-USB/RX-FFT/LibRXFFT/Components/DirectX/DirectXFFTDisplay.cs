@@ -137,7 +137,7 @@ namespace LibRXFFT.Components.DirectX
         {
         }
 
-        public DirectXFFTDisplay(bool slaveMode)
+        public DirectXFFTDisplay(bool slaveMode) : base(slaveMode)
         {
             ColorFG = Color.Cyan;
             ColorBG = Color.Black;
@@ -156,6 +156,7 @@ namespace LibRXFFT.Components.DirectX
             EventActions[eUserEvent.MouseWheelDownShift] = eUserAction.XZoomOut;
 
             InitializeComponent();
+            /*
             try
             {
                 InitializeDirectX();
@@ -165,7 +166,7 @@ namespace LibRXFFT.Components.DirectX
                 MessageBox.Show("Failed initializing DirectX." + Environment.NewLine + e.ToString());
             }
 
-
+            */
             if (!slaveMode)
             {
                 ScreenRefreshTimer = new Timer();
@@ -203,15 +204,15 @@ namespace LibRXFFT.Components.DirectX
                     {
                         double xPos = ((double)points[pos].X / (double)numPoints) * DirectXWidth;
 
-                        PlotVerts[pos].PositionRhw.X = (float)((XAxisSampleOffset + xPos) * XZoomFactor - DisplayXOffset);
-                        PlotVerts[pos].PositionRhw.Y = (float)(-sampleToDBScale(points[pos].Y - BaseAmplification));
+                        PlotVerts[pos].PositionRhw.X = (float)Math.Min(DirectXWidth, Math.Max(0, ((XAxisSampleOffset + xPos) * XZoomFactor - DisplayXOffset)));
+                        PlotVerts[pos].PositionRhw.Y = (float)Math.Min(DirectXHeight, Math.Max(0, (-sampleToDBScale(points[pos].Y - BaseAmplification))));
                         PlotVerts[pos].PositionRhw.Z = 0.5f;
                         PlotVerts[pos].PositionRhw.W = 1;
                         PlotVerts[pos].Color = 0x9F000000 | colorFG;
 
                         if (OverviewModeEnabled)
                         {
-                            PlotVertsOverview[pos].PositionRhw.X = (float)(XAxisSampleOffset + xPos);
+                            PlotVertsOverview[pos].PositionRhw.X = Math.Min(DirectXWidth, Math.Max(0, (float)(XAxisSampleOffset + xPos)));
                             PlotVertsOverview[pos].PositionRhw.Y = PlotVerts[pos].PositionRhw.Y;
                             PlotVertsOverview[pos].PositionRhw.Z = PlotVerts[pos].PositionRhw.Z;
                             PlotVertsOverview[pos].PositionRhw.W = PlotVerts[pos].PositionRhw.W;
@@ -447,6 +448,8 @@ namespace LibRXFFT.Components.DirectX
                     base.ProcessUserAction(action, param);
                     break;
             }
+
+            NeedsRender = true;
         }
 
         protected override void RenderCursor()
@@ -988,6 +991,8 @@ namespace LibRXFFT.Components.DirectX
                     try
                     {
                         NeedsUpdate = false;
+                        NeedsRender = true;
+
                         if (SlavePlot != null)
                             SlavePlot.PrepareLinePoints();
                         PrepareLinePoints();
@@ -1000,19 +1005,5 @@ namespace LibRXFFT.Components.DirectX
             }
         }
 
-        private void ScreenRefreshTimer_Func(object sender, EventArgs e)
-        {
-            try
-            {
-                if (SlavePlot != null)
-                    SlavePlot.Render();
-
-                Render();
-            }
-            catch (Exception ex)
-            {
-                Log.AddMessage(ex.ToString());
-            }
-        }
     }
 }

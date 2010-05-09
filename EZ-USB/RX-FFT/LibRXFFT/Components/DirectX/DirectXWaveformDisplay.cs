@@ -106,7 +106,7 @@ namespace LibRXFFT.Components.DirectX
                 if (!double.IsNaN(RenderSleepDelay) && !double.IsInfinity(RenderSleepDelay) && LinePointUpdateTimer != null)
                 {
                     LinePointUpdateTimer.Interval = (uint)RenderSleepDelay;
-                    ScreenRefreshTimer.Interval = (uint)((value < MinRefreshRate) ? (1000 / MinRefreshRate) : RenderSleepDelay);
+                    ScreenRefreshTimer.Interval = (uint)(1000/MinRefreshRate);// ((value < MinRefreshRate) ? (1000 / MinRefreshRate) : RenderSleepDelay);
                 }
             }
         }
@@ -117,7 +117,7 @@ namespace LibRXFFT.Components.DirectX
         {
         }
 
-        public DirectXWaveformDisplay(bool slaveMode)
+        public DirectXWaveformDisplay(bool slaveMode) : base(slaveMode)
         {
             ColorFG = Color.Cyan;
             ColorBG = Color.Black;
@@ -135,15 +135,6 @@ namespace LibRXFFT.Components.DirectX
             EventActions[eUserEvent.MouseWheelDownShift] = eUserAction.XZoomOut;
 
             InitializeComponent();
-            try
-            {
-                InitializeDirectX();
-            }
-            catch (Direct3D9Exception e)
-            {
-                MessageBox.Show("Failed initializing DirectX." + Environment.NewLine + e.ToString());
-            }
-
 
             if (!slaveMode)
             {

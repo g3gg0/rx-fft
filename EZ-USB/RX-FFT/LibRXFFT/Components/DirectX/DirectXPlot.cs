@@ -153,8 +153,10 @@ namespace LibRXFFT.Components.DirectX
 
         public DirectXPlot(bool slaveMode)
         {
+            /*
             SlimDX.Configuration.EnableObjectTracking = true;
             SlimDX.Configuration.DetectDoubleDispose = true;
+            */
 
             SetDefaultActions();
 
@@ -489,11 +491,24 @@ namespace LibRXFFT.Components.DirectX
             Device = null;
         }
 
+        private ArrayList AllocatedResources = new ArrayList();
+        public void AddAllocatedResource(IDisposable resource)
+        {
+            lock (AllocatedResources)
+            {
+                AllocatedResources.Add(resource);
+            }
+        }
+
         protected virtual void AllocateResources()
         {
             DisplayFont = new Font(Device, DisplayFontSource);
             SmallFont = new Font(Device, SmallFontSource);
             FixedFont = new Font(Device, FixedFontSource);
+
+            AddAllocatedResource(DisplayFont);
+            AddAllocatedResource(SmallFont);
+            AddAllocatedResource(FixedFont);
 
             lock (Drawables)
             {
@@ -513,12 +528,15 @@ namespace LibRXFFT.Components.DirectX
 
         protected virtual void ReleaseResources()
         {
-            if (DisplayFont != null)
-                DisplayFont.Dispose();
-            if (SmallFont != null)
-                SmallFont.Dispose();
-            if (FixedFont != null)
-                FixedFont.Dispose();
+            lock (AllocatedResources)
+            {
+                IDisposable[] objects = (IDisposable[])AllocatedResources.ToArray(typeof(IDisposable));
+                for (int pos = objects.Length - 1; pos >= 0; pos--)
+                {
+                    objects[pos].Dispose();
+                }
+                AllocatedResources.Clear();
+            }
 
             DisplayFont = null;
             SmallFont = null;

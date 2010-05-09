@@ -107,7 +107,7 @@ namespace LibRXFFT.Components.DirectX
                 if (!double.IsNaN(RenderSleepDelay) && !double.IsInfinity(RenderSleepDelay) && LinePointUpdateTimer != null)
                 {
                     LinePointUpdateTimer.Interval = (uint)RenderSleepDelay;
-                    ScreenRefreshTimer.Interval = (uint)((value < MinRefreshRate) ? (1000 / MinRefreshRate) : RenderSleepDelay);
+                    ScreenRefreshTimer.Interval = (uint)(1000/MinRefreshRate);// ((value < MinRefreshRate) ? (1000 / MinRefreshRate) : RenderSleepDelay);
                 }
             }
         }
@@ -118,7 +118,7 @@ namespace LibRXFFT.Components.DirectX
         {
         }
 
-        public DirectX2DPlot(bool slaveMode)
+        public DirectX2DPlot(bool slaveMode) : base(slaveMode)
         {
             ColorFG = Color.Cyan;
             ColorBG = Color.Black;
@@ -137,6 +137,7 @@ namespace LibRXFFT.Components.DirectX
             EventActions[eUserEvent.MouseWheelDownShift] = eUserAction.XZoomOut;
 
             InitializeComponent();
+            /*
             try
             {
                 InitializeDirectX();
@@ -145,7 +146,7 @@ namespace LibRXFFT.Components.DirectX
             {
                 MessageBox.Show("Failed initializing DirectX." + Environment.NewLine + e.ToString());
             }
-
+            */
 
             if (!slaveMode)
             {

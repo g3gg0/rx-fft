@@ -651,15 +651,16 @@ namespace LibRXFFT.Components.DirectX
             base.AllocateResources();
 
             DefaultRenderTarget = Device.GetRenderTarget(0);
+            AddAllocatedResource(DefaultRenderTarget);
 
             WaterfallTexture = new Texture(Device, PresentParameters.BackBufferWidth, PresentParameters.BackBufferHeight, 1, Usage.RenderTarget, Format.A8R8G8B8, Pool.Default);
+            AddAllocatedResource(WaterfallTexture);
+
             TempWaterfallTexture = new Texture(Device, PresentParameters.BackBufferWidth, PresentParameters.BackBufferHeight, 1, Usage.RenderTarget, Format.A8R8G8B8, Pool.Default);
+            AddAllocatedResource(TempWaterfallTexture);
+
             Sprite = new Sprite(Device);
-
-            //WaterfallTexture.Fill(new Fill2DCallback(delegate (Vector2 coordinate, Vector2 texelSize){return ColorBG;}));
-            //TempWaterfallTexture.Fill(new Fill2DCallback(delegate (Vector2 coordinate, Vector2 texelSize){return ColorBG;}));
-
-
+            AddAllocatedResource(Sprite);
 
             /* save file every screen roll-over */
             SaveWaterfallLinesToRender = SaveParameters.BackBufferHeight;
@@ -667,11 +668,19 @@ namespace LibRXFFT.Components.DirectX
 
             //SaveImageThreadContext = new Texture(SaveDeviceThreadContext, SaveParameters.BackBufferWidth, SaveParameters.BackBufferHeight, 1, Usage.RenderTarget, Format.A8R8G8B8, Pool.Default);
             SaveWaterfallTexture = new Texture(SaveDeviceDisplayContext, SaveParameters.BackBufferWidth, SaveParameters.BackBufferHeight, 1, Usage.RenderTarget, Format.A8R8G8B8, Pool.Default);
+            AddAllocatedResource(SaveWaterfallTexture);
+
             SaveTempWaterfallTexture = new Texture(SaveDeviceDisplayContext, SaveParameters.BackBufferWidth, SaveParameters.BackBufferHeight, 1, Usage.RenderTarget, Format.A8R8G8B8, Pool.Default);
+            AddAllocatedResource(SaveTempWaterfallTexture);
+
             SaveImageDisplayContext = new Texture(SaveDeviceDisplayContext, SaveParameters.BackBufferWidth, SaveParameters.BackBufferHeight, 1, Usage.RenderTarget, Format.A8R8G8B8, Pool.Default);
+            AddAllocatedResource(SaveImageDisplayContext);
 
             SaveFixedFont = new Font(SaveDeviceDisplayContext, new System.Drawing.Font("Courier New", 8));
+            AddAllocatedResource(SaveFixedFont);
+
             SaveSprite = new Sprite(SaveDeviceDisplayContext);
+            AddAllocatedResource(SaveSprite);
 
             /* clear textures */
             ClearTexture(Device, WaterfallTexture);
@@ -686,46 +695,14 @@ namespace LibRXFFT.Components.DirectX
         {
             base.ReleaseResources();
 
-            if (SaveTempWaterfallTexture != null)
-                SaveTempWaterfallTexture.Dispose();
-            if (SaveWaterfallTexture != null)
-                SaveWaterfallTexture.Dispose();
             SaveTempWaterfallTexture = null;
             SaveWaterfallTexture = null;
-
-            SaveImageLock.WaitOne();
-
-            if (SaveImageDisplayContext != null)
-                SaveImageDisplayContext.Dispose();
-            //if (SaveImageThreadContext != null)
-            //    SaveImageThreadContext.Dispose();
             SaveImageDisplayContext = null;
-            //SaveImageThreadContext = null;
-
-            SaveImageLock.ReleaseMutex();
-
-
-            if (Sprite != null)
-                Sprite.Dispose();
-            if (SaveSprite != null)
-                SaveSprite.Dispose();
             Sprite = null;
             SaveSprite = null;
-
-            if (TempWaterfallTexture != null)
-                TempWaterfallTexture.Dispose();
-            if (WaterfallTexture != null)
-                WaterfallTexture.Dispose();
             WaterfallTexture = null;
             TempWaterfallTexture = null;
-
-            if (SaveFixedFont != null)
-                SaveFixedFont.Dispose();
             SaveFixedFont = null;
-
-
-            if (DefaultRenderTarget != null)
-                DefaultRenderTarget.Dispose();
             DefaultRenderTarget = null;
         }
 
@@ -1161,15 +1138,12 @@ namespace LibRXFFT.Components.DirectX
 
             RenderOverlay();
             RenderCursor();
-            //Device.EndScene();
             #endregion
 
 
             #region draw waterfall + overlay
             Device.SetRenderTarget(0, DefaultRenderTarget);
             Device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, ColorBG, 1.0f, 0);
-
-            //Device.BeginScene();
 
             Sprite.Begin(SpriteFlags.AlphaBlend);
             Sprite.Draw(WaterfallTexture, Color.White);

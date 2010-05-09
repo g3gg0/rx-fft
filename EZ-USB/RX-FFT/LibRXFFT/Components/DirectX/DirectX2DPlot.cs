@@ -185,8 +185,8 @@ namespace LibRXFFT.Components.DirectX
                         double xPos = DirectXWidth / 2 * (1 + points[pos].X / 2 * XZoomFactor);
                         double yPos = DirectXHeight / 2 * (1 + points[pos].Y / 2 * YZoomFactor);
 
-                        PlotVerts[pos].PositionRhw.X = (float)((float)xPos - DisplayXOffset);
-                        PlotVerts[pos].PositionRhw.Y = (float)((float)yPos - DisplayYOffset);
+                        PlotVerts[pos].PositionRhw.X = (float)Math.Min(DirectXWidth, Math.Max(0, ((float)xPos - DisplayXOffset)));
+                        PlotVerts[pos].PositionRhw.Y = (float)Math.Min(DirectXHeight, Math.Max(0, ((float)yPos - DisplayYOffset)));
                         PlotVerts[pos].PositionRhw.Z = 0.5f;
                         PlotVerts[pos].PositionRhw.W = 1;
                         PlotVerts[pos].Color = 0x9F000000 | colorFG;
@@ -234,7 +234,7 @@ namespace LibRXFFT.Components.DirectX
 
         protected override void OnMouseEnter(EventArgs e)
         {
-            Focus();
+            //Focus();
             base.OnMouseEnter(e);
         }
 
@@ -803,18 +803,5 @@ namespace LibRXFFT.Components.DirectX
             NestingDepth--;
         }
 
-        private void ScreenRefreshTimer_Func(object sender, EventArgs e)
-        {
-            try
-            {
-                if (SlavePlot != null)
-                    SlavePlot.Render();
-                Render();
-            }
-            catch (Exception ex)
-            {
-
-            }
-        }
     }
 }

@@ -895,7 +895,7 @@ namespace LibRXFFT.Components.DirectX
                             ampl = Math.Max(0, ampl);
                             ampl = Math.Min(1, ampl);
 
-                            PlotVertsOverview[pos].PositionRhw.X = (float)(((float)pos / (float)numPoints) * SaveParameters.BackBufferWidth);
+                            PlotVertsOverview[pos].PositionRhw.X = (float)Math.Min(DirectXWidth, Math.Max(0, (((float)pos / (float)numPoints) * SaveParameters.BackBufferWidth)));
                             PlotVertsOverview[pos].PositionRhw.Y = 0;
                             PlotVertsOverview[pos].PositionRhw.Z = 0.5f;
                             PlotVertsOverview[pos].PositionRhw.W = 1;

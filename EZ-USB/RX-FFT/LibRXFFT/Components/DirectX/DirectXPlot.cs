@@ -29,6 +29,8 @@ namespace LibRXFFT.Components.DirectX
 
         public DirectXPlot SlavePlot = null;
 
+        protected bool NeedsRender = true;
+        public int NeedsRenderClients = 0;
         public bool KeepText = false;
         public string MainText = "";
         public string MainTextPrev = "";
@@ -56,6 +58,7 @@ namespace LibRXFFT.Components.DirectX
         protected Font DisplayFont;
         protected Font SmallFont;
         protected Font FixedFont;
+        protected System.Windows.Forms.Timer ResizeTimer = new System.Windows.Forms.Timer();
 
 
         protected System.Drawing.Font DisplayFontSource = new System.Drawing.Font("Arial", 20);
@@ -264,15 +267,15 @@ namespace LibRXFFT.Components.DirectX
                     {
                         for (int pos = 0; pos < numPoints; pos++)
                         {
-                            PlotVerts[pos].PositionRhw.X = (float)((XAxisSampleOffset + points[pos].X) * XZoomFactor - DisplayXOffset);
-                            PlotVerts[pos].PositionRhw.Y = (float)(DirectXHeight - (DisplayYOffset + points[pos].Y * YZoomFactor)) / 2;
+                            PlotVerts[pos].PositionRhw.X = (float)Math.Min(DirectXWidth, Math.Max(0, ((XAxisSampleOffset + points[pos].X) * XZoomFactor - DisplayXOffset)));
+                            PlotVerts[pos].PositionRhw.Y = (float)Math.Min(DirectXHeight, Math.Max(0, (DirectXHeight - (DisplayYOffset + points[pos].Y * YZoomFactor)) / 2));
                             PlotVerts[pos].PositionRhw.Z = 0.5f;
                             PlotVerts[pos].PositionRhw.W = 1;
                             PlotVerts[pos].Color = 0xFF000000 | colorFG;
 
                             if (OverviewModeEnabled)
                             {
-                                PlotVertsOverview[pos].PositionRhw.X = (float)(XAxisSampleOffset + points[pos].X);
+                                PlotVertsOverview[pos].PositionRhw.X = (float)Math.Min(DirectXWidth, Math.Max(0, (XAxisSampleOffset + points[pos].X)));
                                 PlotVertsOverview[pos].PositionRhw.Y = PlotVerts[pos].PositionRhw.Y;
                                 PlotVertsOverview[pos].PositionRhw.Z = PlotVerts[pos].PositionRhw.Z;
                                 PlotVertsOverview[pos].PositionRhw.W = PlotVerts[pos].PositionRhw.W;
@@ -376,6 +379,21 @@ namespace LibRXFFT.Components.DirectX
 
                     /* ressource allocations */
                     AllocateResources();
+
+                    /* set up the window resize timer */
+                    ResizeTimer.Interval = 50;
+                    ResizeTimer.Tick += (object sender, EventArgs ev) =>
+                    {
+                        try
+                        {
+                            ResizeTimer.Stop();
+                            InitializeDirectX();
+                        }
+                        catch (Direct3D9Exception ex)
+                        {
+                        }
+                        OnSizeChanged(null);
+                    };
                 }
                 else
                 {
@@ -889,10 +907,12 @@ namespace LibRXFFT.Components.DirectX
 
         protected virtual void KeyPressed(Keys key)
         {
+            NeedsRender = true;
         }
 
         protected virtual void KeyReleased(Keys key)
         {
+            NeedsRender = true;
         }
 
         public void ProcessUserEvent(eUserEvent evt, double param)
@@ -1062,6 +1082,8 @@ namespace LibRXFFT.Components.DirectX
             {
                 Drawables.AddLast(directXDrawable);
             }
+
+            NeedsRender = true;
         }
 
         protected bool UpdateDrawablePositions()
@@ -1154,6 +1176,8 @@ namespace LibRXFFT.Components.DirectX
                     MainText = "Zoom Selection";
                 }
             }
+
+            NeedsRender = true;
         }
 
         protected override void OnKeyUp(KeyEventArgs e)
@@ -1198,6 +1222,8 @@ namespace LibRXFFT.Components.DirectX
                     ResetModifiers(false);
                 }
             }
+
+            NeedsRender = true;
         }
         protected virtual void ResetModifiers(bool forceUnhover)
         {
@@ -1261,6 +1287,8 @@ namespace LibRXFFT.Components.DirectX
             MouseHovering = true;
             UpdateCursor = true;
             ProcessUserEvent(eUserEvent.MouseEnter, 0);
+
+            NeedsRender = true;
         }
 
         protected override void OnMouseLeave(EventArgs e)
@@ -1275,6 +1303,8 @@ namespace LibRXFFT.Components.DirectX
             ResetModifiers(true, true);
             UpdateCursor = true;
             ProcessUserEvent(eUserEvent.MouseLeave, 0);
+
+            NeedsRender = true;
         }
 
         protected override void OnMouseDoubleClick(MouseEventArgs e)
@@ -1322,6 +1352,8 @@ namespace LibRXFFT.Components.DirectX
                 else
                     ProcessUserEvent(eUserEvent.MouseDoubleClickMiddle, 0);
             }
+
+            NeedsRender = true;
         }
 
         protected override void OnMouseClick(MouseEventArgs e)
@@ -1369,6 +1401,8 @@ namespace LibRXFFT.Components.DirectX
                 else
                     ProcessUserEvent(eUserEvent.MouseClickMiddle, 0);
             }
+
+            NeedsRender = true;
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
@@ -1421,6 +1455,8 @@ namespace LibRXFFT.Components.DirectX
                 if (e.Button == MouseButtons.Right)
                     ProcessUserEvent(eUserEvent.MouseDownRight, 0);
             }
+
+            NeedsRender = true;
         }
 
         protected override void OnMouseUp(MouseEventArgs e)
@@ -1473,6 +1509,8 @@ namespace LibRXFFT.Components.DirectX
                 if (e.Button == MouseButtons.Right)
                     ProcessUserEvent(eUserEvent.MouseUpRight, 0);
             }
+
+            NeedsRender = true;
         }
 
         protected override void OnMouseMove(MouseEventArgs e)
@@ -1516,6 +1554,8 @@ namespace LibRXFFT.Components.DirectX
 
             ProcessUserEvent(eUserEvent.MousePosX, e.X);
             ProcessUserEvent(eUserEvent.MousePosY, e.Y);
+
+            NeedsRender = true;
         }
 
         protected override void OnMouseWheel(MouseEventArgs e)
@@ -1551,29 +1591,71 @@ namespace LibRXFFT.Components.DirectX
                     ProcessUserEvent(eUserEvent.MouseWheelDown, e.Delta);
             }
 
+            NeedsRender = true;
         }
 
         protected override void OnSizeChanged(EventArgs e)
         {
-            try
+            if (DirectXHeight != Height || DirectXWidth != Width)
             {
-                InitializeDirectX();
+                ResizeTimer.Stop();
+                ResizeTimer.Start();
             }
-            catch (Direct3D9Exception ex)
-            {
-            }
+            NeedsRender = true;
         }
 
         protected override void OnResize(EventArgs e)
         {
+            NeedsRender = true;
         }
 
         protected override void OnPaintBackground(PaintEventArgs e)
         {
+            NeedsRender = true;
         }
 
         protected override void OnPaint(PaintEventArgs e)
         {
+            NeedsRender = true;
+        }
+
+        private Dictionary<object, bool> NeedRenderObjects = new Dictionary<object, bool>();
+        public void NeedRender(object client, bool state)
+        {
+            lock (NeedRenderObjects)
+            {
+                if (!state && NeedRenderObjects.ContainsKey(client))
+                {
+                    NeedRenderObjects.Remove(client);
+                }
+
+                if (state && !NeedRenderObjects.ContainsKey(client))
+                {
+                    NeedRenderObjects.Add(client, state);
+                }
+
+                NeedsRenderClients = NeedRenderObjects.Count;
+            }
+        }
+
+        protected void ScreenRefreshTimer_Func(object sender, EventArgs e)
+        {
+            if (NeedsRender || NeedsRenderClients > 0)
+            {
+                try
+                {
+                    NeedsRender = false;
+
+                    if (SlavePlot != null)
+                        SlavePlot.Render();
+
+                    Render();
+                }
+                catch (Exception ex)
+                {
+                    Log.AddMessage(ex.ToString());
+                }
+            }
         }
     }
 }

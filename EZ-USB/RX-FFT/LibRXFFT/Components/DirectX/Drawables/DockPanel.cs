@@ -42,7 +42,19 @@ namespace LibRXFFT.Components.DirectX.Drawables
         public bool FadeOutByDistance = true;
         public int FadeOutDistance = 80;
 
-        public bool DocksChanged = false;
+        private bool _DocksChanged = false;
+        public bool DocksChanged 
+        {
+            get { return _DocksChanged; }
+            set
+            {
+                if (MainPlot != null)
+                {
+                    MainPlot.NeedRender(this, value);
+                }
+                _DocksChanged = value;
+            }
+        }
         protected SlimDX.Direct3D9.Font DisplayFont;
         protected int FontSize = 9;
         protected int BorderSpaceVert = 2;
@@ -201,8 +213,11 @@ namespace LibRXFFT.Components.DirectX.Drawables
 
         public override bool ProcessInputEvent(InputEvent evt)
         {
+            bool docksChanged = false;
+
             if (!HasDocks)
             {
+                DocksChanged = false;
                 return false;
             }
 
@@ -217,7 +232,7 @@ namespace LibRXFFT.Components.DirectX.Drawables
                 {
                     case eInputEventType.MouseLeave:
                         WantedTitleBarAlpha = 0;
-                        DocksChanged = true;
+                        docksChanged = true;
                         break;
 
                     case eInputEventType.MouseMoved:
@@ -249,7 +264,7 @@ namespace LibRXFFT.Components.DirectX.Drawables
                         if (newAlpha != WantedTitleBarAlpha)
                         {
                             WantedTitleBarAlpha = newAlpha;
-                            DocksChanged = true;
+                            docksChanged = true;
                         }
                         break;
                 }
@@ -263,7 +278,7 @@ namespace LibRXFFT.Components.DirectX.Drawables
 
                     if (priv.TitleHighlighted)
                     {
-                        DocksChanged = true;
+                        docksChanged = true;
                     }
 
                     priv.TitleHighlighted = false;
@@ -276,7 +291,7 @@ namespace LibRXFFT.Components.DirectX.Drawables
                     {
                         //defaultCursor = true;
                         priv.TitleHighlighted = true;
-                        DocksChanged = true;
+                        docksChanged = true;
                         handled = true;
 
                         /* in case of a click */
@@ -328,16 +343,19 @@ namespace LibRXFFT.Components.DirectX.Drawables
                 SetDefaultCursor = false;
             }
 
-
+            DocksChanged = docksChanged;
             return handled;
         }
 
 
         public override void Render()
         {
+            bool docksChanged = false;
+
             /* to speed up processing */
             if (!HasDocks)
             {
+                DocksChanged = false;
                 return;
             }
 
@@ -351,7 +369,7 @@ namespace LibRXFFT.Components.DirectX.Drawables
                 if (CurrentTitleBarAlpha > 0)
                 {
                     CurrentTitleBarAlpha = Math.Max(0, CurrentTitleBarAlpha - 0.02f);
-                    DocksChanged = true;
+                    docksChanged = true;
                 }
             }
 
@@ -385,7 +403,6 @@ namespace LibRXFFT.Components.DirectX.Drawables
             {
                 lock (Docks)
                 {
-                    DocksChanged = false;
                     Rectangle sizeRect = new Rectangle();
 
                     LeftMostPosition = MainPlot.DirectXWidth;
@@ -457,7 +474,7 @@ namespace LibRXFFT.Components.DirectX.Drawables
                                 }
 
                                 /* force update again */
-                                DocksChanged = true;
+                                docksChanged = true;
                                 break;
 
                             case eDockState.Collapsing:
@@ -474,7 +491,7 @@ namespace LibRXFFT.Components.DirectX.Drawables
                                 }
 
                                 /* force update again */
-                                DocksChanged = true;
+                                docksChanged = true;
                                 break;
 
                             default:
@@ -604,6 +621,8 @@ namespace LibRXFFT.Components.DirectX.Drawables
                     }
                 }
             }
+
+            DocksChanged = docksChanged;
         }
 
         private int DockTitleX(Dock dock)

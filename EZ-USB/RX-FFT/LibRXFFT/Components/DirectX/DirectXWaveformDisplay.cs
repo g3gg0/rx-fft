@@ -186,15 +186,15 @@ namespace LibRXFFT.Components.DirectX
                         double yVal = points[pos].Y;
                         double xPos = ((double)points[pos].X / (double)PlotVertsEntries) * DirectXWidth;
 
-                        PlotVerts[pos].PositionRhw.X = (float)((XAxisSampleOffset + xPos) * XZoomFactor - DisplayXOffset);
-                        PlotVerts[pos].PositionRhw.Y = (float)yVal;
+                        PlotVerts[pos].PositionRhw.X = (float)Math.Min(DirectXWidth, Math.Max(0, ((XAxisSampleOffset + xPos) * XZoomFactor - DisplayXOffset)));
+                        PlotVerts[pos].PositionRhw.Y = (float)Math.Min(DirectXHeight, Math.Max(0, yVal));
                         PlotVerts[pos].PositionRhw.Z = 0.5f;
                         PlotVerts[pos].PositionRhw.W = 1;
                         PlotVerts[pos].Color = 0x9F000000 | colorFG;
 
                         if (OverviewModeEnabled)
                         {
-                            PlotVertsOverview[pos].PositionRhw.X = (float)(XAxisSampleOffset + xPos);
+                            PlotVertsOverview[pos].PositionRhw.X = (float)Math.Min(DirectXWidth, Math.Max(0, (XAxisSampleOffset + xPos)));
                             PlotVertsOverview[pos].PositionRhw.Y = PlotVerts[pos].PositionRhw.Y;
                             PlotVertsOverview[pos].PositionRhw.Z = PlotVerts[pos].PositionRhw.Z;
                             PlotVertsOverview[pos].PositionRhw.W = PlotVerts[pos].PositionRhw.W;
@@ -946,18 +946,5 @@ namespace LibRXFFT.Components.DirectX
             }
         }
 
-        private void ScreenRefreshTimer_Func(object sender, EventArgs e)
-        {
-            try
-            {
-                if (SlavePlot != null)
-                    SlavePlot.Render();
-                Render();
-            }
-            catch (Exception ex)
-            {
-                Log.AddMessage(ex.ToString());
-            }
-        }
     }
 }

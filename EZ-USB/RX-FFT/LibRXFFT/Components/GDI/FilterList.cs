@@ -136,6 +136,9 @@ namespace LibRXFFT.Components.GDI
             {
                 if (e.Button == MouseButtons.Right)
                 {
+                    FilterDetailDialog dlg = new FilterDetailDialog(filter);
+                    dlg.Show();
+                    /*
                     string msg = "";
 
                     msg += "  Filter details:" + Environment.NewLine;
@@ -154,6 +157,7 @@ namespace LibRXFFT.Components.GDI
                         msg += "  Location:  " + filter.Location + Environment.NewLine;
                     }
                     MessageBox.Show(msg);
+                     * */
                 }
             });
 

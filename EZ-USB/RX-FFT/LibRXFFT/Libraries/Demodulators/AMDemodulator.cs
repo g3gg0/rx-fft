@@ -14,7 +14,13 @@ namespace LibRXFFT.Libraries.Demodulators
 
         public AMDemodulator()
         {
-            NativeContext = AMDemodInit();
+            try
+            {
+                NativeContext = AMDemodInit();
+            }
+            catch (Exception e)
+            {
+            }
         }
 
         public override void Dispose()

@@ -17,8 +17,6 @@ namespace LibRXFFT.Libraries.SignalProcessing
         private double HighVal = 1.0;
         private double LowVal = -1.0;
         public eOversamplingType Type = eOversamplingType.SinX;
-        private double[] DeltaTable;
-        private double Shannon = 0.9;
 
         private double LastSampleValue = 0;
         private double[] LastBlockLastSamples = new double[0];
@@ -26,28 +24,15 @@ namespace LibRXFFT.Libraries.SignalProcessing
         private double[] NextBlockFirstSamples = new double[0];
 
 
-
-
         public Oversampler(double oversampling)
         {
             Oversampling = oversampling;
-            PrepareDeltaTable();
         }
 
         public Oversampler(double highVal, double lowVal)
         {
             HighVal = highVal;
             LowVal = lowVal;
-        }
-
-        public void PrepareDeltaTable()
-        {
-            DeltaTable = new double[200];
-
-            for (int pos = 0; pos < DeltaTable.Length; pos++)
-            {
-                DeltaTable[pos] = Math.Sin(Shannon * pos * Math.PI) / (pos * Math.PI);
-            }
         }
 
         public double[] Oversample(byte[] sourceData)
@@ -80,8 +65,10 @@ namespace LibRXFFT.Libraries.SignalProcessing
 
         public double[] Oversample(double[] srcData, double[] outData)
         {
-            if (outData == null)
+            if (outData == null || outData.Length != (int)(srcData.Length * Oversampling))
+            {
                 outData = new double[(int)(srcData.Length * Oversampling)];
+            }
 
             switch (Type)
             {
@@ -180,7 +167,9 @@ namespace LibRXFFT.Libraries.SignalProcessing
                                     sampleValue = NextBlockFirstSamples[windowPos + SinXDepth];
                             }
                             else
+                            {
                                 sampleValue = srcData[windowPos];
+                            }
 
                             /* implement this as a lookup table? */
                             delta *= Math.PI;

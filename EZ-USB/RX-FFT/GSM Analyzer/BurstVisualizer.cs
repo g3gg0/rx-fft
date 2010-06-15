@@ -104,7 +104,5 @@ namespace GSM_Analyzer
                     break;
             }
         }
-
-
     }
 }

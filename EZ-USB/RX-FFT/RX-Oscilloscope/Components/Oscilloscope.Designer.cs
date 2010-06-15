@@ -471,7 +471,7 @@
 
         #endregion
 
-        private LibRXFFT.Components.DirectX.DirectXWaveformDisplay waveForm;
+        internal LibRXFFT.Components.DirectX.DirectXWaveformDisplay waveForm;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.GroupBox groupBox1;
         private LibRXFFT.Components.GDI.TextBoxMouseScroll txtTriggerLevel;

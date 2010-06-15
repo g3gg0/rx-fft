@@ -15,6 +15,11 @@ namespace LibRXFFT.Components.DirectX
         /// <param name="disposing">True, wenn verwaltete Ressourcen gelöscht werden sollen; andernfalls False.</param>
         protected override void Dispose(bool disposing)
         {
+            if (FpsUpdateTimer != null)
+            {
+                FpsUpdateTimer.Stop();
+            }
+
             if (disposing && (components != null))
             {
                 components.Dispose();

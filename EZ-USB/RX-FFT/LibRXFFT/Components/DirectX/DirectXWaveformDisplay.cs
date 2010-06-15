@@ -264,6 +264,8 @@ namespace LibRXFFT.Components.DirectX
                         {
                             CreateVertexBufferForPoints(LinePoints, LinePointEntries);
                         }
+
+                        NeedsRender = true;
                     }
                     else
                     {
@@ -439,6 +441,8 @@ namespace LibRXFFT.Components.DirectX
                     base.ProcessUserAction(action, param);
                     break;
             }
+
+            NeedsRender = true;
         }
 
         protected override void RenderCursor()
@@ -843,7 +847,7 @@ namespace LibRXFFT.Components.DirectX
                 return ((offset + 0.5f + XAxisSampleOffset) * (XZoomFactor * DirectXWidth)) - DisplayXOffset;
         }
 
-        protected override string XLabelFromCursorPos(double xPos)
+        public override string XLabelFromCursorPos(double xPos)
         {
             /* offset (-0.5 ... 0.5) */
             double offset = ((DisplayXOffset + xPos) / (XZoomFactor * DirectXWidth)) - 0.5f - XAxisSampleOffset;
@@ -861,7 +865,7 @@ namespace LibRXFFT.Components.DirectX
         }
 
 
-        protected override string XLabelFromSampleNum(double pos)
+        public override string XLabelFromSampleNum(double pos)
         {
             /* offset (-0.5 ... 0.5) */
             double offset = pos / DirectXWidth - 0.5f;
@@ -923,16 +927,21 @@ namespace LibRXFFT.Components.DirectX
         {
             if (NeedsUpdate && !RealTimeMode)
             {
-                try
+                lock (SampleValues)
                 {
-                    NeedsUpdate = false;
-                    if (SlavePlot != null)
-                        SlavePlot.PrepareLinePoints();
-                    PrepareLinePoints();
-                }
-                catch (Exception ex)
-                {
-                    Log.AddMessage(ex.ToString());
+                    try
+                    {
+                        if (SlavePlot != null)
+                            SlavePlot.PrepareLinePoints();
+                        PrepareLinePoints();
+                        
+                        NeedsUpdate = false;
+                        NeedsRender = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.AddMessage(ex.ToString());
+                    }
                 }
             }
         }

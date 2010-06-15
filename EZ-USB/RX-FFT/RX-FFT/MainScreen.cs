@@ -25,6 +25,8 @@ using LibRXFFT.Components.DirectX.Drawables;
 using LibRXFFT.Components.DirectX.Drawables.Docks;
 using LibRXFFT.Components.Generic;
 using System.IO;
+using LuaInterface;
+using LibRXFFT.Libraries.Demodulators;
 
 namespace RX_FFT
 {
@@ -107,39 +109,42 @@ namespace RX_FFT
             set { FFTDisplay.ChannelBandDetails = value; }
         }
 
-        Thread ReadThread;
-        Thread AudioThread;
-        DeviceControl Device;
-        double LastSamplingRate = 48000;
-        long MouseDragStartFreq;
+        public Thread ReadThread;
+        public Thread AudioThread;
+        public DeviceControl Device;
+        public double LastSamplingRate = 48000;
+        public long MouseDragStartFreq;
 
         private FrequencyMarkerList MarkerList = new FrequencyMarkerList();
         private LinkedList<FrequencyMarker> ScanFrequencies = new LinkedList<FrequencyMarker>();
 
         ShmemSampleSource AudioShmem;
+        SharedMem AudioOutShmem;
+
         double[] DecimatedInputI = new double[0];
         double[] DecimatedInputQ = new double[0];
         double[] AudioSampleBuffer = new double[0];
         double[] AudioSampleBufferDecim = new double[0];
         Object FFTSizeSpinLock = new Object();
 
-        Demodulation DemodOptions = new Demodulation();
-        DemodulationDialog DemodDialog;
-        MarkerListDialog MarkerDialog;
-        PerformaceStatsDialog StatsDialog;
-        PerformanceEnvelope PerformanceCounters = new PerformanceEnvelope();
+        public Demodulation DemodOptions = new Demodulation();
+        public DemodulationDialog DemodDialog;
+        public MarkerListDialog MarkerDialog;
+        public PerformaceStatsDialog StatsDialog;
+        public PerformanceEnvelope PerformanceCounters = new PerformanceEnvelope();
 
-        RXOscilloscope OscilloscopeWindow = new RXOscilloscope();
-        DemodulatorDialog DemodulatorWindow = new DemodulatorDialog();
-        GSMAnalyzer GsmAnalyzerWindow = new GSMAnalyzer();
+        public RXOscilloscope OscilloscopeWindow = new RXOscilloscope();
+        public DemodulatorDialog DemodulatorWindow = new DemodulatorDialog();
+        public GSMAnalyzer GsmAnalyzerWindow = new GSMAnalyzer();
 
-        StaticText SignalOverLoad;
-        DockPanel RightDockPanel;
-        DockPanel LeftDockPanel;
-        DockPanel BottomDockPanel;
-        DockPanel TopDockPanel;
-        PowerBarDock SignalPowerBar;
-
+        public StaticText SignalOverLoad;
+        public DockPanel RightDockPanel;
+        public DockPanel LeftDockPanel;
+        public DockPanel BottomDockPanel;
+        public DockPanel TopDockPanel;
+        public PowerBarDock SignalPowerBar;
+        public StaticTextDock StatusTextDock;
+        public FFTAreaSelection AreaSelection;
 
         bool _DeviceOpened = false;
         private bool ScanStrongestFrequency;
@@ -151,12 +156,14 @@ namespace RX_FFT
 
         private Timer StatusUpdateTimer;
         private bool AGCEnabled;
-
+        private Lua LuaVm;
 
         public MainScreen()
         {
             InitializeComponent();
+            
             Log.Init();
+            Log.Enabled = false;
 
             this.Icon = Icon.FromHandle(Icons.imgRhythmbox.GetHicon());
 
@@ -191,12 +198,6 @@ namespace RX_FFT
             /* when dragging with CTRL pressed, "move" frequency */
             FFTDisplay.AddUserEventCallback(eUserEvent.MouseDragXControl);
 
-            /*
-            SignalPowerBar = new PowerBar(FFTDisplay.FFTDisplay);
-            SignalPowerBar.XPosition = -0.0475;
-            SignalPowerBar.YPosition = -0.08;
-            SignalPowerBar.Active = true;*/
-
             SignalOverLoad = new StaticText(FFTDisplay.FFTDisplay, "OVERDRIVE");
             SignalOverLoad.XPosition = -0.04;
             SignalOverLoad.YPosition = -0.06;
@@ -204,17 +205,28 @@ namespace RX_FFT
             SignalOverLoad.Active = false;
 
             RightDockPanel = new DockPanel(FFTDisplay.FFTDisplay, eOrientation.RightBorder);
-            LeftDockPanel = new DockPanel(FFTDisplay.FFTDisplay, eOrientation.RightBorder);
-            TopDockPanel = new DockPanel(FFTDisplay.FFTDisplay, eOrientation.RightBorder);
-            BottomDockPanel = new DockPanel(FFTDisplay.FFTDisplay, eOrientation.RightBorder);
+            LeftDockPanel = new DockPanel(FFTDisplay.FFTDisplay, eOrientation.LeftBorder);
+            TopDockPanel = new DockPanel(FFTDisplay.FFTDisplay, eOrientation.TopBorder);
+            BottomDockPanel = new DockPanel(FFTDisplay.FFTDisplay, eOrientation.BottomBorder);
             SignalPowerBar = new PowerBarDock(RightDockPanel);
 
-            FFTAreaSelection a = new FFTAreaSelection(FFTDisplay.FFTDisplay);
-            FFTAreaSelectionDetails d = new FFTAreaSelectionDetails(a, RightDockPanel);
+            AreaSelection = new FFTAreaSelection(FFTDisplay.FFTDisplay);
+            FFTAreaSelectionDetails d = new FFTAreaSelectionDetails(AreaSelection, RightDockPanel);
+
+            AreaSelection.Draggable = true;
+            AreaSelection.SelectionUpdated += new EventHandler(FFTAreaSelection_SelectionUpdated);
+
+            DemodOptions.CursorWindowFilterChanged += new EventHandler(DemodOptions_CursorWindowFilterChanged);
+            DemodOptions.DataUpdated += new EventHandler(DemodOptions_CursorWindowFilterChanged);
 
             RightDockPanel.FadeOutByDistance = true;
             RightDockPanel.FadeOutDistance = 90;
 
+            StatusTextDock = new StaticTextDock(LeftDockPanel);
+            StatusTextDock.Title = "Status";
+            StatusTextDock.Text = "";
+            StatusTextDock.XOffset = 25;
+            StatusTextDock.YOffset = 25;
 
             DeviceOpened = false;
 
@@ -251,7 +263,181 @@ namespace RX_FFT
             Remote.FFTSizeChanged += new EventHandler(Remote_FFTSizeChanged);
             FFTDisplay.Remote = Remote;
 
+            dynamicWaterfallMenu.Checked = true;
+            displayFilterMarginsMenu.Checked = true;
+
+            FFTDisplay.DynamicLimits = true;
+            DisplayFilterMargins = true;
+
+            InitLua();
         }
+
+        void AreaSelectionUpdate()
+        {
+            FFTAreaSelection sel = AreaSelection;
+
+            string text = "";
+
+            if (!DeviceOpened || !DemodOptions.DemodulationEnabled || !DemodOptions.CursorPositionWindowEnabled)
+            {
+                sel.Text = text;
+                return;
+            }
+
+            if (DemodOptions.Demod is AMDemodulator)
+            {
+                text = "AM:  ";
+            }
+            else if (DemodOptions.Demod is FMDemodulator)
+            {
+                text = "FM:  ";
+            }
+            else if (DemodOptions.Demod is SSBDemodulator)
+            {
+                switch (((SSBDemodulator)DemodOptions.Demod).Type)
+                {
+                    case eSsbType.Usb:
+                        text = "USB: ";
+                        break;
+                    case eSsbType.Lsb:
+                        text = "LSB: ";
+                        break;
+                }
+            }
+
+            double filterWidth = Device.SamplingRate / DemodOptions.CursorWindowFilterWidthFract;
+
+            sel.Text = text + FrequencyFormatter.FreqToStringAccurate(filterWidth);
+
+            if (sel.Visible)
+            {
+                FFTDisplay.FFTDisplay.HorLineFixed = false;
+            }
+            else
+            {
+                FFTDisplay.FFTDisplay.HorLineFixed = true;
+                FFTDisplay.FFTDisplay.HorLineWidth = filterWidth;
+            }
+        }
+
+        void DemodOptions_CursorWindowFilterChanged(object sender, EventArgs e)
+        {
+            double filterWidth = Device.SamplingRate / DemodOptions.CursorWindowFilterWidthFract;
+
+            if (DemodOptions == null)
+            {
+                return;
+            }
+
+            if (DemodOptions.Demod is AMDemodulator || DemodOptions.Demod is FMDemodulator)
+            {
+                double centerFreq = (AreaSelection.StartFreq + AreaSelection.EndFreq) / 2;
+
+                AreaSelection.StartFreq = (long)(centerFreq - filterWidth / 2);
+                AreaSelection.EndFreq = (long)(centerFreq + filterWidth / 2);
+            }
+            else if (DemodOptions.Demod is SSBDemodulator)
+            {
+                filterWidth /= 2;
+                switch (((SSBDemodulator)DemodOptions.Demod).Type)
+                {
+                    case eSsbType.Lsb:
+                        AreaSelection.StartFreq = (long)(AreaSelection.EndFreq - filterWidth);
+                        break;
+                    case eSsbType.Usb:
+                        AreaSelection.EndFreq = (long)(AreaSelection.StartFreq + filterWidth);
+                        break;
+                }
+            }
+
+            AreaSelectionUpdate();
+            AreaSelection.UpdatePositions();
+        }
+
+        void FFTAreaSelection_SelectionUpdated(object sender, EventArgs e)
+        {
+            FFTAreaSelection sel = AreaSelection;
+
+            /* in any case update its text */
+            AreaSelectionUpdate();
+
+            /* not being used, so dont do anything */
+            if (!DeviceOpened || !DemodOptions.DemodulationEnabled || !DemodOptions.CursorPositionWindowEnabled)
+            {
+                return;
+            }
+
+            double baseFreq = 0;
+
+            if (DemodOptions.Demod is AMDemodulator || DemodOptions.Demod is FMDemodulator)
+            {
+                /* want center as baseband */
+                baseFreq = (sel.StartFreq + sel.EndFreq) / 2;
+            }
+            else if (DemodOptions.Demod is SSBDemodulator)
+            {
+                /* depending on USB or LSB choose the baseband freq */
+                switch (((SSBDemodulator)DemodOptions.Demod).Type)
+                {
+                    case eSsbType.Usb:
+                        baseFreq = AreaSelection.StartFreq;
+                        break;
+                    case eSsbType.Lsb:
+                        baseFreq = AreaSelection.EndFreq;
+                        break;
+                }
+            }
+
+            /* calculate downmix frequency */
+            double filterWidth = Device.SamplingRate / DemodOptions.CursorWindowFilterWidthFract;
+            double xPos = FFTDisplay.FFTDisplay.XPosFromFrequency(baseFreq);
+            double relative = FFTDisplay.FFTDisplay.XRelativeCoordFromCursorPos(xPos);
+
+            /* only if within the visible window */
+            if (relative >= -0.5f && relative <= 0.5f)
+            {
+                DemodOptions.DemodulationDownmixer.TimeStep = relative * (2 * Math.PI);
+            }
+        }
+
+        private void InitLua()
+        {
+            LuaVm = new Lua();
+
+            LuaHelpers.RegisterNamespace("DemodulatorCollection.Demodulators");
+            LuaHelpers.RegisterNamespace("DemodulatorCollection.BitClockSinks");
+
+            LuaHelpers.RegisterLuaFunctions(LuaVm, new LuaHelpers());
+            LuaHelpers.RegisterLuaFunctions(LuaVm, this);
+
+            try
+            {
+                LuaVm.DoFile("startup.lua");
+                try
+                {
+                    LuaHelpers.CallFunction(LuaVm, "Init", this);
+                }
+                catch (Exception e)
+                {
+                    Log.AddMessage(e.ToString());
+                }
+            }
+            catch (Exception e)
+            {
+            }
+        }
+
+        private void DeinitLua()
+        {
+            try
+            {
+                LuaHelpers.CallFunction(LuaVm, "Deinit", this);
+            }
+            catch (Exception e)
+            {
+            }
+        }
+
 
         void MainScreen_DragDrop(object sender, DragEventArgs e)
         {
@@ -334,6 +520,7 @@ namespace RX_FFT
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
             Exiting = true;
+            DeinitLua();
             Remote.Abort();
             StopThreads();
 
@@ -411,7 +598,7 @@ namespace RX_FFT
             {
                 if (Device != null)
                 {
-                    Device.SamplesPerBlock = value * Math.Max(1, SamplesToAverage);
+                    Device.SamplesPerBlock = Math.Min(32, Math.Max(1, SamplesToAverage)) * value;
                 }
 
                 if (FFTDisplay.FFTSize != value)
@@ -430,7 +617,9 @@ namespace RX_FFT
             set
             {
                 if (Device != null)
+                {
                     Device.BlocksPerSecond = value;
+                }
                 FFTDisplay.UpdateRate = value;
             }
         }
@@ -442,7 +631,7 @@ namespace RX_FFT
             {
                 if (Device != null)
                 {
-                    Device.SamplesPerBlock = Math.Max(1, value) * FFTSize;
+                    Device.SamplesPerBlock = Math.Min(32, Math.Max(1, value)) * FFTSize;
                 }
                 FFTDisplay.SamplesToAverage = value;
             }
@@ -492,6 +681,7 @@ namespace RX_FFT
         {
             base.OnActivated(e);
             WindowActivated = true;
+            FFTDisplay.FocusHovered();
         }
 
         protected override void OnDeactivate(EventArgs e)
@@ -505,16 +695,16 @@ namespace RX_FFT
             switch (evt)
             {
                 case eUserEvent.MousePosX:
-                    {
-                        double relative = FFTDisplay.RelativeCursorXPos;
-                        /*
-                        if (Device != null && Device.InvertedSpectrum)
+                    {                        
+                        if (!AreaSelection.Visible)
                         {
-                            relative -= relative;
-                        }
-                        */
+                            double relative = FFTDisplay.RelativeCursorXPos;
 
-                        DemodOptions.DemodulationDownmixer.TimeStep = relative * (2 * Math.PI);
+                            if (relative >= -0.5f && relative <= 0.5f)
+                            {
+                                DemodOptions.DemodulationDownmixer.TimeStep = relative * (2 * Math.PI);
+                            }
+                        }
                     }
                     break;
 
@@ -534,13 +724,16 @@ namespace RX_FFT
                 /* dragged with control down. "move" radio band */
                 case eUserEvent.MouseDragXControl:
                     {
-                        long mouseFreq = FFTDisplay.Frequency;
+                        if (DeviceOpened)
+                        {
+                            long mouseFreq = FFTDisplay.Frequency;
 
-                        long currentFreq = Device.GetFrequency();
-                        long newFreq = currentFreq - (mouseFreq - MouseDragStartFreq);
+                            long currentFreq = Device.GetFrequency();
+                            long newFreq = currentFreq - (mouseFreq - MouseDragStartFreq);
 
-                        //FFTDisplay.CenterFrequency = newFreq;
-                        CurrentFrequency = newFreq;
+                            //FFTDisplay.CenterFrequency = newFreq;
+                            CurrentFrequency = newFreq;
+                        }
                     }
                     break;
 
@@ -565,18 +758,18 @@ namespace RX_FFT
                     {
                         long freq = FFTDisplay.Frequency;
 
-
                         ContextMenu contextMenu = new ContextMenu();
                         MenuItem menuItem1 = new MenuItem("Frequency: " + FrequencyFormatter.FreqToStringAccurate(freq));
                         MenuItem menuItem2 = new MenuItem("-");
                         MenuItem menuItem3 = new MenuItem("Send to Locator");
                         MenuItem menuItem4 = new MenuItem("Add Marker...");
                         MenuItem menuItem5 = new MenuItem("-");
-                        MenuItem menuItem6 = new MenuItem("Pseudocolors");
-                        MenuItem menuItem7 = new MenuItem("Gradient");
+                        MenuItem menuItem6 = new MenuItem("Gradient");
+                        MenuItem menuItem7 = new MenuItem("TriColor");
+                        MenuItem menuItem8 = new MenuItem("Pseudocolors");
                         menuItem1.Enabled = false;
 
-                        contextMenu.MenuItems.AddRange(new MenuItem[] { menuItem1, menuItem2, menuItem3, menuItem4, menuItem5, menuItem6, menuItem7 });
+                        contextMenu.MenuItems.AddRange(new MenuItem[] { menuItem1, menuItem2, menuItem3, menuItem4, menuItem5, menuItem6, menuItem7, menuItem8 });
 
                         menuItem4.Click += new EventHandler(delegate(object sender, EventArgs e)
                         {
@@ -585,17 +778,21 @@ namespace RX_FFT
 
                         menuItem6.Click += new EventHandler(delegate(object sender, EventArgs e)
                         {
-                            FFTDisplay.WaterfallDisplay.ColorTable = new HeatColors(8192);
-                        });
-
-                        menuItem7.Click += new EventHandler(delegate(object sender, EventArgs e)
-                        {
                             ColorDialog dlg = new ColorDialog();
                             dlg.ShowDialog();
 
                             FFTDisplay.WaterfallDisplay.ColorTable = new ColorLookupTable(dlg.Color);
                         });
 
+                        menuItem7.Click += new EventHandler(delegate(object sender, EventArgs e)
+                        {
+                            FFTDisplay.WaterfallDisplay.ColorTable = new MultiColorMap(8192, Color.Black, Color.FromArgb(0, 0, 128), Color.FromArgb(192, 0, 255), Color.White);
+                        });
+
+                        menuItem8.Click += new EventHandler(delegate(object sender, EventArgs e)
+                        {
+                            FFTDisplay.WaterfallDisplay.ColorTable = new HeatColors(8192);
+                        });
 
                         Point popupPos = this.PointToClient(MousePosition);
 
@@ -632,8 +829,10 @@ namespace RX_FFT
 
                 double[] inputI;
                 double[] inputQ;
+                byte[] AudioOutBinary = null;
 
                 AudioShmem.SamplesPerBlock = 512;
+
 
                 PerformanceCounters.Reset();
 
@@ -644,228 +843,252 @@ namespace RX_FFT
                     //dev.Read(inBuffer);
                     PerformanceCounters.CounterRuntime.Update();
 
-                    lock (AudioShmem)
+                    if (DeviceOpened && Device.TransferMode == eTransferMode.Stream)
                     {
-                        PerformanceCounters.CounterReading.Start();
-                        AudioShmem.Read();
-                        PerformanceCounters.CounterReading.Stop();
-
-                        PerformanceCounters.CounterProcessing.Start();
-                        lock (AudioShmem.SampleBufferLock)
+                        lock (AudioShmem)
                         {
-                            inputI = AudioShmem.SourceSamplesI;
-                            inputQ = AudioShmem.SourceSamplesQ;
+                            PerformanceCounters.CounterReading.Start();
+                            AudioShmem.Read();
+                            PerformanceCounters.CounterReading.Stop();
 
-                            lock (DemodOptions)
+                            PerformanceCounters.CounterProcessing.Start();
+                            lock (AudioShmem.SampleBufferLock)
                             {
-                                bool blockSizeChanged = AudioSampleBuffer.Length != (inputI.Length / lastInputDecim);
-                                bool rateChanged = Math.Abs(rate - LastSamplingRate) > 0;
-                                lastCursorWinEnabled = DemodOptions.CursorPositionWindowEnabled;
+                                inputI = AudioShmem.SourceSamplesI;
+                                inputQ = AudioShmem.SourceSamplesQ;
 
-                                if (blockSizeChanged || DemodOptions.ReinitSound || rateChanged)
-                                {
-                                    rate = LastSamplingRate;
-
-                                    DemodOptions.ReinitSound = false;
-                                    DemodOptions.SoundDevice.SetRate((int)DemodOptions.AudioRate);
-
-                                    lastAudioDecim = DemodOptions.AudioDecimation;
-                                    lastInputDecim = DemodOptions.InputSignalDecimation;
-
-                                    AudioSampleBuffer = new double[inputI.Length / lastInputDecim];
-                                    AudioSampleBufferDecim = new double[inputI.Length / lastAudioDecim / lastInputDecim];
-
-                                    DecimatedInputI = new double[inputI.Length / lastInputDecim];
-                                    DecimatedInputQ = new double[inputQ.Length / lastInputDecim];
-                                }
-                            }
-
-                            if (!ProcessPaused)
-                            {
                                 lock (DemodOptions)
                                 {
-                                    if (DemodOptions.DemodulationEnabled)
-                                    {
-                                        if (lastCursorWinEnabled)
-                                        {
-                                            /* frequency translation */
-                                            PerformanceCounters.CounterXlat.Start();
-                                            DemodOptions.DemodulationDownmixer.ProcessData(inputI, inputQ, inputI, inputQ);
-                                            PerformanceCounters.CounterXlat.Stop();
+                                    bool blockSizeChanged = AudioSampleBuffer.Length != (inputI.Length / lastInputDecim);
+                                    bool rateChanged = Math.Abs(rate - LastSamplingRate) > 0;
+                                    lastCursorWinEnabled = DemodOptions.CursorPositionWindowEnabled;
 
-                                            /* lowpass */
-                                            PerformanceCounters.CounterXlatLowpass.Start();
+                                    if (blockSizeChanged || DemodOptions.ReinitSound || rateChanged)
+                                    {
+                                        rate = LastSamplingRate;
+
+                                        DemodOptions.ReinitSound = false;
+                                        DemodOptions.SoundDevice.SetInputRate((int)DemodOptions.AudioRate);
+
+                                        lastAudioDecim = DemodOptions.AudioDecimation;
+                                        lastInputDecim = DemodOptions.InputSignalDecimation;
+
+                                        AudioSampleBuffer = new double[inputI.Length / lastInputDecim];
+                                        AudioSampleBufferDecim = new double[inputI.Length / lastAudioDecim / lastInputDecim];
+
+                                        DecimatedInputI = new double[inputI.Length / lastInputDecim];
+                                        DecimatedInputQ = new double[inputQ.Length / lastInputDecim];
+                                    }
+                                }
+
+                                if (!ProcessPaused)
+                                {
+                                    lock (DemodOptions)
+                                    {
+                                        if (DemodOptions.DemodulationEnabled)
+                                        {
+                                            if (lastCursorWinEnabled)
+                                            {
+                                                /* frequency translation */
+                                                PerformanceCounters.CounterXlat.Start();
+                                                DemodOptions.DemodulationDownmixer.ProcessData(inputI, inputQ, inputI, inputQ);
+                                                PerformanceCounters.CounterXlat.Stop();
+
+                                                /* lowpass */
+                                                PerformanceCounters.CounterXlatLowpass.Start();
 #if false
                                     // 51% CPU time with 79% CPU load
                                     DemodOptions.CursorWindowFilterI.Process(inputI, inputI);
                                     DemodOptions.CursorWindowFilterQ.Process(inputQ, inputQ);
 #else
-                                            // 43% (with 53% CPU load)
-                                            DemodOptions.CursorWindowFilterThreadI.Process(inputI, inputI);
-                                            DemodOptions.CursorWindowFilterThreadQ.Process(inputQ, inputQ);
-                                            WaitHandle.WaitAll(DemodOptions.CursorWindowFilterEvents);
+                                                // 43% (with 53% CPU load)
+                                                DemodOptions.CursorWindowFilterThreadI.Process(inputI, inputI);
+                                                DemodOptions.CursorWindowFilterThreadQ.Process(inputQ, inputQ);
+                                                WaitHandle.WaitAll(DemodOptions.CursorWindowFilterEvents);
 #endif
-                                            PerformanceCounters.CounterXlatLowpass.Stop();
+                                                PerformanceCounters.CounterXlatLowpass.Stop();
 
-                                            /* decimate input signal */
-                                            PerformanceCounters.CounterXlatDecimate.Start();
-                                            if (lastInputDecim > 1)
-                                            {
-                                                for (int pos = 0; pos < DecimatedInputI.Length; pos++)
+                                                /* decimate input signal */
+                                                PerformanceCounters.CounterXlatDecimate.Start();
+                                                if (lastInputDecim > 1)
                                                 {
-                                                    DecimatedInputI[pos] = inputI[pos * lastInputDecim];
-                                                    DecimatedInputQ[pos] = inputQ[pos * lastInputDecim];
-                                                }
-
-                                                inputI = DecimatedInputI;
-                                                inputQ = DecimatedInputQ;
-                                            }
-                                            PerformanceCounters.CounterXlatDecimate.Stop();
-                                        }
-
-                                        /* in this block are some samples that can be demodulated. used for squelch */
-                                        bool haveSamplesToDemodulate = true;
-
-                                        /* squelch */
-                                        if (DemodOptions.SquelchEnabled)
-                                        {
-                                            double totalStrength = 0;
-                                            double maxStrength = 0;
-                                            double limit = DBTools.SquaredSampleFromdB(DemodOptions.SquelchLowerLimit);
-
-                                            /* default: nothing to demodulate */
-                                            haveSamplesToDemodulate = false;
-
-                                            for (int pos = 0; pos < inputI.Length; pos++)
-                                            {
-                                                double strength = inputI[pos] * inputI[pos] + inputQ[pos] * inputQ[pos];
-
-                                                totalStrength += strength;
-                                                maxStrength = Math.Max(maxStrength, strength);
-
-                                                if (strength < limit)
-                                                {
-                                                    /* below limit, close squelch? */
-                                                    if (DemodOptions.SquelchState == Demodulation.eSquelchState.Open)
+                                                    for (int pos = 0; pos < DecimatedInputI.Length; pos++)
                                                     {
-                                                        DemodOptions.SquelchSampleCounter++;
-                                                        if (DemodOptions.SquelchSampleCounter > DemodOptions.SquelchSampleCount)
+                                                        DecimatedInputI[pos] = inputI[pos * lastInputDecim];
+                                                        DecimatedInputQ[pos] = inputQ[pos * lastInputDecim];
+                                                    }
+
+                                                    inputI = DecimatedInputI;
+                                                    inputQ = DecimatedInputQ;
+                                                }
+                                                PerformanceCounters.CounterXlatDecimate.Stop();
+                                            }
+
+                                            /* in this block are some samples that can be demodulated. used for squelch */
+                                            bool haveSamplesToDemodulate = true;
+
+                                            /* squelch */
+                                            if (DemodOptions.SquelchEnabled)
+                                            {
+                                                double totalStrength = 0;
+                                                double maxStrength = 0;
+                                                double limit = DBTools.SquaredSampleFromdB(DemodOptions.SquelchLowerLimit);
+
+                                                /* default: nothing to demodulate */
+                                                haveSamplesToDemodulate = false;
+
+                                                for (int pos = 0; pos < inputI.Length; pos++)
+                                                {
+                                                    double strength = inputI[pos] * inputI[pos] + inputQ[pos] * inputQ[pos];
+
+                                                    totalStrength += strength;
+                                                    maxStrength = Math.Max(maxStrength, strength);
+
+                                                    if (strength < limit)
+                                                    {
+                                                        /* below limit, close squelch? */
+                                                        if (DemodOptions.SquelchState == Demodulation.eSquelchState.Open)
+                                                        {
+                                                            DemodOptions.SquelchSampleCounter++;
+                                                            if (DemodOptions.SquelchSampleCounter > DemodOptions.SquelchSampleCount)
+                                                            {
+                                                                DemodOptions.SquelchSampleCounter = 0;
+                                                                DemodOptions.SquelchState = Demodulation.eSquelchState.Closed;
+                                                            }
+                                                        }
+                                                        else
                                                         {
                                                             DemodOptions.SquelchSampleCounter = 0;
-                                                            DemodOptions.SquelchState = Demodulation.eSquelchState.Closed;
                                                         }
                                                     }
                                                     else
                                                     {
-                                                        DemodOptions.SquelchSampleCounter = 0;
+                                                        /* over limit, open squelch? */
+                                                        if (DemodOptions.SquelchState == Demodulation.eSquelchState.Closed)
+                                                        {
+                                                            DemodOptions.SquelchSampleCounter++;
+                                                            if (DemodOptions.SquelchSampleCounter > DemodOptions.SquelchSampleCount)
+                                                            {
+                                                                DemodOptions.SquelchSampleCounter = 0;
+                                                                DemodOptions.SquelchState = Demodulation.eSquelchState.Open;
+                                                            }
+                                                        }
+                                                        else
+                                                        {
+                                                            DemodOptions.SquelchSampleCounter = 0;
+                                                        }
                                                     }
-                                                }
-                                                else
-                                                {
-                                                    /* over limit, open squelch? */
+
                                                     if (DemodOptions.SquelchState == Demodulation.eSquelchState.Closed)
                                                     {
-                                                        DemodOptions.SquelchSampleCounter++;
-                                                        if (DemodOptions.SquelchSampleCounter > DemodOptions.SquelchSampleCount)
-                                                        {
-                                                            DemodOptions.SquelchSampleCounter = 0;
-                                                            DemodOptions.SquelchState = Demodulation.eSquelchState.Open;
-                                                        }
+                                                        inputI[pos] = 0;
+                                                        inputQ[pos] = 0;
                                                     }
                                                     else
                                                     {
-                                                        DemodOptions.SquelchSampleCounter = 0;
+                                                        /* demodulate this block since there are some usable samples */
+                                                        haveSamplesToDemodulate = true;
                                                     }
                                                 }
 
-                                                if (DemodOptions.SquelchState == Demodulation.eSquelchState.Closed)
+                                                DemodOptions.SquelchAverage = DBTools.SquaredSampleTodB(totalStrength / inputI.Length);
+                                                DemodOptions.SquelchMax = DBTools.SquaredSampleTodB(maxStrength);
+
+                                                DemodOptions.UpdateListeners();
+                                            }
+
+                                            /* demodulate signal */
+                                            if (haveSamplesToDemodulate)
+                                            {
+                                                PerformanceCounters.CounterDemod.Start();
+                                                DemodOptions.Demod.ProcessData(inputI, inputQ, AudioSampleBuffer);
+                                                PerformanceCounters.CounterDemod.Stop();
+
+                                                if (DemodOptions.AudioLowPassEnabled)
                                                 {
-                                                    inputI[pos] = 0;
-                                                    inputQ[pos] = 0;
-                                                }
-                                                else
-                                                {
-                                                    /* demodulate this block since there are some usable samples */
-                                                    haveSamplesToDemodulate = true;
-                                                }
-                                            }
-
-                                            DemodOptions.SquelchAverage = DBTools.SquaredSampleTodB(totalStrength / inputI.Length);
-                                            DemodOptions.SquelchMax = DBTools.SquaredSampleTodB(maxStrength);
-                                            if (DemodDialog != null)
-                                            {
-                                                DemodDialog.UpdatePowerBar();
-                                            }
-                                        }
-
-                                        /* demodulate signal */
-                                        if (haveSamplesToDemodulate)
-                                        {
-                                            PerformanceCounters.CounterDemod.Start();
-                                            DemodOptions.Demod.ProcessData(inputI, inputQ, AudioSampleBuffer);
-                                            PerformanceCounters.CounterDemod.Stop();
-
-                                            if (DemodOptions.AudioLowPassEnabled)
-                                            {
-                                                PerformanceCounters.CounterDemodLowpass.Start();
-                                                DemodOptions.AudioLowPass.Process(AudioSampleBuffer, AudioSampleBuffer);
-                                                PerformanceCounters.CounterDemodLowpass.Stop();
-                                            }
-                                        }
-                                        else
-                                        {
-                                            Array.Clear(AudioSampleBuffer, 0, AudioSampleBuffer.Length);
-                                        }
-
-                                        /* audio decimation */
-                                        if (lastAudioDecim > 1)
-                                        {
-                                            PerformanceCounters.CounterDemodDecimate.Start();
-                                            double ampl = 1;
-                                            if (DemodOptions.AudioAmplificationEnabled)
-                                                ampl = DemodOptions.AudioAmplification;
-
-                                            for (int pos = 0; pos < AudioSampleBufferDecim.Length; pos++)
-                                            {
-                                                AudioSampleBufferDecim[pos] = ampl * AudioSampleBuffer[pos * lastAudioDecim];
-                                            }
-                                            PerformanceCounters.CounterDemodDecimate.Stop();
-
-                                            DemodOptions.SoundDevice.Write(AudioSampleBufferDecim);
-                                        }
-                                        else
-                                        {
-                                            if (DemodOptions.AudioAmplificationEnabled)
-                                            {
-                                                for (int pos = 0; pos < AudioSampleBuffer.Length; pos++)
-                                                {
-                                                    AudioSampleBuffer[pos] *= DemodOptions.AudioAmplification;
+                                                    PerformanceCounters.CounterDemodLowpass.Start();
+                                                    DemodOptions.AudioLowPass.Process(AudioSampleBuffer, AudioSampleBuffer);
+                                                    PerformanceCounters.CounterDemodLowpass.Stop();
                                                 }
                                             }
-                                            DemodOptions.SoundDevice.Write(AudioSampleBuffer);
+                                            else
+                                            {
+                                                Array.Clear(AudioSampleBuffer, 0, AudioSampleBuffer.Length);
+                                            }
+
+                                            /* audio decimation */
+                                            if (lastAudioDecim > 1)
+                                            {
+                                                PerformanceCounters.CounterDemodDecimate.Start();
+                                                double ampl = 1;
+                                                if (DemodOptions.AudioAmplificationEnabled)
+                                                {
+                                                    ampl = DemodOptions.AudioAmplification;
+                                                }
+
+                                                for (int pos = 0; pos < AudioSampleBufferDecim.Length; pos++)
+                                                {
+                                                    AudioSampleBufferDecim[pos] = ampl * AudioSampleBuffer[pos * lastAudioDecim];
+                                                }
+                                                PerformanceCounters.CounterDemodDecimate.Stop();
+
+                                                DemodOptions.SoundDevice.Write(AudioSampleBufferDecim);
+
+                                                /* shmem output of demodulated signal */
+                                                if (AudioOutBinary == null || AudioOutBinary.Length != AudioSampleBufferDecim.Length * 4)
+                                                {
+                                                    AudioOutBinary = new byte[AudioSampleBufferDecim.Length * 4];
+                                                }
+                                                ByteUtil.SamplesToBinary(AudioOutBinary, AudioSampleBufferDecim, AudioSampleBufferDecim, ByteUtil.eSampleFormat.Direct16BitIQFixedPoint, false);
+                                            }
+                                            else
+                                            {
+                                                if (DemodOptions.AudioAmplificationEnabled)
+                                                {
+                                                    for (int pos = 0; pos < AudioSampleBuffer.Length; pos++)
+                                                    {
+                                                        AudioSampleBuffer[pos] *= DemodOptions.AudioAmplification;
+                                                    }
+                                                }
+                                                DemodOptions.SoundDevice.Write(AudioSampleBuffer);
+
+                                                /* shmem output of demodulated signal */
+                                                if (AudioOutBinary == null || AudioOutBinary.Length != AudioSampleBuffer.Length * 4)
+                                                {
+                                                    AudioOutBinary = new byte[AudioSampleBuffer.Length * 4];
+                                                }
+                                                ByteUtil.SamplesToBinary(AudioOutBinary, AudioSampleBuffer, AudioSampleBuffer, ByteUtil.eSampleFormat.Direct16BitIQFixedPoint, false);
+                                            }
+
+                                            AudioOutShmem.Rate = (long)(rate / lastAudioDecim);
+                                            AudioOutShmem.Write(AudioOutBinary);
                                         }
                                     }
-                                }
-                                PerformanceCounters.CounterProcessing.Stop();
+                                    PerformanceCounters.CounterProcessing.Stop();
 
-                                if (DemodOptions.DisplayDemodulationSignal)
-                                {
-                                    PerformanceCounters.CounterVisualization.Start();
-                                    FFTDisplay.ProcessData(inputI, inputQ, 0, Device.Amplification - Device.Attenuation);
-                                    PerformanceCounters.CounterVisualization.Stop();
+                                    if (DemodOptions.DisplayDemodulationSignal)
+                                    {
+                                        PerformanceCounters.CounterVisualization.Start();
+                                        FFTDisplay.ProcessData(inputI, inputQ, 0, Device.Amplification - Device.Attenuation);
+                                        PerformanceCounters.CounterVisualization.Stop();
+                                    }
                                 }
-                            }
-                            else
-                            {
-                                PerformanceCounters.CounterProcessing.Stop();
+                                else
+                                {
+                                    PerformanceCounters.CounterProcessing.Stop();
+                                }
                             }
                         }
                     }
+                    else
+                    {
+                        Thread.Sleep(100);
+                    }
                 }
-
+                /*
                 if (DemodDialog != null)
                     DemodDialog.UpdateInformation();
-
+                */
                 PerformanceCounters.CounterRuntime.Stop();
             }
             catch (ThreadAbortException e)
@@ -915,7 +1138,7 @@ namespace RX_FFT
                                     {
                                         // Log.AddMessage("FFTReadFunc: avail " + avail + " Bytes. Thats okay when FFT size was changed.");
                                     }
-                                    Device.SampleSource.Flush();
+                                    //Device.SampleSource.Flush();
                                 }
 
                                 lock (Device.SampleSource.SampleBufferLock)
@@ -971,7 +1194,6 @@ namespace RX_FFT
                                             FFTDisplay.SamplingRate = rate;
 
                                             DemodOptions.InputRate = rate;
-                                            DemodOptions.AudioRate = rate / DemodOptions.AudioDecimation / DemodOptions.InputSignalDecimation;
                                             DemodOptions.ReinitSound = true;
 
                                             if (DemodDialog != null && DemodDialog.Visible)
@@ -1049,33 +1271,38 @@ namespace RX_FFT
 
         private void OpenBO35Device(USBRXDevice.eCombinationType type)
         {
-            USBRXDeviceControl dev = new USBRXDeviceControl();
-
-            dev.TunerCombination = type;
-
-            if (!dev.OpenTuner())
+            try
             {
-                MessageBox.Show("Failed to open the device. Reason: " + dev.ErrorMessage);
-                return;
+                USBRXDeviceControl dev = new USBRXDeviceControl();
+
+                dev.TunerCombination = type;
+
+                if (!dev.OpenTuner())
+                {
+                    MessageBox.Show("Failed to open the device. Reason: " + dev.ErrorMessage);
+                    return;
+                }
+
+                Device = dev;
+                Remote.Tuner = dev;
+
+                dev.FrequencyChanged += new EventHandler(Device_FrequencyChanged);
+                dev.SamplingRateChanged += new EventHandler(Device_RateChanged);
+                dev.FilterWidthChanged += new EventHandler(Device_FilterWidthChanged);
+                dev.TransferModeChanged += new EventHandler(Device_TransferModeChanged);
+                dev.InvertedSpectrumChanged += new EventHandler(Device_InvertedSpectrumChanged);
+                dev.DeviceDisappeared += new EventHandler(Device_DeviceDisappeared);
+                dev.DeviceClosed += new EventHandler(Device_DeviceClosed);
+                dev.SamplesPerBlock = Math.Min(32, Math.Max(1, SamplesToAverage)) * FFTSize;
+
+                StartThreads();
+                CurrentFrequency = dev.GetFrequency();
+                DeviceOpened = true;
             }
-
-            Device = dev;
-            Remote.Tuner = dev;
-
-            dev.FrequencyChanged += new EventHandler(Device_FrequencyChanged);
-            dev.SamplingRateChanged += new EventHandler(Device_RateChanged);
-            dev.FilterWidthChanged += new EventHandler(Device_FilterWidthChanged);
-            dev.TransferModeChanged += new EventHandler(Device_TransferModeChanged);
-            dev.InvertedSpectrumChanged += new EventHandler(Device_InvertedSpectrumChanged);
-            dev.DeviceDisappeared += new EventHandler(Device_DeviceDisappeared);
-            dev.DeviceClosed += new EventHandler(Device_DeviceClosed);
-            dev.SamplesPerBlock = Math.Max(1, SamplesToAverage) * FFTSize;
-
-            StartThreads();
-
-            CurrentFrequency = dev.GetFrequency();
-
-            DeviceOpened = true;
+            catch (Exception e)
+            {
+                DeviceOpened = false;
+            }
         }
 
         public void OpenFileDevice()
@@ -1100,7 +1327,7 @@ namespace RX_FFT
             dev.FilterWidthChanged += new EventHandler(Device_FilterWidthChanged);
             dev.DeviceDisappeared += new EventHandler(Device_DeviceDisappeared);
             dev.DeviceClosed += new EventHandler(Device_DeviceClosed);
-            dev.SamplesPerBlock = Math.Max(1, SamplesToAverage) * FFTSize;
+            dev.SamplesPerBlock = Math.Min(32, Math.Max(1, SamplesToAverage)) * FFTSize;
 
             StartThreads();
 
@@ -1203,6 +1430,8 @@ namespace RX_FFT
             AudioShmem = new ShmemSampleSource("RX-FFT Audio Decoder", Device.ShmemChannel, 1, 0);
             AudioShmem.InvertedSpectrum = Device.SampleSource.InvertedSpectrum;
 
+            AudioOutShmem = new SharedMem(-2, 1, "RX-FFT Demodulated Audio");
+
             lock (DemodOptions)
             {
                 DemodOptions.SoundDevice = new DXSoundDevice(Handle);
@@ -1230,7 +1459,7 @@ namespace RX_FFT
             {
                 if (DemodOptions.SoundDevice != null)
                 {
-                    DemodOptions.SoundDevice.Close();
+                    DemodOptions.SoundDevice.Stop();
                     DemodOptions.SoundDevice = null;
                 }
             }
@@ -1249,6 +1478,7 @@ namespace RX_FFT
                 }
                 ReadThread = null;
             }
+
             if (AudioThread != null)
             {
                 if (!AudioThread.Join(100))
@@ -1257,11 +1487,17 @@ namespace RX_FFT
                 }
                 AudioThread = null;
             }
-
+            
             if (AudioShmem != null)
             {
                 AudioShmem.Close();
                 AudioShmem = null;
+            }
+
+            if (AudioOutShmem != null)
+            {
+                AudioOutShmem.Close();
+                AudioOutShmem = null;
             }
 
             /* un-pause again */
@@ -1350,10 +1586,31 @@ namespace RX_FFT
             FFTDisplay.LimiterLowerLimit = Device.LowerFilterMargin;
             FFTDisplay.LimiterUpperDescription = Device.UpperFilterMarginDescription;
             FFTDisplay.LimiterLowerDescription = Device.LowerFilterMarginDescription;
+
+            /* try to find optimal decimation rate */
+            if (DemodOptions.SoundDevice != null && DemodOptions.SoundDevice.Rate < Device.SamplingRate)
+            {
+                double exactDecim = (double)Device.SamplingRate / (double)DemodOptions.SoundDevice.Rate;
+
+                DemodOptions.AudioDecimation = (int)Math.Ceiling(exactDecim);
+            }
+            else
+            {
+                DemodOptions.AudioDecimation = 1;
+            }
+
+            DemodOptions.ReinitSound = true;
+            if (DemodDialog != null)
+            {
+                DemodDialog.UpdateInformation();
+            }
         }
 
         void Device_FrequencyChanged(object sender, EventArgs e)
         {
+            /* give FFT area selection the chance to update its downmix parameters */
+            FFTAreaSelection_SelectionUpdated(null, null);
+
             if (!ScanFrequenciesEnabled)
             {
                 _currentFrequency = Device.GetFrequency();
@@ -1368,12 +1625,61 @@ namespace RX_FFT
 
         private void openBO35Menu_Click(object sender, EventArgs e)
         {
+            bool animateStatus = true;
+            new Thread(() =>
+            {
+                string dotString = "........";
+                int dots = 0;
+                int loops = 100;
+
+                while (animateStatus)
+                {
+                    StatusTextDock.Text = "Opening Device" + dotString.Substring(0, dots);
+                    Thread.Sleep(500);
+                    dots++;
+                    dots %= 4;
+                    loops--;
+                    if (loops == 0)
+                    {
+                        return;
+                    }
+                }
+                StatusTextDock.Hide();
+            }).Start();
+
             OpenBO35Device(USBRXDevice.eCombinationType.BO35);
+
+            animateStatus = false;
+            StatusTextDock.Hide();
         }
 
         private void openBO35PlainMenu_Click(object sender, EventArgs e)
         {
+            bool animateStatus = true;
+            new Thread(() =>
+            {
+                string dotString = "........";
+                int dots = 0;
+                int loops = 100;
+
+                while (animateStatus)
+                {
+                    StatusTextDock.Text = "Opening Device" + dotString.Substring(0, dots);
+                    Thread.Sleep(500);
+                    dots++;
+                    dots %= 4;
+                    loops--;
+                    if (loops == 0)
+                    {
+                        return;
+                    }
+                }
+                StatusTextDock.Hide();
+            }).Start();
             OpenBO35Device(USBRXDevice.eCombinationType.Automatic);
+
+            StatusTextDock.Hide();
+            animateStatus = false;
         }
 
         private void openFileMenu_Click(object sender, EventArgs e)

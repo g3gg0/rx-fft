@@ -279,11 +279,11 @@ namespace LibRXFFT.Components.DirectX
         public double UpdateRate
         {
             set 
-            { 
-                FFTDisplay.UpdateRate = value;
-                WaterfallDisplay.UpdateRate = value;
+            {
+                FFTDisplay.UpdateRate = Interleaving * value;
+                WaterfallDisplay.UpdateRate = Interleaving * value;
             }
-            get { return FFTDisplay.UpdateRate; }
+            get { return FFTDisplay.UpdateRate / Interleaving; }
         }
 
         public long SamplesToAverage
@@ -369,11 +369,20 @@ namespace LibRXFFT.Components.DirectX
                 case eUserEvent.MouseEnter:
                     FFTDisplay.ShowVerticalCursor = true;
                     WaterfallDisplay.ShowVerticalCursor = true;
+
+                    UserEventCallbackFunc(eUserEvent.StatusUpdated, 0);
                     break;
 
                 case eUserEvent.MouseLeave:
+                    WaterfallDisplay.LevelBarActive = false;
+
+                    FFTDisplay.MainText = "";
+                    WaterfallDisplay.MainText = "";
+
                     FFTDisplay.ShowVerticalCursor = false;
                     WaterfallDisplay.ShowVerticalCursor = false;
+
+                    UserEventCallbackFunc(eUserEvent.StatusUpdated, 0);
                     break;
 
                 /* used to paint waterfall level bars */
@@ -410,6 +419,8 @@ namespace LibRXFFT.Components.DirectX
                         LevelBarLower.Position = WaterfallDisplay.LeveldBBlack;
                     }
                     FFTDisplay.UpdateOverlays = true;
+                    FFTDisplay.NeedsRender = true;
+                    WaterfallDisplay.NeedsRender = true;
                     break;
 
                 case eUserEvent.MouseWheelUp:
@@ -482,6 +493,18 @@ namespace LibRXFFT.Components.DirectX
             }
         }
 
+        protected int _Interleaving = 1;
+        public int Interleaving
+        {
+            get { return _Interleaving; }
+            set
+            {
+                _Interleaving = value;
+                FFTSize = FFTSize;
+                UpdateRate = UpdateRate;
+            }
+        }
+
         public int FFTSize
         {
             get { return _FFTSize; }
@@ -490,8 +513,10 @@ namespace LibRXFFT.Components.DirectX
                 lock (FFTLock)
                 {
                     _FFTSize = value;
-                    FFTResult = new double[_FFTSize];
-                    FFT = new FFTTransformer(value);
+                    Array.Resize(ref FFTResult, _FFTSize);
+                    //FFTResult = new double[_FFTSize];
+                    FFT = new InterleavedFFTTransformer(value, Interleaving);
+                    //FFT = new FFTTransformer(value);
 
                     Correction.BuildCorrectionTable(LowestFrequency, HighestFrequency, FFTSize);
                     FFTDisplay.FFTSize = value;
@@ -595,9 +620,10 @@ namespace LibRXFFT.Components.DirectX
 
         private void CenterCut(int FFTCenterWidth)
         {
-            if (FFTResultPartial.Length !=  FFTCenterWidth)
+            if (FFTResultPartial.Length != FFTCenterWidth)
             {
-                FFTResultPartial = new double[FFTCenterWidth];
+                Array.Resize(ref FFTResultPartial, FFTCenterWidth);
+                //FFTResultPartial = new double[FFTCenterWidth];
             }
 
             for (int pos = 0; pos < FFTCenterWidth; pos++)
@@ -629,15 +655,34 @@ namespace LibRXFFT.Components.DirectX
             }
         }
 
+        private LinkedList<FrequencyMarker> AddedLines = new LinkedList<FrequencyMarker>();
 
         public LinkedList<FrequencyMarker> Markers
         {
             set
             {
-                FFTDisplay.LabelledVertLines.Clear();
+                LinkedList<LabelledLine> linesToRemove = new LinkedList<LabelledLine>();
+
+                foreach (FrequencyMarker marker in AddedLines)
+                {
+                    foreach (LabelledLine line in FFTDisplay.LabelledVertLines)
+                    {
+                        if (line.Label == marker.Label && line.Position == marker.Frequency && line.Color == (uint)MarkerColor.ToArgb())
+                        {
+                            linesToRemove.AddLast(line);
+                        }
+                    }
+                }
+                AddedLines.Clear();
+
+                foreach (LabelledLine line in linesToRemove)
+                {
+                    FFTDisplay.LabelledVertLines.Remove(line);
+                }
 
                 foreach (FrequencyMarker marker in value)
                 {
+                    AddedLines.AddLast(marker);
                     FFTDisplay.LabelledVertLines.AddLast(new LabelledLine(marker.Label, marker.Frequency, MarkerColor));
                 }
 

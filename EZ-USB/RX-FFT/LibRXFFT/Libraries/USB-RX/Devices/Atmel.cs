@@ -4,16 +4,29 @@ using LibRXFFT.Libraries.USB_RX.Interfaces;
 
 namespace LibRXFFT.Libraries.USB_RX.Devices
 {
+    public struct FilterCorrectionCoeff
+    {
+        public bool AGCState;
+        public long AGCCorrectionOffset;
+        public long AGCCorrectionGain;
+
+        public FilterCorrectionCoeff(bool agcState, long offset, long gain)
+        {
+            AGCState = agcState;
+            AGCCorrectionOffset = offset;
+            AGCCorrectionGain = gain;
+        }
+    }
+
     public class Atmel : AD6636Interface
     {
+        public AD6636 AD6636;
         private I2CInterface I2CDevice;
         private int BusID;
         private static int DefaultBusID = 0x20;
 
         private long FilterClock;
         private long FilterWidth;
-        private long AGCCorrectionOffset;
-        private long AGCCorrectionGain;
 
         /*
             20:20:03:3380   Atmel Serial: RX22 ADS5547
@@ -26,11 +39,11 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             20:24:45:2870 [AtmelDelay]   Minimum SetAttDelay: 6 ms
             20:24:45:2870 [AtmelDelay] ---------------------------------
         */
-        public int SetFilterDelay = 105;
+        public int SetFilterDelay = 120;
         public int ReadFilterDelay = 0;
-        public int SetAgcDelay = 10;
-        public int SetAttDelay = 10;
-        
+        public int SetAgcDelay = 30;
+        public int SetAttDelay = 30;
+
 
         internal class ad6636RegCacheEntry
         {
@@ -224,7 +237,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                 return;
             }
         }
-        
+
         public int GetRBW()
         {
             byte[] buf = new byte[4];
@@ -355,7 +368,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                         return 0;
                 }
 
-                return (buf[1]<<8) | buf[0];
+                return (buf[1] << 8) | buf[0];
             }
         }
 
@@ -482,52 +495,55 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             return true;
         }
 
-        public bool SetAGCCorrection(bool state, int offset, int gain)
-        {
-            byte[] cmd = new byte[4];
 
-            if (state)
-                cmd[0] = 0x37;
-            else
-                cmd[0] = 0x38;
-            cmd[1] = (byte)offset;
-            cmd[2] = (byte)(gain & 0xFF);
-            cmd[3] = (byte)((gain >> 8) & 0xFF);
-            lock (this)
+
+        public FilterCorrectionCoeff FilterCorrection
+        {
+            get
             {
-                if (!I2CDevice.I2CWriteBytes(BusID, cmd))
-                    return false;
+                byte[] buffer = new byte[3];
+
+                lock (this)
+                {
+                    if (!I2CDevice.I2CWriteByte(BusID, 0x39))
+                        return new FilterCorrectionCoeff(false, 0, 0);
+
+                    if (!I2CDevice.I2CReadBytes(BusID, buffer))
+                        return new FilterCorrectionCoeff(false, 0, 0);
+                }
+
+                return new FilterCorrectionCoeff(AD6636.AgcState, buffer[0], ((buffer[2] << 8) | buffer[1]));
             }
-            return true;
-        }
 
-        public bool ReadAGCCorrection()
-        {
-            byte[] buffer = new byte[3];
-
-            lock (this)
+            set
             {
-                if (!I2CDevice.I2CWriteByte(BusID, 0x39))
-                    return false;
+                byte[] cmd = new byte[4];
+                long offset = value.AGCCorrectionOffset;
+                long gain = value.AGCCorrectionGain;
 
-                if (!I2CDevice.I2CReadBytes(BusID, buffer))
-                    return false;
+
+                if (value.AGCState)
+                    cmd[0] = 0x38;
+                else
+                    cmd[0] = 0x37;
+
+
+                cmd[1] = (byte)offset;
+                cmd[2] = (byte)(gain & 0xFF);
+                cmd[3] = (byte)((gain >> 8) & 0xFF);
+
+                lock (this)
+                {
+                    if (!I2CDevice.I2CWriteBytes(BusID, cmd))
+                        return;
+                    WaitMs(20);
+                }
+
+                AD6636.Offset = offset;
+                AD6636.Gain = gain;
+
+                return;
             }
-            this.AGCCorrectionOffset = buffer[0];
-            this.AGCCorrectionGain = (buffer[2] << 8) | buffer[1];
-
-            return true;
-        }
-
-
-        public long GetAGCCorrectionOffset()
-        {
-            return this.AGCCorrectionOffset;
-        }
-
-        public long GetAGCCorrectionGain()
-        {
-            return this.AGCCorrectionGain;
         }
 
 
@@ -645,6 +661,12 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                     return false;
             }
             return true;
+        }
+
+
+        public void Register(AD6636 ad6636)
+        {
+            AD6636 = ad6636;
         }
     }
 }

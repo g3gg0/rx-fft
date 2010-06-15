@@ -88,7 +88,6 @@
     <Compile Include="Demodulators\PKDemodulator.cs" />
     <Compile Include="Demodulators\PDDemodulator.cs" />
     <Compile Include="BitClockSinks\POCSAGDecoder.cs" />
-    <Compile Include="LuaHelpers.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="DemodulatorDialog.resx">

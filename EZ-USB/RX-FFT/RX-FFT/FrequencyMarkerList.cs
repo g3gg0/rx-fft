@@ -19,7 +19,7 @@ namespace RX_FFT
             {
                 Load("markers.xml");
             }
-            catch (Exception)
+            catch (FileNotFoundException e)
             {
             }
         }

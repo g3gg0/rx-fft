@@ -7,10 +7,26 @@ using System.Reflection;
 using RX_FFT.Components.GDI;
 using System.Collections;
 
-namespace DemodulatorCollection
+namespace LibRXFFT.Libraries
 {
     public class LuaHelpers
     {
+        public static LinkedList<string> RegisteredNamespaces = new LinkedList<string>();
+
+        public static void RegisterNamespace(string p)
+        {
+            lock (RegisteredNamespaces)
+            {
+                if (!RegisteredNamespaces.Contains(p))
+                {
+                    RegisteredNamespaces.AddLast(p);
+                }
+            }
+        }
+
+        public LuaHelpers()
+        {
+        }
 
         [AttrLuaFunc("bit_not", "Bitwise negation", new[] { "input value" })]
         public static uint LuaNot(uint value)
@@ -66,31 +82,64 @@ namespace DemodulatorCollection
             return retVal;
         }
 
+        [AttrLuaFunc("using", "Register .NET namespace", new[] { "Namespace" })]
+        public static void LuaUsing(string name)
+        {
+            RegisterNamespace(name);
+        }
+
+        [AttrLuaFunc("lua_error", "", new[] { "" })]
+        public static void LuaError(object e)
+        {
+            if (e is Exception)
+            {
+                Exception exc = (Exception)e;
+                Log.AddMessage("LUA", exc.ToString());
+            }
+            else if (e is string)
+            {
+                Log.AddMessage("LUA", (string)e);
+            }
+        }
+
         [AttrLuaFunc("print", "Print string into log window", new[] { "Text to print" })]
         public static void LuaPrint(string text)
         {
             Log.AddMessage("LUA", text);
         }
 
-        [AttrLuaFunc("new", "", new[] { "" })]
-        public static object LuaNew(string className)
+        [AttrLuaFunc("print_adv", "Print string into log window", new[] { "Text to print" })]
+        public static void LuaPrintAdv(object obj)
+        {
+            Log.AddMessage("LUA", obj.ToString());
+        }
+
+        [AttrLuaFunc("new", "Instanciate a new object", new[] { "Class name to instanciate", "optional parameters" })]
+        public static object LuaNew(string className, params object[] parameters)
         {
             Type type = Type.GetType(className);
 
-            if (type == null)
+            foreach (string name in RegisteredNamespaces)
             {
-                type = Type.GetType("DemodulatorCollection.Demodulators." + className);
+                if (type == null)
+                {
+                    type = Type.GetType(name + "." + className);
+                }
             }
-            if (type == null)
-            {
-                type = Type.GetType("DemodulatorCollection.BitClockSinks." + className);
-            }
+
             if (type == null)
             {
                 return null;
             }
 
-            return Activator.CreateInstance(type);
+            if (parameters != null && parameters.Length > 0)
+            {
+                return Activator.CreateInstance(type, parameters);
+            }
+            else
+            {
+                return Activator.CreateInstance(type);
+            }
         }
 
         public static object[] CallFunction(Lua luaVm, string name, params object[] parameters)
@@ -176,6 +225,7 @@ namespace DemodulatorCollection
                 }
             }
         }
+
     }
 
     public class AttrLuaFunc : Attribute

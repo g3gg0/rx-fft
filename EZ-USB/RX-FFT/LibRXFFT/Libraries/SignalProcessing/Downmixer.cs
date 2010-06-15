@@ -49,7 +49,13 @@ namespace LibRXFFT.Libraries.SignalProcessing
                     {
                         DownmixFree(NativeContext);
                     }
-                    NativeContext = DownmixInit(CosTable, SinTable, CosTable.Length);
+                    try
+                    {
+                        NativeContext = DownmixInit(CosTable, SinTable, CosTable.Length);
+                    }
+                    catch (Exception e)
+                    {
+                    }
                 }
             }
         }

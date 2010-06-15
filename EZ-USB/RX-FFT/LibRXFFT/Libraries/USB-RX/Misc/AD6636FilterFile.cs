@@ -129,6 +129,11 @@ namespace LibRXFFT.Libraries.USB_RX.Misc
             }
         }
 
+        public object SourceDevice
+        {
+            get { return null; }
+        }
+
         private void ParseFile()
         {
             ProgramVersion = ReadSectionFieldString("Filter Design", "Version");
@@ -334,5 +339,6 @@ namespace LibRXFFT.Libraries.USB_RX.Misc
         }
 
         #endregion
+
     }
 }

@@ -21,13 +21,15 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
     {
         public SerialPortProperties Properties = new SerialPortProperties();
 
+        protected bool AutoDetectRunning = false;
         protected SerialPort Port;
+        protected double TransmitDuration = 0;
+        protected long CurrentFrequency = 0;
+
         private string NewLine = "\r";
         private Thread TransferThread;
         private HighPerformanceCounter TransmitDelay = new HighPerformanceCounter("Serial transmit delay");
-        protected double TransmitDuration = 0;
 
-        protected long CurrentFrequency = 0;
 
         private enum eTransferDirection
         {
@@ -52,14 +54,18 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         {
             string[] portNames = SerialPort.GetPortNames();
 
+            AutoDetectRunning = true;
+
             foreach (string portName in portNames)
             {
                 if (Connect(portName))
                 {
+                    AutoDetectRunning = false;
                     return true;
                 }
             }
 
+            AutoDetectRunning = false;
             return false;
         }
 
@@ -68,7 +74,6 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         {
             try
             {
-
                 Port = new SerialPort(name, Properties.BaudRate, Properties.Parity, Properties.DataBits, Properties.StopBits);
 
                 Port.Handshake = Properties.Handshake;
@@ -76,7 +81,6 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                 Port.ReadTimeout = 500;
 
                 Port.Open();
-                GC.SuppressFinalize(Port.BaseStream);
 
                 IsOpening = true;
                 IsOpened = ConnectionCheck();
@@ -88,6 +92,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                     return false;
                 }
 
+                GC.SuppressFinalize(Port.BaseStream);
                 return true;
             }
             catch (Exception e)

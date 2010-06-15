@@ -322,6 +322,8 @@ namespace LibRXFFT.Components.DirectX
                     base.ProcessUserAction(action, param);
                     break;
             }
+
+            NeedsRender = true;
         }
 
         protected override void RenderCursor()
@@ -723,7 +725,7 @@ namespace LibRXFFT.Components.DirectX
         }
 
 
-        protected override string XLabelFromCursorPos(double xPos)
+        public override string XLabelFromCursorPos(double xPos)
         {
             /* offset (-0.5 ... 0.5) */
             double offset = ((DisplayXOffset + xPos) / (XZoomFactor * DirectXWidth)) - 0.5f - XAxisSampleOffset;
@@ -786,20 +788,24 @@ namespace LibRXFFT.Components.DirectX
             {
                 Log.AddMessage("Nesting");
             }
-
-            try
+            lock (SampleValues)
             {
-                if (NeedsUpdate)
+                try
                 {
-                    NeedsUpdate = false;
-                    if (SlavePlot != null)
-                        SlavePlot.PrepareLinePoints();
-                    PrepareLinePoints();
-                }
-            }
-            catch (Exception ex)
-            {
+                    if (NeedsUpdate)
+                    {
+                        if (SlavePlot != null)
+                            SlavePlot.PrepareLinePoints();
+                        PrepareLinePoints();
 
+                        NeedsUpdate = false;
+                        NeedsRender = true;
+                    }
+                }
+                catch (Exception ex)
+                {
+
+                }
             }
             NestingDepth--;
         }

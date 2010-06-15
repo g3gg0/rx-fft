@@ -8,6 +8,7 @@ using System.Collections;
 using System.Windows.Forms;
 using RX_FFT.Components.GDI;
 using System.Reflection;
+using LibRXFFT.Libraries;
 
 namespace DemodulatorCollection.Demodulators
 {
@@ -21,6 +22,9 @@ namespace DemodulatorCollection.Demodulators
         {
             LuaVm = new Lua();
             LuaVm["SamplingRate"] = 0.0f;
+
+            LuaHelpers.RegisterNamespace("DemodulatorCollection.Demodulators");
+            LuaHelpers.RegisterNamespace("DemodulatorCollection.BitClockSinks");
 
             LuaHelpers.RegisterLuaFunctions(LuaVm, new LuaHelpers());
             LuaHelpers.RegisterLuaFunctions(LuaVm, this);

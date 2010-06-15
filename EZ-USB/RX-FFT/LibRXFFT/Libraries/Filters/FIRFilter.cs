@@ -23,7 +23,13 @@ namespace LibRXFFT.Libraries.Filters
 
         public FIRFilter(double[] coeffs)
         {
-            NativeContext = FIRInit(coeffs, coeffs.Length);
+            try
+            {
+                NativeContext = FIRInit(coeffs, coeffs.Length);
+            }
+            catch (Exception e)
+            {
+            }
 
             Coefficients = coeffs;
             DelayLine = new double[Coefficients.Length];
@@ -73,6 +79,5 @@ namespace LibRXFFT.Libraries.Filters
 			    DelayLinePosition = 0;
 		    return result;
 	    }
-
     }
 }

@@ -28,15 +28,15 @@ namespace LibRXFFT.Libraries
 
         public RemoteControl()
         {
-            IPEndPoint ip = new IPEndPoint(IPAddress.Any, Port);
-            ListenSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-
-            ListenSocket.Bind(ip);
-            ListenSocket.Listen(10);
-
-            Console.WriteLine("Waiting for a client...");
             try
             {
+                IPEndPoint ip = new IPEndPoint(IPAddress.Any, Port);
+                ListenSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+
+                ListenSocket.Bind(ip);
+                ListenSocket.Listen(10);
+
+                Console.WriteLine("Waiting for a client...");
                 SocketAsyncEventArgs socketArgs = new SocketAsyncEventArgs();
                 socketArgs.Completed += new EventHandler<SocketAsyncEventArgs>(socketArgs_Completed);
                 ListenSocket.AcceptAsync(socketArgs);

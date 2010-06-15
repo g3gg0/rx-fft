@@ -151,7 +151,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
         public double Attenuation
         {
-            get { return 0; }
+            get { return 40; }
         }
 
         public long IntermediateFrequency

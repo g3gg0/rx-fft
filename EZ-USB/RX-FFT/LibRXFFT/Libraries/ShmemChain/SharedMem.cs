@@ -10,6 +10,7 @@ namespace LibRXFFT.Libraries.ShmemChain
         Blocking = SharedMemNative.MODE_BLOCKING,
         Dynamic = SharedMemNative.MODE_BLOCKING_DYNAMIC,
         TimeLimited = SharedMemNative.MODE_BLOCKING_TIME,
+        TimeLimitedNoPartial = SharedMemNative.MODE_BLOCKING_TIME_NOPARTIAL,        
         Partial = SharedMemNative.MODE_PARTIAL
     }
 
@@ -205,12 +206,19 @@ namespace LibRXFFT.Libraries.ShmemChain
         {
             int readParam = (int)readMode;
 
-            if (readMode == eReadMode.Dynamic || readMode == eReadMode.TimeLimited)
-                readParam |= readTimeout;
+            /* dynamic and time limited modes have the timeout in 100ms steps as parameter */
+            if (readMode == eReadMode.Dynamic || readMode == eReadMode.TimeLimited || readMode == eReadMode.TimeLimitedNoPartial)
+            {
+                readParam |= ((readTimeout + 99) / 100);
+            }
 
+            /* directly read into buffer */
             if (offset == 0)
+            {
                 return (int)SharedMemNative.shmemchain_read_data(shmemID, buffer, (uint)count, readParam);
+            }
 
+            /* use a temporary buffer for writing at offset */
             byte[] tmpBuffer = new byte[count];
             int ret = (int)SharedMemNative.shmemchain_read_data(shmemID, tmpBuffer, (uint)count, readParam);
 
@@ -231,7 +239,9 @@ namespace LibRXFFT.Libraries.ShmemChain
         public override void Write(byte[] buffer, int offset, int count)
         {
             if (offset == 0)
+            {
                 SharedMemNative.shmemchain_write_data(shmemID, buffer, (uint)count);
+            }
             else
             {
                 byte[] tmpBuffer = new byte[count];

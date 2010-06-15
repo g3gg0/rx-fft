@@ -19,5 +19,6 @@ namespace LibRXFFT.Components.DirectX.Drawables.Docks
         {
             Title = "Test";
         }
+
     }
 }

@@ -20,6 +20,11 @@ namespace RX_FFT
                 StatusUpdateTimer.Dispose();
                 StatusUpdateTimer = null;
             }
+            if (DemodOptions != null)
+            {
+                DemodOptions.Dispose();
+                DemodOptions = null;
+            }
             base.Dispose(disposing);
         }
 
@@ -655,7 +660,7 @@ namespace RX_FFT
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
         private System.Windows.Forms.ToolStripStatusLabel statusLabel;
-        private LibRXFFT.Components.DirectX.DirectXWaterfallFFTDisplay FFTDisplay;
+        public LibRXFFT.Components.DirectX.DirectXWaterfallFFTDisplay FFTDisplay;
 
         private System.Windows.Forms.MenuStrip mainMenu;
         private System.Windows.Forms.ToolStripMenuItem deviceMenu;

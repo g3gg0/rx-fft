@@ -1,17 +1,21 @@
 ﻿using System;
+using LibRXFFT.Libraries.USB_RX.Devices;
 
 namespace LibRXFFT.Libraries.USB_RX.Misc
 {
 
     public class AtmelFilter : FilterInformation, IComparable
     {
+        private Atmel Atmel;
+
         public int Id;
 
         public long _Width;
         public long _OutputFrequency;
 
-        public AtmelFilter(int id, long width, long rate)
+        public AtmelFilter(Atmel atmel, int id, long width, long rate)
         {
+            this.Atmel = atmel;
             this.Id = id;
             this._Width = width;
             this._OutputFrequency = rate;
@@ -39,6 +43,11 @@ namespace LibRXFFT.Libraries.USB_RX.Misc
             {
                 return "Atmel Filter #" + Id.ToString();
             }
+        }
+
+        public object SourceDevice
+        {
+            get { return Atmel; }
         }
 
 

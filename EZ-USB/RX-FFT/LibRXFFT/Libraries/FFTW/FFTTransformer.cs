@@ -63,7 +63,9 @@ namespace LibRXFFT.Libraries.FFTW
         [DllImport("libRXFFT_native.dll", EntryPoint = "FFTFree")]
         public static unsafe extern void FFTFree(IntPtr ctx);
 
-
+        public FFTTransformer()
+        { 
+        }
 
         public FFTTransformer(int FFTSize)
         {
@@ -94,7 +96,6 @@ namespace LibRXFFT.Libraries.FFTW
             catch (DllNotFoundException ex)
             {
             }
-
         }
 
         public eWindowingFunction WindowingFunction
@@ -217,7 +218,7 @@ namespace LibRXFFT.Libraries.FFTW
             }
         }
 
-        public void Execute()
+        virtual protected void Execute()
         {
             if (DiffFFTWKISS)
             {
@@ -242,17 +243,24 @@ namespace LibRXFFT.Libraries.FFTW
             }
         }
 
-        public double[] GetResult()
+        virtual public double[] GetResult()
         {
             return GetResult(null);
         }
 
-        public double[] GetResult(double[] amplitudes)
+        virtual public double[] GetResult(double[] amplitudes)
         {
             ResultAvailable = false;
 
             if (amplitudes == null)
+            {
                 amplitudes = new double[FFTSize];
+            }
+
+            if (amplitudes.Length != FFTSize)
+            {
+                Array.Resize(ref amplitudes, FFTSize);
+            }
 
             if (DiffFFTWKISS)
             {
@@ -268,7 +276,7 @@ namespace LibRXFFT.Libraries.FFTW
                     Q /= FFTSize;
 
                     /* the output is not properly aligned, so start in the middle */
-                    amplitudes[amplitudes.Length - 1 - (pos + FFTSize / 2) % FFTSize] = DBTools.SampleTodB(WindowingCorrection * (I * I + Q * Q));
+                    amplitudes[(pos + FFTSize / 2) % FFTSize] = DBTools.SampleTodB(WindowingCorrection * Math.Sqrt(I * I + Q * Q));
                 }
             }
             else
@@ -287,7 +295,7 @@ namespace LibRXFFT.Libraries.FFTW
                         Q /= FFTSize;
 
                         /* the output is not properly aligned, so start in the middle */
-                        amplitudes[amplitudes.Length - 1 - (pos + FFTSize / 2) % FFTSize] = DBTools.SampleTodB(WindowingCorrection * Math.Sqrt(I * I + Q * Q));
+                        amplitudes[(pos + FFTSize / 2) % FFTSize] = DBTools.SampleTodB(WindowingCorrection * Math.Sqrt(I * I + Q * Q));
                     }
                 }
                 else
@@ -304,7 +312,7 @@ namespace LibRXFFT.Libraries.FFTW
                         Q /= FFTSize;
 
                         /* the output is not properly aligned, so start in the middle */
-                        amplitudes[amplitudes.Length - 1 - (pos + FFTSize / 2) % FFTSize] = DBTools.SampleTodB(WindowingCorrection * (I * I + Q * Q));
+                        amplitudes[(pos + FFTSize / 2) % FFTSize] = DBTools.SampleTodB(WindowingCorrection * Math.Sqrt(I * I + Q * Q));
                     }
                 }
             }
@@ -313,14 +321,24 @@ namespace LibRXFFT.Libraries.FFTW
 
 
 
-        /* a more optimized version, that returns the amplitudes still squared. useful if the data later would get square-rooted. */
-        public double[] GetResultSquared(double[] amplitudes)
+        /* a more optimized version, that returns the amplitudes still squared. useful if the data later would get square-rooted. 
+         * update: will behave the same as the other - both return dB.
+         */
+        virtual public double[] GetResultSquared(double[] amplitudes)
         {
             ResultAvailable = false;
 
             if (amplitudes == null)
+            {
                 amplitudes = new double[FFTSize];
+            }
 
+            if (amplitudes.Length != FFTSize)
+            {
+                Array.Resize(ref amplitudes, FFTSize);
+            }
+
+#if false
             if (DiffFFTWKISS)
             {
                 for (int pos = 0; pos < FFTSize; pos++)
@@ -335,11 +353,14 @@ namespace LibRXFFT.Libraries.FFTW
                     Q /= FFTSize;
 
                     /* the output is not properly aligned, so start in the middle */
-                    amplitudes[amplitudes.Length - 1 - (pos + FFTSize / 2) % FFTSize] = DBTools.SquaredSampleTodB(WindowingCorrection * (I * I + Q * Q));
+                    amplitudes[(pos + FFTSize / 2) % FFTSize] = DBTools.SquaredSampleTodB(WindowingCorrection * (I * I + Q * Q));
                 }
             }
             else
+#endif
             {
+                int startPos = amplitudes.Length - 1 ;
+
                 if (UseFFTW)
                 {
                     for (int pos = 0; pos < FFTSize; pos++)
@@ -354,7 +375,7 @@ namespace LibRXFFT.Libraries.FFTW
                         Q /= FFTSize;
 
                         /* the output is not properly aligned, so start in the middle */
-                        amplitudes[amplitudes.Length - 1 - (pos + FFTSize / 2) % FFTSize] = DBTools.SquaredSampleTodB(WindowingCorrection * (I * I + Q * Q));
+                        amplitudes[(pos + FFTSize / 2) % FFTSize] = DBTools.SquaredSampleTodB(WindowingCorrection * (I * I + Q * Q));
                     }
                 }
                 else
@@ -371,14 +392,14 @@ namespace LibRXFFT.Libraries.FFTW
                         Q /= FFTSize;
 
                         /* the output is not properly aligned, so start in the middle */
-                        amplitudes[amplitudes.Length - 1 - (pos + FFTSize / 2) % FFTSize] = DBTools.SquaredSampleTodB(WindowingCorrection * (I * I + Q * Q));
+                        amplitudes[(pos + FFTSize / 2) % FFTSize] = DBTools.SquaredSampleTodB(WindowingCorrection * (I * I + Q * Q));
                     }
                 }
             }
             return amplitudes;
         }
 
-        public void AddSample(double I, double Q)
+        virtual public void AddSample(double I, double Q)
         {
             if (UseFFTW || DiffFFTWKISS)
             {

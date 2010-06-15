@@ -130,11 +130,19 @@ namespace RX_FFT.Dialogs
             UpdateTimer.Tick += new EventHandler(UpdateTimer_Tick);
             UpdateTimer.Interval = 500;
             UpdateTimer.Start();
+
+            Demod.DataUpdated += new EventHandler(Demod_DataUpdated);
+        }
+
+        void Demod_DataUpdated(object sender, EventArgs e)
+        {
+            UpdateInformation();
+            UpdatePowerBar();
         }
 
         void UpdateTimer_Tick(object sender, EventArgs e)
         {
-            UpdateInformationInternal();
+            UpdateInformationInternal(false);
         }
 
         public void UpdateInformation()
@@ -169,17 +177,33 @@ namespace RX_FFT.Dialogs
 
         private void UpdateInformationInternal()
         {
-            Demod.AudioRate = Demod.InputRate / Demod.AudioDecimation / Demod.InputSignalDecimation;
+            UpdateInformationInternal(false);
+        }
+
+        private void UpdateInformationInternal(bool notify)
+        {
+
+            txtDemodRate.Text = FrequencyFormatter.FreqToString(Demod.AudioRate);
+            txtDecim.Value = Demod.AudioDecimation;
 
             if (Demod.SoundDevice == null)
+            {
                 txtStatus.Text = "No Device opened";
-            else 
+            }
+            else
+            {
                 txtStatus.Text = Demod.SoundDevice.Status;
+            }
 
             if (Demod.SoundDevice == null)
+            {
                 txtSamplingRate.Text = FrequencyFormatter.FreqToString(Demod.InputRate / Demod.InputSignalDecimation / Demod.AudioDecimation);
+            }
             else
+            {
                 txtSamplingRate.Text = FrequencyFormatter.FreqToString(Demod.SoundDevice.Rate);
+            }
+
 
             if (Demod.InputRate != 0)
             {
@@ -229,6 +253,11 @@ namespace RX_FFT.Dialogs
 
             txtSquelchAvg.Text = String.Format("{0:0.00}", Demod.SquelchAverage);
             txtSquelchMax.Text = String.Format("{0:0.00}", Demod.SquelchMax);
+
+            if (notify)
+            {
+                Demod.UpdateListeners();
+            }
         }
 
         private void chkEnableDemod_CheckedChanged(object sender, EventArgs e)
@@ -236,8 +265,18 @@ namespace RX_FFT.Dialogs
             lock (Demod)
             {
                 Demod.DemodulationEnabled = chkEnableDemod.Checked;
-                if (!Demod.DemodulationEnabled && Demod.SoundDevice != null)
-                    Demod.SoundDevice.Stop();
+                if (Demod.SoundDevice != null)
+                {
+                    if (!Demod.DemodulationEnabled)
+                    {
+                        Demod.SoundDevice.Stop();
+                    }
+                    else
+                    {
+                        Demod.SoundDevice.Start();
+                    }
+                }
+                UpdateInformationInternal(true);
             }
         }
 
@@ -247,7 +286,7 @@ namespace RX_FFT.Dialogs
             {
                 Demod.CursorPositionWindowEnabled = chkEnableCursorWin.Checked;
                 Demod.ReinitSound = true;
-                UpdateInformationInternal();
+                UpdateInformationInternal(true);
             }
         }
 
@@ -256,7 +295,25 @@ namespace RX_FFT.Dialogs
             lock (Demod)
             {
                 Demod.Demod = new AMDemodulator();
-                UpdateInformationInternal();                
+                UpdateInformationInternal(true);                
+            }
+        }
+
+        private void radioLSB_CheckedChanged(object sender, EventArgs e)
+        {
+            lock (Demod)
+            {
+                Demod.Demod = new SSBDemodulator(eSsbType.Lsb);
+                UpdateInformationInternal(true);
+            }
+        }
+
+        private void radioUSB_CheckedChanged(object sender, EventArgs e)
+        {
+            lock (Demod)
+            {
+                Demod.Demod = new SSBDemodulator(eSsbType.Usb);
+                UpdateInformationInternal(true);
             }
         }
 
@@ -265,7 +322,7 @@ namespace RX_FFT.Dialogs
             lock (Demod)
             {
                 Demod.Demod = new FMDemodulator();
-                UpdateInformationInternal();                
+                UpdateInformationInternal(true);                
             }
         }
 
@@ -274,7 +331,7 @@ namespace RX_FFT.Dialogs
             lock (Demod)
             {
                 Demod.Demod = new FMDemodulator();
-                UpdateInformationInternal();                
+                UpdateInformationInternal(true);                
             }
         }
 
@@ -290,7 +347,7 @@ namespace RX_FFT.Dialogs
                 Demod.CursorWindowFilterI = new IIRFilter(IIRCoefficients.IIRLowPass_2);
                 Demod.CursorWindowFilterQ = new IIRFilter(IIRCoefficients.IIRLowPass_2);
                 Demod.ReinitSound = true;
-                UpdateInformationInternal();
+                UpdateInformationInternal(true);
             }
         }
 
@@ -304,7 +361,7 @@ namespace RX_FFT.Dialogs
                 Demod.CursorWindowFilterI = new IIRFilter(IIRCoefficients.IIRLowPass_4);
                 Demod.CursorWindowFilterQ = new IIRFilter(IIRCoefficients.IIRLowPass_4);
                 Demod.ReinitSound = true;
-                UpdateInformationInternal();
+                UpdateInformationInternal(true);
             }
         }
 
@@ -318,7 +375,7 @@ namespace RX_FFT.Dialogs
                 Demod.CursorWindowFilterI = new IIRFilter(IIRCoefficients.IIRLowPass_8);
                 Demod.CursorWindowFilterQ = new IIRFilter(IIRCoefficients.IIRLowPass_8);
                 Demod.ReinitSound = true;
-                UpdateInformationInternal();
+                UpdateInformationInternal(true);
             }
         }
 
@@ -332,7 +389,7 @@ namespace RX_FFT.Dialogs
                 Demod.CursorWindowFilterI = new IIRFilter(IIRCoefficients.IIRLowPass_16);
                 Demod.CursorWindowFilterQ = new IIRFilter(IIRCoefficients.IIRLowPass_16);
                 Demod.ReinitSound = true;
-                UpdateInformationInternal();
+                UpdateInformationInternal(true);
             }
         }
 
@@ -346,7 +403,7 @@ namespace RX_FFT.Dialogs
                 Demod.CursorWindowFilterI = new IIRFilter(IIRCoefficients.IIRLowPass_32);
                 Demod.CursorWindowFilterQ = new IIRFilter(IIRCoefficients.IIRLowPass_32);
                 Demod.ReinitSound = true;
-                UpdateInformationInternal();
+                UpdateInformationInternal(true);
             }
         }
 
@@ -360,7 +417,7 @@ namespace RX_FFT.Dialogs
                 Demod.CursorWindowFilterI = new IIRFilter(IIRCoefficients.IIRLowPass_64);
                 Demod.CursorWindowFilterQ = new IIRFilter(IIRCoefficients.IIRLowPass_64);
                 Demod.ReinitSound = true;
-                UpdateInformationInternal();
+                UpdateInformationInternal(true);
             }
         }
 
@@ -374,7 +431,7 @@ namespace RX_FFT.Dialogs
                 Demod.CursorWindowFilterI = new IIRFilter(IIRCoefficients.IIRLowPass_128);
                 Demod.CursorWindowFilterQ = new IIRFilter(IIRCoefficients.IIRLowPass_128);
                 Demod.ReinitSound = true;
-                UpdateInformationInternal();
+                UpdateInformationInternal(true);
             }
         }
 
@@ -388,13 +445,14 @@ namespace RX_FFT.Dialogs
                 Demod.CursorWindowFilterI = new IIRFilter(IIRCoefficients.IIRLowPass_256);
                 Demod.CursorWindowFilterQ = new IIRFilter(IIRCoefficients.IIRLowPass_256);
                 Demod.ReinitSound = true;
-                UpdateInformationInternal();
+                UpdateInformationInternal(true);
             }
         }
 
         private void chkEnableLowpass_CheckedChanged(object sender, EventArgs e)
         {
             Demod.AudioLowPassEnabled = chkEnableLowpass.Checked;
+            UpdateInformationInternal(true); 
         }
 
         private void radioLowPass2_CheckedChanged(object sender, EventArgs e)
@@ -403,7 +461,7 @@ namespace RX_FFT.Dialogs
             {
                 Demod.AudioLowPassWidthFract = 2;
                 Demod.AudioLowPass = new FIRFilter(FIRCoefficients.FIRLowPass_2_Low);
-                UpdateInformationInternal();                
+                UpdateInformationInternal(true);                
             }
         }
 
@@ -413,7 +471,7 @@ namespace RX_FFT.Dialogs
             {
                 Demod.AudioLowPassWidthFract = 4;
                 Demod.AudioLowPass = new FIRFilter(FIRCoefficients.FIRLowPass_4_Low);
-                UpdateInformationInternal();                
+                UpdateInformationInternal(true);                
             }
         }
 
@@ -423,7 +481,7 @@ namespace RX_FFT.Dialogs
             {
                 Demod.AudioLowPassWidthFract = 8;
                 Demod.AudioLowPass = new FIRFilter(FIRCoefficients.FIRLowPass_8_Low);
-                UpdateInformationInternal();                
+                UpdateInformationInternal(true);                
             }
         }
 
@@ -433,7 +491,7 @@ namespace RX_FFT.Dialogs
             {
                 Demod.AudioLowPassWidthFract = 16;
                 Demod.AudioLowPass = new FIRFilter(FIRCoefficients.FIRLowPass_16_Low);
-                UpdateInformationInternal();                
+                UpdateInformationInternal(true);                
             }
         }
 
@@ -443,7 +501,7 @@ namespace RX_FFT.Dialogs
             {
                 Demod.AudioLowPassWidthFract = 32;
                 Demod.AudioLowPass = new FIRFilter(FIRCoefficients.FIRLowPass_32_Low);
-                UpdateInformationInternal();                
+                UpdateInformationInternal(true);                
             }
         }
         
@@ -453,7 +511,7 @@ namespace RX_FFT.Dialogs
             {
                 Demod.AudioLowPassWidthFract = 64;
                 Demod.AudioLowPass = new FIRFilter(FIRCoefficients.FIRLowPass_64_Low);
-                UpdateInformationInternal();                
+                UpdateInformationInternal(true);                
             }
         }
 
@@ -463,7 +521,7 @@ namespace RX_FFT.Dialogs
             {
                 Demod.AudioLowPassWidthFract = 128;
                 Demod.AudioLowPass = new FIRFilter(FIRCoefficients.FIRLowPass_128_Low);
-                UpdateInformationInternal();                
+                UpdateInformationInternal(true);                
             }
         }
 
@@ -473,19 +531,21 @@ namespace RX_FFT.Dialogs
             {
                 Demod.AudioLowPassWidthFract = 256;
                 Demod.AudioLowPass = new FIRFilter(FIRCoefficients.FIRLowPass_256_Low);
-                UpdateInformationInternal();                
+                UpdateInformationInternal(true);                
             }
         }
 
         private void chkShowDemod_CheckedChanged(object sender, EventArgs e)
         {
             Demod.DisplayDemodulationSignal = chkShowDemod.Checked;
+            UpdateInformationInternal(true);
         }
 
         private void chkAmplify_CheckedChanged(object sender, EventArgs e)
         {
             Demod.AudioAmplificationEnabled = chkAmplify.Checked;
             txtAmplify.ReadOnly = !Demod.AudioAmplificationEnabled;
+            UpdateInformationInternal(true);
         }
 
         private void txtAmplify_TextChanged(object sender, EventArgs e)
@@ -496,7 +556,7 @@ namespace RX_FFT.Dialogs
                 return;
 
             Demod.AudioAmplification = ampl / 100;
-            UpdateInformationInternal();
+            UpdateInformationInternal(true);
         }
 
         private void txtDecim_TextChanged(object sender, EventArgs e)
@@ -508,7 +568,7 @@ namespace RX_FFT.Dialogs
 
             Demod.AudioDecimation = decim;
             Demod.ReinitSound = true;
-            UpdateInformationInternal();
+            UpdateInformationInternal(true);
         }
 
         private void chkNative_CheckedChanged(object sender, EventArgs e)
@@ -518,7 +578,7 @@ namespace RX_FFT.Dialogs
             Demodulator.UseNative = chkNative.Checked;
             Downmixer.UseNative = chkNative.Checked;
             ByteUtil.UseNative = chkNative.Checked;
-
+            UpdateInformationInternal(true);
             //FFTTransformer.UseFFTW = !chkNative.Checked;
         }
 
@@ -533,6 +593,7 @@ namespace RX_FFT.Dialogs
             }
 
             barSquelchPower.Invalidate();
+            UpdateInformationInternal(true);
         }
 
         private void txtSquelchLimit_TextChanged(object sender, EventArgs e)
@@ -543,7 +604,7 @@ namespace RX_FFT.Dialogs
                 return;
 
             Demod.SquelchLowerLimit = level;
-            UpdatePowerBarInternal();
+            UpdateInformationInternal(true);
         }
     }
 }

@@ -56,6 +56,7 @@ namespace RX_Oscilloscope.Components
             UpdateScale();
         }
 
+
         public double SamplingRate
         {
             get

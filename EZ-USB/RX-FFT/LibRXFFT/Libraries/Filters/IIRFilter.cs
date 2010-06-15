@@ -31,7 +31,13 @@ namespace LibRXFFT.Libraries.Filters
             Section = coeffs.Section;
             Num = coeffs.Num;
             Den = coeffs.Den;
-            NativeContext = IIRInit(Gain, Section, Num, Den);
+            try
+            {
+                NativeContext = IIRInit(Gain, Section, Num, Den);
+            }
+            catch (Exception e)
+            {
+            }
 
             m1 = new double[Section];
             m2 = new double[Section];

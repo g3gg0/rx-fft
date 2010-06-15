@@ -147,7 +147,7 @@ namespace LibRXFFT.Components.DirectX.Drawables
             }
         }
 
-        protected bool PositionUpdated = false;
+        public bool PositionUpdated = false;
         public DirectXPlot MainPlot;
 
         public DirectXDrawable(DirectXPlot mainPlot)

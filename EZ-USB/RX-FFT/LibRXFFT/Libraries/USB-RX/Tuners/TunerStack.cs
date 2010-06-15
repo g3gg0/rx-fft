@@ -248,12 +248,12 @@ namespace LibRXFFT.Libraries.USB_RX.Tuners
             {
                 ArrayList lines = new ArrayList();
 
-                lines.Add("Master:");
+                lines.Add("Master: " + (MasterTuner.InvertedSpectrum ? "(inverted)" : "(non inverted)"));
                 foreach (string line in MasterTuner.Description)
                 {
                     lines.Add("    " + line);
                 }
-                lines.Add("Slave:");
+                lines.Add("Slave:" + (SlaveTuner.InvertedSpectrum ? "(inverted)" : "(non inverted)"));
                 foreach (string line in SlaveTuner.Description)
                 {
                     lines.Add("    " + line);

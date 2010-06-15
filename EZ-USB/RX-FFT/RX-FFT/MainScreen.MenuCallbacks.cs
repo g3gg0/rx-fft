@@ -496,7 +496,7 @@ namespace RX_FFT
                 }
                 msg += Environment.NewLine;
 
-                msg += "    Description:" + Environment.NewLine;
+                msg += "    Description:  " + (Device.InvertedSpectrum ? "(inverted)" : "(non inverted)") + Environment.NewLine;
                 foreach (string line in Device.Description)
                 {
                     msg += "        " + line + Environment.NewLine;

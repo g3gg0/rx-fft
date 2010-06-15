@@ -396,13 +396,14 @@ namespace LibRXFFT.Libraries
         
         public static void SamplesToBinary(byte[] dataBuffer, double[] samplesI, double[] samplesQ, eSampleFormat dataFormat, bool InvertedSpectrum)
         {
-            SamplesToBinary(dataBuffer, dataBuffer.Length, samplesI, samplesQ, dataFormat, InvertedSpectrum);
+            SamplesToBinary(dataBuffer, samplesI.Length, samplesI, samplesQ, dataFormat, InvertedSpectrum);
         }
 
         public static void SamplesToBinary(byte[] dataBuffer, int samplePairs, double[] samplesI, double[] samplesQ, eSampleFormat dataFormat, bool invertedSpectrum)
         {
-            if (UseNative)
+            if (false && UseNative)
             {
+                /* causes crash! */
                 SamplesToBinaryNative(dataBuffer, samplePairs, samplesI, samplesQ, (int)dataFormat, invertedSpectrum);
             }
             else

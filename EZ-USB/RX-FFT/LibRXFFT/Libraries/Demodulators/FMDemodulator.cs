@@ -20,7 +20,14 @@ namespace LibRXFFT.Libraries.Demodulators
 
         public FMDemodulator()
         {
-            NativeContext = FMDemodInit();
+            try
+            {
+                NativeContext = FMDemodInit();
+            }
+            catch (Exception e)
+            {
+                UseNative = false;
+            }
         }
 
         public override void Dispose()

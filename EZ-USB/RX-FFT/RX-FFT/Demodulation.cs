@@ -2,10 +2,10 @@ using System.Threading;
 using LibRXFFT.Libraries.Demodulators;
 using LibRXFFT.Libraries.Filters;
 using LibRXFFT.Libraries.SignalProcessing;
+using System;
 
 namespace RX_FFT
 {
-
     public class Demodulation
     {
         public enum eSquelchState
@@ -13,9 +13,16 @@ namespace RX_FFT
             Open,
             Closed
         }
+        public event EventHandler DataUpdated;
         public bool ReinitSound = false;
         public double InputRate = 0;
-        public double AudioRate = 0;
+        public double AudioRate
+        {
+            get
+            {
+                return InputRate / AudioDecimation / InputSignalDecimation;
+            }
+        }
 
         public bool AudioAmplificationEnabled = false;
         public double AudioAmplification = 1.0f;
@@ -73,6 +80,7 @@ namespace RX_FFT
         protected Filter _CursorWindowFilterI;
         protected Filter _CursorWindowFilterQ;
         public ManualResetEvent[] CursorWindowFilterEvents = new ManualResetEvent[2];
+        public event EventHandler CursorWindowFilterChanged;
         public FilterThread CursorWindowFilterThreadI;
         public FilterThread CursorWindowFilterThreadQ;
 
@@ -81,33 +89,45 @@ namespace RX_FFT
             get { return _CursorWindowFilterI; }
             set
             {
-                if (_CursorWindowFilterI != null)
+                lock (this)
                 {
-                    _CursorWindowFilterI.Dispose();
-                }
+                    if (_CursorWindowFilterI != null)
+                    {
+                        _CursorWindowFilterI.Dispose();
+                    }
 
-                _CursorWindowFilterI = value;
-                if (CursorWindowFilterThreadI != null)
-                    CursorWindowFilterThreadI.Stop();
-                CursorWindowFilterThreadI = new FilterThread(value);
-                CursorWindowFilterEvents[0] = CursorWindowFilterThreadI.DataProcessed;
+                    _CursorWindowFilterI = value;
+                    if (CursorWindowFilterThreadI != null)
+                        CursorWindowFilterThreadI.Stop();
+                    CursorWindowFilterThreadI = new FilterThread(value);
+                    CursorWindowFilterEvents[0] = CursorWindowFilterThreadI.DataProcessed;
+
+                    if (CursorWindowFilterChanged != null)
+                    {
+                        CursorWindowFilterChanged(this, null);
+                    }
+                }
             }
         }
+
         public Filter CursorWindowFilterQ
         {
             get { return _CursorWindowFilterQ; }
             set
             {
-                if (_CursorWindowFilterI != null)
+                lock (this)
                 {
-                    _CursorWindowFilterI.Dispose();
-                }
+                    if (_CursorWindowFilterI != null)
+                    {
+                        _CursorWindowFilterI.Dispose();
+                    }
 
-                _CursorWindowFilterQ = value;
-                if (CursorWindowFilterThreadQ != null)
-                    CursorWindowFilterThreadQ.Stop();
-                CursorWindowFilterThreadQ = new FilterThread(value);
-                CursorWindowFilterEvents[1] = CursorWindowFilterThreadQ.DataProcessed;
+                    _CursorWindowFilterQ = value;
+                    if (CursorWindowFilterThreadQ != null)
+                        CursorWindowFilterThreadQ.Stop();
+                    CursorWindowFilterThreadQ = new FilterThread(value);
+                    CursorWindowFilterEvents[1] = CursorWindowFilterThreadQ.DataProcessed;
+                }
             }
         }
 
@@ -129,5 +149,12 @@ namespace RX_FFT
                 CursorWindowFilterI.Dispose();
         }
 
+        internal void UpdateListeners()
+        {
+            if (DataUpdated != null)
+            {
+                DataUpdated(this, null);
+            }
+        }
     }
 }

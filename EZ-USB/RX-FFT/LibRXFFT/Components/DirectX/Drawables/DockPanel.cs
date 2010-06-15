@@ -146,6 +146,13 @@ namespace LibRXFFT.Components.DirectX.Drawables
             }
         }
 
+
+        public void HideDock(Dock dock)
+        {
+            CollapseDock(dock);
+            dock.WantedState = eDockState.Hidden;
+        }
+
         public void CollapseDock(Dock dock)
         {
             /* check if there are docks to expand */
@@ -160,8 +167,11 @@ namespace LibRXFFT.Components.DirectX.Drawables
 
             dock.State = eDockState.Collapsing;
             dock.WantedState = eDockState.Collapsed;
+
+            dock.StateChanged();
             DocksChanged = true;
         }
+
 
         public void ExpandDock(Dock dock)
         {
@@ -192,6 +202,8 @@ namespace LibRXFFT.Components.DirectX.Drawables
 
             dock.State = eDockState.Expanding;
             dock.WantedState = eDockState.Expanded;
+
+            dock.StateChanged();
             DocksChanged = true;
         }
 
@@ -309,13 +321,25 @@ namespace LibRXFFT.Components.DirectX.Drawables
                 {
                     foreach (Dock dock in Docks)
                     {
-                        if (dock.State == eDockState.Expanded)
+                        switch (dock.State)
                         {
-                            if (mousePos.X > dock.XPosition && mousePos.X < (dock.XPosition + dock.Width)
-                                && mousePos.Y > dock.YPosition && mousePos.Y < (dock.YPosition + dock.Height))
-                            {
-                                handled = dock.ProcessUserEvent(evt);
-                            }
+                            case eDockState.Expanded:
+                                {
+                                    if (mousePos.X > dock.XPosition && mousePos.X < (dock.XPosition + dock.Width)
+                                        && mousePos.Y > dock.YPosition && mousePos.Y < (dock.YPosition + dock.Height))
+                                    {
+                                        handled = dock.ProcessUserEvent(evt);
+
+                                        /* dock handled the event, also rerender now */
+                                        docksChanged |= handled;
+                                    }
+                                }
+                                break;
+
+                            case eDockState.Expanding:
+                            case eDockState.Collapsing:
+                                docksChanged = true;
+                                break;
                         }
                     }
                 }
@@ -465,7 +489,7 @@ namespace LibRXFFT.Components.DirectX.Drawables
 
                                 if (dock.Private.VisiblePart > 0.99f)
                                 {
-                                    dock.State = eDockState.Expanded;
+                                    dock.State = dock.WantedState;
                                     dock.Private.VisiblePart = 1;
                                 }
                                 else
@@ -482,7 +506,7 @@ namespace LibRXFFT.Components.DirectX.Drawables
 
                                 if (dock.Private.VisiblePart < 0.01f)
                                 {
-                                    dock.State = eDockState.Collapsed;
+                                    dock.State = dock.WantedState;
                                     dock.Private.VisiblePart = 0;
                                 }
                                 else

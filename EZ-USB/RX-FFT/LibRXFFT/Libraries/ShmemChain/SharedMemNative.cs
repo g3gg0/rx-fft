@@ -12,6 +12,7 @@ namespace LibRXFFT.Libraries.ShmemChain
         public const int MODE_FLUSH = 3;			// flush buffers and return (no read made)
         public const int MODE_GET_AVAIL = 4;			// just get how much is available 
         public const int MODE_BLOCKING_TIME = 0x40000000;	// read n bytes (wait up to x*100ms until read completely)
+        public const int MODE_BLOCKING_TIME_NOPARTIAL = 0x20000000;	// read n bytes (wait up to x*100ms or read completely)
         public const int MODE_BLOCKING_DYNAMIC = 0x10000000;	// used with MODE_BLOCKING_TIME (wait up to x*100ms in case of no data)
 
         public const int MODE_CRITICAL = 0x20000000;	// less sleep delay (obsolete!)

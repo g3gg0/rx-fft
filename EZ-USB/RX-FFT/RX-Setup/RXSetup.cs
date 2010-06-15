@@ -1113,11 +1113,11 @@ namespace RX_Setup
                 Log.AddMessage("AtmelDelay", "");
                 Log.AddMessage("AtmelDelay", "Test results:");
                 Log.AddMessage("AtmelDelay", "---------------------------------");
-                Log.AddMessage("AtmelDelay", "  Minimum SetFilterDelay: " + Device.Atmel.SetFilterDelay + " ms");
+                Log.AddMessage("AtmelDelay", "  Minimum SetFilterDelay:  " + Device.Atmel.SetFilterDelay + " ms");
                 Log.AddMessage("AtmelDelay", "  Minimum ReadFilterDelay: " + Device.Atmel.ReadFilterDelay + " ms");
-                Log.AddMessage("AtmelDelay", "  Minimum SetAgcDelay: " + Device.Atmel.SetAgcDelay + " ms");
-                Log.AddMessage("AtmelDelay", "  Minimum SetAttDelay: " + Device.Atmel.SetAttDelay + " ms");
-                Log.AddMessage("AtmelDelay", "  Minimum reset delay: " + Device.AtmelProgrammer.RecoveryTime + " ms");
+                Log.AddMessage("AtmelDelay", "  Minimum SetAgcDelay:     " + Device.Atmel.SetAgcDelay + " ms");
+                Log.AddMessage("AtmelDelay", "  Minimum SetAttDelay:     " + Device.Atmel.SetAttDelay + " ms");
+                Log.AddMessage("AtmelDelay", "  Minimum reset delay:     " + Device.AtmelProgrammer.RecoveryTime + " ms");
                 Log.AddMessage("AtmelDelay", "---------------------------------");
 
                 WorkerThread = null;

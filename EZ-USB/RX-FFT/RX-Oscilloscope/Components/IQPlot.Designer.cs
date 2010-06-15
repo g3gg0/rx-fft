@@ -215,7 +215,7 @@
 
         #endregion
 
-        private LibRXFFT.Components.DirectX.DirectX2DPlot waveForm;
+        internal LibRXFFT.Components.DirectX.DirectX2DPlot waveForm;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.TabControl tabControl;
         private System.Windows.Forms.TabPage tabPage1;

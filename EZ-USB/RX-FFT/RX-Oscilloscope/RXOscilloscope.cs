@@ -7,6 +7,7 @@ using LibRXFFT.Libraries;
 using LibRXFFT.Libraries.SampleSources;
 using LibRXFFT.Libraries.ShmemChain;
 using RX_Oscilloscope.Components;
+using LibRXFFT.Components.DirectX;
 
 namespace RX_Oscilloscope
 {
@@ -16,11 +17,24 @@ namespace RX_Oscilloscope
         private Thread ProcessThread;
         private bool Processing;
         public int SharedMemoryChannel = 0;
+        private bool WindowActivated = false;
 
 
         public RXOscilloscope()
         {
             InitializeComponent();
+
+            iqPlot.waveForm.UserEventCallback = UserEventCallbackFunc;
+            scope.waveForm.UserEventCallback = UserEventCallbackFunc;
+
+            AddUserEventCallback(eUserEvent.MouseEnter);
+            AddUserEventCallback(eUserEvent.MouseClickRight);
+        }
+
+        public void AddUserEventCallback(eUserEvent evt)
+        {
+            iqPlot.waveForm.EventActions[evt] = eUserAction.UserCallback;
+            scope.waveForm.EventActions[evt] = eUserAction.UserCallback;
         }
 
         protected override void OnClosing(CancelEventArgs e)
@@ -31,12 +45,55 @@ namespace RX_Oscilloscope
             base.OnClosing(e);
         }
 
+        protected override void OnActivated(EventArgs e)
+        {
+            base.OnActivated(e);
+            WindowActivated = true;
+            FocusHovered();
+        }
+
+        protected override void OnDeactivate(EventArgs e)
+        {
+            base.OnDeactivate(e);
+            WindowActivated = false;
+        }
+
+        public void FocusHovered()
+        {
+            if (iqPlot.waveForm.MouseHovering)
+            {
+                iqPlot.Focus();
+            }
+            if (scope.waveForm.MouseHovering)
+            {
+                scope.Focus();
+            }
+        }
+
+        public void UserEventCallbackFunc(eUserEvent evt, double param)
+        {
+            switch (evt)
+            {
+                /* when mouse is moved into a plot and we are in foreground, update focus to hovered plot */
+                case eUserEvent.MouseEnter:
+                    if (WindowActivated)
+                    {
+                        FocusHovered();
+                    }
+                    break;
+
+                /* bring up popup menu. has to be improved */
+                case eUserEvent.MouseClickRight:
+                    break;
+            }
+        }
+
         public void CloseSource()
         {
             if (ProcessThread != null)
             {
                 Processing = false;
-                ProcessThread.Join(500);
+                ProcessThread.Join(1000);
                 ProcessThread = null;
             }
             if (SampleSource != null)
@@ -60,15 +117,18 @@ namespace RX_Oscilloscope
             {
                 if (SampleSource.Read())
                 {
-                    lock (SampleSource.SampleBufferLock)
+                    if (SampleSource.SamplesRead > 0)
                     {
-                        for (int pos = 0; pos < SampleSource.SamplesRead; pos++)
+                        lock (SampleSource.SampleBufferLock)
                         {
-                            double I = SampleSource.SourceSamplesI[pos];
-                            double Q = SampleSource.SourceSamplesQ[pos];
+                            for (int pos = 0; pos < SampleSource.SamplesRead; pos++)
+                            {
+                                double I = SampleSource.SourceSamplesI[pos];
+                                double Q = SampleSource.SourceSamplesQ[pos];
 
-                            iqPlot.Process(I, Q);
-                            scope.Process(I, Q);
+                                iqPlot.Process(I, Q);
+                                scope.Process(I, Q);
+                            }
                         }
                     }
                 }
@@ -88,7 +148,7 @@ namespace RX_Oscilloscope
 
                 menu.MenuItems.Add(new MenuItem("Shared Memory", new EventHandler(btnOpen_SharedMemory)));
                 btnOpen.ContextMenu = menu;
-                btnOpen.ContextMenu.Show(btnOpen, new Point(10, 10));
+                btnOpen.ContextMenu.Show(btnOpen, new System.Drawing.Point(10, 10));
             }
         }
 
@@ -146,7 +206,7 @@ namespace RX_Oscilloscope
             }
 
             btnOpen.ContextMenu = menu;
-            btnOpen.ContextMenu.Show(btnOpen, new Point(10, 10));
+            btnOpen.ContextMenu.Show(btnOpen, new System.Drawing.Point(10, 10));
         }
     }
 }

@@ -8,6 +8,7 @@ using System.Windows.Forms;
 using RX_FFT.Components.GDI;
 using System.Reflection;
 using System.Collections;
+using LibRXFFT.Libraries;
 
 namespace DemodulatorCollection.BitClockSinks
 {
@@ -21,6 +22,10 @@ namespace DemodulatorCollection.BitClockSinks
         public ScriptableSink()
         {
             LuaVm = new Lua();
+
+            LuaHelpers.RegisterNamespace("DemodulatorCollection.Demodulators");
+            LuaHelpers.RegisterNamespace("DemodulatorCollection.BitClockSinks");
+
             LuaHelpers.RegisterLuaFunctions(LuaVm, new LuaHelpers());
             LuaHelpers.RegisterLuaFunctions(LuaVm, this);
 

@@ -8,6 +8,10 @@ namespace LibRXFFT.Components.DirectX
         public string Label;
         public uint Color;
 
+        public LabelledLine()
+        {
+        }
+
         public LabelledLine(string label, double position, Color color)
         {
             this.Position = position;

@@ -36,6 +36,7 @@ namespace RX_FFT.Components.GDI
                     }
                     txtLog.Text += LogText;
                     txtLog.SelectionStart = txtLog.Text.Length;
+                    txtLog.ScrollToCaret();
                     LogText = "";
                 }
             }

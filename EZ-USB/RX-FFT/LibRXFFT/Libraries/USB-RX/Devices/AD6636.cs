@@ -13,6 +13,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         private long _FilterWidth = 0;
         private long CurrentFrequency;
         private int CurrentChannel = 0;
+        public bool AgcState = false;
 
         private AD6636Interface Device;
         private double NCOMul;
@@ -106,6 +107,8 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             NCOFreq = ncoFreq;
 
             InitRegisters();
+
+            Device.Register(this);
         }
 
         public void ReInit()
@@ -179,6 +182,8 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                     success &= this.Device.AD6636WriteReg(AD6636_REG_AGCCR, AD6636_REG_AGCCR_L, 0x040D);
                 }
 
+                AgcState = false;
+
                 _Amplification = value;
                 success &= SoftSync();
             }
@@ -200,6 +205,8 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                 success &= this.Device.AD6636WriteReg(AD6636_REG_AGCLG + 0, AD6636_REG_AGCLG_L, 16);
                 success &= this.Device.AD6636WriteReg(AD6636_REG_AGCLG + 1, AD6636_REG_AGCLG_L, 8);
                 success &= this.Device.AD6636WriteReg(AD6636_REG_AGCLG + 2, AD6636_REG_AGCLG_L, 6);
+                
+                AgcState = true;
 
                 success &= SoftSync();
                 _Amplification = 0;
@@ -394,16 +401,62 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
         public bool SoftSync()
         {
+            return SoftSync(0x0F);
+        }
+
+        public bool SoftSync(int channelMask)
+        {
             bool success = true;
 
             lock (this)
             {
                 success &= this.Device.AD6636WriteReg(AD6636_REG_SOFTSYNC, AD6636_REG_SOFTSYNC_L, 0x00);
-                success &= this.Device.AD6636WriteReg(AD6636_REG_SOFTSYNC, AD6636_REG_SOFTSYNC_L, 0xCF);
-                success &= this.Device.AD6636WriteReg(AD6636_REG_SOFTSYNC, AD6636_REG_SOFTSYNC_L, 0xCF);
+                success &= this.Device.AD6636WriteReg(AD6636_REG_SOFTSYNC, AD6636_REG_SOFTSYNC_L, 0xC0 | channelMask);
+                success &= this.Device.AD6636WriteReg(AD6636_REG_SOFTSYNC, AD6636_REG_SOFTSYNC_L, 0xC0 | channelMask);
             }
 
             return success;
+        }
+
+        public long Offset
+        {
+            set
+            {
+                bool success = true;
+                long val = Math.Min(255, Math.Max(0, value));
+
+                lock (this)
+                {
+                    success &= this.Device.AD6636WriteReg(AD6636_REG_IOAC, AD6636_REG_IOAC_L, 0x0F);
+
+                    success &= this.Device.AD6636WriteReg(0x1C, 2, val);
+                    success &= this.Device.AD6636WriteReg(0x1E, 2, val);
+
+                    success &= SoftSync(0x0F);
+                }
+
+                return;
+            }
+        }
+
+        public long Gain
+        {
+            set
+            {
+                bool success = true;
+                long val = Math.Min(32768, Math.Max(0, value));
+
+                lock (this)
+                {
+                    success &= this.Device.AD6636WriteReg(AD6636_REG_IOAC, AD6636_REG_IOAC_L, 0x04);
+
+                    success &= this.Device.AD6636WriteReg(0xA4, 2, val);
+
+                    success &= SoftSync(0x04);
+                }
+
+                return;
+            }
         }
 
         public void StopTransfer()

@@ -70,6 +70,14 @@
     <WarningLevel>1</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="lua51, Version=0.0.0.0, Culture=neutral, PublicKeyToken=1e1fb15b02227b8a, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>.\lua51.dll</HintPath>
+    </Reference>
+    <Reference Include="LuaInterface, Version=2.0.0.16708, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>.\LuaInterface.dll</HintPath>
+    </Reference>
     <Reference Include="SlimDX, Version=2.0.9.42, Culture=neutral, PublicKeyToken=b1b0c32fd1ffe4f9, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\Program Files (x86)\SlimDX SDK (February 2010)\Bin\x86\SlimDX.dll</HintPath>
@@ -121,6 +129,7 @@
     <Compile Include="Components\DirectX\Drawables\Docks\Dock.cs" />
     <Compile Include="Components\DirectX\Drawables\DockPanel.cs" />
     <Compile Include="Components\DirectX\Drawables\Docks\FFTAreaSelectionDetails.cs" />
+    <Compile Include="Components\DirectX\Drawables\Docks\StaticTextDock.cs" />
     <Compile Include="Components\DirectX\Drawables\Docks\WaveformAreaSelectionDetails.cs" />
     <Compile Include="Components\DirectX\Drawables\Docks\TestDock.cs" />
     <Compile Include="Components\DirectX\Drawables\Docks\PowerBarDock.cs" />
@@ -136,6 +145,12 @@
     </Compile>
     <Compile Include="Components\GDI\FileFormatDialog.Designer.cs">
       <DependentUpon>FileFormatDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Components\GDI\FilterDetailDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Components\GDI\FilterDetailDialog.Designer.cs">
+      <DependentUpon>FilterDetailDialog.cs</DependentUpon>
     </Compile>
     <Compile Include="Components\GDI\FilterList.cs">
       <SubType>UserControl</SubType>
@@ -233,13 +248,17 @@
     </Compile>
     <Compile Include="Components\Generic\HeatColors.cs" />
     <Compile Include="Components\Generic\ColorLookupTable.cs" />
+    <Compile Include="Components\Generic\MultiColorMap.cs" />
     <Compile Include="Libraries\ByteUtil.cs" />
     <Compile Include="Libraries\Demodulators\AMDemodulator.cs" />
     <Compile Include="Libraries\Demodulators\Demodulator.cs" />
+    <Compile Include="Libraries\Demodulators\SSBDemodulator.cs" />
+    <Compile Include="Libraries\FFTW\InterleavedFFTTransformer.cs" />
     <Compile Include="Libraries\Filters\Filter.cs" />
     <Compile Include="Libraries\Filters\FilterThread.cs" />
     <Compile Include="Libraries\Filters\IIRCoefficients.cs" />
     <Compile Include="Libraries\Filters\IIRFilter.cs" />
+    <Compile Include="Libraries\LuaHelpers.cs" />
     <Compile Include="Libraries\Misc\TraceMutex.cs" />
     <Compile Include="Libraries\RemoteControl.cs" />
     <Compile Include="Libraries\SampleSources\RandomSampleSource.cs" />
@@ -306,6 +325,7 @@
     <Compile Include="Libraries\USB-RX\Devices\Atmel.cs" />
     <Compile Include="Libraries\USB-RX\Devices\AtmelProgrammer.cs" />
     <Compile Include="Libraries\USB-RX\Devices\BO35.cs" />
+    <Compile Include="Libraries\USB-RX\Devices\BO35Interface.cs" />
     <Compile Include="Libraries\USB-RX\Devices\VUHF_RX.cs" />
     <Compile Include="Libraries\USB-RX\Devices\SerialPortTuner.cs" />
     <Compile Include="Libraries\USB-RX\Interfaces\AD6636Interface.cs" />
@@ -337,6 +357,10 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Components\GDI\FileFormatDialog.resx">
       <DependentUpon>FileFormatDialog.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Components\GDI\FilterDetailDialog.resx">
+      <DependentUpon>FilterDetailDialog.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Components\GDI\FilterList.resx">

@@ -33,7 +33,7 @@ namespace LibRXFFT.Components.DirectX
         //protected Texture SaveImageThreadContext;
         protected Color ColorFaderBG = Color.Orange;
 
-        public ColorLookupTable ColorTable = new HeatColors(8192);
+        public ColorLookupTable ColorTable = new MultiColorMap(8192, Color.Black, Color.FromArgb(0, 0, 128), Color.FromArgb(192, 0, 255), Color.White);
 
         protected double DisplayXOffsetPrev = 0;
         protected Object DisplayXOffsetLock = new Object();
@@ -67,12 +67,23 @@ namespace LibRXFFT.Components.DirectX
             get { return _SavingEnabled; }
             set
             {
-                _SavingEnabled = value;
-
-                /* notify that its disabled */
-                if (!SavingEnabled)
+                if (value)
                 {
-                    SaveBufferTrigger.Release(1);
+                    /* reset parameters */
+                    SaveImageLines = 0;
+                    SaveImageAvailable = false;
+                    _SavingEnabled = true;
+                }
+                else
+                {
+                    _SavingEnabled = false;
+                    SaveImageAvailable = true;
+                }
+
+                /* notify thread */
+                lock (SaveBufferTrigger)
+                {
+                    Monitor.Pulse(SaveBufferTrigger);
                 }
             }
         }
@@ -80,6 +91,7 @@ namespace LibRXFFT.Components.DirectX
         public bool LevelBarActive = false;
 
         protected bool SaveImageAvailable;
+        protected int SaveImageLines = 0;
         protected Mutex SaveImageLock = new Mutex();
         protected Semaphore SaveBufferTrigger = new Semaphore(0, 1);
         protected PresentParameters SaveParameters;
@@ -144,86 +156,108 @@ namespace LibRXFFT.Components.DirectX
             {
                 while (SaveThreadRunning)
                 {
-                    /* wait until we should do something */
-                    SaveBufferTrigger.WaitOne();
-
-                    /* clear old file when got disabled */
-                    if (!SavingEnabled)
+                    lock (SaveBufferTrigger)
                     {
-                        if (SavedImage != null)
-                            SavedImage.Dispose();
-                        SavedImage = null;
-                    }
+                        /* wait until we should do something */
+                        Monitor.Wait(SaveBufferTrigger, 250);
 
-                    /* if there is a new texture to save */
-                    if (SaveImageAvailable)
-                    {
-                        SaveImageAvailable = false;
-
-                        try
+                        /* if there is a new texture to save */
+                        if (SaveImageAvailable)
                         {
-                            /* build an image from the texture */
-                            //SaveImageLock.WaitOne();
-                            DataStream saveImageStream = Texture.ToStream(/*SaveImageThreadContext*/SaveImageDisplayContext, ImageFileFormat.Png);
-                            Image curImage = Image.FromStream(saveImageStream);
-                            //SaveImageLock.ReleaseMutex();
+                            SaveImageAvailable = false;
 
-
-                            /* and create a new image with the new size */
-                            Image newImage;
-                            if (SavedImage != null && SavedImage.Width == curImage.Width)
-                                newImage = new Bitmap(curImage.Width, SavedImage.Height + curImage.Height / 2);
-                            else
-                                newImage = new Bitmap(curImage.Width, curImage.Height / 2);
-
-                            /* draw last image and the current texture into the new image */
-                            Graphics g = Graphics.FromImage(newImage);
-                            g.DrawImage(curImage, 0, -(curImage.Height / 2));
-                            if (SavedImage != null)
-                                g.DrawImage(SavedImage, 0, curImage.Height / 2);
-
-                            /* and save it to disk */
                             try
                             {
-                                newImage.Save(SavingNameExtended, ImageFormat.Png);
+                                /* build an image from the texture */
+                                DataStream saveImageStream = Texture.ToStream(SaveImageDisplayContext, ImageFileFormat.Png);
+                                Image curImage = Image.FromStream(saveImageStream);
+
+                                /* and create a new image with the new size */
+                                Image newImage;
+                                if (SavedImage != null && SavedImage.Width == curImage.Width)
+                                {
+                                    newImage = new Bitmap(curImage.Width, SavedImage.Height + SaveImageLines);
+                                }
+                                else
+                                {
+                                    newImage = new Bitmap(curImage.Width, SaveImageLines);
+                                }
+
+                                /* draw last image and the current texture into the new image */
+                                Graphics g = Graphics.FromImage(newImage);
+
+                                /* but skip the first few lines to make sure timestamp gets drawn */
+                                int offset = -(FixedFontHeight + 1);
+
+                                /* dont skip when saving got disabled and this is our last run */
+                                if (!SavingEnabled)
+                                {
+                                    offset = 0;
+                                }
+                                offset = 0;
+
+
+                                g.DrawImage(curImage, 0, 0 + offset);
+                                if (SavedImage != null)
+                                {
+                                    g.DrawImage(SavedImage, 0, SaveImageLines + offset);
+                                }
+
+                                /* no more lines to save in current buffer */
+                                SaveImageLines = 0;
+
+                                /* save it to disk */
+                                try
+                                {
+                                    newImage.Save(SavingNameExtended, ImageFormat.Png);
+                                }
+                                catch (Exception e)
+                                {
+                                }
+
+                                /* dispose old image */
+                                if (SavedImage != null)
+                                    SavedImage.Dispose();
+
+                                /* and keep for the next time */
+                                SavedImage = newImage;
                             }
                             catch (Exception e)
                             {
-                            }
+                                /* clear current image and save to a new file
+                                 * TODO: correct filename ;)
+                                 */
+                                SavingNamePostfix++;
+                                string savingName = "";
 
-                            /* dispose old image */
-                            if (SavedImage != null)
-                                SavedImage.Dispose();
-
-                            /* and keep for the next time */
-                            SavedImage = newImage;
-                        }
-                        catch (Exception e)
-                        {
-                            /* clear current image and save to a new file
-                             * TODO: correct filename ;)
-                             */
-                            SavingNamePostfix++;
-                            string savingName = "";
-
-                            string[] parts = _SavingName.Split('.');
-                            if (parts.Length > 1)
-                            {
-                                for (int part = 0; part < parts.Length - 1; part++)
+                                string[] parts = _SavingName.Split('.');
+                                if (parts.Length > 1)
                                 {
-                                    savingName += parts[part] + ".";
+                                    for (int part = 0; part < parts.Length - 1; part++)
+                                    {
+                                        savingName += parts[part] + ".";
+                                    }
+                                    savingName += "_" + SavingNamePostfix + "." + parts[parts.Length - 1];
                                 }
-                                savingName += "_" + SavingNamePostfix + "." + parts[parts.Length - 1];
-                            }
-                            else
-                            {
-                                savingName = _SavingName + "_" + SavingNamePostfix;
-                            }
+                                else
+                                {
+                                    savingName = _SavingName + "_" + SavingNamePostfix;
+                                }
 
-                            SavingNameExtended = savingName;
+                                SavingNameExtended = savingName;
 
-                            if (SavedImage != null)
-                                SavedImage.Dispose();
+                                if (SavedImage != null)
+                                {
+                                    SavedImage.Dispose();
+                                    SavedImage = null;
+                                }
+                            }
+                        }
+
+                        /* clear old file when got disabled */
+                        if (!SavingEnabled && SaveImageLines == 0 && SaveWaterfallLinesRendered == 0 && SavedImage != null)
+                        {
+                            SavedImage.Dispose();
                             SavedImage = null;
                         }
                     }
@@ -263,6 +297,7 @@ namespace LibRXFFT.Components.DirectX
 
                 /* draw vertical cursor line */
                 float stubLength = (float)DirectXHeight / 10.0f;
+                float horLineHeight = (float)DirectXHeight / 10.0f;
                 float xPos = (float)LastMousePos.X;
                 float yPos = (float)LastMousePos.Y;
 
@@ -270,17 +305,6 @@ namespace LibRXFFT.Components.DirectX
                 CursorVertexesVert[1].PositionRhw.X = xPos;
                 CursorVertexesVert[2].PositionRhw.X = xPos;
                 CursorVertexesVert[3].PositionRhw.X = xPos;
-
-                /* horizontal line */
-                CursorVertexesHor[0].PositionRhw.X = xPos - 30;
-                CursorVertexesHor[0].PositionRhw.Y = yPos;
-
-                CursorVertexesHor[1].PositionRhw.X = xPos;
-                CursorVertexesHor[1].PositionRhw.Y = yPos;
-
-                CursorVertexesHor[2].PositionRhw.X = xPos + 30;
-                CursorVertexesHor[2].PositionRhw.Y = yPos;
-
 
                 /* recalc lines (this is needed just once btw.) */
                 CursorVertexesVert[0].PositionRhw.Y = 0;
@@ -303,17 +327,102 @@ namespace LibRXFFT.Components.DirectX
                 CursorVertexesVert[3].PositionRhw.W = 1;
                 CursorVertexesVert[3].Color = colorCursor & 0x00FFFFFF;
 
-                CursorVertexesHor[0].PositionRhw.Z = 0.5f;
-                CursorVertexesHor[0].PositionRhw.W = 1;
-                CursorVertexesHor[0].Color = colorCursor & 0x00FFFFFF;
+                if (HorLineFixed)
+                {
+                    float absoluteWidthPerSide = (float)(XPosFromFrequency(CenterFrequency + HorLineWidth / 2) - XPosFromFrequency(CenterFrequency - HorLineWidth / 2)) / 2;
 
-                CursorVertexesHor[1].PositionRhw.Z = 0.5f;
-                CursorVertexesHor[1].PositionRhw.W = 1;
-                CursorVertexesHor[1].Color = colorCursor;
+                    /* horizontal line */
+                    CursorVertexesHor[0].PositionRhw.X = xPos - absoluteWidthPerSide;
+                    CursorVertexesHor[0].PositionRhw.Y = yPos;
+                    CursorVertexesHor[0].PositionRhw.Z = 0.5f;
+                    CursorVertexesHor[0].PositionRhw.W = 1;
+                    CursorVertexesHor[0].Color = colorCursor;
 
-                CursorVertexesHor[2].PositionRhw.Z = 0.5f;
-                CursorVertexesHor[2].PositionRhw.W = 1;
-                CursorVertexesHor[2].Color = colorCursor & 0x00FFFFFF;
+                    CursorVertexesHor[1].PositionRhw.X = xPos;
+                    CursorVertexesHor[1].PositionRhw.Y = yPos;
+                    CursorVertexesHor[1].PositionRhw.Z = 0.5f;
+                    CursorVertexesHor[1].PositionRhw.W = 1;
+                    CursorVertexesHor[1].Color = colorCursor;
+
+                    CursorVertexesHor[2].PositionRhw.X = xPos + absoluteWidthPerSide;
+                    CursorVertexesHor[2].PositionRhw.Y = yPos;
+                    CursorVertexesHor[2].PositionRhw.Z = 0.5f;
+                    CursorVertexesHor[2].PositionRhw.W = 1;
+                    CursorVertexesHor[2].Color = colorCursor;
+
+                    /* 1 */
+                    CursorVertexesHorSide[0].PositionRhw.X = xPos - absoluteWidthPerSide;
+                    CursorVertexesHorSide[0].PositionRhw.Y = yPos - horLineHeight;
+                    CursorVertexesHorSide[0].PositionRhw.Z = 0.5f;
+                    CursorVertexesHorSide[0].PositionRhw.W = 1;
+                    CursorVertexesHorSide[0].Color = colorCursor & 0x00FFFFFF;
+
+                    CursorVertexesHorSide[1].PositionRhw.X = xPos - absoluteWidthPerSide;
+                    CursorVertexesHorSide[1].PositionRhw.Y = yPos;
+                    CursorVertexesHorSide[1].PositionRhw.Z = 0.5f;
+                    CursorVertexesHorSide[1].PositionRhw.W = 1;
+                    CursorVertexesHorSide[1].Color = colorCursor;
+
+                    /* 2 */
+                    CursorVertexesHorSide[2].PositionRhw.X = xPos - absoluteWidthPerSide;
+                    CursorVertexesHorSide[2].PositionRhw.Y = yPos;
+                    CursorVertexesHorSide[2].PositionRhw.Z = 0.5f;
+                    CursorVertexesHorSide[2].PositionRhw.W = 1;
+                    CursorVertexesHorSide[2].Color = colorCursor;
+
+                    CursorVertexesHorSide[3].PositionRhw.X = xPos - absoluteWidthPerSide;
+                    CursorVertexesHorSide[3].PositionRhw.Y = yPos + horLineHeight;
+                    CursorVertexesHorSide[3].PositionRhw.Z = 0.5f;
+                    CursorVertexesHorSide[3].PositionRhw.W = 1;
+                    CursorVertexesHorSide[3].Color = colorCursor & 0x00FFFFFF;
+
+                    /* 3 */
+                    CursorVertexesHorSide[4].PositionRhw.X = xPos + absoluteWidthPerSide;
+                    CursorVertexesHorSide[4].PositionRhw.Y = yPos - horLineHeight;
+                    CursorVertexesHorSide[4].PositionRhw.Z = 0.5f;
+                    CursorVertexesHorSide[4].PositionRhw.W = 1;
+                    CursorVertexesHorSide[4].Color = colorCursor & 0x00FFFFFF;
+
+                    CursorVertexesHorSide[5].PositionRhw.X = xPos + absoluteWidthPerSide;
+                    CursorVertexesHorSide[5].PositionRhw.Y = yPos;
+                    CursorVertexesHorSide[5].PositionRhw.Z = 0.5f;
+                    CursorVertexesHorSide[5].PositionRhw.W = 1;
+                    CursorVertexesHorSide[5].Color = colorCursor;
+
+                    /* 4 */
+                    CursorVertexesHorSide[6].PositionRhw.X = xPos + absoluteWidthPerSide;
+                    CursorVertexesHorSide[6].PositionRhw.Y = yPos;
+                    CursorVertexesHorSide[6].PositionRhw.Z = 0.5f;
+                    CursorVertexesHorSide[6].PositionRhw.W = 1;
+                    CursorVertexesHorSide[6].Color = colorCursor;
+
+                    CursorVertexesHorSide[7].PositionRhw.X = xPos + absoluteWidthPerSide;
+                    CursorVertexesHorSide[7].PositionRhw.Y = yPos + horLineHeight;
+                    CursorVertexesHorSide[7].PositionRhw.Z = 0.5f;
+                    CursorVertexesHorSide[7].PositionRhw.W = 1;
+                    CursorVertexesHorSide[7].Color = colorCursor & 0x00FFFFFF;
+                }
+                else
+                {
+                    /* horizontal line */
+                    CursorVertexesHor[0].PositionRhw.X = xPos - DirectXWidth / 20;
+                    CursorVertexesHor[0].PositionRhw.Y = yPos;
+                    CursorVertexesHor[0].PositionRhw.Z = 0.5f;
+                    CursorVertexesHor[0].PositionRhw.W = 1;
+
+                    CursorVertexesHor[0].Color = colorCursor & 0x00FFFFFF;
+                    CursorVertexesHor[1].PositionRhw.X = xPos;
+                    CursorVertexesHor[1].PositionRhw.Y = yPos;
+                    CursorVertexesHor[1].PositionRhw.Z = 0.5f;
+                    CursorVertexesHor[1].PositionRhw.W = 1;
+                    CursorVertexesHor[1].Color = colorCursor;
+
+                    CursorVertexesHor[2].PositionRhw.X = xPos + DirectXWidth / 20;
+                    CursorVertexesHor[2].PositionRhw.Y = yPos;
+                    CursorVertexesHor[2].PositionRhw.Z = 0.5f;
+                    CursorVertexesHor[2].PositionRhw.W = 1;
+                    CursorVertexesHor[2].Color = colorCursor & 0x00FFFFFF;
+                }
             }
 
             if (MouseHovering || ShowVerticalCursor)
@@ -511,7 +620,10 @@ namespace LibRXFFT.Components.DirectX
                     lock (LinePointsLock)
                     {
                         if (LinePoints == null || LinePoints.Length < samples)
-                            LinePoints = new Point[samples];
+                        {
+                            Array.Resize(ref LinePoints, samples);
+                            //LinePoints = new Point[samples];
+                        }
 
                         for (int pos = 0; pos < samples; pos++)
                         {
@@ -625,8 +737,9 @@ namespace LibRXFFT.Components.DirectX
         {
             base.ResetDevices();
 
-            SaveParameters.BackBufferHeight = SaveImageBlockSize;
-            SaveParameters.BackBufferWidth = Math.Min(FFTSize, 8192);
+            SaveParameters.BackBufferHeight = Math.Min(SaveImageBlockSize, DeviceCaps.MaxTextureHeight);
+            SaveParameters.BackBufferWidth = Math.Min(FFTSize, DeviceCaps.MaxTextureWidth);
+
             SaveDeviceThreadContext.Reset(SaveParameters);
             SaveDeviceThreadContext.Clear(ClearFlags.Target | ClearFlags.ZBuffer, ColorBG, 1.0f, 0);
             SaveDeviceDisplayContext.Reset(SaveParameters);
@@ -663,7 +776,7 @@ namespace LibRXFFT.Components.DirectX
             AddAllocatedResource(Sprite);
 
             /* save file every screen roll-over */
-            SaveWaterfallLinesToRender = SaveParameters.BackBufferHeight;
+            SaveWaterfallLinesToRender = SaveParameters.BackBufferHeight / 2;
             SaveWaterfallLinesRendered = 0;
 
             //SaveImageThreadContext = new Texture(SaveDeviceThreadContext, SaveParameters.BackBufferWidth, SaveParameters.BackBufferHeight, 1, Usage.RenderTarget, Format.A8R8G8B8, Pool.Default);
@@ -846,6 +959,8 @@ namespace LibRXFFT.Components.DirectX
                     }
                     break;
             }
+
+            NeedsRender = true;
         }
 
 
@@ -859,7 +974,10 @@ namespace LibRXFFT.Components.DirectX
                 if (numPoints > 0)
                 {
                     if (numPoints != PlotVertsOverview.Length)
-                        PlotVertsOverview = new Vertex[numPoints];
+                    {
+                        Array.Resize(ref PlotVertsOverview, numPoints);
+                        //PlotVertsOverview = new Vertex[numPoints];
+                    }
 
                     if (SavingEnabled)
                     {
@@ -872,7 +990,7 @@ namespace LibRXFFT.Components.DirectX
                             ampl = Math.Max(0, ampl);
                             ampl = Math.Min(1, ampl);
 
-                            PlotVertsOverview[pos].PositionRhw.X = (float)Math.Min(DirectXWidth, Math.Max(0, (((float)pos / (float)numPoints) * SaveParameters.BackBufferWidth)));
+                            PlotVertsOverview[pos].PositionRhw.X = (float)Math.Min(SaveParameters.BackBufferWidth, Math.Max(0, (((float)pos / (float)numPoints) * SaveParameters.BackBufferWidth)));
                             PlotVertsOverview[pos].PositionRhw.Y = 0;
                             PlotVertsOverview[pos].PositionRhw.Z = 0.5f;
                             PlotVertsOverview[pos].PositionRhw.W = 1;
@@ -898,7 +1016,10 @@ namespace LibRXFFT.Components.DirectX
                             startPos++;
 
                         if (newNumPoints != PlotVerts.Length)
-                            PlotVerts = new Vertex[newNumPoints];
+                        {
+                            Array.Resize(ref PlotVerts, newNumPoints);
+                            //PlotVerts = new Vertex[newNumPoints];
+                        }
 
                         PlotVertsEntries = newNumPoints - 1;
 
@@ -929,7 +1050,10 @@ namespace LibRXFFT.Components.DirectX
                     else
                     {
                         if (numPoints != PlotVerts.Length)
-                            PlotVerts = new Vertex[numPoints];
+                        {
+                            Array.Resize(ref PlotVerts, numPoints);
+                            //PlotVerts = new Vertex[numPoints];
+                        }
 
                         PlotVertsEntries = numPoints - 1;
 
@@ -994,7 +1118,6 @@ namespace LibRXFFT.Components.DirectX
                     DisplayXOffsetPrev = DisplayXOffset;
                 }
 
-
                 /* draw the old waterfall image */
                 Sprite.Begin(SpriteFlags.None);
                 if (delta == 0)
@@ -1046,57 +1169,60 @@ namespace LibRXFFT.Components.DirectX
                 Sprite.End();
 
 
-                //Device.EndScene();
-
                 /* save the view into a file */
-                if (SavingEnabled)
+                if (SavingEnabled || SaveWaterfallLinesRendered > 0)
                 {
                     SaveDeviceDisplayContext.BeginScene();
 
-                    /* render into temporary buffer */
-                    SaveDeviceDisplayContext.SetRenderTarget(0, SaveTempWaterfallTexture.GetSurfaceLevel(0));
-
-                    /* clear temp buffer */
-                    SaveDeviceDisplayContext.Clear(ClearFlags.Target | ClearFlags.ZBuffer, ColorBG, 1.0f, 0);
-                    SaveDeviceDisplayContext.VertexFormat = VertexFormat.PositionRhw | VertexFormat.Diffuse;
-
-                    /* draw the old waterfall image */
-                    SaveSprite.Begin(SpriteFlags.None);
-                    SaveSprite.Draw(SaveWaterfallTexture, Vector3.Zero, new Vector3(0, 1, 0), new Color4(Color.White));
-                    SaveSprite.End();
-
-                    /* paint first line */
-                    if (PlotVertsOverview.Length - 1 > 0)
-                        SaveDeviceDisplayContext.DrawUserPrimitives(PrimitiveType.LineStrip, PlotVertsOverview.Length - 1, PlotVertsOverview);
-
-                    if (drawTimeStamp)
+                    if (SavingEnabled)
                     {
-                        Vertex[] lineVertexes = new Vertex[2];
-                        lineVertexes[0].PositionRhw.X = 0;
-                        lineVertexes[0].PositionRhw.Y = 0;
-                        lineVertexes[0].PositionRhw.Z = 0.5f;
-                        lineVertexes[0].PositionRhw.W = 1;
-                        lineVertexes[0].Color = (uint)ColorCursor.ToArgb();
-                        lineVertexes[1].PositionRhw.X = 20;
-                        lineVertexes[1].PositionRhw.Y = 0;
-                        lineVertexes[1].PositionRhw.Z = 0.5f;
-                        lineVertexes[1].PositionRhw.W = 1;
-                        lineVertexes[1].Color = (uint)ColorCursor.ToArgb();
+                        /* render into temporary buffer */
+                        SaveDeviceDisplayContext.SetRenderTarget(0, SaveTempWaterfallTexture.GetSurfaceLevel(0));
 
-                        SaveDeviceDisplayContext.DrawUserPrimitives(PrimitiveType.LineList, 1, lineVertexes);
+                        /* clear temp buffer first */
+                        SaveDeviceDisplayContext.Clear(ClearFlags.Target | ClearFlags.ZBuffer, ColorBG, 1.0f, 0);
+                        SaveDeviceDisplayContext.VertexFormat = VertexFormat.PositionRhw | VertexFormat.Diffuse;
 
-                        SaveFixedFont.DrawString(null, TimeStamp.ToString(), 5, 1, (int)(ColorCursor.ToArgb()));
+                        /* draw the old waterfall image */
+                        SaveSprite.Begin(SpriteFlags.None);
+                        SaveSprite.Draw(SaveWaterfallTexture, Vector3.Zero, new Vector3(0, 1, 0), new Color4(Color.White));
+                        SaveSprite.End();
+
+                        /* finally paint first line */
+                        if (PlotVertsOverview.Length - 1 > 0)
+                            SaveDeviceDisplayContext.DrawUserPrimitives(PrimitiveType.LineStrip, PlotVertsOverview.Length - 1, PlotVertsOverview);
+
+                        /* here also draw timestamps */
+                        if (drawTimeStamp)
+                        {
+                            Vertex[] lineVertexes = new Vertex[2];
+                            lineVertexes[0].PositionRhw.X = 0;
+                            lineVertexes[0].PositionRhw.Y = 0;
+                            lineVertexes[0].PositionRhw.Z = 0.5f;
+                            lineVertexes[0].PositionRhw.W = 1;
+                            lineVertexes[0].Color = (uint)ColorCursor.ToArgb();
+                            lineVertexes[1].PositionRhw.X = 20;
+                            lineVertexes[1].PositionRhw.Y = 0;
+                            lineVertexes[1].PositionRhw.Z = 0.5f;
+                            lineVertexes[1].PositionRhw.W = 1;
+                            lineVertexes[1].Color = (uint)ColorCursor.ToArgb();
+
+                            SaveDeviceDisplayContext.DrawUserPrimitives(PrimitiveType.LineList, 1, lineVertexes);
+
+                            SaveFixedFont.DrawString(null, TimeStamp.ToString(), 5, 1, (int)(ColorCursor.ToArgb()));
+                        }
+
+                        /* now write the temp buffer into the real image buffer */
+                        SaveDeviceDisplayContext.SetRenderTarget(0, SaveWaterfallTexture.GetSurfaceLevel(0));
+
+                        SaveSprite.Begin(SpriteFlags.None);
+                        SaveSprite.Draw(SaveTempWaterfallTexture, new Color4(Color.White));
+                        SaveSprite.End();
+
+                        SaveWaterfallLinesRendered++;
                     }
 
-                    /* now write the temp buffer into the real image buffer */
-                    SaveDeviceDisplayContext.SetRenderTarget(0, SaveWaterfallTexture.GetSurfaceLevel(0));
-
-                    SaveSprite.Begin(SpriteFlags.None);
-                    SaveSprite.Draw(SaveTempWaterfallTexture, new Color4(Color.White));
-                    SaveSprite.End();
-
-
-                    if (++SaveWaterfallLinesRendered >= SaveWaterfallLinesToRender)
+                    if (!SavingEnabled || (SaveWaterfallLinesRendered >= (SaveWaterfallLinesToRender - (SaveWaterfallLinesToRender / 2 + 1))))
                     {
                         /* backup the current image */
                         SaveDeviceDisplayContext.SetRenderTarget(0, SaveImageDisplayContext.GetSurfaceLevel(0));
@@ -1105,23 +1231,14 @@ namespace LibRXFFT.Components.DirectX
                         SaveSprite.Draw(SaveWaterfallTexture, new Color4(Color.White));
                         SaveSprite.End();
 
-                        /* get image into save thread device context */
-                        //SaveImageLock.WaitOne();
-                        //Surface.FromSurface(SaveImageThreadContext.GetSurfaceLevel(0), SaveImageDisplayContext.GetSurfaceLevel(0), Filter.None, 0);
-                        //SaveImageLock.ReleaseMutex();
-
-                        SaveWaterfallLinesRendered = SaveWaterfallLinesToRender / 2 + 1;
-
-                        try
+                        lock (SaveBufferTrigger)
                         {
+                            SaveImageLines = SaveWaterfallLinesRendered;
                             SaveImageAvailable = true;
-                            SaveBufferTrigger.Release(1);
+                            Monitor.Pulse(SaveBufferTrigger);
                         }
-                        catch (SemaphoreFullException e)
-                        {
-                        }
+                        SaveWaterfallLinesRendered = 0;
                     }
-
                     SaveDeviceDisplayContext.EndScene();
                 }
             }

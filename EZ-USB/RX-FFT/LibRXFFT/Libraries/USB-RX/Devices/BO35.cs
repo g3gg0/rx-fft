@@ -42,14 +42,20 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             }
             catch (ArgumentException e)
             {
-                Log.AddMessage("No BO-35 on port " + Port.PortName + ". Reason: Could not read power state. '" + e + "'");
+                if (!AutoDetectRunning)
+                {
+                    Log.AddMessage("No BO-35 on port " + Port.PortName + ". Reason: Could not read power state. '" + e + "'");
+                }
                 return false;
             }
 
             string ver = SystemVersion;
             if (ver.Substring(0, 2) != "VR")
             {
-                Log.AddMessage("No BO-35 on port " + Port.PortName + ". Reason: Invalid System Version '" + ver + "'");
+                if (!AutoDetectRunning)
+                {
+                    Log.AddMessage("No BO-35 on port " + Port.PortName + ". Reason: Invalid System Version '" + ver + "'");
+                }
                 return false;
             }
 
@@ -252,7 +258,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                 return "BO-35 " + FrequencyFormatter.FreqToString(FilterWidth) + " hard limit";
             }
         }
-        public override bool InvertedSpectrum { get { return GetFrequency() > 3000000000; } }
+        public override bool InvertedSpectrum { get { return GetFrequency() < 3000000000; } }
 
         public override string[] Name
         {

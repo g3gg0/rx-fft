@@ -29,7 +29,7 @@ namespace LibRXFFT.Components.DirectX
 
         public DirectXPlot SlavePlot = null;
 
-        protected bool NeedsRender = true;
+        internal bool NeedsRender = true;
         public int NeedsRenderClients = 0;
         public bool KeepText = false;
         public string MainText = "";
@@ -58,6 +58,7 @@ namespace LibRXFFT.Components.DirectX
         protected Font DisplayFont;
         protected Font SmallFont;
         protected Font FixedFont;
+        protected int FixedFontHeight;
         protected System.Windows.Forms.Timer ResizeTimer = new System.Windows.Forms.Timer();
 
 
@@ -83,7 +84,7 @@ namespace LibRXFFT.Components.DirectX
         public LinkedList<StringLabel> OverlayTextLabels = new LinkedList<StringLabel>();
 
 
-        protected Point[] LinePoints;
+        public Point[] LinePoints;
         protected Object LinePointsLock = new Object();
         protected bool LinePointsUpdated = true;
 
@@ -175,6 +176,21 @@ namespace LibRXFFT.Components.DirectX
             EmptyCursor = CreateEmptyCursor();
 
             RenderSleepDelay = 1000 / DefaultRefreshRate;
+
+            /* set up the window resize timer */
+            ResizeTimer.Interval = 50;
+            ResizeTimer.Tick += (object sender, EventArgs ev) =>
+            {
+                try
+                {
+                    ResizeTimer.Stop();
+                    InitializeDirectX();
+                }
+                catch (Direct3D9Exception ex)
+                {
+                }
+                OnSizeChanged(null);
+            };
 
             try
             {
@@ -381,21 +397,6 @@ namespace LibRXFFT.Components.DirectX
 
                     /* ressource allocations */
                     AllocateResources();
-
-                    /* set up the window resize timer */
-                    ResizeTimer.Interval = 50;
-                    ResizeTimer.Tick += (object sender, EventArgs ev) =>
-                    {
-                        try
-                        {
-                            ResizeTimer.Stop();
-                            InitializeDirectX();
-                        }
-                        catch (Direct3D9Exception ex)
-                        {
-                        }
-                        OnSizeChanged(null);
-                    };
                 }
                 else
                 {
@@ -506,6 +507,8 @@ namespace LibRXFFT.Components.DirectX
             SmallFont = new Font(Device, SmallFontSource);
             FixedFont = new Font(Device, FixedFontSource);
 
+            FixedFontHeight = FixedFont.MeasureString(null, "X", DrawTextFormat.Center).Height;
+
             AddAllocatedResource(DisplayFont);
             AddAllocatedResource(SmallFont);
             AddAllocatedResource(FixedFont);
@@ -558,13 +561,13 @@ namespace LibRXFFT.Components.DirectX
             }
         }
 
-        protected virtual string XLabelFromCursorPos(double xPos)
+        public virtual string XLabelFromCursorPos(double xPos)
         {
             double offset = ((DisplayXOffset + xPos) / (XZoomFactor)) - XAxisSampleOffset;
             return "Sample " + offset.ToString();
         }
 
-        protected virtual string XLabelFromSampleNum(double num)
+        public virtual string XLabelFromSampleNum(double num)
         {
             return "Sample " + num.ToString();
         }
@@ -1294,10 +1297,7 @@ namespace LibRXFFT.Components.DirectX
         {
             /* check if drawable wants to handle input event */
             DrawableInputEvent.Type = eInputEventType.MouseEnter;
-            if (HandleDrawableInput(DrawableInputEvent))
-            {
-                return;
-            }
+            HandleDrawableInput(DrawableInputEvent);
 
             //Focus();
             ProcessUserEvent(eUserEvent.StatusUpdated, 0);
@@ -1309,19 +1309,17 @@ namespace LibRXFFT.Components.DirectX
             NeedsRender = true;
         }
 
+
         protected override void OnMouseLeave(EventArgs e)
         {
             /* check if drawable wants to handle input event */
             DrawableInputEvent.Type = eInputEventType.MouseLeave;
-            if (HandleDrawableInput(DrawableInputEvent))
-            {
-                return;
-            }
+            HandleDrawableInput(DrawableInputEvent);
 
             ResetModifiers(true, true);
             UpdateCursor = true;
             ProcessUserEvent(eUserEvent.MouseLeave, 0);
-
+            MouseHovering = false;
             NeedsRender = true;
         }
 
@@ -1330,6 +1328,9 @@ namespace LibRXFFT.Components.DirectX
             /* check if drawable wants to handle input event */
             DrawableInputEvent.Type = eInputEventType.MouseDoubleClick;
             DrawableInputEvent.MouseButtons = e.Button;
+            DrawableInputEvent.MousePosition.X = e.X;
+            DrawableInputEvent.MousePosition.Y = e.Y;
+
             if (HandleDrawableInput(DrawableInputEvent))
             {
                 return;
@@ -1379,6 +1380,9 @@ namespace LibRXFFT.Components.DirectX
             /* check if drawable wants to handle input event */
             DrawableInputEvent.Type = eInputEventType.MouseClick;
             DrawableInputEvent.MouseButtons = e.Button;
+            DrawableInputEvent.MousePosition.X = e.X;
+            DrawableInputEvent.MousePosition.Y = e.Y;
+
             if (HandleDrawableInput(DrawableInputEvent))
             {
                 return;
@@ -1428,6 +1432,9 @@ namespace LibRXFFT.Components.DirectX
             /* check if drawable wants to handle input event */
             DrawableInputEvent.Type = eInputEventType.MouseButtonDown;
             DrawableInputEvent.MouseButtons = e.Button;
+            DrawableInputEvent.MousePosition.X = e.X;
+            DrawableInputEvent.MousePosition.Y = e.Y;
+
             if (HandleDrawableInput(DrawableInputEvent))
             {
                 return;
@@ -1482,6 +1489,9 @@ namespace LibRXFFT.Components.DirectX
             /* check if drawable wants to handle input event */
             DrawableInputEvent.Type = eInputEventType.MouseButtonUp;
             DrawableInputEvent.MouseButtons = e.Button;
+            DrawableInputEvent.MousePosition.X = e.X;
+            DrawableInputEvent.MousePosition.Y = e.Y;
+
             if (HandleDrawableInput(DrawableInputEvent))
             {
                 return;
@@ -1538,6 +1548,7 @@ namespace LibRXFFT.Components.DirectX
             DrawableInputEvent.MouseButtons = e.Button;
             DrawableInputEvent.MousePosition.X = e.X;
             DrawableInputEvent.MousePosition.Y = e.Y;
+
             if (HandleDrawableInput(DrawableInputEvent))
             {
                 return;
@@ -1581,6 +1592,10 @@ namespace LibRXFFT.Components.DirectX
             /* check if drawable wants to handle input event */
             DrawableInputEvent.Type = eInputEventType.MouseWheel;
             DrawableInputEvent.MouseWheelDelta = e.Delta;
+            DrawableInputEvent.MouseButtons = e.Button;
+            DrawableInputEvent.MousePosition.X = e.X;
+            DrawableInputEvent.MousePosition.Y = e.Y;
+
             if (HandleDrawableInput(DrawableInputEvent))
             {
                 return;

@@ -90,36 +90,43 @@ namespace GSM_Analyzer
         public GSMAnalyzer()
         {
             InitializeComponent();
-            Parameters = new GSMParameters();
-            Demodulator = new GMSKDemodulator();
 
-            Log.Init();
-            ChannelHandler = new RadioChannelHandler(Device);
-            ChannelHandler.FrequencyOffset = 0;
+            try
+            {
+                Parameters = new GSMParameters();
+                Demodulator = new GMSKDemodulator();
 
-            /* from: http://de.wikipedia.org/wiki/ARFCN */
-            ChannelHandler.AddBand(new FrequencyBand("E-GSM a", 935000000, 200000, 0, 124));
-            ChannelHandler.AddBand(new FrequencyBand("E-GSM b", 925200000, 200000, 975, 1023));
-            ChannelHandler.AddBand(new FrequencyBand("T-GSM 900", 915600000, 200000, 1024, 1052));
-            ChannelHandler.AddBand(new FrequencyBand("DCS 1800", 1805200000, 200000, 512, 885));
+                Log.Init();
+                ChannelHandler = new RadioChannelHandler(Device);
+                ChannelHandler.FrequencyOffset = 0;
 
-            txtArfcn.Value = ChannelHandler.LowestChannel;
+                /* from: http://de.wikipedia.org/wiki/ARFCN */
+                ChannelHandler.AddBand(new FrequencyBand("E-GSM a", 935000000, 200000, 0, 124));
+                ChannelHandler.AddBand(new FrequencyBand("E-GSM b", 925200000, 200000, 975, 1023));
+                ChannelHandler.AddBand(new FrequencyBand("T-GSM 900", 915600000, 200000, 1024, 1052));
+                ChannelHandler.AddBand(new FrequencyBand("DCS 1800", 1805200000, 200000, 512, 885));
+
+                txtArfcn.Value = ChannelHandler.LowestChannel;
 
 
-            /* already init here to load XML files */
-            InitTimeSlotHandler();
+                /* already init here to load XML files */
+                InitTimeSlotHandler();
 
-            TextBoxCommitTimer.Tick += new EventHandler(TextBoxCommitTimer_Tick);
-            TextBoxCommitTimer.Interval = 100;
+                TextBoxCommitTimer.Tick += new EventHandler(TextBoxCommitTimer_Tick);
+                TextBoxCommitTimer.Interval = 100;
 
-            /*
-            double lg;
-            double bg;
-            GaussKrueger.ConvertToLatLong(3634110, 5391840, out lg, out bg);
-            txtLog.Text += (" " + bg + ", " + lg + Environment.NewLine);
-            GaussKrueger.HelmertTransformation(lg, bg, out lg, out bg);
-            txtLog.Text += (" " + bg + ", " + lg + Environment.NewLine);
-            */
+                /*
+                double lg;
+                double bg;
+                GaussKrueger.ConvertToLatLong(3634110, 5391840, out lg, out bg);
+                txtLog.Text += (" " + bg + ", " + lg + Environment.NewLine);
+                GaussKrueger.HelmertTransformation(lg, bg, out lg, out bg);
+                txtLog.Text += (" " + bg + ", " + lg + Environment.NewLine);
+                */
+            }
+            catch (Exception e)
+            {
+            }
         }
 
         void TextBoxCommitTimer_Tick(object sender, EventArgs e)

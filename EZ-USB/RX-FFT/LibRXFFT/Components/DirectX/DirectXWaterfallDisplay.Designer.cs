@@ -1,4 +1,5 @@
-﻿namespace LibRXFFT.Components.DirectX
+﻿using System.Threading;
+namespace LibRXFFT.Components.DirectX
 {
     partial class DirectXWaterfallDisplay
     {
@@ -14,12 +15,21 @@
         protected override void Dispose(bool disposing)
         {
             SaveThreadRunning = false;
+            SavingEnabled = false;
+
             if (SaveThread != null)
             {
-                SaveBufferTrigger.Release(1);
-                if (!SaveThread.Join(250))
+                try
                 {
-                    SaveThread.Abort();
+                    Monitor.Pulse(SaveBufferTrigger); 
+                    //SaveBufferTrigger.Release(1);
+                    if (!SaveThread.Join(300))
+                    {
+                        SaveThread.Abort();
+                    }
+                }
+                catch (System.Exception e)
+                {
                 }
                 SaveThread = null;
             }

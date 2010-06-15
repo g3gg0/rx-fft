@@ -26,6 +26,7 @@ namespace RX_FFT.DeviceControls
         private double BoardAttenuation = 0;
         private double BoardAmplification = 0;
         private FilterInformation CurrentFilter;
+        protected int SamplesThisBlock = 0;
 
 
         public USBRXDevice.eCombinationType TunerCombination = USBRXDevice.eCombinationType.None;
@@ -68,7 +69,7 @@ namespace RX_FFT.DeviceControls
                 long width = USBRX.Atmel.GetFilterWidth();
                 long rate = USBRX.Atmel.GetFilterClock();
 
-                FilterList.AddFilter(new AtmelFilter(pos, width, rate));
+                FilterList.AddFilter(new AtmelFilter(USBRX.Atmel, pos, width, rate));
             }
         }
 
@@ -100,6 +101,9 @@ namespace RX_FFT.DeviceControls
 
             /* set sample source frequency */
             _SampleSource.ForceInputRate(SamplingRate);
+
+            /* update related parameters */
+            SamplesPerBlock = SamplesPerBlock;
 
             /* inform listeners */
             if (SamplingRateChanged != null)
@@ -135,6 +139,8 @@ namespace RX_FFT.DeviceControls
                     SharedMemNative.shmemchain_set_rate(ShmemNode, ((AtmelFilter)sender).Rate * 2);
                 }
             }
+
+            TransferMode = TransferMode;
         }
 
         protected override void OnClosing(CancelEventArgs e)
@@ -215,9 +221,11 @@ namespace RX_FFT.DeviceControls
         public virtual bool OpenTuner()
         {
             /* display the wait message */
+#if false
             WaitDialog waitDlg = new WaitDialog();
             waitDlg.Show();
             waitDlg.Refresh();
+#endif
             
             USBRX = new USBRXDevice();
             USBRX.ShowConsole(false);
@@ -228,7 +236,9 @@ namespace RX_FFT.DeviceControls
                 if (!USBRX.Init())
                 {
                     ErrorMessage = "There was no BO-35digi found on USB bus.";
+#if false
                     waitDlg.Close();
+#endif
                     Close();
                     return false;
                 }                
@@ -236,14 +246,18 @@ namespace RX_FFT.DeviceControls
             catch (BadImageFormatException e)
             {
                 ErrorMessage = "Unsupported architecture.";
-                waitDlg.Close();
+#if false
+                    waitDlg.Close();
+#endif
                 Close();
                 return false;
             }
             catch (Exception e)
             {
                 ErrorMessage = "Unhandled exception." + Environment.NewLine + e;
-                waitDlg.Close();
+#if false
+                    waitDlg.Close();
+#endif
                 Close();
                 return false;
             }
@@ -281,7 +295,9 @@ namespace RX_FFT.DeviceControls
             FilterList.FilterSelect(FilterList.FirstFilter);
 
             /* close wait dialog and show ours */
-            waitDlg.Close();
+#if false
+                    waitDlg.Close();
+#endif
 
             Show();
 
@@ -295,6 +311,8 @@ namespace RX_FFT.DeviceControls
             chkAtt_CheckedChanged(null, null);
             chkPreAmp_CheckedChanged(null, null);
             radioAgcOff_CheckedChanged(null, null);
+
+            radioAcqBlock.Checked = true;
 
             return true;
         }
@@ -516,6 +534,7 @@ namespace RX_FFT.DeviceControls
             }
             set
             {
+                SamplesThisBlock = 0;
                 USBRX.CurrentMode = value;
                 if (TransferModeChanged != null)
                 {
@@ -530,15 +549,28 @@ namespace RX_FFT.DeviceControls
             {
                 if (!Connected)
                     return;
+
+                int fragmentSamples = value;
+
+                /* read data from shmen in smaller fragments */
+                if (SamplingRate <= 48000)
+                {
+                    /* transfer in 512 byte blocks */
+                    fragmentSamples = 512 / BytesPerSamplePair;
+                }
+
                 USBRX.SamplesPerBlock = (uint)value;
                 USBRX.ReadBlockSize = (uint)(value * BytesPerSamplePair);
-                SampleSource.SamplesPerBlock = value;
+                USBRX.ReadFragmentSize = (uint)(fragmentSamples * BytesPerSamplePair);
+                SampleSource.SamplesPerBlock = fragmentSamples;
+
+                TransferMode = TransferMode;
             }
             get
             {
                 if (!Connected)
                     return 0;
-                return (int)(USBRX.ReadBlockSize / BytesPerSamplePair);
+                return (int)USBRX.SamplesPerBlock;
             }
         }
 
@@ -621,23 +653,39 @@ namespace RX_FFT.DeviceControls
         {
             bool success;
 
-            success = SampleSource.Read();
+            do
+            {
+                success = SampleSource.Read();
+            } while (success && SampleSource.SamplesRead == 0);
 
-            /* transfer done, if needed start next one */
+            /* collect as many samples as the current read block size has */
             if (success)
             {
-                if (TransferMode == eTransferMode.Block)
-                {
-                    USBRX.ReadBlockReceived();
-                }
+                SamplesThisBlock += SampleSource.SamplesPerBlock;
             }
-            else
+
+            if (SamplesThisBlock >= SamplesPerBlock)
             {
-                if (USBRX.DeviceLost)
+                //RX_FFT.Components.GDI.Log.AddMessage("ShmemSampleSource", "Full block");
+                SamplesThisBlock = 0;
+                SampleSource.Flush();
+
+                /* transfer done, if needed start next one */
+                if (success)
                 {
-                    if (DeviceDisappeared != null)
+                    if (TransferMode == eTransferMode.Block)
                     {
-                        DeviceDisappeared(this, null);
+                        USBRX.ReadBlockReceived();
+                    }
+                }
+                else
+                {
+                    if (USBRX.DeviceLost)
+                    {
+                        if (DeviceDisappeared != null)
+                        {
+                            DeviceDisappeared(this, null);
+                        }
                     }
                 }
             }

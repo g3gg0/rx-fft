@@ -58,5 +58,26 @@ namespace LibRXFFT.Components.DirectX.Drawables.Docks
                 return Panel.MainPlot;
             }
         }
+
+        public virtual void StateChanged()
+        {
+        }
+
+        public virtual void Collapse()
+        {
+            Panel.CollapseDock(this);
+        }
+
+        public virtual void Expand()
+        {
+            Panel.ExpandDock(this);
+        }
+
+        public virtual void Hide()
+        {
+            Panel.HideDock(this);
+        }
+
+
     }
 }

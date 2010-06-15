@@ -1,4 +1,5 @@
 ﻿using LibRXFFT.Libraries.ShmemChain;
+using RX_FFT.Components.GDI;
 
 namespace LibRXFFT.Libraries.SampleSources
 {
@@ -39,7 +40,7 @@ namespace LibRXFFT.Libraries.SampleSources
         {
             ShmemChannel = new SharedMem(srcChan, -1, name, bufferSize);
             ShmemChannel.ReadTimeout = 100;
-            ShmemChannel.ReadMode = eReadMode.TimeLimited;
+            ShmemChannel.ReadMode = eReadMode.TimeLimitedNoPartial;
 
             InvertedSpectrum = false;
             DataFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPoint;
@@ -87,8 +88,17 @@ namespace LibRXFFT.Libraries.SampleSources
 
             int read = ShmemChannel.Read(InBuffer, 0, InBuffer.Length);
 
+            //Log.AddMessage("ShmemSamplesource", "Read Block: " + read + "/" + InBuffer.Length);
+
             /* in case buffer size has changed meanwhile, return */
             if (NextInBufferAvailable)
+            {
+                SamplesRead = 0;
+                return true;
+            }
+
+            /* seems we have timed out */
+            if (read == 0)
             {
                 SamplesRead = 0;
                 return true;

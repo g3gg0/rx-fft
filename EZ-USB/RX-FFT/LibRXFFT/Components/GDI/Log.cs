@@ -4,7 +4,7 @@ namespace RX_FFT.Components.GDI
 {
     public class Log
     {
-        private static bool Enabled = true;
+        public static bool Enabled = true;
         private static LogWindow LogWindow = null;
 
         public static void Init()

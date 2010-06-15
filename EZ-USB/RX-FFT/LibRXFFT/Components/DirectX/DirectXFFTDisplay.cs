@@ -10,6 +10,7 @@ using SlimDX.Direct3D9;
 using Timer = LibRXFFT.Libraries.Timers.AccurateTimer;
 using LibRXFFT.Components.DirectX.Drawables;
 using RX_FFT.Components.GDI;
+using System.Collections;
 
 namespace LibRXFFT.Components.DirectX
 {
@@ -18,13 +19,25 @@ namespace LibRXFFT.Components.DirectX
         /* DirectX related graphic stuff */
         protected Vertex[] CursorVertexesVert = new Vertex[4];
         protected Vertex[] CursorVertexesHor = new Vertex[3];
-        protected Vertex[] ScaleVertexes = new Vertex[100];
+        protected Vertex[] CursorVertexesHorSide = new Vertex[8];
+
+        protected Vertex[] ScaleVertexes = new Vertex[512];
         protected Vertex[] OverlayVertexes = new Vertex[100];
+        protected ScaleLineInfo[] ScaleLineInfos = new ScaleLineInfo[1024];
+        protected int ScaleLineInfosUsed = 0;
+        protected struct ScaleLineInfo
+        {
+            public double Frequency;
+            public string Text;
+            public uint Color;
+        }
 
         /* the cursor rectangle that contains signal information */
         protected Vertex[] CursorRectVertexes = new Vertex[4];
         protected Vertex[] CursorRectBorderVertexes = new Vertex[4];
+
         public Color CursorBoxColor = Color.Blue;
+        public Color ColorGrid = Color.FromArgb(0x3F, Color.Gray);
 
         public string ScaleUnit = "dBm";
 
@@ -49,13 +62,17 @@ namespace LibRXFFT.Components.DirectX
         public bool EnoughData = false;
         public bool EnoughDataReset = false;
 
+        /* variable horizontal cursor width - unit is Hz */
+        public double HorLineWidth = 0.0f;
+        public bool HorLineFixed = false;
+
 
         /* channel displaying */
         public bool ChannelMode = false;
         public FrequencyBand ChannelBandDetails = null;
 
         /* sample value buffer */
-        protected double[] SampleValues = new double[0];
+        public double[] SampleValues = new double[0];
         protected long SampleValuesAveraged = 0;
         public long SamplesToAverage = 2;
 
@@ -126,7 +143,7 @@ namespace LibRXFFT.Components.DirectX
                 if (!double.IsNaN(RenderSleepDelay) && !double.IsInfinity(RenderSleepDelay) && LinePointUpdateTimer != null)
                 {
                     LinePointUpdateTimer.Interval = (uint)RenderSleepDelay;
-                    ScreenRefreshTimer.Interval = (uint)(1000/MinRefreshRate);// ((value < MinRefreshRate) ? (1000 / MinRefreshRate) : RenderSleepDelay);
+                    ScreenRefreshTimer.Interval = (uint)(1000 / MinRefreshRate);// ((value < MinRefreshRate) ? (1000 / MinRefreshRate) : RenderSleepDelay);
                 }
             }
         }
@@ -137,7 +154,8 @@ namespace LibRXFFT.Components.DirectX
         {
         }
 
-        public DirectXFFTDisplay(bool slaveMode) : base(slaveMode)
+        public DirectXFFTDisplay(bool slaveMode)
+            : base(slaveMode)
         {
             ColorFG = Color.Cyan;
             ColorBG = Color.Black;
@@ -156,17 +174,7 @@ namespace LibRXFFT.Components.DirectX
             EventActions[eUserEvent.MouseWheelDownShift] = eUserAction.XZoomOut;
 
             InitializeComponent();
-            /*
-            try
-            {
-                InitializeDirectX();
-            }
-            catch (Direct3D9Exception e)
-            {
-                MessageBox.Show("Failed initializing DirectX." + Environment.NewLine + e.ToString());
-            }
 
-            */
             if (!slaveMode)
             {
                 ScreenRefreshTimer = new Timer();
@@ -194,8 +202,10 @@ namespace LibRXFFT.Components.DirectX
                 {
                     if (numPoints > PlotVerts.Length)
                     {
-                        PlotVerts = new Vertex[numPoints];
-                        PlotVertsOverview = new Vertex[numPoints];
+                        Array.Resize(ref PlotVerts, numPoints);
+                        Array.Resize(ref PlotVertsOverview, numPoints);
+                        //PlotVerts = new Vertex[numPoints];
+                        //PlotVertsOverview = new Vertex[numPoints];
                     }
 
                     PlotVertsEntries = numPoints - 1;
@@ -282,7 +292,10 @@ namespace LibRXFFT.Components.DirectX
                 BaseAmplification = baseAmp;
 
                 if (SampleValues.Length != spectSize * spectParts)
-                    SampleValues = new double[spectSize * spectParts];
+                {
+                    Array.Resize(ref SampleValues, spectSize * spectParts);
+                    //SampleValues = new double[spectSize * spectParts];
+                }
 
                 if (SamplesToAverage == 0)
                 {
@@ -320,9 +333,7 @@ namespace LibRXFFT.Components.DirectX
                                 SampleValues[spectPart * spectSize + pos] += amplitudes[pos];
                         }
 
-
                         SampleValuesAveraged++;
-
                     }
 
                     /* to reduce CPU load */
@@ -458,6 +469,10 @@ namespace LibRXFFT.Components.DirectX
             uint colorCursorBox = (uint)CursorBoxColor.ToArgb();
 
             float stubLength = (float)DirectXHeight / 10.0f;
+            float stubWidth = (float)DirectXWidth / 30.0f;
+
+            float horLineHeight = (float)DirectXHeight / 10.0f;
+
             float xPos = (float)LastMousePos.X;
             float yPos = (float)LastMousePos.Y;
             float dB = (float)sampleFromDBScale(-yPos);
@@ -466,58 +481,133 @@ namespace LibRXFFT.Components.DirectX
             {
                 UpdateCursor = false;
 
+                float stubOffsetX = ((xPos / DirectXWidth) - 0.5f) * 2 * stubWidth;
+                float stubStart = Math.Min(yPos - stubLength, 20);
+
                 /* draw vertical cursor line */
-                if (xPos > DirectXWidth / 2)
-                    CursorVertexesVert[0].PositionRhw.X = xPos - 30;
-                else
-                    CursorVertexesVert[0].PositionRhw.X = xPos + 30;
+                CursorVertexesVert[0].PositionRhw.X = xPos - stubOffsetX;
+                CursorVertexesVert[0].PositionRhw.Y = stubStart;
                 CursorVertexesVert[1].PositionRhw.X = xPos;
+                CursorVertexesVert[1].PositionRhw.Y = stubStart + stubLength;
                 CursorVertexesVert[2].PositionRhw.X = xPos;
+                CursorVertexesVert[2].PositionRhw.Y = DirectXHeight - stubLength;
                 CursorVertexesVert[3].PositionRhw.X = xPos;
-
-                /* horizontal line */
-                CursorVertexesHor[0].PositionRhw.X = xPos - 30;
-                CursorVertexesHor[0].PositionRhw.Y = yPos;
-
-                CursorVertexesHor[1].PositionRhw.X = xPos;
-                CursorVertexesHor[1].PositionRhw.Y = yPos;
-
-                CursorVertexesHor[2].PositionRhw.X = xPos + 30;
-                CursorVertexesHor[2].PositionRhw.Y = yPos;
+                CursorVertexesVert[3].PositionRhw.Y = DirectXHeight;
 
 
                 /* recalc lines (this is needed just once btw.) */
-                CursorVertexesVert[0].PositionRhw.Y = 20;
                 CursorVertexesVert[0].PositionRhw.Z = 0.5f;
                 CursorVertexesVert[0].PositionRhw.W = 1;
                 CursorVertexesVert[0].Color = colorCursor & 0x00FFFFFF;
 
-                CursorVertexesVert[1].PositionRhw.Y = 20 + stubLength;
                 CursorVertexesVert[1].PositionRhw.Z = 0.5f;
                 CursorVertexesVert[1].PositionRhw.W = 1;
                 CursorVertexesVert[1].Color = colorCursor;
 
-                CursorVertexesVert[2].PositionRhw.Y = DirectXHeight - stubLength;
                 CursorVertexesVert[2].PositionRhw.Z = 0.5f;
                 CursorVertexesVert[2].PositionRhw.W = 1;
                 CursorVertexesVert[2].Color = colorCursor;
 
-                CursorVertexesVert[3].PositionRhw.Y = DirectXHeight;
                 CursorVertexesVert[3].PositionRhw.Z = 0.5f;
                 CursorVertexesVert[3].PositionRhw.W = 1;
                 CursorVertexesVert[3].Color = colorCursor;
 
-                CursorVertexesHor[0].PositionRhw.Z = 0.5f;
-                CursorVertexesHor[0].PositionRhw.W = 1;
-                CursorVertexesHor[0].Color = colorCursor & 0x00FFFFFF;
+                if (HorLineFixed)
+                {
+                    float absoluteWidthPerSide = (float)(XPosFromFrequency(CenterFrequency + HorLineWidth / 2) - XPosFromFrequency(CenterFrequency - HorLineWidth / 2)) / 2;
 
-                CursorVertexesHor[1].PositionRhw.Z = 0.5f;
-                CursorVertexesHor[1].PositionRhw.W = 1;
-                CursorVertexesHor[1].Color = colorCursor;
+                    /* horizontal line */
+                    CursorVertexesHor[0].PositionRhw.X = xPos - absoluteWidthPerSide;
+                    CursorVertexesHor[0].PositionRhw.Y = yPos;
+                    CursorVertexesHor[0].PositionRhw.Z = 0.5f;
+                    CursorVertexesHor[0].PositionRhw.W = 1;
+                    CursorVertexesHor[0].Color = colorCursor;
 
-                CursorVertexesHor[2].PositionRhw.Z = 0.5f;
-                CursorVertexesHor[2].PositionRhw.W = 1;
-                CursorVertexesHor[2].Color = colorCursor & 0x00FFFFFF;
+                    CursorVertexesHor[1].PositionRhw.X = xPos;
+                    CursorVertexesHor[1].PositionRhw.Y = yPos;
+                    CursorVertexesHor[1].PositionRhw.Z = 0.5f;
+                    CursorVertexesHor[1].PositionRhw.W = 1;
+                    CursorVertexesHor[1].Color = colorCursor;
+
+                    CursorVertexesHor[2].PositionRhw.X = xPos + absoluteWidthPerSide;
+                    CursorVertexesHor[2].PositionRhw.Y = yPos;
+                    CursorVertexesHor[2].PositionRhw.Z = 0.5f;
+                    CursorVertexesHor[2].PositionRhw.W = 1;
+                    CursorVertexesHor[2].Color = colorCursor;
+
+                    /* 1 */
+                    CursorVertexesHorSide[0].PositionRhw.X = xPos - absoluteWidthPerSide;
+                    CursorVertexesHorSide[0].PositionRhw.Y = yPos - horLineHeight;
+                    CursorVertexesHorSide[0].PositionRhw.Z = 0.5f;
+                    CursorVertexesHorSide[0].PositionRhw.W = 1;
+                    CursorVertexesHorSide[0].Color = colorCursor & 0x00FFFFFF;
+
+                    CursorVertexesHorSide[1].PositionRhw.X = xPos - absoluteWidthPerSide;
+                    CursorVertexesHorSide[1].PositionRhw.Y = yPos;
+                    CursorVertexesHorSide[1].PositionRhw.Z = 0.5f;
+                    CursorVertexesHorSide[1].PositionRhw.W = 1;
+                    CursorVertexesHorSide[1].Color = colorCursor;
+
+                    /* 2 */
+                    CursorVertexesHorSide[2].PositionRhw.X = xPos - absoluteWidthPerSide;
+                    CursorVertexesHorSide[2].PositionRhw.Y = yPos;
+                    CursorVertexesHorSide[2].PositionRhw.Z = 0.5f;
+                    CursorVertexesHorSide[2].PositionRhw.W = 1;
+                    CursorVertexesHorSide[2].Color = colorCursor;
+
+                    CursorVertexesHorSide[3].PositionRhw.X = xPos - absoluteWidthPerSide;
+                    CursorVertexesHorSide[3].PositionRhw.Y = yPos + horLineHeight;
+                    CursorVertexesHorSide[3].PositionRhw.Z = 0.5f;
+                    CursorVertexesHorSide[3].PositionRhw.W = 1;
+                    CursorVertexesHorSide[3].Color = colorCursor & 0x00FFFFFF;
+
+                    /* 3 */
+                    CursorVertexesHorSide[4].PositionRhw.X = xPos + absoluteWidthPerSide;
+                    CursorVertexesHorSide[4].PositionRhw.Y = yPos - horLineHeight;
+                    CursorVertexesHorSide[4].PositionRhw.Z = 0.5f;
+                    CursorVertexesHorSide[4].PositionRhw.W = 1;
+                    CursorVertexesHorSide[4].Color = colorCursor & 0x00FFFFFF;
+
+                    CursorVertexesHorSide[5].PositionRhw.X = xPos + absoluteWidthPerSide;
+                    CursorVertexesHorSide[5].PositionRhw.Y = yPos;
+                    CursorVertexesHorSide[5].PositionRhw.Z = 0.5f;
+                    CursorVertexesHorSide[5].PositionRhw.W = 1;
+                    CursorVertexesHorSide[5].Color = colorCursor;
+
+                    /* 4 */
+                    CursorVertexesHorSide[6].PositionRhw.X = xPos + absoluteWidthPerSide;
+                    CursorVertexesHorSide[6].PositionRhw.Y = yPos;
+                    CursorVertexesHorSide[6].PositionRhw.Z = 0.5f;
+                    CursorVertexesHorSide[6].PositionRhw.W = 1;
+                    CursorVertexesHorSide[6].Color = colorCursor;
+
+                    CursorVertexesHorSide[7].PositionRhw.X = xPos + absoluteWidthPerSide;
+                    CursorVertexesHorSide[7].PositionRhw.Y = yPos + horLineHeight;
+                    CursorVertexesHorSide[7].PositionRhw.Z = 0.5f;
+                    CursorVertexesHorSide[7].PositionRhw.W = 1;
+                    CursorVertexesHorSide[7].Color = colorCursor & 0x00FFFFFF;
+                }
+                else
+                {
+                    /* horizontal line */
+                    CursorVertexesHor[0].PositionRhw.X = xPos - DirectXWidth / 20;
+                    CursorVertexesHor[0].PositionRhw.Y = yPos;
+                    CursorVertexesHor[0].PositionRhw.Z = 0.5f;
+                    CursorVertexesHor[0].PositionRhw.W = 1;
+
+                    CursorVertexesHor[0].Color = colorCursor & 0x00FFFFFF;
+                    CursorVertexesHor[1].PositionRhw.X = xPos;
+                    CursorVertexesHor[1].PositionRhw.Y = yPos;
+                    CursorVertexesHor[1].PositionRhw.Z = 0.5f;
+                    CursorVertexesHor[1].PositionRhw.W = 1;
+                    CursorVertexesHor[1].Color = colorCursor;
+
+                    CursorVertexesHor[2].PositionRhw.X = xPos + DirectXWidth / 20;
+                    CursorVertexesHor[2].PositionRhw.Y = yPos;
+                    CursorVertexesHor[2].PositionRhw.Z = 0.5f;
+                    CursorVertexesHor[2].PositionRhw.W = 1;
+                    CursorVertexesHor[2].Color = colorCursor & 0x00FFFFFF;
+                }
             }
 
             if ((MouseHovering || ShowVerticalCursor) && !HideCursor)
@@ -558,6 +648,10 @@ namespace LibRXFFT.Components.DirectX
                     /* draw the strength into box */
                     SmallFont.DrawString(null, signalPower, boxX + 5, boxY + 5, ColorFG.ToArgb());
                     Device.DrawUserPrimitives(PrimitiveType.LineStrip, 2, CursorVertexesHor);
+                    if (HorLineFixed)
+                    {
+                        Device.DrawUserPrimitives(PrimitiveType.LineList, 4, CursorVertexesHorSide);
+                    }
                 }
 
                 /* draw the horizontal into box */
@@ -651,6 +745,113 @@ namespace LibRXFFT.Components.DirectX
                     ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 1;
                     ScaleVertexes[ScaleVertexesUsed].Color = colorCursor & 0x00FFFFFF;
                     ScaleVertexesUsed++;
+                }
+
+                /* draw frequency markers */
+                double width = SamplingRate;
+                double startFreq = CenterFrequency - width / 2;
+
+                double scaleDistance = Math.Pow(10, Math.Floor(Math.Log10(width) - 0.5f));
+                int scaleCount = (int)(width / scaleDistance) + 1;
+
+                if (scaleCount == 0)
+                {
+                    scaleCount = 1;
+                    scaleDistance = width;
+                }
+
+                int pixelsPerRange = DirectXWidth / scaleCount;
+                int interScales = 1;
+
+                for (int tries = 0; tries < 5; tries++)
+                {
+                    if (pixelsPerRange < 80 && pixelsPerRange < DirectXWidth / 4)
+                    {
+                        scaleDistance *= 2;
+                        interScales *= 2;
+                        scaleCount = (int)(width / scaleDistance) + 1;
+                        pixelsPerRange = DirectXWidth / scaleCount;
+                    }
+                }
+
+
+                double interScaleDistance = scaleDistance / interScales;
+                double firstScaleFreq = Math.Floor(startFreq / scaleDistance) * scaleDistance;
+
+                /* generate a list of frequencies to draw text for */
+                lock (ScaleLineInfos)
+                {
+                    ScaleLineInfosUsed = 0;
+                    for (int pos = 0; pos < scaleCount; pos++)
+                    {
+                        double freq = firstScaleFreq + (pos * interScales) * interScaleDistance;
+
+                        float scaleXPos = (int)XPosFromFrequency(freq);
+                        float alpha = Math.Min((Math.Min(scaleXPos, DirectXWidth - scaleXPos) / 100), 1.0f) * 255.0f;
+
+                        if (alpha > 0)
+                        {
+                            ScaleLineInfos[ScaleLineInfosUsed].Frequency = freq;
+                            ScaleLineInfos[ScaleLineInfosUsed].Text = FrequencyFormatter.FreqToStringAccurate(freq);
+                            ScaleLineInfos[ScaleLineInfosUsed].Color = (uint)((colorCursor & 0x00FFFFFF) | ((int)alpha << 24));
+                            ScaleLineInfosUsed++;
+                        }
+                    }
+                }
+
+                /* generate lines for the same frequencies */
+                for (int pos = 0; pos < scaleCount; pos++)
+                {
+                    for (int interScale = 0; interScale < interScales; interScale++)
+                    {
+                        if (ScaleVertexesUsed + 4 > ScaleVertexes.Length)
+                        {
+                            return;
+                        }
+
+                        float scaleXPos = (int)XPosFromFrequency(firstScaleFreq + (pos * interScales + interScale) * interScaleDistance);
+                        float alpha = Math.Min((Math.Min(scaleXPos, DirectXWidth - scaleXPos) / 100), 1.0f) * 255.0f;
+
+                        if (alpha > 0)
+                        {
+                            /* the grey line */
+                            ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = scaleXPos;
+                            ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = 0;
+                            ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
+                            ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 1;
+                            ScaleVertexes[ScaleVertexesUsed].Color = (uint)((ColorGrid.ToArgb() & 0x00FFFFFF) | ((int)(alpha / 4) << 24));
+                            ScaleVertexesUsed++;
+
+                            ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = scaleXPos;
+                            ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = DirectXHeight;
+                            ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
+                            ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 1;
+                            ScaleVertexes[ScaleVertexesUsed].Color = (uint)((ColorGrid.ToArgb() & 0x00FFFFFF) | ((int)(alpha / 4) << 24));
+                            ScaleVertexesUsed++;
+
+                            /* the red line stub */
+                            ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = scaleXPos;
+                            ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = 0;
+                            ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
+                            ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 1;
+                            ScaleVertexes[ScaleVertexesUsed].Color = (uint)((colorCursor & 0x00FFFFFF) | ((int)alpha << 24));
+                            ScaleVertexesUsed++;
+
+                            ScaleVertexes[ScaleVertexesUsed].PositionRhw.X = scaleXPos;
+                            if (interScale == 0)
+                            {
+                                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = 25;
+                            }
+                            else
+                            {
+                                ScaleVertexes[ScaleVertexesUsed].PositionRhw.Y = 10;
+                            }
+                            ScaleVertexes[ScaleVertexesUsed].PositionRhw.Z = 0.5f;
+                            ScaleVertexes[ScaleVertexesUsed].PositionRhw.W = 1;
+                            ScaleVertexes[ScaleVertexesUsed].Color = colorCursor & 0x00FFFFFF;
+                            ScaleVertexesUsed++;
+                        }
+                    }
                 }
             }
 
@@ -812,6 +1013,14 @@ namespace LibRXFFT.Components.DirectX
             SmallFont.DrawString(null, " -50 " + ScaleUnit, 10, (int)-sampleToDBScale(-50), (int)(colorCursor & 0x80FFFFFF));
             SmallFont.DrawString(null, "-100 " + ScaleUnit, 10, (int)-sampleToDBScale(-100), (int)(colorCursor & 0x80FFFFFF));
             SmallFont.DrawString(null, "-150 " + ScaleUnit, 10, (int)-sampleToDBScale(-150), (int)(colorCursor & 0x80FFFFFF));
+
+            lock (ScaleLineInfos)
+            {
+                for (int pos = 0; pos < ScaleLineInfosUsed; pos++)
+                {
+                    SmallFont.DrawString(null, ScaleLineInfos[pos].Text, (int)XPosFromFrequency(ScaleLineInfos[pos].Frequency), (int)20, (int)ScaleLineInfos[pos].Color);
+                }
+            }
         }
 
         public double XRelativeCoordFromCursorPos(double xPos)
@@ -843,7 +1052,7 @@ namespace LibRXFFT.Components.DirectX
             return XRelativeCoordFromCursorPos(LastMousePos.X);
         }
 
-        protected override string XLabelFromCursorPos(double xPos)
+        public override string XLabelFromCursorPos(double xPos)
         {
             /* offset (-0.5 ... 0.5) */
             double offset = ((DisplayXOffset + xPos) / (XZoomFactor * DirectXWidth)) - 0.5f - XAxisSampleOffset;
@@ -915,10 +1124,10 @@ namespace LibRXFFT.Components.DirectX
         }
 
 
-        protected override string XLabelFromSampleNum(double pos)
+        public override string XLabelFromSampleNum(double pos)
         {
             /* offset (-0.5 ... 0.5) */
-            double offset = pos / DirectXWidth - 0.5f;
+            double offset = pos / FFTSize - 0.5f;
 
             if (!ChannelMode)
             {
@@ -930,6 +1139,24 @@ namespace LibRXFFT.Components.DirectX
                 long channels = 1 + ChannelBandDetails.ChannelEnd - ChannelBandDetails.ChannelStart;
                 long channel = (long)(ChannelBandDetails.ChannelStart + (offset + 0.5f) * channels);
                 return "Ch. " + channel;
+            }
+        }
+
+        public double FrequencyFromSampleNum(double pos)
+        {
+            /* offset (-0.5 ... 0.5) */
+            double offset = pos / FFTSize - 0.5f;
+
+            if (!ChannelMode)
+            {
+                double frequency = CenterFrequency + offset * SamplingRate;
+                return frequency;
+            }
+            else
+            {
+                long channels = 1 + ChannelBandDetails.ChannelEnd - ChannelBandDetails.ChannelStart;
+                long channel = (long)(ChannelBandDetails.ChannelStart + (offset + 0.5f) * channels);
+                return channel;
             }
         }
 
@@ -951,7 +1178,10 @@ namespace LibRXFFT.Components.DirectX
                         lock (LinePointsLock)
                         {
                             if (LinePoints == null || LinePoints.Length < samples)
-                                LinePoints = new Point[samples];
+                            {
+                                Array.Resize(ref LinePoints, samples);
+                                //LinePoints = new Point[samples];
+                            }
 
                             for (int pos = 0; pos < samples; pos++)
                             {

@@ -17,6 +17,8 @@ namespace LibRXFFT.Libraries.Demodulators
 
         public SSBDemodulator(eSsbType type)
         {
+            Description = "Simple SSB Demodulator";
+            ShortDescription = "SSB";
             Type = type;
         }
 

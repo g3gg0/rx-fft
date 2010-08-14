@@ -14,6 +14,8 @@ namespace LibRXFFT.Libraries.Demodulators
 
         public AMDemodulator()
         {
+            Description = "Simple AM Demodulator";
+            ShortDescription = "AM";
             try
             {
                 NativeContext = AMDemodInit();

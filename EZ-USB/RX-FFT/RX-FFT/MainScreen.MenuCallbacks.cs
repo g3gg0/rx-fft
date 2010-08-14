@@ -9,6 +9,7 @@ using LibRXFFT.Libraries;
 using RX_FFT.DeviceControls;
 using RX_FFT.Dialogs;
 using RX_Oscilloscope;
+using LibRXFFT.Components.GDI;
 
 namespace RX_FFT
 {
@@ -18,8 +19,6 @@ namespace RX_FFT
 
         private bool TryParseMenuText(ToolStripTextBox textBox, out int value)
         {
-            int samples = 0;
-
             if (!int.TryParse(textBox.Text, out value))
             {
                 faultTooltip.Active = false;
@@ -45,8 +44,6 @@ namespace RX_FFT
 
         private bool TryParseMenuText(ToolStripTextBox textBox, out double value)
         {
-            double samples = 0;
-
             if (!double.TryParse(textBox.Text, out value))
             {
                 faultTooltip.Active = false;
@@ -106,63 +103,166 @@ namespace RX_FFT
 
         private void scanBandMenu_Click(object sender, EventArgs e)
         {
-            if(!DeviceOpened)
+            if (!DeviceOpened)
                 return;
 
-            FrequencyBand band = new FrequencyBand();
-            band.BaseFrequency = 935014000;
-            band.ChannelStart = 2;
-            band.ChannelEnd = 124;
-            band.ChannelDistance = 200000;
-
-            FrequencyBandDetailsDialog dlg = new FrequencyBandDetailsDialog(band);
-            if (dlg.ShowDialog() == DialogResult.OK)
+            if (!ScanFrequenciesEnabled)
             {
-                ScanFrequencies.Clear();
-                for (long channel = band.ChannelStart; channel <= band.ChannelEnd; channel++)
+                FrequencyBand band = new FrequencyBand();
+
+                band.BaseFrequency = CurrentFrequency;
+                band.ChannelDistance = FilterWidth;
+                band.ChannelWidth = FilterWidth;
+
+                ScanBandDialog dlg = new ScanBandDialog(band);
+                if (dlg.ShowDialog() == DialogResult.OK)
                 {
-                    ScanFrequencies.AddLast(new FrequencyMarker("Ch. " + channel, "", band.BaseFrequency + (channel - band.ChannelStart) * band.ChannelDistance));
+                    ScanStartFreq = band.BaseFrequency - band.ChannelDistance/2;
+                    ScanEndFreq = band.BaseFrequency + (band.ChannelEnd - band.ChannelStart + 1) * band.ChannelDistance;
+                    
+                    ScanFrequencies.Clear();
+                    for (long channel = band.ChannelStart; channel <= band.ChannelEnd; channel++)
+                    {
+                        ScanFrequencies.AddLast(new FrequencyMarker("Ch. " + channel, "", band.BaseFrequency + (channel - band.ChannelStart) * band.ChannelDistance));
+                    }
+
+                    CurrentScanFreq = ScanFrequencies.First;
+                    ChannelBandDetails = band;
+
+                    ScanStrongestFrequency = false;
+                    ScanFrequenciesEnabled = true;
+
+                    if (!FitSpectrum)
+                    {
+                        fitSpectrumMenu_Click(null, null);
+                    }
                 }
-
-                CurrentScanFreq = ScanFrequencies.First;
-                ChannelBandDetails = band;
-
-                ScanStrongestFrequency = false;
-                ScanFrequenciesEnabled = true;
+                else
+                {
+                    ScanFrequenciesEnabled = false;
+                }
             }
             else
             {
                 ScanFrequenciesEnabled = false;
             }
+
+            scanBandMenu.Checked = ScanFrequenciesEnabled;
+            scanBandMenu.Enabled = true;
+            scanChannelsMenu.Checked = false;
+            scanChannelsMenu.Enabled = !ScanFrequenciesEnabled;
+            scanMarkersMenu.Checked = false;
+            scanMarkersMenu.Enabled = !ScanFrequenciesEnabled;
+        }
+
+        private void scanChannelsMenu_Click(object sender, EventArgs e)
+        {
+            if (!DeviceOpened)
+                return;
+
+            if (!ScanFrequenciesEnabled)
+            {
+                FrequencyBand band = new FrequencyBand();
+                band.BaseFrequency = 935014000;
+                band.ChannelStart = 2;
+                band.ChannelEnd = 124;
+                band.ChannelDistance = 200000;
+
+                FrequencyBandDetailsDialog dlg = new FrequencyBandDetailsDialog(band);
+                if (dlg.ShowDialog() == DialogResult.OK)
+                {
+                    ScanStartFreq = 0;
+                    ScanEndFreq = 0;
+
+                    ScanFrequencies.Clear();
+                    for (long channel = band.ChannelStart; channel <= band.ChannelEnd; channel++)
+                    {
+                        ScanFrequencies.AddLast(new FrequencyMarker("Ch. " + channel, "", band.BaseFrequency + (channel - band.ChannelStart) * band.ChannelDistance));
+                    }
+
+                    CurrentScanFreq = ScanFrequencies.First;
+                    ChannelBandDetails = band;
+
+                    ScanStrongestFrequency = false;
+                    ScanFrequenciesEnabled = true;
+
+                    if (!FitSpectrum)
+                    {
+                        fitSpectrumMenu_Click(null, null);
+                    }
+                }
+                else
+                {
+                    ScanFrequenciesEnabled = false;
+                }
+            }
+            else
+            {
+                ScanFrequenciesEnabled = false;
+            }
+
+            scanBandMenu.Checked = false;
+            scanBandMenu.Enabled = !ScanFrequenciesEnabled;
+            scanChannelsMenu.Checked = ScanFrequenciesEnabled;
+            scanChannelsMenu.Enabled = true;
+            scanMarkersMenu.Checked = false;
+            scanMarkersMenu.Enabled = !ScanFrequenciesEnabled;
         }
 
         private void scanMarkersMenu_Click(object sender, EventArgs e)
         {
-            
-            ScanFrequencies.Clear();
-            foreach (FrequencyMarker marker in MarkerList.Markers)
+            if (!ScanFrequenciesEnabled)
             {
-                ScanFrequencies.AddLast(marker);
+                ScanStartFreq = 0;
+                ScanEndFreq = 0;
+
+                ScanFrequencies.Clear();
+                foreach (FrequencyMarker marker in MarkerList.Markers)
+                {
+                    ScanFrequencies.AddLast(marker);
+                }
+
+                CurrentScanFreq = ScanFrequencies.First;
+                ChannelBandDetails = new FrequencyBand();
+                ScanStrongestFrequency = true;
+                ScanFrequenciesEnabled = true;
+
+                if (!FitSpectrum)
+                {
+                    fitSpectrumMenu_Click(null, null);
+                }
+            }
+            else
+            {
+                ScanFrequenciesEnabled = false;
             }
 
-            CurrentScanFreq = ScanFrequencies.First;
-            ChannelBandDetails = new FrequencyBand();
-            ScanStrongestFrequency = true;
-            ScanFrequenciesEnabled = true;
+            scanBandMenu.Checked = false;
+            scanBandMenu.Enabled = !ScanFrequenciesEnabled;
+            scanChannelsMenu.Checked = false;
+            scanChannelsMenu.Enabled = !ScanFrequenciesEnabled;
+            scanMarkersMenu.Checked = ScanFrequenciesEnabled;
+            scanMarkersMenu.Enabled = true;
         }
 
         private void demodulationMenu_Click(object sender, EventArgs e)
         {
-            if (DemodDialog != null)
+            if (DemodState.Dialog != null)
             {
-                //DemodDialog.Close();
-                DemodDialog = null;
+                DemodState.Dialog.Close();
+                DemodState.Dialog = null;
             }
             else
             {
-                DemodDialog = new DemodulationDialog(DemodOptions);
-                DemodDialog.Show();
+                DemodState.Dialog = new DemodulationDialog(DemodState);
+                DemodState.Dialog.FrequencyChanged += new EventHandler(DemodDialog_FrequencyChanged);
+                DemodState.Dialog.Show();
             }
+        }
+
+        void DemodDialog_FrequencyChanged(object sender, EventArgs e)
+        {
+            UpdateDemodFrequency();
         }
 
 

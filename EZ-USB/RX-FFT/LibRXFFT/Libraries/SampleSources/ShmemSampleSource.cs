@@ -12,6 +12,8 @@ namespace LibRXFFT.Libraries.SampleSources
         private static double DefaultRate = 2184533;
         private static long DefaultBufferSize = 32 * 1024 * 1024;
 
+        public bool TraceReads = false;
+
         public override int SamplesPerBlock
         {
             set
@@ -88,7 +90,10 @@ namespace LibRXFFT.Libraries.SampleSources
 
             int read = ShmemChannel.Read(InBuffer, 0, InBuffer.Length);
 
-            //Log.AddMessage("ShmemSamplesource", "Read Block: " + read + "/" + InBuffer.Length);
+            if (TraceReads)
+            {
+                Log.AddMessage("ShmemSamplesource", "Read Block: " + read + "/" + InBuffer.Length);
+            }
 
             /* in case buffer size has changed meanwhile, return */
             if (NextInBufferAvailable)

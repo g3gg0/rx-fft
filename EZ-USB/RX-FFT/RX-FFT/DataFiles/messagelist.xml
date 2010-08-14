@@ -259,9 +259,9 @@
       <pduslot ref="10.4" presence="M"/>
       <pduslot ref="10.5.2.26" presence="M"/>
       <pduslot ref="10.5.2.25b" presence="M"/>
-      <pduslot ref="10.5.2.5" presence="M" trigger-post="ChannelAssignment"/>
+      <pduslot ref="10.5.2.5" presence="M"/>
       <pduslot ref="10.5.2.30" presence="M"/>
-      <pduslot ref="10.5.2.40" presence="M"/>
+      <pduslot ref="10.5.2.40" presence="M" trigger-post="ChannelAssignment"/>
       <pduslot ref="10.5.2.21" presence="M"/>
       <pduslot iei="7C" ref="10.5.2.38" presence="O"/>
       <pduslot ref="10.5.2.16" presence="M"/>
@@ -275,12 +275,12 @@
       <pduslot ref="10.4" presence="M"/>
       <pduslot ref="10.5.2.26" presence="M"/>
       <pduslot ref="10.5.1.8" presence="M"/>
-      <pduslot ref="10.5.2.5" presence="M" trigger-post="ChannelAssignment"/>
+      <pduslot ref="10.5.2.5" presence="M" />
       <pduslot ref="10.5.2.30" presence="M"/>
-      <pduslot ref="10.5.2.40" presence="M"/>
-      <pduslot ref="10.5.2.5" presence="M" trigger-post="ChannelAssignment"/>
+      <pduslot ref="10.5.2.40" presence="M" trigger-post="ChannelAssignment"/>
+      <pduslot ref="10.5.2.5" presence="M"/>
       <pduslot ref="10.5.2.30" presence="M"/>
-      <pduslot ref="10.5.2.40" presence="M"/>
+      <pduslot ref="10.5.2.40" presence="M" trigger-post="ChannelAssignment"/>
       <pduslot ref="10.5.2.21" presence="M"/>
       <pduslot iei="7C" ref="10.5.2.38" presence="O"/>
       <pduslot ref="10.5.2.18" presence="M"/>

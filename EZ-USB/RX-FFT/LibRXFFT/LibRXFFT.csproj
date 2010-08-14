@@ -100,6 +100,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Components\DirectX\DemodFFTView.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Components\DirectX\DemodFFTView.Designer.cs">
+      <DependentUpon>DemodFFTView.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Components\GDI\DemodulationDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Components\GDI\DemodulationDialog.Designer.cs">
+      <DependentUpon>DemodulationDialog.cs</DependentUpon>
+    </Compile>
     <Compile Include="Components\DirectX\DirectX2DPlot.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -213,6 +225,12 @@
     <Compile Include="Components\GDI\PowerBar.Designer.cs">
       <DependentUpon>PowerBar.cs</DependentUpon>
     </Compile>
+    <Compile Include="Components\GDI\SoundCardSinkControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Components\GDI\SoundCardSinkControl.Designer.cs">
+      <DependentUpon>SoundCardSinkControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="Components\GDI\TextBoxMouseScroll.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -258,12 +276,22 @@
     <Compile Include="Libraries\Filters\FilterThread.cs" />
     <Compile Include="Libraries\Filters\IIRCoefficients.cs" />
     <Compile Include="Libraries\Filters\IIRFilter.cs" />
+    <Compile Include="Libraries\GSM\Layer1\PacketDump\GsmAnalyzerDump.cs" />
+    <Compile Include="Libraries\GSM\Layer1\PacketDump\PacketDumpReader.cs" />
+    <Compile Include="Libraries\GSM\Layer1\PacketDump\PacketDumpWriter.cs" />
     <Compile Include="Libraries\LuaHelpers.cs" />
     <Compile Include="Libraries\Misc\TraceMutex.cs" />
+    <Compile Include="Libraries\GSM\Layer1\PacketDump\PcapPacket.cs" />
+    <Compile Include="Libraries\GSM\Layer1\PacketDump\PcapFileReader.cs" />
+    <Compile Include="Libraries\GSM\Layer1\PacketDump\PcapFileWriter.cs" />
     <Compile Include="Libraries\RemoteControl.cs" />
+    <Compile Include="Libraries\SampleSources\Lame.cs" />
+    <Compile Include="Libraries\SampleSources\Mp3Writer.cs" />
     <Compile Include="Libraries\SampleSources\RandomSampleSource.cs" />
     <Compile Include="Libraries\SampleSources\WaveFileIO.cs" />
     <Compile Include="Libraries\SignalProcessing\AttenuationCorrection.cs" />
+    <Compile Include="Libraries\SignalProcessing\AudioDemodulator.cs" />
+    <Compile Include="Libraries\SignalProcessing\Demodulation.cs" />
     <Compile Include="Libraries\SignalProcessing\Downmixer.cs" />
     <Compile Include="Libraries\Demodulators\FMDemodulator.cs" />
     <Compile Include="Libraries\FFTW\complexarray.cs" />
@@ -319,6 +347,10 @@
     <Compile Include="Libraries\SignalProcessing\GaussFilter.cs" />
     <Compile Include="Libraries\SignalProcessing\SignalPower.cs" />
     <Compile Include="Libraries\SoundDevices\DXSoundDevice.cs" />
+    <Compile Include="Libraries\SoundSinks\SoundFileSink.cs" />
+    <Compile Include="Libraries\SoundSinks\ShoutcastSink.cs" />
+    <Compile Include="Libraries\SoundSinks\SoundCardSink.cs" />
+    <Compile Include="Libraries\SoundSinks\SoundSink.cs" />
     <Compile Include="Libraries\Timers\AccurateTimer.cs" />
     <Compile Include="Libraries\Timers\HighPerformanceCounter.cs" />
     <Compile Include="Libraries\USB-RX\Devices\AD6636.cs" />
@@ -326,6 +358,7 @@
     <Compile Include="Libraries\USB-RX\Devices\AtmelProgrammer.cs" />
     <Compile Include="Libraries\USB-RX\Devices\BO35.cs" />
     <Compile Include="Libraries\USB-RX\Devices\BO35Interface.cs" />
+    <Compile Include="Libraries\USB-RX\Devices\EEPROM.cs" />
     <Compile Include="Libraries\USB-RX\Devices\VUHF_RX.cs" />
     <Compile Include="Libraries\USB-RX\Devices\SerialPortTuner.cs" />
     <Compile Include="Libraries\USB-RX\Interfaces\AD6636Interface.cs" />
@@ -347,6 +380,14 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Components\DirectX\DemodFFTView.resx">
+      <DependentUpon>DemodFFTView.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Components\GDI\DemodulationDialog.resx">
+      <DependentUpon>DemodulationDialog.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Components\DirectX\DirectXPhaseDisplay.resx">
       <DependentUpon>DirectXPhaseDisplay.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -393,6 +434,10 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Components\GDI\LogWindow.resx">
       <DependentUpon>LogWindow.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Components\GDI\SoundCardSinkControl.resx">
+      <DependentUpon>SoundCardSinkControl.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Components\GDI\StatusLamp.resx">

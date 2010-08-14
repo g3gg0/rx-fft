@@ -24,6 +24,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         private I2CInterface I2CDevice;
         private int BusID;
         private static int DefaultBusID = 0x20;
+        private object Lock = new object();
 
         private long FilterClock;
         private long FilterWidth;
@@ -76,7 +77,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         // FIFO Functions
         public bool FIFOReset(bool state)
         {
-            lock (this)
+            lock (Lock)
             {
                 return I2CDevice.I2CWriteByte(BusID, (byte)(state ? 0x28 : 0x29));
             }
@@ -85,7 +86,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         /* do not use since reset would happen asynchronously */
         private bool FIFOReset()
         {
-            lock (this)
+            lock (Lock)
             {
                 return I2CDevice.I2CWriteByte(BusID, 0x0d);
             }
@@ -96,7 +97,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         {
             byte[] buf = new byte[1];
 
-            lock (this)
+            lock (Lock)
             {
                 if (!I2CDevice.I2CWriteByte(BusID, 0x64))
                     return 0;
@@ -111,7 +112,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         {
             byte[] buf = new byte[1];
 
-            lock (this)
+            lock (Lock)
             {
                 if (!I2CDevice.I2CWriteByte(BusID, 0x10))
                     return 0;
@@ -133,7 +134,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             cmd[0] = (byte)(0x65 + index);
             cmd[1] = 1;
 
-            lock (this)
+            lock (Lock)
             {
                 if (!I2CDevice.I2CWriteBytes(BusID, cmd))
                     return false;
@@ -173,7 +174,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             cmd[0] = (byte)(0x65 + index);
             cmd[1] = 0;
 
-            lock (this)
+            lock (Lock)
             {
                 if (!I2CDevice.I2CWriteBytes(BusID, cmd))
                     return false;
@@ -205,7 +206,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             {
                 byte[] buf = new byte[4];
 
-                lock (this)
+                lock (Lock)
                 {
                     if (!I2CDevice.I2CWriteByte(BusID, 0xC8))
                         return 0;
@@ -229,7 +230,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                 buf[3] = (byte)((value >> 16) & 0xFF);
                 buf[4] = (byte)((value >> 24) & 0xFF);
 
-                lock (this)
+                lock (Lock)
                 {
                     if (!I2CDevice.I2CWriteBytes(BusID, buf))
                         return;
@@ -242,7 +243,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         {
             byte[] buf = new byte[4];
 
-            lock (this)
+            lock (Lock)
             {
                 if (!I2CDevice.I2CWriteByte(BusID, 0xCC))
                     return 0;
@@ -263,7 +264,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             buf[3] = (byte)((value >> 16) & 0xFF);
             buf[4] = (byte)((value >> 24) & 0xFF);
 
-            lock (this)
+            lock (Lock)
             {
                 if (!I2CDevice.I2CWriteBytes(BusID, buf))
                     return false;
@@ -276,7 +277,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             get
             {
                 byte[] buf = new byte[34];
-                lock (this)
+                lock (Lock)
                 {
                     if (I2CDevice.I2CWriteByte(BusID, 0x07) != true)
                         return null;
@@ -305,7 +306,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
                 for (int i = 0; i < array.Length; i++)
                     buffer[2 + i] = (byte)array[i];
-                lock (this)
+                lock (Lock)
                 {
                     if (!I2CDevice.I2CWriteBytes(BusID, buffer))
                         return;
@@ -318,7 +319,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             get
             {
                 byte[] buf = new byte[34];
-                lock (this)
+                lock (Lock)
                 {
                     if (I2CDevice.I2CWriteByte(BusID, 207) != true)
                         return null;
@@ -347,7 +348,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
                 for (int i = 0; i < array.Length; i++)
                     buffer[2 + i] = (byte)array[i];
-                lock (this)
+                lock (Lock)
                 {
                     if (!I2CDevice.I2CWriteBytes(BusID, buffer))
                         return;
@@ -359,7 +360,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             get
             {
                 byte[] buf = new byte[2];
-                lock (this)
+                lock (Lock)
                 {
                     if (I2CDevice.I2CWriteByte(BusID, 209) != true)
                         return 0;
@@ -374,7 +375,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
         public bool SetRfSource(USBRXDevice.eRfSource source)
         {
-            lock (this)
+            lock (Lock)
             {
                 switch (source)
                 {
@@ -405,7 +406,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
         public bool SetAtt(bool state)
         {
-            lock (this)
+            lock (Lock)
             {
                 return I2CDevice.I2CWriteByte(BusID, (byte)(state ? 0x17 : 0x18));
             }
@@ -413,7 +414,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
         public bool SetAtt(int value)
         {
-            lock (this)
+            lock (Lock)
             {
                 byte[] buffer = new byte[2] { 0x23, (byte)value };
                 bool ret = I2CDevice.I2CWriteBytes(BusID, buffer);
@@ -426,7 +427,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
         public bool SetPreAmp(bool state)
         {
-            lock (this)
+            lock (Lock)
             {
                 return I2CDevice.I2CWriteByte(BusID, (byte)(state ? 0x15 : 0x16));
             }
@@ -451,7 +452,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             cmd[0] = 0x32;
             cmd[1] = (byte)dB;
 
-            lock (this)
+            lock (Lock)
             {
                 if (!I2CDevice.I2CWriteBytes(BusID, cmd))
                     return false;
@@ -468,7 +469,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                 return true;
             }
 
-            lock (this)
+            lock (Lock)
             {
                 switch (type)
                 {
@@ -503,7 +504,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             {
                 byte[] buffer = new byte[3];
 
-                lock (this)
+                lock (Lock)
                 {
                     if (!I2CDevice.I2CWriteByte(BusID, 0x39))
                         return new FilterCorrectionCoeff(false, 0, 0);
@@ -532,7 +533,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                 cmd[2] = (byte)(gain & 0xFF);
                 cmd[3] = (byte)((gain >> 8) & 0xFF);
 
-                lock (this)
+                lock (Lock)
                 {
                     if (!I2CDevice.I2CWriteBytes(BusID, cmd))
                         return;
@@ -550,7 +551,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         // AD6636 Functions
         public bool AD6636Reset()
         {
-            lock (this)
+            lock (Lock)
             {
                 return I2CDevice.I2CWriteByte(BusID, 0x05);
             }
@@ -559,7 +560,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
         public long AD6636ReadReg(int address, int bytes)
         {
-            lock (this)
+            lock (Lock)
             {
                 return AD6636ReadReg(address, bytes, false);
             }
@@ -587,7 +588,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             cmd[1] = (byte)address;
             cmd[2] = (byte)(bytes | 0x80);
 
-            lock (this)
+            lock (Lock)
             {
                 if (!I2CDevice.I2CWriteBytes(BusID, cmd))
                     return -1;
@@ -655,7 +656,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                 value >>= 8;
             }
 
-            lock (this)
+            lock (Lock)
             {
                 if (!I2CDevice.I2CWriteBytes(BusID, cmd))
                     return false;

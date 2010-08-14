@@ -10,15 +10,16 @@ namespace RX_FFT.DeviceControls
         private long CurrentFrequency = 0;
         private long CurrentWidth = 1000000;
         private long CurrentRate = 1024000;
-        private RandomSampleSource _SampleSource;
+        private RandomSampleSource Source;
         private double _BlocksPerSecond = 20;
 
         public RandomDataDeviceControl()
         {
             InitializeComponent();
 
-            _SampleSource = new RandomSampleSource();
-            _SampleSource.InvertedSpectrum = false;
+            Source = new RandomSampleSource();
+            Source.ForwardEnabled = true;
+            Source.InvertedSpectrum = false;
         }
 
         #region DeviceControl Member
@@ -79,7 +80,7 @@ namespace RX_FFT.DeviceControls
 
         public SampleSource SampleSource
         {
-            get { return _SampleSource; }
+            get { return Source; }
         }
 
         public bool Connected
@@ -239,11 +240,18 @@ namespace RX_FFT.DeviceControls
         }
 
         public bool ScanFrequenciesEnabled { get; set; }
+
         public int ShmemChannel
         {
-            get { return 0; }
+            get
+            {
+                if (Source != null)
+                {
+                    return Source.OutputShmemChannel.DstChan;
+                }
+                return 0;
+            }
         }
-
 
         public string ErrorMessage
         {

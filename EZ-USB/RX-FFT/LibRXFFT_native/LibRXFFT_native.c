@@ -112,7 +112,11 @@ LIBRXFFT_NATIVE_API int *IIRInit(double gain, int section, double *num, double *
 		state->Num[pos] = num[pos];
 		state->Den[pos] = den[pos];
 	}
-
+	for(pos = 0; pos < section; pos++)
+	{
+		state->m1[pos] = 0;
+		state->m2[pos] = 0;
+	}
 	state->Gain = gain;
 	state->Section = section;
 
@@ -156,6 +160,7 @@ LIBRXFFT_NATIVE_API void IIRProcess(int *ctx, double *inData, double *outData, i
 			result = (s0 * localNum[arrayPos + 0] + m1[i]) / localDen[arrayPos + 0];
 			m1[i] = m2[i] + s0 * localNum[arrayPos + 1] - result * localDen[arrayPos + 1];
 			m2[i] = s0 * localNum[arrayPos + 2] - result * localDen[arrayPos + 2];
+
 			s0 = result;
 			arrayPos += 3;
 		}
@@ -223,9 +228,7 @@ LIBRXFFT_NATIVE_API void AMDemodProcess(int *ctx, double *iDataIn, double *qData
 {
 	int pos = 0;
 
-//#pragma omp parallel for
-
-	for(pos = 0; pos < samples; pos++)
+	for( pos = 0; pos < samples; pos++)
 	{
 		double iData = iDataIn[pos];
 		double qData = qDataIn[pos];
@@ -273,7 +276,6 @@ LIBRXFFT_NATIVE_API void DownmixProcess(int *ctx, double *iDataIn, double *qData
 	double *cosTable = state->CosTable;
 	double *sinTable = state->SinTable;
 
-//#pragma omp parallel for
 	for(pos = 0; pos < samples; pos++)
 	{
 		/* keep timePos local for parallel processing */
@@ -371,8 +373,6 @@ LIBRXFFT_NATIVE_API void SamplesFromBinary(unsigned char *dataBuffer, int bytesR
 		return;
 	}
 
-//#pragma omp parallel for
-
 	for (pos = 0; pos < samplePairs; pos++)
 	{
 		double I;
@@ -436,8 +436,6 @@ LIBRXFFT_NATIVE_API void SamplesToBinary(unsigned char *dataBuffer, int samplePa
 	}
 
 	samplePos = 0;
-
-//#pragma omp parallel for
 
 	for (pos = 0; pos < samplePairs; pos++)
 	{

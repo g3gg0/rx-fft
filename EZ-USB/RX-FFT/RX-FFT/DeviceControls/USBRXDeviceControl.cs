@@ -75,8 +75,18 @@ namespace RX_FFT.DeviceControls
 
         void Tuner_DeviceDisappeared(object sender, EventArgs e)
         {
-            if (DeviceDisappeared != null)
-                DeviceDisappeared(sender, e);
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action(() =>
+                {
+                    Tuner_DeviceDisappeared(sender, e);
+                }));
+            }
+            else
+            {
+                if (DeviceDisappeared != null)
+                    DeviceDisappeared(sender, e);
+            }
         }
 
         void Tuner_InvertedSpectrumChanged(object sender, EventArgs e)
@@ -86,28 +96,47 @@ namespace RX_FFT.DeviceControls
 
         void Tuner_FilterWidthChanged(object sender, EventArgs e)
         {
-            /* update UI */
-            txtFilterWidth.Text = FrequencyFormatter.FreqToStringAccurate(FilterWidth);
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action(() =>
+                {
+                    Tuner_FilterWidthChanged(sender, e);
+                }));
+            }
+            else
+            {
+                txtFilterWidth.Text = FrequencyFormatter.FreqToStringAccurate(FilterWidth);
 
-            /* inform listeners */
-            if (FilterWidthChanged != null)
-                FilterWidthChanged(this, null);
+                /* inform listeners */
+                if (FilterWidthChanged != null)
+                    FilterWidthChanged(this, null);
+            }
         }
 
         void Tuner_FilterRateChanged(object sender, EventArgs e)
         {
             /* update UI */
-            txtFilterRate.Text = FrequencyFormatter.FreqToStringAccurate(SamplingRate);
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action(() =>
+                {
+                    Tuner_FilterRateChanged(sender, e);
+                }));
+            }
+            else
+            {
+                txtFilterRate.Text = FrequencyFormatter.FreqToStringAccurate(SamplingRate);
 
-            /* set sample source frequency */
-            _SampleSource.ForceInputRate(SamplingRate);
+                /* set sample source frequency */
+                _SampleSource.ForceInputRate(SamplingRate);
 
-            /* update related parameters */
-            SamplesPerBlock = SamplesPerBlock;
+                /* update related parameters */
+                SamplesPerBlock = SamplesPerBlock;
 
-            /* inform listeners */
-            if (SamplingRateChanged != null)
-                SamplingRateChanged(this, null);
+                /* inform listeners */
+                if (SamplingRateChanged != null)
+                    SamplingRateChanged(this, null);
+            }
         }
 
         void FilterList_FilterSelected(object sender, EventArgs e)
@@ -204,7 +233,12 @@ namespace RX_FFT.DeviceControls
         {
             get
             {
-                return USBRX.Tuner.SamplingRate;
+                if (USBRX != null & USBRX.Tuner != null)
+                {
+                    return USBRX.Tuner.SamplingRate;
+                }
+
+                return 0;
             }
         }
 
@@ -212,7 +246,7 @@ namespace RX_FFT.DeviceControls
 
         #region Tuner Member
 
-        public event EventHandler FrequencyChanged; 
+        public event EventHandler FrequencyChanged;
         public event EventHandler FilterWidthChanged;
         public event EventHandler InvertedSpectrumChanged;
         public event EventHandler DeviceDisappeared;
@@ -226,7 +260,7 @@ namespace RX_FFT.DeviceControls
             waitDlg.Show();
             waitDlg.Refresh();
 #endif
-            
+
             USBRX = new USBRXDevice();
             USBRX.ShowConsole(false);
             USBRX.TunerCombination = TunerCombination;
@@ -241,7 +275,7 @@ namespace RX_FFT.DeviceControls
 #endif
                     Close();
                     return false;
-                }                
+                }
             }
             catch (BadImageFormatException e)
             {
@@ -324,7 +358,7 @@ namespace RX_FFT.DeviceControls
                 USBRX.Tuner.CloseTuner();
                 USBRX.CurrentMode = eTransferMode.Stopped;
                 USBRX.Close();
-                USBRX=null;
+                USBRX = null;
                 _SampleSource.Close();
 
                 Connected = false;
@@ -345,7 +379,7 @@ namespace RX_FFT.DeviceControls
             {
                 double val = value;
 
-                if(val > 30 && AttEnabled)
+                if (val > 30 && AttEnabled)
                 {
                     USBRX.SetAtt(false);
                     BeginInvoke(new MethodInvoker(() => chkAtt.Checked = false));
@@ -432,7 +466,7 @@ namespace RX_FFT.DeviceControls
 
         string[] Tuner.Name
         {
-            get 
+            get
             {
                 ArrayList lines = new ArrayList();
 
@@ -452,7 +486,7 @@ namespace RX_FFT.DeviceControls
 
         string[] Tuner.Description
         {
-            get 
+            get
             {
                 if (USBRX != null && USBRX.Tuner != null)
                 {
@@ -460,7 +494,7 @@ namespace RX_FFT.DeviceControls
                 }
                 else
                 {
-                    return new[]{"No description available"};
+                    return new[] { "No description available" };
                 }
             }
         }
@@ -508,7 +542,7 @@ namespace RX_FFT.DeviceControls
         public string ErrorMessage
         {
             get { return _ErrorMessage; }
-            private set { _ErrorMessage = value;}
+            private set { _ErrorMessage = value; }
 
         }
 
@@ -542,7 +576,7 @@ namespace RX_FFT.DeviceControls
                 }
             }
         }
-        
+
         public int SamplesPerBlock
         {
             set
@@ -645,6 +679,8 @@ namespace RX_FFT.DeviceControls
         {
             ClosingAllowed = true;
 
+            TransferMode = eTransferMode.Stopped;
+
             CloseTuner();
             base.Close();
         }
@@ -655,6 +691,7 @@ namespace RX_FFT.DeviceControls
 
             do
             {
+                /* will loop every 100ms (timeout set up in SharedMem object) */
                 success = SampleSource.Read();
             } while (success && SampleSource.SamplesRead == 0);
 
@@ -855,7 +892,7 @@ namespace RX_FFT.DeviceControls
         {
             if (radioAgcManual.Checked)
             {
-                USBRX.SetMgc((int) txtMgcValue.Value);
+                USBRX.SetMgc((int)txtMgcValue.Value);
             }
         }
     }

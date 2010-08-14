@@ -158,7 +158,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         private SPIInterface Device;
         private int LastExtendedByte = -1;
 
-        public int RecoveryTime = 800;
+        public int RecoveryTime = 500;
 
 
         public AtmelProgrammer(SPIInterface device)

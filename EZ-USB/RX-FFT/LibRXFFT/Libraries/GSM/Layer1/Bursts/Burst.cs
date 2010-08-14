@@ -29,6 +29,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
         public string Name = "Unknown";
         public string ShortName = "Unk";
 
+
         public enum eSuccessState
         {
             Failed,

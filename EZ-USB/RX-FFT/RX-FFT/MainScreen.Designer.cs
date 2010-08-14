@@ -20,10 +20,10 @@ namespace RX_FFT
                 StatusUpdateTimer.Dispose();
                 StatusUpdateTimer = null;
             }
-            if (DemodOptions != null)
+            if (DemodState != null)
             {
-                DemodOptions.Dispose();
-                DemodOptions = null;
+                DemodState.Dispose();
+                DemodState = null;
             }
             base.Dispose(disposing);
         }
@@ -58,12 +58,20 @@ namespace RX_FFT
             this.closeMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.scanBandMenu = new System.Windows.Forms.ToolStripMenuItem();
+            this.scanChannelsMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.scanMarkersMenu = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator8 = new System.Windows.Forms.ToolStripSeparator();
             this.demodulationMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.performanceStatisticsMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.markersMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.loadScriptMenu = new System.Windows.Forms.ToolStripMenuItem();
+            this.unloadScriptToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.unloadAllMenu = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator7 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
             this.quitMenu = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator6 = new System.Windows.Forms.ToolStripSeparator();
             this.optionsMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.fftSizeMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.fftSize512Menu = new System.Windows.Forms.ToolStripMenuItem();
@@ -212,12 +220,18 @@ namespace RX_FFT
             this.closeMenu,
             this.toolStripSeparator1,
             this.scanBandMenu,
+            this.scanChannelsMenu,
             this.scanMarkersMenu,
+            this.toolStripSeparator8,
             this.demodulationMenu,
             this.performanceStatisticsMenu,
             this.markersMenu,
             this.toolStripSeparator2,
-            this.quitMenu});
+            this.loadScriptMenu,
+            this.unloadScriptToolStripMenuItem,
+            this.toolStripSeparator5,
+            this.quitMenu,
+            this.toolStripSeparator6});
             this.deviceMenu.Name = "deviceMenu";
             this.deviceMenu.Size = new System.Drawing.Size(54, 20);
             this.deviceMenu.Text = "Device";
@@ -237,35 +251,35 @@ namespace RX_FFT
             // openBO35Menu
             // 
             this.openBO35Menu.Name = "openBO35Menu";
-            this.openBO35Menu.Size = new System.Drawing.Size(214, 22);
+            this.openBO35Menu.Size = new System.Drawing.Size(250, 22);
             this.openBO35Menu.Text = "BO-35digi";
             this.openBO35Menu.Click += new System.EventHandler(this.openBO35Menu_Click);
             // 
             // openBO35PlainMenu
             // 
             this.openBO35PlainMenu.Name = "openBO35PlainMenu";
-            this.openBO35PlainMenu.Size = new System.Drawing.Size(214, 22);
+            this.openBO35PlainMenu.Size = new System.Drawing.Size(250, 22);
             this.openBO35PlainMenu.Text = "BO-35digi (autodetect ext. Tuner)";
             this.openBO35PlainMenu.Click += new System.EventHandler(this.openBO35PlainMenu_Click);
             // 
             // openFileMenu
             // 
             this.openFileMenu.Name = "openFileMenu";
-            this.openFileMenu.Size = new System.Drawing.Size(214, 22);
+            this.openFileMenu.Size = new System.Drawing.Size(250, 22);
             this.openFileMenu.Text = "File on Disk";
             this.openFileMenu.Click += new System.EventHandler(this.openFileMenu_Click);
             // 
             // openShMemMenu
             // 
             this.openShMemMenu.Name = "openShMemMenu";
-            this.openShMemMenu.Size = new System.Drawing.Size(214, 22);
+            this.openShMemMenu.Size = new System.Drawing.Size(250, 22);
             this.openShMemMenu.Text = "Shared Memory";
             this.openShMemMenu.Click += new System.EventHandler(this.openShMemMenu_Click);
             // 
             // openRandomDataMenu
             // 
             this.openRandomDataMenu.Name = "openRandomDataMenu";
-            this.openRandomDataMenu.Size = new System.Drawing.Size(214, 22);
+            this.openRandomDataMenu.Size = new System.Drawing.Size(250, 22);
             this.openRandomDataMenu.Text = "Random Data";
             this.openRandomDataMenu.Click += new System.EventHandler(this.openRandomDataMenu_Click);
             // 
@@ -299,8 +313,15 @@ namespace RX_FFT
             // 
             this.scanBandMenu.Name = "scanBandMenu";
             this.scanBandMenu.Size = new System.Drawing.Size(191, 22);
-            this.scanBandMenu.Text = "Scan band";
+            this.scanBandMenu.Text = "Scan Band...";
             this.scanBandMenu.Click += new System.EventHandler(this.scanBandMenu_Click);
+            // 
+            // scanChannelsMenu
+            // 
+            this.scanChannelsMenu.Name = "scanChannelsMenu";
+            this.scanChannelsMenu.Size = new System.Drawing.Size(191, 22);
+            this.scanChannelsMenu.Text = "Scan Channels...";
+            this.scanChannelsMenu.Click += new System.EventHandler(this.scanChannelsMenu_Click);
             // 
             // scanMarkersMenu
             // 
@@ -308,6 +329,11 @@ namespace RX_FFT
             this.scanMarkersMenu.Size = new System.Drawing.Size(191, 22);
             this.scanMarkersMenu.Text = "Scan Markers";
             this.scanMarkersMenu.Click += new System.EventHandler(this.scanMarkersMenu_Click);
+            // 
+            // toolStripSeparator8
+            // 
+            this.toolStripSeparator8.Name = "toolStripSeparator8";
+            this.toolStripSeparator8.Size = new System.Drawing.Size(188, 6);
             // 
             // demodulationMenu
             // 
@@ -335,6 +361,39 @@ namespace RX_FFT
             this.toolStripSeparator2.Name = "toolStripSeparator2";
             this.toolStripSeparator2.Size = new System.Drawing.Size(188, 6);
             // 
+            // loadScriptMenu
+            // 
+            this.loadScriptMenu.Name = "loadScriptMenu";
+            this.loadScriptMenu.Size = new System.Drawing.Size(191, 22);
+            this.loadScriptMenu.Text = "Load Script...";
+            this.loadScriptMenu.Click += new System.EventHandler(this.loadScriptMenu_Click);
+            // 
+            // unloadScriptToolStripMenuItem
+            // 
+            this.unloadScriptToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.unloadAllMenu,
+            this.toolStripSeparator7});
+            this.unloadScriptToolStripMenuItem.Name = "unloadScriptToolStripMenuItem";
+            this.unloadScriptToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
+            this.unloadScriptToolStripMenuItem.Text = "Unload Script";
+            // 
+            // unloadAllMenu
+            // 
+            this.unloadAllMenu.Name = "unloadAllMenu";
+            this.unloadAllMenu.Size = new System.Drawing.Size(127, 22);
+            this.unloadAllMenu.Text = "Unload all";
+            this.unloadAllMenu.Click += new System.EventHandler(this.unloadAllMenu_Click);
+            // 
+            // toolStripSeparator7
+            // 
+            this.toolStripSeparator7.Name = "toolStripSeparator7";
+            this.toolStripSeparator7.Size = new System.Drawing.Size(124, 6);
+            // 
+            // toolStripSeparator5
+            // 
+            this.toolStripSeparator5.Name = "toolStripSeparator5";
+            this.toolStripSeparator5.Size = new System.Drawing.Size(188, 6);
+            // 
             // quitMenu
             // 
             this.quitMenu.Image = global::RX_FFT.Icons.imgExit;
@@ -342,6 +401,11 @@ namespace RX_FFT
             this.quitMenu.Size = new System.Drawing.Size(191, 22);
             this.quitMenu.Text = "Exit";
             this.quitMenu.Click += new System.EventHandler(this.quitMenu_Click);
+            // 
+            // toolStripSeparator6
+            // 
+            this.toolStripSeparator6.Name = "toolStripSeparator6";
+            this.toolStripSeparator6.Size = new System.Drawing.Size(188, 6);
             // 
             // optionsMenu
             // 
@@ -611,6 +675,7 @@ namespace RX_FFT
             this.FFTDisplay.DynamicLimits = false;
             this.FFTDisplay.FFTSize = 2048;
             this.FFTDisplay.FitSpectrumEnabled = false;
+            this.FFTDisplay.Interleaving = 1;
             this.FFTDisplay.LimiterColor = System.Drawing.Color.Green;
             this.FFTDisplay.LimiterDisplayEnabled = false;
             this.FFTDisplay.LimiterLowerDescription = "";
@@ -714,7 +779,7 @@ namespace RX_FFT
         private System.Windows.Forms.ToolStripMenuItem openBO35PlainMenu;
         private System.Windows.Forms.ToolStripMenuItem fitSpectrumMenu;
         private System.Windows.Forms.ToolStripMenuItem displayFilterMarginsMenu;
-        private System.Windows.Forms.ToolStripMenuItem scanBandMenu;
+        private System.Windows.Forms.ToolStripMenuItem scanChannelsMenu;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel3;
         private System.Windows.Forms.ToolStripStatusLabel fpsLabel;
         private System.Windows.Forms.ToolStripMenuItem oscilloscopeMenu;
@@ -722,6 +787,14 @@ namespace RX_FFT
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel4;
         private System.Windows.Forms.ToolStripStatusLabel maxDbLabel;
         private System.Windows.Forms.ToolStripMenuItem agcMenu;
+        private System.Windows.Forms.ToolStripMenuItem loadScriptMenu;
+        private System.Windows.Forms.ToolStripMenuItem unloadScriptToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem unloadAllMenu;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator5;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator6;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator7;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator8;
+        private System.Windows.Forms.ToolStripMenuItem scanBandMenu;
     }
 }
 

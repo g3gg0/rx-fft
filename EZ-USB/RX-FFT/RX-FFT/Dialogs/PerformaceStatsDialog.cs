@@ -6,11 +6,11 @@ namespace RX_FFT.Dialogs
 {
     public partial class PerformaceStatsDialog : Form
     {
-        private MainScreen.PerformanceEnvelope Envelope;
+        private LibRXFFT.Libraries.SignalProcessing.AudioDemodulator.PerformanceEnvelope Envelope;
         private Timer RefreshTimer;
         private ListViewItem[] ListItems;
 
-        public PerformaceStatsDialog(MainScreen.PerformanceEnvelope envelope)
+        public PerformaceStatsDialog(LibRXFFT.Libraries.SignalProcessing.AudioDemodulator.PerformanceEnvelope envelope)
         {
             Envelope = envelope;
             InitializeComponent();

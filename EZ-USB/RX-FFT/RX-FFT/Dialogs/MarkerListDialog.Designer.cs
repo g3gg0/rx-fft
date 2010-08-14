@@ -60,6 +60,7 @@
             this.lstMarkers.UseCompatibleStateImageBehavior = false;
             this.lstMarkers.View = System.Windows.Forms.View.Details;
             this.lstMarkers.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.lstMarkers_MouseDoubleClick);
+            this.lstMarkers.MouseClick += new System.Windows.Forms.MouseEventHandler(lstMarkers_MouseClick);
             // 
             // colFrequency
             // 

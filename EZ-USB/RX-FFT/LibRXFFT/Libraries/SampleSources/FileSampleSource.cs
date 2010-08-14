@@ -61,7 +61,7 @@ namespace LibRXFFT.Libraries.SampleSources
                 case eFileType.Unknown:
                     return;
             }
-
+            AllocateBuffers();
         }
 
         protected override void AllocateBuffers()

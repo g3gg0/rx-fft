@@ -30,6 +30,7 @@ namespace LibRXFFT.Libraries.SampleSources
             : base(1)
         {
             RandomData = new Random((int)DateTime.Now.Ticks);
+            InputSamplingRate = 44100;
         }
 
         public override bool Read()
@@ -38,6 +39,8 @@ namespace LibRXFFT.Libraries.SampleSources
             {
                 RandomData.NextBytes(InBuffer);
                 ByteUtil.SamplesFromBinary(InBuffer, SourceSamplesI, SourceSamplesQ, DataFormat, InvertedSpectrum);
+
+                ForwardData(InBuffer);
 
                 for (int pos = 0; pos < SourceSamplesI.Length; pos++)
                 {
@@ -64,10 +67,7 @@ namespace LibRXFFT.Libraries.SampleSources
                 ModulationPos += SourceSamplesI.Length;
                 SamplesRead = SourceSamplesI.Length;
 
-
-
                 SaveData();
-
             }
             return true;
         }

@@ -59,6 +59,35 @@ namespace LibRXFFT.Libraries
             return dstData;
         }
 
+        /// <summary>
+        /// Convert a given byte array to a bool array. The first bit in array will be (srcData[0] & 0x80).
+        /// </summary>
+        /// <param name="srcData">source byte data.</param> 
+        /// <param name="dstData">destination bool data.</param> 
+        /// <param name="bitsPerByte">bits per byte.</param> 
+        /// <param name="startBitPos">number of bits to skip in input data.</param> 
+        /// <param name="bitCount">number of bits to get.</param> 
+        /// <returns>either dstData or (if it was null) a newly allocated bool[]</param> 
+        /// 
+        public static bool[] BitsFromBytesRev(byte[] srcData, bool[] dstData, int bitsPerByte, int startBitPos, int bitCount)
+        {
+            if (dstData == null)
+                dstData = new bool[bitCount];
+
+            int inBitPos = startBitPos;
+            for (int outBitPos = 0; outBitPos < bitCount; outBitPos++)
+            {
+                int inBytePos = inBitPos / bitsPerByte;
+                int bitNum = inBitPos % bitsPerByte;
+                byte bitValue = (byte)(1 << bitNum);
+                bool bitSet = (srcData[inBytePos] & bitValue) != 0;
+
+                dstData[outBitPos] = bitSet;
+                inBitPos++;
+            }
+
+            return dstData;
+        }
 
         public static byte[] BitsToBytes(bool[] srcData)
         {
@@ -83,28 +112,49 @@ namespace LibRXFFT.Libraries
         public static byte[] BitsToBytes(bool[] srcData, byte[] dstData, int bitsPerByte, int startPos, int bits)
         {
             int byteCount = (bits + (bitsPerByte-1)) / bitsPerByte;
-            int leadingBits = 0;// (byteCount * 8) - srcData.Length;
 
             if (dstData == null)
                 dstData = new byte[byteCount];
 
+            byte outByte = 0;
+            int bitCount = 0;
+            int outPos = 0;
+            for (int bitNum = 0; bitNum < bits; bitNum++)
+            {
+                bool bitSet = srcData[bitNum];
+
+                outByte <<= 1;
+                if (bitSet)
+                {
+                    outByte |= 1;
+                }
+
+                bitCount++;
+                /* have enough bits to write a byte */
+                if (bitCount >= bitsPerByte)
+                {
+                    /* write the byte */
+                    dstData[outPos] = outByte;
+
+                    /* reset counters */
+                    bitCount = 0;
+                    outByte = 0;
+                    outPos++;
+                }
+            }
+
+            /* write remaining bits */
+            if (bitCount!= 0)
+            {
+                /* shift to align it to MSB */
+                outByte <<= (bitsPerByte - bitCount);
+                dstData[outPos] = outByte;
+            }
+            /*
             for (int bytePos = 0; bytePos < (bits / bitsPerByte); bytePos++)
             {
-                byte outByte = 0;
-
                 for (int bitPos = 0; bitPos < bitsPerByte; bitPos++)
                 {
-                    /* when handling the first bit, skip some bits if not aligned properly 
-                    if (bitPos == 0 && bytePos == 0)
-                        bitPos = leadingBits;
-
-                    byte bitValue = (byte)(1 << (7-bitPos));
-                    bool bitSet = srcData[startPos + bytePos * bitsPerByte + bitPos];
-
-                    if (bitSet)
-                        outByte |= bitValue;
-                     * */
-
                     bool bitSet = srcData[startPos + bytePos * bitsPerByte + bitPos];
 
                     outByte <<= 1;
@@ -114,10 +164,39 @@ namespace LibRXFFT.Libraries
 
                 dstData[bytePos] = outByte;
             }
-
+            */
             return dstData;
         }
 
+        /// <summary>
+        /// Convert a given byte array to a bool array MSB. The first bit in array will be (srcData[0] & 0x80).
+        /// </summary>
+        /// <param name="srcData">source byte data.</param> 
+        /// <param name="dstData">destination bool data.</param> 
+        /// <param name="bitsPerByte">bits per byte.</param> 
+        /// <param name="startBitPos">number of bits to skip in input data.</param> 
+        /// <param name="bitCount">number of bits to get.</param> 
+        /// <returns>either dstData or (if it was null) a newly allocated bool[]</param> 
+        /// 
+        public static bool[] BitsFromBytes(byte[] srcData, bool[] dstData, int bitsPerByte, int startBitPos, int bitCount)
+        {
+            if (dstData == null)
+                dstData = new bool[bitCount];
+
+            int inBitPos = startBitPos;
+            for (int bitNum = 0; bitNum < bitCount; bitNum++)
+            {
+                int inBytePos = inBitPos / bitsPerByte;
+                int bitPos = inBitPos % bitsPerByte;
+                byte bitValue = (byte)(1 << ((bitsPerByte - 1) - bitPos));
+                bool bitSet = (srcData[inBytePos] & bitValue) != 0;
+
+                dstData[bitNum] = bitSet;
+                inBitPos++;
+            }
+
+            return dstData;
+        }
 
         public static long BitsToLong(bool[] srcData)
         {

@@ -6,7 +6,13 @@ namespace LibRXFFT.Libraries.SignalProcessing
     public class OffsetEstimator
     {
         /* estimate offset by checking the zero-line crossings */
+               
         public static double EstimateOffset(double[] srcData, int startPos, int samples, double oversampling)
+        {
+            return EstimateOffset(srcData, startPos, samples, oversampling, 0);
+        }
+
+        public static double EstimateOffset(double[] srcData, int startPos, int samples, double oversampling, double transitionOffset)
         {
             double lastSampleValue = 0;
             double sampleValue = 0;
@@ -29,9 +35,9 @@ namespace LibRXFFT.Libraries.SignalProcessing
                     /* get the offset where we have this transition */
                     double transition = startPos + (pos - 1) + delta;
 
-                    //transition += oversampling / 2;
+                    transition += transitionOffset;
                     transition %= oversampling;
-                    //transition -= oversampling / 2;
+                    transition -= transitionOffset;
 
                     averages.Add(transition);
                 }

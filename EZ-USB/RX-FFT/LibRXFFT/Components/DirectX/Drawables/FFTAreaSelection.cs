@@ -11,10 +11,18 @@ namespace LibRXFFT.Components.DirectX.Drawables
 {
     public class FFTAreaSelection : DirectXDrawable
     {
-        public enum OperationMode
+        public enum eOperationMode
         {
             Area,
-            Carriers
+            Carriers,
+            USB,
+            LSB
+        }
+        public enum eAreaMode
+        {
+            Normal,
+            USB,
+            LSB
         }
         protected enum DragType
         {
@@ -41,7 +49,9 @@ namespace LibRXFFT.Components.DirectX.Drawables
 
         public double DragBorderWidth = 10;
         public int Carriers = 0;
-        public OperationMode Mode = OperationMode.Area;
+        public eOperationMode Mode = eOperationMode.Area;
+        public eAreaMode AreaMode = eAreaMode.Normal;
+        
 
         protected new DirectXFFTDisplay MainPlot;
         protected Vertex[] BorderVertexes = new Vertex[16];
@@ -448,13 +458,28 @@ namespace LibRXFFT.Components.DirectX.Drawables
                 BorderVertexesUsed = 0;
                 BorderVertexesUsed = BuildRectangle(BorderVertexes, BorderVertexesUsed, xPos, xPos + AbsoluteWidth, yPos, yPos + AbsoluteHeight, (uint)BorderColor.ToArgb());
 
-                BodyVertexesUsed = 0;
-                BodyVertexesUsed = BuildFilledRectangle(BodyVertexes, BodyVertexesUsed, xPos, xPos + AbsoluteWidth, yPos, yPos + AbsoluteHeight, (uint)BodyColor.ToArgb());
+                switch (AreaMode)
+                {
+                    case eAreaMode.LSB:
+                        BodyVertexesUsed = 0;
+                        BodyVertexesUsed = BuildFilledRectangle(BodyVertexes, BodyVertexesUsed, xPos, xPos + AbsoluteWidth, yPos, yPos + AbsoluteHeight, (uint)BodyColor.ToArgb() & 0x1F000000, (uint)BodyColor.ToArgb());
+                        break;
+                    case eAreaMode.USB:
+                        BodyVertexesUsed = 0;
+                        BodyVertexesUsed = BuildFilledRectangle(BodyVertexes, BodyVertexesUsed, xPos, xPos + AbsoluteWidth, yPos, yPos + AbsoluteHeight, (uint)BodyColor.ToArgb(), (uint)BodyColor.ToArgb() & 0x1F000000);
+                        break;
+                    case eAreaMode.Normal:
+                        BodyVertexesUsed = 0;
+                        BodyVertexesUsed = BuildFilledRectangle(BodyVertexes, BodyVertexesUsed, xPos, xPos + AbsoluteWidth, yPos, yPos + AbsoluteHeight, (uint)BodyColor.ToArgb());
+                        break;
+                }
 
+
+                /* we dont care about the maximum size anymore */
                 TextRect.X = xPos + 10;
                 TextRect.Y = yPos + 3;
-                TextRect.Width = (int)AbsoluteWidth - 10;
-                TextRect.Height = (int)AbsoluteHeight - 3;
+                TextRect.Width = 200;// (int)AbsoluteWidth - 10;
+                TextRect.Height = 200;// (int)AbsoluteHeight - 3;
 
                 double carrierWidth = (double)AbsoluteWidth / Carriers;
 
@@ -480,14 +505,14 @@ namespace LibRXFFT.Components.DirectX.Drawables
 
             switch (Mode)
             {
-                case OperationMode.Area:
+                case eOperationMode.Area:
                     if (BodyVertexesUsed - 2 > 0)
                         MainPlot.Device.DrawUserPrimitives(PrimitiveType.TriangleStrip, BodyVertexesUsed - 2, BodyVertexes);
                     if (BorderVertexesUsed > 0)
                         MainPlot.Device.DrawUserPrimitives(PrimitiveType.LineList, BorderVertexesUsed / 2, BorderVertexes);
                     break;
 
-                case OperationMode.Carriers:
+                case eOperationMode.Carriers:
                     if (BodyVertexesUsed - 2 > 0)
                         MainPlot.Device.DrawUserPrimitives(PrimitiveType.TriangleStrip, BodyVertexesUsed - 2, BodyVertexes);
                     if (CarrierVertexesUsed > 0)

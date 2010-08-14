@@ -1,4 +1,5 @@
 ﻿using System.Threading;
+using System;
 namespace LibRXFFT.Components.DirectX
 {
     partial class DirectXWaterfallDisplay
@@ -28,7 +29,7 @@ namespace LibRXFFT.Components.DirectX
                         SaveThread.Abort();
                     }
                 }
-                catch (System.Exception e)
+                catch (Exception e)
                 {
                 }
                 SaveThread = null;

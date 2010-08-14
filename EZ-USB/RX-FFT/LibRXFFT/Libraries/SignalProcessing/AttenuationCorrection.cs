@@ -140,7 +140,7 @@ namespace LibRXFFT.Libraries.SignalProcessing
         }
 
 
-        private void Load(string file)
+        public void Load(string file)
         {
             TextReader reader = new StreamReader(file);
             XmlSerializer serializer = new XmlSerializer(typeof(CorrectionProfilePoint[]));
@@ -156,7 +156,7 @@ namespace LibRXFFT.Libraries.SignalProcessing
             }
         }
 
-        private void Save(string file)
+        public void Save(string file)
         {
             TextWriter writer = new StreamWriter(file);
             CorrectionProfilePoint[] points = ProfilePoints.ToArray<CorrectionProfilePoint>();
@@ -180,6 +180,11 @@ namespace LibRXFFT.Libraries.SignalProcessing
         public AttenuationCorrection(string fileName)
         {
             Profile = new CorrectionProfile(fileName);
+        }
+
+        public AttenuationCorrection(CorrectionProfile profile)
+        {
+            Profile = profile;
         }
 
         public void BuildCorrectionTable(long startFreq, long endFreq, long steps)

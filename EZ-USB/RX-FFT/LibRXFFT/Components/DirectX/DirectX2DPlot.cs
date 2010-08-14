@@ -699,7 +699,7 @@ namespace LibRXFFT.Components.DirectX
                             OverlayVertexesUsed++;
 
                             /* add the labels to the label list to draw */
-                            OverlayTextLabels.AddLast(new StringLabel(line.Label, (int)(line.Position) + 5, 15, line.Color));
+                            OverlayTextLabels.AddLast(new StringLabel(line.Label, (int)(line.Position) + 5, 5, line.Color));
                         }
                     }
                 }

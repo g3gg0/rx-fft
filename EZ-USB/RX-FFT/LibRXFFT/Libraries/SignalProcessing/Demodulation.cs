@@ -3,16 +3,34 @@ using LibRXFFT.Libraries.Demodulators;
 using LibRXFFT.Libraries.Filters;
 using LibRXFFT.Libraries.SignalProcessing;
 using System;
+using LibRXFFT.Components.DirectX;
+using LibRXFFT.Libraries.SoundSinks;
+using System.Windows.Forms;
+using System.Collections.Generic;
+using LibRXFFT.Components.GDI;
 
-namespace RX_FFT
+namespace LibRXFFT.Libraries.SignalProcessing
 {
-    public class Demodulation
+    public class DemodulationState
     {
         public enum eSquelchState
         {
+            Unknown,
             Open,
             Closed
         }
+
+        public enum eSourceFrequency
+        {
+            Center = 0,
+            Fixed = 1,
+            Cursor = 2,
+            Marker = 3,
+            Selection = 4
+        }
+
+
+        public DemodulationDialog Dialog = null;
         public event EventHandler DataUpdated;
         public bool ReinitSound = false;
         public double InputRate = 0;
@@ -24,17 +42,51 @@ namespace RX_FFT
             }
         }
 
+        public eSourceFrequency SourceFrequency = eSourceFrequency.Center;
+        public long DemodulationFrequencyCenter = 0;
+        public long DemodulationFrequencyFixed = 0;
+        public long DemodulationFrequencyCursor = 0;
+        public long DemodulationFrequencyMarker = 0;
+        public long DemodulationFrequencySelection = 0;
+
+        public long DemodulationFrequency
+        {
+            get
+            {
+                switch (SourceFrequency)
+                {
+                    case eSourceFrequency.Center:
+                        return DemodulationFrequencyCenter;
+                    case eSourceFrequency.Fixed:
+                        return DemodulationFrequencyFixed;
+                    case eSourceFrequency.Cursor:
+                        return DemodulationFrequencyCursor;
+                    case eSourceFrequency.Marker:
+                        return DemodulationFrequencyMarker;
+                    case eSourceFrequency.Selection:
+                        return DemodulationFrequencySelection;
+                }
+
+                return 0;
+            }
+        }
+        public long BaseFrequency = 0;
+        
+        public string Description = null;
+
         public bool AudioAmplificationEnabled = false;
         public double AudioAmplification = 1.0f;
 
         public int AudioDecimation = 1;
 
-        public bool DisplayDemodulationSignal = false;
-
         public bool DemodulationEnabled = false;
-        public DXSoundDevice SoundDevice = null;
-        public Demodulator Demod = new AMDemodulator();
+        public bool DemodulationPossible = false;
+
+        public Demodulator SignalDemodulator = new AMDemodulator();
         public Downmixer DemodulationDownmixer = new Downmixer();
+        public Downmixer SSBDownmixer = new Downmixer();
+
+        public DemodFFTView DemodView = null;
 
         public bool SquelchEnabled = false;
         public double SquelchLowerLimit = -25;
@@ -131,7 +183,7 @@ namespace RX_FFT
             }
         }
 
-        public Demodulation()
+        public DemodulationState()
         {
             CursorWindowFilterI = new FIRFilter(FIRCoefficients.FIRLowPass_4);
             CursorWindowFilterQ = new FIRFilter(FIRCoefficients.FIRLowPass_4);
@@ -149,12 +201,68 @@ namespace RX_FFT
                 CursorWindowFilterI.Dispose();
         }
 
-        internal void UpdateListeners()
+        private DateTime LastListenerUpdate = DateTime.Now;
+
+        public void UpdateListeners()
         {
-            if (DataUpdated != null)
+            lock (this)
             {
-                DataUpdated(this, null);
+                if ((DateTime.Now - LastListenerUpdate).TotalMilliseconds > 100)
+                {
+                    if (DataUpdated != null)
+                    {
+                        DataUpdated(this, null);
+                    }
+                    LastListenerUpdate = DateTime.Now;
+                }
             }
         }
+        
+        public LinkedList<SoundSinkInfo> SoundSinkInfos = new LinkedList<SoundSinkInfo>();
+
+
+        public void UpdateSinks()
+        {
+            lock (SoundSinkInfos)
+            {
+                foreach (SoundSinkInfo info in SoundSinkInfos)
+                {
+                    if (DemodulationEnabled)
+                    {
+                        info.Sink.Start();
+                    }
+                    else
+                    {
+                        info.Sink.Stop();
+                    }
+                }
+            }
+        }
+
+        public void AddSink(SoundSinkInfo info)
+        {
+            lock (SoundSinkInfos)
+            {
+                SoundSinkInfos.AddLast(info);
+                UpdateSinks();
+            }
+        }
+
+        internal void RemoveSink(SoundSinkInfo info)
+        {
+            lock (SoundSinkInfos)
+            {
+                SoundSinkInfos.Remove(info);
+                info.Sink.Stop();
+                UpdateSinks();
+            }
+        }
+    }
+
+    public struct SoundSinkInfo
+    {
+        public TabPage Page;
+        public SoundSink Sink;
+        public DemodulationDialog DemodDialog;
     }
 }

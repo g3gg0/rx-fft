@@ -7,7 +7,6 @@ namespace LibRXFFT.Components.DirectX.Drawables
 {
     public class DirectXDrawBase
     {
-
         protected int BuildFilledRectangle(Vertex[] vertexBuffer, int pos, float startX, float endX, float startY, float endY, uint color)
         {
             return BuildFilledRectangle(vertexBuffer, pos, startX, endX, startY, endY, color, color);

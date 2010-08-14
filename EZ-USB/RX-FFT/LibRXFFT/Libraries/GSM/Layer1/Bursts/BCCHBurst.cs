@@ -29,6 +29,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
 
             UnmapToI(decodedBurst, sequence);
 
+
             if (sequence == 3)
             {
                 /* deinterleave the 4 bursts. the result is a 456 bit block. i[] to c[] */
@@ -62,7 +63,6 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                     ErrorMessage = "(Error in L2 Pseudo Length)";
                     return eSuccessState.Failed;
                 }
-
                 L2.Handle(this, L3, BurstBufferD);
 
                 return eSuccessState.Succeeded;

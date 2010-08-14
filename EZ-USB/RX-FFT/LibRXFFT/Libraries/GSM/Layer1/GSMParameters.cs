@@ -2,6 +2,7 @@
 using LibRXFFT.Libraries.GSM.Layer1.Bursts;
 using System.Collections;
 using System.Collections.Generic;
+using LibRXFFT.Libraries.GSM.Layer1.PacketDump;
 
 namespace LibRXFFT.Libraries.GSM.Layer1
 {
@@ -73,6 +74,9 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
         public eGSMState State = eGSMState.Idle;
         public eTriState CBCH = eTriState.Unknown;
+
+        public PacketDumpWriter PacketDumper = null;
+        public Burst CurrentBurstHandler = null;
 
         public double PhaseOffsetFrequency
         {
@@ -166,6 +170,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
         public long MCC;
         public long LAC;
         public long CellIdent;
+        public byte BSIC;
         
         public long TC
         {

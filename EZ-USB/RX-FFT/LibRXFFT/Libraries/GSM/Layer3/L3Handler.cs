@@ -89,13 +89,26 @@ namespace LibRXFFT.Libraries.GSM.Layer3
 
         public static void ReloadFiles()
         {
-            L3PacketTypesMM = new L3PacketTypes("DataFiles\\packeteering-mm.xml");
-            L3PacketTypesCC = new L3PacketTypes("DataFiles\\packeteering-cc.xml");
-            L3PacketTypesRR = new L3PacketTypes("DataFiles\\packeteering-rr.xml");
-            L3Messages = new L3Messages("DataFiles\\messagelist.xml");
-            L3PduList = new L3PDUList("DataFiles\\pdulist.xml");
-            MCCTable = new MCCTable("DataFiles\\mccentries.xml");
-            MNCTable = new MNCTable("DataFiles\\mncentries.xml");
+            try
+            {
+                L3PacketTypesMM = new L3PacketTypes("DataFiles\\packeteering-mm.xml");
+                L3PacketTypesCC = new L3PacketTypes("DataFiles\\packeteering-cc.xml");
+                L3PacketTypesRR = new L3PacketTypes("DataFiles\\packeteering-rr.xml");
+                L3Messages = new L3Messages("DataFiles\\messagelist.xml");
+                L3PduList = new L3PDUList("DataFiles\\pdulist.xml");
+                MCCTable = new MCCTable("DataFiles\\mccentries.xml");
+                MNCTable = new MNCTable("DataFiles\\mncentries.xml");
+            }
+            catch (DirectoryNotFoundException e)
+            {
+                L3PacketTypesMM = new L3PacketTypes("..\\..\\..\\..\\RX-FFT\\DataFiles\\packeteering-mm.xml");
+                L3PacketTypesCC = new L3PacketTypes("..\\..\\..\\..\\RX-FFT\\DataFiles\\packeteering-cc.xml");
+                L3PacketTypesRR = new L3PacketTypes("..\\..\\..\\..\\RX-FFT\\DataFiles\\packeteering-rr.xml");
+                L3Messages = new L3Messages("..\\..\\..\\..\\RX-FFT\\DataFiles\\messagelist.xml");
+                L3PduList = new L3PDUList("..\\..\\..\\..\\RX-FFT\\DataFiles\\pdulist.xml");
+                MCCTable = new MCCTable("..\\..\\..\\..\\RX-FFT\\DataFiles\\mccentries.xml");
+                MNCTable = new MNCTable("..\\..\\..\\..\\RX-FFT\\DataFiles\\mncentries.xml");
+            }
         }
 
         private string ParseRA(L3Handler handler, long value)

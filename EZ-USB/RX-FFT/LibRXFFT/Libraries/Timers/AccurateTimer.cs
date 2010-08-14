@@ -107,12 +107,14 @@ namespace LibRXFFT.Libraries.Timers
         private System.Timers.Timer RecoveryTimer;
         private Thread TimerThread;
         private object TimerThreadEvent = new object();
+        private bool Pulsed = false;
 
         /// <summary>
         /// The timer elapsed event
         /// </summary>
         public event EventHandler Timer;
         public string StackTrace = "";
+        public string Name = "Unnamed Timer";
         private int Timeouts = 0;
         private int MaxTimeouts = 5;
 
@@ -211,13 +213,34 @@ namespace LibRXFFT.Libraries.Timers
                         RecoveryTimer = null;
                     }
 
-                    StopInternal();
+                    StopInternal(true);
                 }
                 Join();
             }
         }
 
-        private void StopInternal()
+        /// <summary>
+        /// Stop the current timer instance (if any)
+        /// </summary>
+        public void SoftStop()
+        {
+            lock (this)
+            {
+                if (TimerID != 0)
+                {
+                    if (RecoveryTimer != null)
+                    {
+                        RecoveryTimer.Stop();
+                        RecoveryTimer = null;
+                    }
+
+                    StopInternal(false);
+                }
+                Join();
+            }
+        }
+
+        private void StopInternal(bool killThread)
         {
             if (TimerID != 0)
             {
@@ -225,10 +248,10 @@ namespace LibRXFFT.Libraries.Timers
                 //Debug.WriteLine("MMTimer " + id.ToString() + " stopped");
                 TimerID = 0;
                 Running = false;
-                TriggerThread();
+                //TriggerThread();
             }
 
-            if (TimerThread != null)
+            if (killThread && TimerThread != null)
             {
                 if (!TimerThread.Join(100))
                 {
@@ -252,6 +275,7 @@ namespace LibRXFFT.Libraries.Timers
         {
             lock (TimerThreadEvent)
             {
+                Pulsed = true;
                 Monitor.Pulse(TimerThreadEvent);
             }
         }
@@ -270,7 +294,15 @@ namespace LibRXFFT.Libraries.Timers
                 {
                     lock (TimerThreadEvent)
                     {
-                        Monitor.Wait(TimerThreadEvent);
+                        while (!Pulsed)
+                        {
+                            Monitor.Wait(TimerThreadEvent, 100);
+                            if (!Running)
+                            {
+                                return;
+                            }
+                        }
+                        Pulsed = false;
                     }
 
                     HandlerActive = true;

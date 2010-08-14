@@ -45,6 +45,8 @@ namespace LibRXFFT.Components.DirectX
         protected int DirectXResetTries = 0;
         protected int DirectXResetTriesMax = 500;
         protected bool DirectXAvailable = false;
+        protected bool ResetInProgress = false;
+        
 
         protected Direct3D Direct3D;
         protected PresentParameters PresentParameters;
@@ -737,13 +739,19 @@ namespace LibRXFFT.Components.DirectX
                 }
                 try
                 {
-                    BeginInvoke((MethodInvoker)delegate()
+                    if (!ResetInProgress)
                     {
-                        ResetDirectX();
-                    });
+                        ResetInProgress = true;
+                        BeginInvoke((MethodInvoker)delegate()
+                        {
+                            ResetDirectX();
+                            ResetInProgress = false;
+                        });
+                    }
                 }
                 catch (Exception e)
                 {
+                    ResetInProgress = false;
                 }
                 Thread.Sleep(100);
 
@@ -1541,8 +1549,17 @@ namespace LibRXFFT.Components.DirectX
             NeedsRender = true;
         }
 
+        protected Point LastMouseMovePos = new Point();
         protected override void OnMouseMove(MouseEventArgs e)
         {
+            /* dont process if nothing has changed... */
+            if (LastMouseMovePos.X == e.X && LastMouseMovePos.Y == e.Y)
+            {
+                return;
+            }
+            LastMouseMovePos.X = e.X;
+            LastMouseMovePos.Y = e.Y;
+
             /* check if drawable wants to handle input event */
             DrawableInputEvent.Type = eInputEventType.MouseMoved;
             DrawableInputEvent.MouseButtons = e.Button;

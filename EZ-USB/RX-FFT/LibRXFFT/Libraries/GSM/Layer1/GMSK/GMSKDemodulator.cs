@@ -21,7 +21,6 @@ namespace LibRXFFT.Libraries.GSM.Layer1.GMSK
             InvertedSpectrum = InvertedSpectrumDefault;
 
             //ShmemOutChan = new SharedMem(-2, -1, "GMSKDemod");
-
         }
 
         private double FastAtan2b(double y, double x)
@@ -122,6 +121,5 @@ namespace LibRXFFT.Libraries.GSM.Layer1.GMSK
 
             return sampleArray;
         }
-
     }
 }

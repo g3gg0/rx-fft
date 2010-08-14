@@ -77,10 +77,10 @@
             this.chkL1DumpFrames = new System.Windows.Forms.CheckBox();
             this.chkL1ShowEncrypted = new System.Windows.Forms.CheckBox();
             this.groupBox5 = new System.Windows.Forms.GroupBox();
+            this.chkL2DumpFaulty = new System.Windows.Forms.CheckBox();
             this.chkL2ShowAllFrames = new System.Windows.Forms.CheckBox();
             this.chkL2DumpRaw = new System.Windows.Forms.CheckBox();
             this.groupBox6 = new System.Windows.Forms.GroupBox();
-            this.chkL2DumpFaulty = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -583,6 +583,17 @@
             this.groupBox5.TabStop = false;
             this.groupBox5.Text = "L2 Options";
             // 
+            // chkL2DumpFaulty
+            // 
+            this.chkL2DumpFaulty.AutoSize = true;
+            this.chkL2DumpFaulty.Location = new System.Drawing.Point(10, 61);
+            this.chkL2DumpFaulty.Name = "chkL2DumpFaulty";
+            this.chkL2DumpFaulty.Size = new System.Drawing.Size(123, 17);
+            this.chkL2DumpFaulty.TabIndex = 19;
+            this.chkL2DumpFaulty.Text = "Dump faulty packets";
+            this.chkL2DumpFaulty.UseVisualStyleBackColor = true;
+            this.chkL2DumpFaulty.CheckedChanged += new System.EventHandler(this.chkL2DumpFaulty_CheckedChanged);
+            // 
             // chkL2ShowAllFrames
             // 
             this.chkL2ShowAllFrames.AutoSize = true;
@@ -620,17 +631,6 @@
             this.groupBox6.TabIndex = 100;
             this.groupBox6.TabStop = false;
             this.groupBox6.Text = "Signal Processing";
-            // 
-            // chkL2DumpFaulty
-            // 
-            this.chkL2DumpFaulty.AutoSize = true;
-            this.chkL2DumpFaulty.Location = new System.Drawing.Point(10, 61);
-            this.chkL2DumpFaulty.Name = "chkL2DumpFaulty";
-            this.chkL2DumpFaulty.Size = new System.Drawing.Size(123, 17);
-            this.chkL2DumpFaulty.TabIndex = 19;
-            this.chkL2DumpFaulty.Text = "Dump faulty packets";
-            this.chkL2DumpFaulty.UseVisualStyleBackColor = true;
-            this.chkL2DumpFaulty.CheckedChanged += new System.EventHandler(this.chkL2DumpFaulty_CheckedChanged);
             // 
             // OptionsDialog
             // 

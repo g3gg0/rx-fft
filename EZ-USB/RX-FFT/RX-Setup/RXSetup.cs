@@ -66,7 +66,7 @@ namespace RX_Setup
                 txtStatus.Text = "Connecting...";
 
                 Device = new USBRXDevice();
-                Device.ShowConsole(true);
+                //Device.ShowConsole(true);
                 Device.TunerCombination = USBRXDevice.eCombinationType.None;
 
                 if (!Device.Init())
@@ -308,7 +308,7 @@ namespace RX_Setup
         private bool AbortStressTest = false;
         private Thread WorkerThread = null;
         private int I2CTestTransfers = 500;
-        private int AtmelSPITestTransfers = 100;
+        private int AtmelSPITestTransfers = 10;
         private int AtmelSerialTestTransfers = 500;
         private int AtmelMixedTestTransfers = 5000;
         private int AtmelAD6636MixedTestTransfers = 200;
@@ -1144,47 +1144,65 @@ namespace RX_Setup
                 Log.AddMessage("------------------------------------");
                 try
                 {
-                    Log.AddMessage("");
-                    Log.AddMessage(" I²C ACK");
-                    I2CTestAck(0x51, "EEPROM");
-                    I2CTestAck(0x20, "Atmel ");
-                    Log.AddMessage("");
-                    Log.AddMessage(" I²C Read (1 byte)");
-                    I2CTestRead(0x51, "EEPROM", 1);
-                    I2CTestRead(0x20, "Atmel ", 1);
-                    Log.AddMessage("");
-                    Log.AddMessage(" I²C Read (8 byte)");
-                    I2CTestRead(0x51, "EEPROM", 8);
-                    I2CTestRead(0x20, "Atmel ", 8);
-                    Log.AddMessage("");
-                    Log.AddMessage(" I²C Read (32 byte)");
-                    I2CTestRead(0x51, "EEPROM", 32);
-                    I2CTestRead(0x20, "Atmel ", 32);
+                    while (true)
+                    {
+                        Log.AddMessage("");
+                        Log.AddMessage(" I²C ACK");
+                        I2CTestAck(0x51, "EEPROM");
+                        I2CTestAck(0x20, "Atmel ");
+                        Log.AddMessage("");
+
+                        Log.AddMessage(" I²C ACK-Storm");
+                        Random rnd = new Random(DateTime.Now.Millisecond);
+                        for (int tries = 0; tries < 1000; tries++)
+                        {
+                            Device.I2CDeviceAck(rnd.Next(0x7F));
+                        }
+                        I2CTestAck(0x51, "EEPROM");
+
+                        for (int tries = 0; tries < 1000; tries++)
+                        {
+                            Device.I2CDeviceAck(rnd.Next(0x7F));
+                        }
+                        I2CTestAck(0x20, "Atmel ");
+
+                        Log.AddMessage("");
+                        Log.AddMessage(" I²C Read (1 byte)");
+                        I2CTestRead(0x51, "EEPROM", 1);
+                        I2CTestRead(0x20, "Atmel ", 1);
+                        Log.AddMessage("");
+                        Log.AddMessage(" I²C Read (8 byte)");
+                        I2CTestRead(0x51, "EEPROM", 8);
+                        I2CTestRead(0x20, "Atmel ", 8);
+                        Log.AddMessage("");
+                        Log.AddMessage(" I²C Read (32 byte)");
+                        I2CTestRead(0x51, "EEPROM", 32);
+                        I2CTestRead(0x20, "Atmel ", 32);
 
 
-                    Log.AddMessage("");
-                    Log.AddMessage(" Atmel SPI programming");
-                    AtmelSPITest();
+                        Log.AddMessage("");
+                        Log.AddMessage(" Atmel SPI programming");
+                        AtmelSPITest();
 
-                    Log.AddMessage("");
-                    Log.AddMessage(" Atmel serial number");
-                    AtmelSerialTest();
-                    
-                    TotalTransfers = 0;
-                    TestStartTime = DateTime.Now;
-                    Log.AddMessage("");
-                    Log.AddMessage(" Atmel mixed access");
-                    AtmelMixedTest();
-                    Log.AddMessage("   - Transfers/s: " + TransfersPerSecond.ToString("0.00"));
+                        Log.AddMessage("");
+                        Log.AddMessage(" Atmel serial number");
+                        AtmelSerialTest();
+
+                        TotalTransfers = 0;
+                        TestStartTime = DateTime.Now;
+                        Log.AddMessage("");
+                        Log.AddMessage(" Atmel mixed access");
+                        AtmelMixedTest();
+                        Log.AddMessage("   - Transfers/s: " + TransfersPerSecond.ToString("0.00"));
 
 
-                    TotalTransfers = 0;
-                    TestStartTime = DateTime.Now;
-                    Log.AddMessage("");
-                    Log.AddMessage(" AD6636 mixed access");
-                    AD6636MixedTest();
-                    Log.AddMessage("   - Transfers/s: " + TransfersPerSecond.ToString("0.00"));
-
+                        TotalTransfers = 0;
+                        TestStartTime = DateTime.Now;
+                        Log.AddMessage("");
+                        Log.AddMessage(" AD6636 mixed access");
+                        AD6636MixedTest();
+                        Log.AddMessage("   - Transfers/s: " + TransfersPerSecond.ToString("0.00"));
+                    }
                 }
                 catch (Exception)
                 {
@@ -1196,6 +1214,171 @@ namespace RX_Setup
             });
 
             WorkerThread.Start();
+        }
+
+        private void btnI2cScan_Click(object sender, EventArgs e)
+        {
+            if (WorkerThread != null)
+            {
+                MessageBox.Show("Test already running. Stopping...");
+                AbortStressTest = true;
+                return;
+            }
+
+            WorkerThread = new Thread(() =>
+            {
+                AbortStressTest = false;
+
+                Log.AddMessage(" I²C scan starting");
+                Log.AddMessage("------------------------------------");
+                try
+                {
+                    Log.AddMessage(" I²C ACK for ID:");
+                    for (int dev = 0; dev < 0x80; dev++)
+                    {
+                        int tries = 0;
+                        int success = 0;
+
+                        for (tries = 0; tries < 50; tries++)
+                        {
+                            if (Device.I2CDeviceAck(dev))
+                            {
+                                success++;
+                            }
+                        }
+
+                        if (success > 0)
+                        {
+                            if (success != tries)
+                            {
+                                Log.AddMessage("    0x" + dev.ToString("X2") + "     (" + (tries-success) + "/" + tries + " failed)" );
+                            }
+                            else
+                            {
+                                Log.AddMessage("    0x" + dev.ToString("X2"));
+                            }
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                }
+                Log.AddMessage("------------------------------------");
+                Log.AddMessage(" I²C test finished");
+
+                WorkerThread = null;
+            });
+
+            WorkerThread.Start();
+        }
+
+
+        private void btnCypressEepromRead_Click(object sender, EventArgs e)
+        {
+            if (WorkerThread != null)
+            {
+                MessageBox.Show("Test already running. Stopping...");
+                AbortStressTest = true;
+                return;
+            }
+
+            if (Device == null)
+            {
+                MessageBox.Show("Not connected.");
+                return;
+            }
+
+            Log.AddMessage(" EEPROM dump");
+            Log.AddMessage("------------------------------------");
+
+            EEPROM eep = new EEPROM(Device);
+            Log.AddMessage("");
+            Log.AddMessage(" Autodetect size...");
+            if (eep.AutodetectSize())
+            {
+                Log.AddMessage("   Size: " + eep.Size + " byte");
+            }
+            else
+            {
+                Log.AddMessage("   Size: FAILED!");
+            }
+
+
+            /*
+            string oldText = btnCypressEepromRead.Text;
+            TotalTransfers = 0;
+            TestStartTime = DateTime.Now;
+            WorkerThread = new Thread(() =>
+            {
+                MemoryDump16BitLE data = Device.AtmelProgrammer.ReadFlash(Device.AtmelProgrammer.FlashStart, Device.AtmelProgrammer.FlashSize, (AtmelProgrammer.BlockProcessInfo info) =>
+                {
+                    TotalTransfers++;
+                    BeginInvoke(new Action(() =>
+                    {
+                        btnFirmwareRead.Text = (uint)((info.BlockNum * 100) / info.BlockCount) + "%";
+                    }));
+                    if (AbortStressTest)
+                    {
+                        info.Cancel = true;
+                    }
+                });
+
+                BeginInvoke(new Action(() =>
+                {
+                    btnFirmwareRead.Text = oldText;
+                }));
+
+                Device.AtmelProgrammer.SetProgrammingMode(false);
+
+                if (data == null)
+                {
+                    MessageBox.Show("Read was aborted");
+                    return;
+                }
+
+                BeginInvoke(new Action(() =>
+                {
+                    FileDialog dlg = new SaveFileDialog();
+
+                    dlg.DefaultExt = ".bin";
+                    if (dlg.ShowDialog() == DialogResult.OK)
+                    {
+                        FileStream writeFile = null;
+                        BinaryWriter writer = null;
+                        try
+                        {
+                            writeFile = File.OpenWrite(dlg.FileName);
+                            writer = new BinaryWriter(writeFile);
+
+                            writer.Write(((MemoryDump8Bit)data).Data);
+                            writer.Close();
+                        }
+                        catch (Exception ex)
+                        {
+                            if (writer != null)
+                            {
+                                writer.Close();
+                            }
+                            else if (writeFile != null)
+                            {
+                                writeFile.Close();
+                            }
+                            MessageBox.Show("Could not save the file. Reason: " + ex.GetType().ToString(), "Saving failed");
+                        }
+                    }
+
+                }));
+
+                WorkerThread = null;
+            });
+            
+            WorkerThread.Start();
+             * */
+        }
+
+        private void btnCypressEepromProgram_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

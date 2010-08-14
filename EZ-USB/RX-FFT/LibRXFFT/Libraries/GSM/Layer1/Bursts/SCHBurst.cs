@@ -44,9 +44,10 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
 
             /* only the first SCH has to be searched in a much higher range */
             if (Parameters.FirstSCH)
+            {
                 bitTolerance = 16;
-
-            Parameters.FirstSCH = false;
+                Parameters.FirstSCH = false;
+            }
 
             /* skip the number of data bits defined in SCHBurst */
             int sequencePos = (int)(startOffset + Parameters.Oversampling * (SyncOffset + 2));
@@ -90,7 +91,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                 return eSuccessState.Failed;
             }
 
-            long BSIC = ByteUtil.BitsToLongRev(data, 2, 6);
+            byte BSIC = (byte)ByteUtil.BitsToLongRev(data, 2, 6);
             long T1 = ByteUtil.BitsToLongRev(data, new[] { new[] { 0, 2 }, new[] { 8, 8 }, new[] { 23, 1 } });
             long T2 = ByteUtil.BitsToLongRev(data, 18, 5);
             long T3M = ByteUtil.BitsToLongRev(data, new[] { new[] { 16, 2 }, new[] { 24, 1 } });
@@ -106,6 +107,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                 param.FN = FN;
 
             param.TN = 0;
+            param.BSIC = BSIC;
 
             if (DumpData)
             {

@@ -20,6 +20,9 @@ namespace LibRXFFT.Components.GDI
         private char DecimalSeparatorChar;
         private string FixedLengthFormat = "";
 
+        public Color ForeColorValid = Color.Black;
+        public Color ForeColorInvalid = Color.Red;
+
         public FrequencySelector()
             : base()
         {
@@ -82,11 +85,11 @@ namespace LibRXFFT.Components.GDI
 
                 if (FrequencyValid)
                 {
-                    ForeColor = Color.Black;
+                    ForeColor = ForeColorValid;
                 }
                 else
                 {
-                    ForeColor = Color.Red;
+                    ForeColor = ForeColorInvalid;
                 }
 
                 if (FrequencyChanged != null)
@@ -157,11 +160,11 @@ namespace LibRXFFT.Components.GDI
 
             if (FrequencyValid)
             {
-                ForeColor = Color.Black;
+                ForeColor = ForeColorValid;
             }
             else
             {
-                ForeColor = Color.Red;
+                ForeColor = ForeColorInvalid;
             }
 
             if (FrequencyChanged != null)
@@ -230,8 +233,6 @@ namespace LibRXFFT.Components.GDI
         {
             get
             {
-                long factor = 1;
-
                 switch (FrequencyUnitString.ToLower())
                 {
                     case "hz":

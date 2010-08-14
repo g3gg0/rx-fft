@@ -80,8 +80,10 @@ namespace GSM_Analyzer
             this.lblT1 = new System.Windows.Forms.Label();
             this.lblT2 = new System.Windows.Forms.Label();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.lblSnr = new System.Windows.Forms.Label();
             this.lblIdlePower = new System.Windows.Forms.Label();
             this.lblPower = new System.Windows.Forms.Label();
+            this.label19 = new System.Windows.Forms.Label();
             this.label18 = new System.Windows.Forms.Label();
             this.label17 = new System.Windows.Forms.Label();
             this.label6 = new System.Windows.Forms.Label();
@@ -102,8 +104,7 @@ namespace GSM_Analyzer
             this.label5 = new System.Windows.Forms.Label();
             this.lblMCCMNC = new System.Windows.Forms.Label();
             this.txtLog = new System.Windows.Forms.TextBox();
-            this.label19 = new System.Windows.Forms.Label();
-            this.lblSnr = new System.Windows.Forms.Label();
+            this.chkDump = new System.Windows.Forms.CheckBox();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -156,6 +157,7 @@ namespace GSM_Analyzer
             // 
             // splitContainer5.Panel1
             // 
+            this.splitContainer5.Panel1.Controls.Add(this.chkDump);
             this.splitContainer5.Panel1.Controls.Add(this.txtArfcn);
             this.splitContainer5.Panel1.Controls.Add(this.label16);
             this.splitContainer5.Panel1.Controls.Add(this.btnScan);
@@ -196,7 +198,7 @@ namespace GSM_Analyzer
             // label16
             // 
             this.label16.AutoSize = true;
-            this.label16.Location = new System.Drawing.Point(105, 62);
+            this.label16.Location = new System.Drawing.Point(105, 61);
             this.label16.Name = "label16";
             this.label16.Size = new System.Drawing.Size(46, 13);
             this.label16.TabIndex = 19;
@@ -204,9 +206,10 @@ namespace GSM_Analyzer
             // 
             // btnScan
             // 
-            this.btnScan.Location = new System.Drawing.Point(3, 57);
+            this.btnScan.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnScan.Location = new System.Drawing.Point(211, 57);
             this.btnScan.Name = "btnScan";
-            this.btnScan.Size = new System.Drawing.Size(75, 23);
+            this.btnScan.Size = new System.Drawing.Size(50, 22);
             this.btnScan.TabIndex = 18;
             this.btnScan.Text = "Scan";
             this.btnScan.UseVisualStyleBackColor = true;
@@ -476,6 +479,15 @@ namespace GSM_Analyzer
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Statistics";
             // 
+            // lblSnr
+            // 
+            this.lblSnr.AutoSize = true;
+            this.lblSnr.Location = new System.Drawing.Point(119, 44);
+            this.lblSnr.Name = "lblSnr";
+            this.lblSnr.Size = new System.Drawing.Size(16, 13);
+            this.lblSnr.TabIndex = 15;
+            this.lblSnr.Text = "---";
+            // 
             // lblIdlePower
             // 
             this.lblIdlePower.AutoSize = true;
@@ -493,6 +505,15 @@ namespace GSM_Analyzer
             this.lblPower.Size = new System.Drawing.Size(16, 13);
             this.lblPower.TabIndex = 15;
             this.lblPower.Text = "---";
+            // 
+            // label19
+            // 
+            this.label19.AutoSize = true;
+            this.label19.Location = new System.Drawing.Point(87, 44);
+            this.label19.Name = "label19";
+            this.label19.Size = new System.Drawing.Size(33, 13);
+            this.label19.TabIndex = 15;
+            this.label19.Text = "SNR:";
             // 
             // label18
             // 
@@ -684,23 +705,16 @@ namespace GSM_Analyzer
             this.txtLog.Size = new System.Drawing.Size(949, 394);
             this.txtLog.TabIndex = 1;
             // 
-            // label19
+            // chkDump
             // 
-            this.label19.AutoSize = true;
-            this.label19.Location = new System.Drawing.Point(87, 44);
-            this.label19.Name = "label19";
-            this.label19.Size = new System.Drawing.Size(33, 13);
-            this.label19.TabIndex = 15;
-            this.label19.Text = "SNR:";
-            // 
-            // lblSnr
-            // 
-            this.lblSnr.AutoSize = true;
-            this.lblSnr.Location = new System.Drawing.Point(119, 44);
-            this.lblSnr.Name = "lblSnr";
-            this.lblSnr.Size = new System.Drawing.Size(16, 13);
-            this.lblSnr.TabIndex = 15;
-            this.lblSnr.Text = "---";
+            this.chkDump.AutoSize = true;
+            this.chkDump.Location = new System.Drawing.Point(7, 58);
+            this.chkDump.Name = "chkDump";
+            this.chkDump.Size = new System.Drawing.Size(54, 17);
+            this.chkDump.TabIndex = 21;
+            this.chkDump.Text = "Dump";
+            this.chkDump.UseVisualStyleBackColor = true;
+            this.chkDump.CheckedChanged += new System.EventHandler(this.chkDump_CheckedChanged);
             // 
             // GSMAnalyzer
             // 
@@ -789,6 +803,7 @@ namespace GSM_Analyzer
         private System.Windows.Forms.Label label18;
         private System.Windows.Forms.Label lblSnr;
         private System.Windows.Forms.Label label19;
+        private System.Windows.Forms.CheckBox chkDump;
     }
 }
 

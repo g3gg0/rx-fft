@@ -7,6 +7,7 @@ using System.Drawing;
 using SlimDX.Direct3D9;
 using LibRXFFT.Libraries.Misc;
 using System.Windows.Forms;
+using System.Threading;
 
 namespace LibRXFFT.Components.DirectX.Drawables.Docks
 {
@@ -30,7 +31,7 @@ namespace LibRXFFT.Components.DirectX.Drawables.Docks
 
         protected Rectangle FontSizeRect = new Rectangle();
 
-        protected FFTAreaSelection.OperationMode Mode
+        protected FFTAreaSelection.eOperationMode Mode
         {
             get
             {
@@ -98,8 +99,8 @@ namespace LibRXFFT.Components.DirectX.Drawables.Docks
 
                         menuItem1.Enabled = false;
                         menuItem3.Checked = Selection.Draggable;
-                        menuItem5.Checked = (Mode == FFTAreaSelection.OperationMode.Area);
-                        menuItem6.Checked = (Mode == FFTAreaSelection.OperationMode.Carriers);
+                        menuItem5.Checked = (Mode == FFTAreaSelection.eOperationMode.Area);
+                        menuItem6.Checked = (Mode == FFTAreaSelection.eOperationMode.Carriers);
 
                         contextMenu.MenuItems.AddRange(new MenuItem[] { menuItem1, menuItem2, menuItem3, menuItem4, menuItem5, menuItem6 });
 
@@ -110,23 +111,24 @@ namespace LibRXFFT.Components.DirectX.Drawables.Docks
 
                         menuItem5.Click += new EventHandler(delegate(object sender, EventArgs e)
                         {
-                            Mode = FFTAreaSelection.OperationMode.Area;
+                            Mode = FFTAreaSelection.eOperationMode.Area;
                         });
 
                         menuItem6.Click += new EventHandler(delegate(object sender, EventArgs e)
                         {
-                            Mode = FFTAreaSelection.OperationMode.Carriers;
+                            Mode = FFTAreaSelection.eOperationMode.Carriers;
                         });
 
 
                         System.Drawing.Point mousePos = new System.Drawing.Point();
-                        mousePos.X = (int)evt.MousePosition.X;
-                        mousePos.Y = (int)evt.MousePosition.Y;
+                        mousePos.X = (int)Form.MousePosition.X;
+                        mousePos.Y = (int)Form.MousePosition.Y;
 
                         System.Drawing.Point popupPos = MainPlot.PointToClient(mousePos);
 
-                        popupPos.X -= 20;
-                        popupPos.Y -= 20;
+                        popupPos.X -= 2;
+                        popupPos.Y -= 2;
+
                         contextMenu.Show(MainPlot, popupPos);
                         return true;
                     }
@@ -139,7 +141,7 @@ namespace LibRXFFT.Components.DirectX.Drawables.Docks
                     return true;
 
                 case eInputEventType.MouseWheel:
-                    if (Mode == FFTAreaSelection.OperationMode.Carriers)
+                    if (Mode == FFTAreaSelection.eOperationMode.Carriers)
                     {
                         Selection.Carriers += Math.Sign(evt.MouseWheelDelta);
                         Selection.Carriers = Math.Max(0, Math.Min(256, Selection.Carriers));

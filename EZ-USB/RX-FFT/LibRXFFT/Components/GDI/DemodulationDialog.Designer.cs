@@ -1,4 +1,4 @@
-﻿namespace RX_FFT.Dialogs
+﻿namespace LibRXFFT.Components.GDI
 {
     partial class DemodulationDialog
     {
@@ -46,10 +46,12 @@
             this.radioFilter2 = new System.Windows.Forms.RadioButton();
             this.radioFilter4 = new System.Windows.Forms.RadioButton();
             this.radioFilter8 = new System.Windows.Forms.RadioButton();
-            this.chkEnableCursorWin = new System.Windows.Forms.CheckBox();
+            this.chkEnableLimiter = new System.Windows.Forms.CheckBox();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.label2 = new System.Windows.Forms.Label();
             this.txtStatus = new System.Windows.Forms.TextBox();
+            this.txtDemodRate = new System.Windows.Forms.TextBox();
+            this.label8 = new System.Windows.Forms.Label();
             this.txtSamplingRate = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
@@ -67,7 +69,7 @@
             this.chkNative = new System.Windows.Forms.CheckBox();
             this.chkAmplify = new System.Windows.Forms.CheckBox();
             this.txtAmplify = new LibRXFFT.Components.GDI.TextBoxMouseScroll();
-            this.chkShowDemod = new System.Windows.Forms.CheckBox();
+            this.btnDemodFft = new System.Windows.Forms.Button();
             this.groupBox6 = new System.Windows.Forms.GroupBox();
             this.barSquelchPower = new LibRXFFT.Components.GDI.PowerBar();
             this.txtSquelchLimit = new LibRXFFT.Components.GDI.TextBoxMouseScroll();
@@ -77,14 +79,22 @@
             this.label5 = new System.Windows.Forms.Label();
             this.label6 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
-            this.label8 = new System.Windows.Forms.Label();
-            this.txtDemodRate = new System.Windows.Forms.TextBox();
+            this.tabSoundOut = new System.Windows.Forms.TabControl();
+            this.tabGeneral = new System.Windows.Forms.TabPage();
+            this.btnMp3File = new System.Windows.Forms.Button();
+            this.btnMp3 = new System.Windows.Forms.Button();
+            this.btnWav = new System.Windows.Forms.Button();
+            this.btnSound = new System.Windows.Forms.Button();
+            this.frequencySelector = new LibRXFFT.Components.GDI.FrequencySelector();
+            this.cmbSourceFrequency = new System.Windows.Forms.ComboBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
             this.groupBox4.SuspendLayout();
             this.groupBox5.SuspendLayout();
             this.groupBox6.SuspendLayout();
+            this.tabSoundOut.SuspendLayout();
+            this.tabGeneral.SuspendLayout();
             this.SuspendLayout();
             // 
             // chkEnableDemod
@@ -108,9 +118,9 @@
             this.groupBox1.Controls.Add(this.radioFMFast);
             this.groupBox1.Controls.Add(this.radioAM);
             this.groupBox1.Controls.Add(this.chkEnableDemod);
-            this.groupBox1.Location = new System.Drawing.Point(12, 12);
+            this.groupBox1.Location = new System.Drawing.Point(179, 64);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(104, 186);
+            this.groupBox1.Size = new System.Drawing.Size(125, 186);
             this.groupBox1.TabIndex = 1;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Demodulation";
@@ -144,7 +154,7 @@
             this.txtDecim.Location = new System.Drawing.Point(75, 158);
             this.txtDecim.LowerLimit = ((long)(1));
             this.txtDecim.Name = "txtDecim";
-            this.txtDecim.Size = new System.Drawing.Size(23, 20);
+            this.txtDecim.Size = new System.Drawing.Size(32, 20);
             this.txtDecim.TabIndex = 5;
             this.txtDecim.Text = "0";
             this.txtDecim.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
@@ -207,13 +217,13 @@
             this.groupBox2.Controls.Add(this.radioFilter2);
             this.groupBox2.Controls.Add(this.radioFilter4);
             this.groupBox2.Controls.Add(this.radioFilter8);
-            this.groupBox2.Controls.Add(this.chkEnableCursorWin);
-            this.groupBox2.Location = new System.Drawing.Point(122, 12);
+            this.groupBox2.Controls.Add(this.chkEnableLimiter);
+            this.groupBox2.Location = new System.Drawing.Point(12, 64);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Size = new System.Drawing.Size(161, 140);
             this.groupBox2.TabIndex = 2;
             this.groupBox2.TabStop = false;
-            this.groupBox2.Text = "Cursor Position Window";
+            this.groupBox2.Text = "Bandwidth Limiter";
             // 
             // radioFilter256
             // 
@@ -310,16 +320,16 @@
             this.radioFilter8.UseVisualStyleBackColor = true;
             this.radioFilter8.CheckedChanged += new System.EventHandler(this.radioFilter8_CheckedChanged);
             // 
-            // chkEnableCursorWin
+            // chkEnableLimiter
             // 
-            this.chkEnableCursorWin.AutoSize = true;
-            this.chkEnableCursorWin.Location = new System.Drawing.Point(8, 19);
-            this.chkEnableCursorWin.Name = "chkEnableCursorWin";
-            this.chkEnableCursorWin.Size = new System.Drawing.Size(59, 17);
-            this.chkEnableCursorWin.TabIndex = 0;
-            this.chkEnableCursorWin.Text = "Enable";
-            this.chkEnableCursorWin.UseVisualStyleBackColor = true;
-            this.chkEnableCursorWin.CheckedChanged += new System.EventHandler(this.chkEnableCursorWin_CheckedChanged);
+            this.chkEnableLimiter.AutoSize = true;
+            this.chkEnableLimiter.Location = new System.Drawing.Point(8, 19);
+            this.chkEnableLimiter.Name = "chkEnableLimiter";
+            this.chkEnableLimiter.Size = new System.Drawing.Size(59, 17);
+            this.chkEnableLimiter.TabIndex = 0;
+            this.chkEnableLimiter.Text = "Enable";
+            this.chkEnableLimiter.UseVisualStyleBackColor = true;
+            this.chkEnableLimiter.CheckedChanged += new System.EventHandler(this.chkEnableCursorWin_CheckedChanged);
             // 
             // groupBox3
             // 
@@ -329,9 +339,9 @@
             this.groupBox3.Controls.Add(this.label8);
             this.groupBox3.Controls.Add(this.txtSamplingRate);
             this.groupBox3.Controls.Add(this.label1);
-            this.groupBox3.Location = new System.Drawing.Point(122, 158);
+            this.groupBox3.Location = new System.Drawing.Point(12, 210);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(161, 99);
+            this.groupBox3.Size = new System.Drawing.Size(161, 105);
             this.groupBox3.TabIndex = 3;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Information";
@@ -352,6 +362,23 @@
             this.txtStatus.ReadOnly = true;
             this.txtStatus.Size = new System.Drawing.Size(68, 20);
             this.txtStatus.TabIndex = 1;
+            // 
+            // txtDemodRate
+            // 
+            this.txtDemodRate.Location = new System.Drawing.Point(82, 45);
+            this.txtDemodRate.Name = "txtDemodRate";
+            this.txtDemodRate.ReadOnly = true;
+            this.txtDemodRate.Size = new System.Drawing.Size(68, 20);
+            this.txtDemodRate.TabIndex = 1;
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(6, 48);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(70, 13);
+            this.label8.TabIndex = 0;
+            this.label8.Text = "Demod Rate:";
             // 
             // txtSamplingRate
             // 
@@ -381,7 +408,7 @@
             this.groupBox4.Controls.Add(this.radioLowPass8);
             this.groupBox4.Controls.Add(this.radioLowPass2);
             this.groupBox4.Controls.Add(this.chkEnableLowpass);
-            this.groupBox4.Location = new System.Drawing.Point(289, 12);
+            this.groupBox4.Location = new System.Drawing.Point(310, 64);
             this.groupBox4.Name = "groupBox4";
             this.groupBox4.Size = new System.Drawing.Size(162, 140);
             this.groupBox4.TabIndex = 4;
@@ -501,10 +528,10 @@
             this.groupBox5.Controls.Add(this.chkNative);
             this.groupBox5.Controls.Add(this.chkAmplify);
             this.groupBox5.Controls.Add(this.txtAmplify);
-            this.groupBox5.Controls.Add(this.chkShowDemod);
-            this.groupBox5.Location = new System.Drawing.Point(289, 158);
+            this.groupBox5.Controls.Add(this.btnDemodFft);
+            this.groupBox5.Location = new System.Drawing.Point(310, 210);
             this.groupBox5.Name = "groupBox5";
-            this.groupBox5.Size = new System.Drawing.Size(162, 99);
+            this.groupBox5.Size = new System.Drawing.Size(162, 105);
             this.groupBox5.TabIndex = 5;
             this.groupBox5.TabStop = false;
             this.groupBox5.Text = "Tweaks";
@@ -512,7 +539,7 @@
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(114, 45);
+            this.label7.Location = new System.Drawing.Point(117, 44);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(15, 13);
             this.label7.TabIndex = 5;
@@ -521,7 +548,7 @@
             // chkNative
             // 
             this.chkNative.AutoSize = true;
-            this.chkNative.Location = new System.Drawing.Point(6, 67);
+            this.chkNative.Location = new System.Drawing.Point(8, 20);
             this.chkNative.Name = "chkNative";
             this.chkNative.Size = new System.Drawing.Size(106, 17);
             this.chkNative.TabIndex = 4;
@@ -532,7 +559,7 @@
             // chkAmplify
             // 
             this.chkAmplify.AutoSize = true;
-            this.chkAmplify.Location = new System.Drawing.Point(6, 43);
+            this.chkAmplify.Location = new System.Drawing.Point(8, 43);
             this.chkAmplify.Name = "chkAmplify";
             this.chkAmplify.Size = new System.Drawing.Size(62, 17);
             this.chkAmplify.TabIndex = 3;
@@ -542,10 +569,10 @@
             // 
             // txtAmplify
             // 
-            this.txtAmplify.Location = new System.Drawing.Point(74, 42);
+            this.txtAmplify.Location = new System.Drawing.Point(70, 41);
             this.txtAmplify.LowerLimit = ((long)(0));
             this.txtAmplify.Name = "txtAmplify";
-            this.txtAmplify.Size = new System.Drawing.Size(38, 20);
+            this.txtAmplify.Size = new System.Drawing.Size(46, 20);
             this.txtAmplify.TabIndex = 2;
             this.txtAmplify.Text = "100";
             this.txtAmplify.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
@@ -553,16 +580,16 @@
             this.txtAmplify.Value = ((long)(100));
             this.txtAmplify.TextChanged += new System.EventHandler(this.txtAmplify_TextChanged);
             // 
-            // chkShowDemod
+            // btnDemodFft
             // 
-            this.chkShowDemod.AutoSize = true;
-            this.chkShowDemod.Location = new System.Drawing.Point(6, 19);
-            this.chkShowDemod.Name = "chkShowDemod";
-            this.chkShowDemod.Size = new System.Drawing.Size(122, 17);
-            this.chkShowDemod.TabIndex = 0;
-            this.chkShowDemod.Text = "Show Demod Signal";
-            this.chkShowDemod.UseVisualStyleBackColor = true;
-            this.chkShowDemod.CheckedChanged += new System.EventHandler(this.chkShowDemod_CheckedChanged);
+            this.btnDemodFft.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.btnDemodFft.Location = new System.Drawing.Point(8, 66);
+            this.btnDemodFft.Name = "btnDemodFft";
+            this.btnDemodFft.Size = new System.Drawing.Size(131, 23);
+            this.btnDemodFft.TabIndex = 7;
+            this.btnDemodFft.Text = "Show Demod FFT";
+            this.btnDemodFft.UseVisualStyleBackColor = true;
+            this.btnDemodFft.Click += new System.EventHandler(this.btnDemodFft_Click);
             // 
             // groupBox6
             // 
@@ -574,9 +601,9 @@
             this.groupBox6.Controls.Add(this.label5);
             this.groupBox6.Controls.Add(this.label6);
             this.groupBox6.Controls.Add(this.label4);
-            this.groupBox6.Location = new System.Drawing.Point(457, 12);
+            this.groupBox6.Location = new System.Drawing.Point(478, 64);
             this.groupBox6.Name = "groupBox6";
-            this.groupBox6.Size = new System.Drawing.Size(126, 139);
+            this.groupBox6.Size = new System.Drawing.Size(126, 140);
             this.groupBox6.TabIndex = 6;
             this.groupBox6.TabStop = false;
             this.groupBox6.Text = "Squelch";
@@ -663,32 +690,114 @@
             this.label4.TabIndex = 0;
             this.label4.Text = "Avg Power:";
             // 
-            // label8
+            // tabSoundOut
             // 
-            this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(6, 48);
-            this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(70, 13);
-            this.label8.TabIndex = 0;
-            this.label8.Text = "Demod Rate:";
+            this.tabSoundOut.Alignment = System.Windows.Forms.TabAlignment.Left;
+            this.tabSoundOut.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.tabSoundOut.Controls.Add(this.tabGeneral);
+            this.tabSoundOut.Location = new System.Drawing.Point(611, 19);
+            this.tabSoundOut.Multiline = true;
+            this.tabSoundOut.Name = "tabSoundOut";
+            this.tabSoundOut.SelectedIndex = 0;
+            this.tabSoundOut.Size = new System.Drawing.Size(255, 299);
+            this.tabSoundOut.TabIndex = 10;
             // 
-            // txtDemodRate
+            // tabGeneral
             // 
-            this.txtDemodRate.Location = new System.Drawing.Point(82, 45);
-            this.txtDemodRate.Name = "txtDemodRate";
-            this.txtDemodRate.ReadOnly = true;
-            this.txtDemodRate.Size = new System.Drawing.Size(68, 20);
-            this.txtDemodRate.TabIndex = 1;
+            this.tabGeneral.BackColor = System.Drawing.SystemColors.Control;
+            this.tabGeneral.Controls.Add(this.btnMp3File);
+            this.tabGeneral.Controls.Add(this.btnMp3);
+            this.tabGeneral.Controls.Add(this.btnWav);
+            this.tabGeneral.Controls.Add(this.btnSound);
+            this.tabGeneral.Location = new System.Drawing.Point(23, 4);
+            this.tabGeneral.Name = "tabGeneral";
+            this.tabGeneral.Padding = new System.Windows.Forms.Padding(3);
+            this.tabGeneral.Size = new System.Drawing.Size(228, 291);
+            this.tabGeneral.TabIndex = 0;
+            this.tabGeneral.Text = "General";
+            // 
+            // btnMp3File
+            // 
+            this.btnMp3File.Location = new System.Drawing.Point(33, 99);
+            this.btnMp3File.Name = "btnMp3File";
+            this.btnMp3File.Size = new System.Drawing.Size(104, 23);
+            this.btnMp3File.TabIndex = 5;
+            this.btnMp3File.Text = "Add MP3 File";
+            this.btnMp3File.UseVisualStyleBackColor = true;
+            this.btnMp3File.Click += new System.EventHandler(this.btnMp3File_Click);
+            // 
+            // btnMp3
+            // 
+            this.btnMp3.Location = new System.Drawing.Point(33, 70);
+            this.btnMp3.Name = "btnMp3";
+            this.btnMp3.Size = new System.Drawing.Size(104, 23);
+            this.btnMp3.TabIndex = 4;
+            this.btnMp3.Text = "Add MP3 Stream";
+            this.btnMp3.UseVisualStyleBackColor = true;
+            this.btnMp3.Click += new System.EventHandler(this.btnMp3_Click);
+            // 
+            // btnWav
+            // 
+            this.btnWav.Location = new System.Drawing.Point(33, 41);
+            this.btnWav.Name = "btnWav";
+            this.btnWav.Size = new System.Drawing.Size(104, 23);
+            this.btnWav.TabIndex = 4;
+            this.btnWav.Text = "Add WAV Saver";
+            this.btnWav.UseVisualStyleBackColor = true;
+            this.btnWav.Click += new System.EventHandler(this.btnWav_Click);
+            // 
+            // btnSound
+            // 
+            this.btnSound.Location = new System.Drawing.Point(33, 12);
+            this.btnSound.Name = "btnSound";
+            this.btnSound.Size = new System.Drawing.Size(104, 23);
+            this.btnSound.TabIndex = 4;
+            this.btnSound.Text = "Add Sound Card";
+            this.btnSound.UseVisualStyleBackColor = true;
+            this.btnSound.Click += new System.EventHandler(this.btnSound_Click);
+            // 
+            // frequencySelector
+            // 
+            this.frequencySelector.BackColor = System.Drawing.Color.Black;
+            this.frequencySelector.ForeColorValid = System.Drawing.Color.Cyan;
+            this.frequencySelector.ForeColorInvalid = System.Drawing.Color.Red;
+            this.frequencySelector.FixedLengthDecades = 10;
+            this.frequencySelector.FixedLengthString = true;
+            this.frequencySelector.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.frequencySelector.ForeColor = System.Drawing.Color.Cyan;
+            this.frequencySelector.Frequency = ((long)(0));
+            this.frequencySelector.Location = new System.Drawing.Point(145, 21);
+            this.frequencySelector.Name = "frequencySelector";
+            this.frequencySelector.Size = new System.Drawing.Size(125, 20);
+            this.frequencySelector.TabIndex = 8;
+            this.frequencySelector.Text = "0.000.000.000 Hz";
+            this.frequencySelector.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.frequencySelector.FrequencyChanged += new System.EventHandler(this.frequencySelector_FrequencyChanged);
+            // 
+            // cmbSourceFrequency
+            // 
+            this.cmbSourceFrequency.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbSourceFrequency.FormattingEnabled = true;
+            this.cmbSourceFrequency.Location = new System.Drawing.Point(18, 20);
+            this.cmbSourceFrequency.Name = "cmbSourceFrequency";
+            this.cmbSourceFrequency.Size = new System.Drawing.Size(121, 21);
+            this.cmbSourceFrequency.TabIndex = 11;
+            this.cmbSourceFrequency.SelectedIndexChanged += new System.EventHandler(this.cmbSourceFrequency_SelectedIndexChanged);
             // 
             // DemodulationDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(593, 269);
+            this.ClientSize = new System.Drawing.Size(878, 330);
+            this.Controls.Add(this.cmbSourceFrequency);
+            this.Controls.Add(this.tabSoundOut);
+            this.Controls.Add(this.groupBox3);
+            this.Controls.Add(this.frequencySelector);
             this.Controls.Add(this.groupBox6);
             this.Controls.Add(this.groupBox5);
             this.Controls.Add(this.groupBox4);
-            this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
@@ -706,7 +815,10 @@
             this.groupBox5.PerformLayout();
             this.groupBox6.ResumeLayout(false);
             this.groupBox6.PerformLayout();
+            this.tabSoundOut.ResumeLayout(false);
+            this.tabGeneral.ResumeLayout(false);
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -721,7 +833,7 @@
         private System.Windows.Forms.RadioButton radioFilter2;
         private System.Windows.Forms.RadioButton radioFilter4;
         private System.Windows.Forms.RadioButton radioFilter8;
-        private System.Windows.Forms.CheckBox chkEnableCursorWin;
+        private System.Windows.Forms.CheckBox chkEnableLimiter;
         private System.Windows.Forms.GroupBox groupBox3;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.TextBox txtStatus;
@@ -737,7 +849,6 @@
         private System.Windows.Forms.RadioButton radioLowPass2;
         private System.Windows.Forms.CheckBox chkEnableLowpass;
         private System.Windows.Forms.GroupBox groupBox5;
-        private System.Windows.Forms.CheckBox chkShowDemod;
         private LibRXFFT.Components.GDI.TextBoxMouseScroll txtAmplify;
         private System.Windows.Forms.CheckBox chkAmplify;
         private System.Windows.Forms.RadioButton radioFilter256;
@@ -763,5 +874,14 @@
         private System.Windows.Forms.RadioButton radioUSB;
         private System.Windows.Forms.TextBox txtDemodRate;
         private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.Button btnDemodFft;
+        private LibRXFFT.Components.GDI.FrequencySelector frequencySelector;
+        private System.Windows.Forms.TabControl tabSoundOut;
+        private System.Windows.Forms.TabPage tabGeneral;
+        private System.Windows.Forms.Button btnSound;
+        private System.Windows.Forms.Button btnMp3;
+        private System.Windows.Forms.Button btnWav;
+        private System.Windows.Forms.Button btnMp3File;
+        private System.Windows.Forms.ComboBox cmbSourceFrequency;
     }
 }

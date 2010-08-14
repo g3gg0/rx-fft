@@ -20,6 +20,8 @@ namespace LibRXFFT.Libraries.Demodulators
 
         public FMDemodulator()
         {
+            Description = "Simple FM Demodulator";
+            ShortDescription = "FM";
             try
             {
                 NativeContext = FMDemodInit();

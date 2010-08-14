@@ -4,9 +4,12 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using System.Xml.Serialization;
-using LibRXFFT.Components.DirectX;
 using LibRXFFT.Libraries.Misc;
 using LibRXFFT.Libraries.USB_RX.Tuners;
+using LibRXFFT.Libraries.SignalProcessing;
+using LibRXFFT.Components.GDI;
+using FrequencyMarker = LibRXFFT.Components.DirectX.FrequencyMarker;
+using System.Drawing;
 
 namespace RX_FFT.Dialogs
 {
@@ -15,12 +18,15 @@ namespace RX_FFT.Dialogs
         private FrequencyMarkerList MarkerList;
         private ListViewItem[] ListItems;
         private Dictionary<ListViewItem, FrequencyMarker> ItemMarkerMap;
+        private MainScreen MainScreen;
 
         public MainScreen.delegateGetTuner GetTuner;
 
-        public MarkerListDialog(FrequencyMarkerList markerList)
+        public MarkerListDialog(FrequencyMarkerList markerList, MainScreen mainScreen)
         {
             InitializeComponent();
+
+            MainScreen = mainScreen;
 
             MarkerList = markerList;
             MarkerList.MarkersChanged += MarkerList_MarkersChanged;
@@ -36,7 +42,9 @@ namespace RX_FFT.Dialogs
             {
                 ListItems = new ListViewItem[markers.Length];
                 for (int pos = 0; pos < ListItems.Length; pos++)
+                {
                     ListItems[pos] = new ListViewItem(new string[2]);
+                }
 
                 lstMarkers.Items.Clear();
                 lstMarkers.Items.AddRange(ListItems);
@@ -63,7 +71,7 @@ namespace RX_FFT.Dialogs
             UpdateMarkerList();
         }
 
-        void lstMarkers_MouseDoubleClick(object sender, MouseEventArgs e)
+        FrequencyMarker GetSelected()
         {
             try
             {
@@ -71,14 +79,169 @@ namespace RX_FFT.Dialogs
 
                 if (selectedMarkers.Count == 1)
                 {
-                    FrequencyMarker marker = ItemMarkerMap[selectedMarkers[0]];
+                    return ItemMarkerMap[selectedMarkers[0]];
+                }
+            }
+            catch (Exception)
+            {
+            }
 
-                    Tuner tuner = GetTuner();
+            return null;
+        }
 
-                    if (tuner != null)
-                    {
-                        tuner.SetFrequency(marker.Frequency);
-                    }
+        void lstMarkers_MouseClick(object sender, System.Windows.Forms.MouseEventArgs e)
+        {
+            try
+            {
+                switch (e.Button)
+                {
+                    case MouseButtons.Right:
+                        FrequencyMarker marker = GetSelected();
+                        Tuner tuner = GetTuner();
+
+                        if (marker != null)
+                        {
+                            ContextMenu contextMenu = new ContextMenu();
+                            MenuItem menuItem;
+                            menuItem = new MenuItem("Marker: " + marker.Label);
+                            menuItem.Enabled = false;
+                            contextMenu.MenuItems.Add(menuItem);
+
+                            menuItem = new MenuItem("-");
+                            menuItem.Enabled = false;
+                            contextMenu.MenuItems.Add(menuItem);
+
+                            menuItem = new MenuItem("Jump to");
+                            menuItem.Enabled = (tuner == null);
+                            menuItem.Click += (object s, EventArgs a) =>
+                            {
+                                tuner.SetFrequency(marker.Frequency);
+                            };
+                            contextMenu.MenuItems.Add(menuItem);
+
+                            menuItem = new MenuItem("-" );
+                            menuItem.Enabled = false;
+                            contextMenu.MenuItems.Add(menuItem);
+
+                            menuItem = new MenuItem("Edit...");
+                            menuItem.Click += (object s, EventArgs a) =>
+                            {
+                                MarkerDetailsDialog dlg = new MarkerDetailsDialog(marker);
+                                dlg.ShowDialog();
+                                UpdateMarkerList();
+                            };
+                            contextMenu.MenuItems.Add(menuItem);
+
+                            menuItem = new MenuItem("Delete");
+                            menuItem.Click += (object s, EventArgs a) =>
+                            {
+                                MarkerList.Remove(marker); 
+                                UpdateMarkerList();
+                            };
+                            contextMenu.MenuItems.Add(menuItem);
+
+                            menuItem = new MenuItem("-");
+                            menuItem.Enabled = false;
+                            contextMenu.MenuItems.Add(menuItem);
+
+
+                            bool demodulation = MainScreen.MarkerDemodulators.ContainsKey(marker);
+                            AudioDemodulator Demod = null;
+                            DemodulationState DemodState = null;
+
+                            if (demodulation)
+                            {
+                                Demod = MainScreen.MarkerDemodulators[marker];
+                                DemodState = Demod.DemodState;
+
+                                menuItem = new MenuItem("Demodulate");
+                                menuItem.Checked = true;
+                                menuItem.Click += (object s, EventArgs a) =>
+                                {
+                                    if (DemodState.Dialog != null)
+                                    {
+                                        DemodState.Dialog.Close();
+                                        DemodState.Dialog = null;
+                                    }
+                                    Demod.Stop();
+                                    Demod.Close();
+
+                                    MainScreen.MarkerDemodulators.Remove(marker);
+                                };
+                                contextMenu.MenuItems.Add(menuItem);
+
+                                menuItem = new MenuItem("Demodulation Options...");
+                                menuItem.Checked = (DemodState.Dialog != null);
+                                menuItem.Click += (object s, EventArgs a) =>
+                                {
+                                    if (DemodState.Dialog != null)
+                                    {
+                                        DemodState.Dialog.Close();
+                                        DemodState.Dialog = null;
+                                    }
+                                    else
+                                    {
+                                        DemodState.Dialog = new DemodulationDialog(DemodState);
+                                        DemodState.Dialog.FrequencyFixed = true;
+                                        DemodState.Dialog.Show();
+                                    }
+                                };
+
+                                contextMenu.MenuItems.Add(menuItem);
+                            }
+                            else
+                            {
+                                menuItem = new MenuItem("Demodulate");
+                                menuItem.Click += (object s, EventArgs a) =>
+                                {
+                                    Demod = new AudioDemodulator();
+                                    DemodState = Demod.DemodState;
+                                    DemodState.BaseFrequency = tuner.GetFrequency();
+                                    DemodState.DemodulationFrequencyMarker = marker.Frequency;
+                                    DemodState.Description = marker.Label;
+
+                                    MainScreen.MarkerDemodulators.Add(marker, Demod);
+
+                                    DemodState.Dialog = new DemodulationDialog(DemodState);
+                                    DemodState.Dialog.FrequencyFixed = true;
+                                    DemodState.Dialog.Show();
+                                    DemodState.Dialog.UpdateInformation();
+
+                                    Demod.Start(MainScreen.AudioShmem);
+                                };
+
+                                contextMenu.MenuItems.Add(menuItem);
+
+                                menuItem = new MenuItem("Demodulation Options...");
+                                menuItem.Enabled = false;
+                                contextMenu.MenuItems.Add(menuItem);
+                            }
+
+                            Point popupPos = this.PointToClient(MousePosition);
+
+                            popupPos.X -= 20;
+                            popupPos.Y -= 20;
+                            contextMenu.Show(this, popupPos);
+                        }
+                        break;
+                }
+            }
+            catch (Exception)
+            {
+            }
+        }
+
+        void lstMarkers_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            try
+            {
+                FrequencyMarker marker = GetSelected();
+
+                Tuner tuner = GetTuner();
+
+                if (marker != null && tuner != null)
+                {
+                    tuner.SetFrequency(marker.Frequency);
                 }
             }
             catch (Exception)
@@ -105,6 +268,7 @@ namespace RX_FFT.Dialogs
             }
 
             MarkerList.Add(marker);
+            UpdateMarkerList();
         }
 
         private void editEntryMenu_Click(object sender, EventArgs e)
@@ -125,6 +289,7 @@ namespace RX_FFT.Dialogs
             catch (Exception)
             {
             }
+            UpdateMarkerList();
         }
 
         private void deleteEntryMenu_Click(object sender, EventArgs e)
@@ -143,6 +308,7 @@ namespace RX_FFT.Dialogs
             catch (Exception)
             {
             }
+            UpdateMarkerList();
         }
 
         private void loadListMenu_Click(object sender, EventArgs e)

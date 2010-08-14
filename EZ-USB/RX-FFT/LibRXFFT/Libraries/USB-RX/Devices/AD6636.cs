@@ -620,7 +620,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                     this.Device.AD6636WriteReg(AD6636_REG_IOAC, AD6636_REG_IOAC_L, 0x0F);
                     this.Device.AD6636WriteReg(AD6636_REG_NCOFREQ, AD6636_REG_NCOFREQ_L, (long)Math.Round(regValue));
                     SoftSync();
-
+                    
                     CurrentFrequency = frequency;
                 }
                 success = true;

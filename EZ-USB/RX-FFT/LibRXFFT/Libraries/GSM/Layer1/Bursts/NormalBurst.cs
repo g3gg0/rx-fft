@@ -30,9 +30,12 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
         public long CryptedBursts = 0;
 
 
-        public bool[] DummyBurstBits = new[] { true, true, true, true, true, false, true, true, false, true, true, true, false, true, true, false, false, false, false, false, true, false, true, false, false, true, false, false, true, true, true, false, false, false, false, false, true, false, false, true, false, false, false, true, false, false, false, false, false, false, false, true, true, true, true, true, false, false, false, true, true, true, false, false, false, true, false, true, true, true, false, false, false, true, false, true, true, true, false, false, false, true, false, true, false, true, true, true, false, true, false, false, true, false, true, false, false, false, true, true, false, false, true, true, false, false, true, true, true, false, false, true, true, true, true, false, true, false, false, true, true, true, true, true, false, false, false, true, false, false, true, false, true, true, true, true, true, false, true, false, true, false };
+        public static bool[] DummyBurstBits = new[] { true, true, true, true, true, false, true, true, false, true, true, true, false, true, true, false, false, false, false, false, true, false, true, false, false, true, false, false, true, true, true, false, false, false, false, false, true, false, false, true, false, false, false, true, false, false, false, false, false, false, false, true, true, true, true, true, false, false, false, true, true, true, false, false, false, true, false, true, true, true, false, false, false, true, false, true, true, true, false, false, false, true, false, true, false, true, true, true, false, true, false, false, true, false, true, false, false, false, true, true, false, false, true, true, false, false, true, true, true, false, false, true, true, true, true, false, true, false, false, true, true, true, true, true, false, false, false, true, false, false, true, false, true, true, true, true, true, false, true, false, true, false };
 
         internal bool[] FireCRCBuffer;
+
+        /* encrypted e[] bits */
+        internal bool[] BurstBufferE;
 
         /* interleaved i[] bits */
         internal bool[][] BurstBufferI;
@@ -49,6 +52,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
 
         internal void InitBuffers(int BurstCount)
         {
+            BurstBufferE = new bool[114];
             BurstBufferI = new bool[BurstCount][];
             BurstBufferC = new bool[456];
             BurstBufferU = new bool[228];
@@ -74,6 +78,17 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
         {
             Array.Copy(decodedBurst, (int)Data1BitsPos, BurstBufferI[dstBurst], 0, (int)Data1Bits);
             Array.Copy(decodedBurst, (int)Data2BitsPos, BurstBufferI[dstBurst], (int)Data1Bits, (int)Data2Bits);
+        }
+
+        internal void UnmapToE(bool[] decodedBurst)
+        {
+            Array.Copy(decodedBurst, (int)Data1BitsPos, BurstBufferE, 0, (int)Data1Bits);
+            Array.Copy(decodedBurst, (int)Data2BitsPos, BurstBufferE, (int)Data1Bits, (int)Data2Bits);
+        }
+
+        internal void CopyEToI(int dstBurst)
+        {
+            Array.Copy(BurstBufferE, BurstBufferI[dstBurst], (int)(Data1Bits + Data2Bits));
         }
 
         internal void Deinterleave()

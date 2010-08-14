@@ -4,6 +4,8 @@ namespace LibRXFFT.Libraries.Demodulators
 {
     public class Demodulator
     {
+        public string Description = "TemplateDemod";
+        public string ShortDescription = "TemplateDemod";
         public static bool UseNative = true;
         protected IntPtr NativeContext;
 

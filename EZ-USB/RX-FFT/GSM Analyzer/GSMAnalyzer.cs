@@ -17,6 +17,8 @@ using LibRXFFT.Libraries.SignalProcessing;
 using Timer = System.Windows.Forms.Timer;
 using LibRXFFT.Libraries.USB_RX.Tuners;
 using RX_FFT.Components.GDI;
+using LibRXFFT.Libraries.GSM.Layer1.PacketDump;
+using System.IO;
 
 namespace GSM_Analyzer
 {
@@ -27,9 +29,10 @@ namespace GSM_Analyzer
         public Tuner Device
         {
             get { return _Device; }
-            set { 
+            set
+            {
                 _Device = value;
-                ChannelHandler.Device = value; 
+                ChannelHandler.Device = value;
             }
         }
         private RadioChannelHandler ChannelHandler;
@@ -59,7 +62,7 @@ namespace GSM_Analyzer
         private StringBuilder TextBoxBuffer = new StringBuilder(32768);
         private Timer TextBoxCommitTimer = new Timer();
 
-        public bool Subsampling = true;
+        public bool Subsampling = false;
         public int InternalOversampling = 1;
         public double SubSampleOffset = 0;
 
@@ -115,6 +118,11 @@ namespace GSM_Analyzer
                 TextBoxCommitTimer.Tick += new EventHandler(TextBoxCommitTimer_Tick);
                 TextBoxCommitTimer.Interval = 100;
 
+                //File.Delete("c:\\temp\\gsm_dump.xml");
+                //Parameters.PacketDumper = new GsmAnalyzerDumpWriter("c:\\temp\\gsm_dump.xml");
+
+                //Parameters.PcapWriter = new LibRXFFT.Libraries.Pcap.PcapFileWriter("c:\\temp\\gsm.pcap", LibRXFFT.Libraries.Pcap.DataLinkType.WTAP_ENCAP_GSM_UM);
+
                 /*
                 double lg;
                 double bg;
@@ -126,6 +134,7 @@ namespace GSM_Analyzer
             }
             catch (Exception e)
             {
+                MessageBox.Show("Failed to initialize: " + e.GetType().ToString());
             }
         }
 
@@ -139,6 +148,7 @@ namespace GSM_Analyzer
         {
             L3Handler.PDUDataTriggers.Add("LAIUpdate", TriggerLAIUpdate);
         }
+
 
         private void TriggerLAIUpdate(L3Handler L3Handler)
         {
@@ -391,14 +401,48 @@ namespace GSM_Analyzer
             }
         }
 
+
+        private void chkDump_CheckedChanged(object sender, EventArgs e)
+        {
+            if (!chkDump.Checked)
+            {
+                if (Parameters.PacketDumper != null)
+                {
+                    Parameters.PacketDumper.Close();
+                    Parameters.PacketDumper = null;
+                }
+            }
+            else
+            {
+                FileDialog dlg = new SaveFileDialog();
+                dlg.Filter = "GSM Analyzer Dumps (*.xml)|*.xml|All files (*.*)|*.*";
+
+                if (dlg.ShowDialog() == DialogResult.OK)
+                {
+                    try
+                    {
+                        File.Delete(dlg.FileName);
+                        Parameters.PacketDumper = new GsmAnalyzerDumpWriter(dlg.FileName);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("Could not create dump file: " + ex.GetType().ToString());
+                        chkDump.Checked = false;
+                    }
+                }
+            }
+        }
+
         private void btnOpen_Click(object sender, EventArgs e)
         {
-            if (Source != null)
+            if (ReadThread != null)
             {
                 ThreadActive = false;
 
                 if (!ReadThread.Join(1000))
                     ReadThread.Abort();
+
+                ReadThread = null;
 
                 if (ChannelScanThread != null)
                 {
@@ -407,8 +451,11 @@ namespace GSM_Analyzer
                     btnScan.Text = "Scan";
                 }
 
-                Source.Close();
-                Source = null;
+                if (Source != null)
+                {
+                    Source.Close();
+                    Source = null;
+                }
 
                 btnOpen.Text = "Open";
             }
@@ -418,6 +465,7 @@ namespace GSM_Analyzer
 
                 menu.MenuItems.Add(new MenuItem("Shared Memory", new EventHandler(btnOpen_SharedMemory)));
                 menu.MenuItems.Add(new MenuItem("USRP CFile", new EventHandler(btnOpen_CFile)));
+                menu.MenuItems.Add(new MenuItem("Dumped Traffic", new EventHandler(btnOpen_DumpFile)));
                 btnOpen.ContextMenu = menu;
                 btnOpen.ContextMenu.Show(btnOpen, new Point(10, 10));
             }
@@ -474,6 +522,25 @@ namespace GSM_Analyzer
             return item;
         }
 
+
+
+        private void btnOpen_DumpFile(object sender, EventArgs e)
+        {
+            OpenFileDialog dlg = new OpenFileDialog();
+            dlg.Filter = "GSM Analyzer Dump Files (*.xml)|*.xml|All files (*.*)|*.*";
+
+            if (dlg.ShowDialog() == DialogResult.OK)
+            {
+                txtLog.Clear();
+                ThreadActive = true;
+                ReadThread = new Thread(() => { DumpReadFunc(dlg.FileName); });
+                ReadThread.Start();
+
+                btnOpen.Text = "Close";
+            }
+        }
+
+
         private void btnOpen_SharedMemory(object sender, EventArgs e)
         {
             ContextMenu menu = new ContextMenu();
@@ -518,7 +585,6 @@ namespace GSM_Analyzer
 
             double burstCount = 0;
             long burstBufferPos = 0;
-            long lastSampleOffset = 0;
 
             double[] sourceSignal = new double[Source.OutputBlockSize];
             double[] sourceStrength = new double[Source.OutputBlockSize];
@@ -540,7 +606,7 @@ namespace GSM_Analyzer
                     }
                     else
                     {
-                        if(Source.BufferOverrun)
+                        if (Source.BufferOverrun)
                         {
                             AddMessage("----------------------------------------------------------------------------------------------------------------------------" + Environment.NewLine);
                             AddMessage("  Important: Input buffer overrun. Your computer might be too slow. Please close some applications and/or visualizations" + Environment.NewLine);
@@ -652,7 +718,7 @@ namespace GSM_Analyzer
                                     Parameters.ResetError();
                                     Parameters.State = eGSMState.FCCHSearch;
 
-                                    InitTimeSlotHandler(); 
+                                    InitTimeSlotHandler();
                                     ResetStats();
                                     UpdateUIStatus(Parameters);
                                     break;
@@ -738,7 +804,9 @@ namespace GSM_Analyzer
                                             }
                                         }
                                         else
+                                        {
                                             Parameters.TN++;
+                                        }
 
 
                                         burstBufferPos = 0;
@@ -765,14 +833,16 @@ namespace GSM_Analyzer
                                     {
                                         if (Subsampling)
                                         {
-                                            /* start at the 5th bit transition */
+                                            /* start offset estimation at the 5th bit transition */
                                             int startPos = (int)(Parameters.SampleOffset + 5.5f * Oversampling);
                                             int samples = (int)((Burst.NetBitCount - 5) * Oversampling);
 
-                                            Parameters.SubSampleOffset = OffsetEstimator.EstimateOffset(burstBuffer, startPos, samples, Oversampling);
+                                            Parameters.SubSampleOffset = OffsetEstimator.EstimateOffset(burstBuffer, startPos, samples, Oversampling, Oversampling / 2);
                                         }
                                         else
+                                        {
                                             Parameters.SubSampleOffset = 0;
+                                        }
 
                                         /* add constant defined by user */
                                         Parameters.SubSampleOffset += SubSampleOffset;
@@ -831,7 +901,7 @@ namespace GSM_Analyzer
                                         burstCount++;
 
                                         /* the next buffer destination depends on the sample offset we have */
-                                        burstBufferPos = (long)-(Parameters.SampleOffset + Parameters.SubSampleOffset);
+                                        burstBufferPos = (long)-(Parameters.SampleOffset /*+ Parameters.SubSampleOffset*/);
                                         Parameters.SampleOffset = 0;
                                         Parameters.SubSampleOffset = 0;
 
@@ -870,10 +940,72 @@ namespace GSM_Analyzer
                 return;
             }
 
+            Parameters.State = eGSMState.Idle;
 
             /* show statistics/information */
             DumpStatistics();
+            UpdateUIStatus(Parameters);
+        }
 
+        void DumpReadFunc(string fileName)
+        {
+            long updateLoops = 0;
+            bool[] burstBits = new bool[148];
+            GsmAnalyzerDumpReader reader = new GsmAnalyzerDumpReader(fileName);
+
+            L3Handler.ReloadFiles();
+
+            Parameters.Reset();
+            Parameters.ResetError();
+            Parameters.State = eGSMState.Lock;
+            Parameters.AverageIdlePower = 0;
+            Parameters.AveragePower = 0;
+
+            InitTimeSlotHandler();
+            ResetStats();
+            UpdateUIStatus(Parameters);
+
+            try
+            {
+                while (reader.HasData)
+                {
+                    reader.Read(Parameters, burstBits);
+
+                    Handler.Handle(burstBits);
+
+                    /* update UI if necessary */
+                    if (SingleStep || updateLoops++ >= 50 * 9)
+                    {
+                        UpdateUIStatus(Parameters);
+                        UpdateStats(Parameters);
+                        updateLoops = 0;
+                    }
+
+                    if (SingleStep)
+                        SingleStepSem.WaitOne();
+                }
+            }
+            catch (ThreadAbortException e)
+            {
+            }
+            catch (SystemException e)
+            {
+                MessageBox.Show("There was an unhandled SystemException." + Environment.NewLine + Environment.NewLine + "Exception:" + Environment.NewLine + e);
+                AddMessage("   [GSM] SystemException: " + e + Environment.NewLine);
+                return;
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show("There was an unhandled Exception." + Environment.NewLine + Environment.NewLine + "Exception:" + Environment.NewLine + e);
+                AddMessage("   [GSM] Exception: " + e + Environment.NewLine);
+                return;
+            }
+
+            Parameters.State = eGSMState.Idle;
+
+            /* show statistics/information */
+            DumpStatistics();
+            UpdateUIStatus(Parameters);
         }
 
         private void DumpStatistics()
@@ -1031,7 +1163,7 @@ namespace GSM_Analyzer
             }
             else
             {
-                if(chan < ChannelHandler.LowestChannel)
+                if (chan < ChannelHandler.LowestChannel)
                 {
                     txtArfcn.Value = ChannelHandler.LowestChannel;
                 }
@@ -1122,7 +1254,7 @@ namespace GSM_Analyzer
                     if (Handler.L3.PDUDataFields.ContainsKey("CellIdent"))
                         cellIdentString = Handler.L3.PDUDataFields["CellIdent"];
 
-                    StationDialog.AddStation(ChannelHandler.Channel, mccMncString, lacString,cellIdentString, Parameters.CBCH.ToString());
+                    StationDialog.AddStation(ChannelHandler.Channel, mccMncString, lacString, cellIdentString, Parameters.CBCH.ToString());
 
                     Log.AddMessage("Channel " + ChannelHandler.Channel + " used.");
                     Log.AddMessage("  MCC/MNC  : " + mccMncString);
@@ -1137,7 +1269,7 @@ namespace GSM_Analyzer
                 if (ChannelHandler.Channel == ChannelHandler.HighestChannel)
                 {
                     Log.AddMessage("Scan finished");
-                    BeginInvoke(new MethodInvoker(() => btnScan.Text="Scan"));
+                    BeginInvoke(new MethodInvoker(() => btnScan.Text = "Scan"));
                     return;
                 }
 

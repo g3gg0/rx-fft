@@ -5,6 +5,8 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
 {
     public class SDCCHBurst : NormalBurst
     {
+        public bool EncryptionState = false;
+        public int EncryptionType = 0;
         public static bool ShowEncryptedMessage = false;
         public static bool DumpEncryptedMessage = false;
         
@@ -59,8 +61,18 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                 return eSuccessState.Succeeded;
             }
 
-            /* decode e[] to i[] and save into our burstbuffer */
-            UnmapToI(decodedBurst, sequence);
+            /* get 114 e[] bits from burst into our buffer. two bits are just stealing flags */
+            UnmapToE(decodedBurst);
+
+            if (EncryptionState && DumpEncryptedMessage)
+            {
+                StatusMessage = "(Encrypted) e[]: ";
+                DumpBits(BurstBufferE);
+                //return eSuccessState.Unknown;
+            }
+
+            CopyEToI(sequence);
+            //UnmapToI(decodedBurst, sequence);
 
             FN[sequence] = param.FN;
 
@@ -78,8 +90,15 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                     {
                         if (DumpEncryptedMessage)
                         {
-                            StatusMessage = "(Encrypted) De-Interleaved bits: ";
-                            DumpBits(BurstBufferC);
+                            if (!EncryptionState)
+                            {
+                                StatusMessage = "(Encrypted?) De-Interleaved bits: ";
+                                DumpBits(BurstBufferC);
+                            }
+                            else
+                            {
+                                // we expected this to happen
+                            }
                         }
                         else
                         {

@@ -77,7 +77,10 @@ namespace LibRXFFT.Components.DirectX
                 else
                 {
                     _SavingEnabled = false;
-                    SaveImageAvailable = true;
+                    if (SaveImageLines > 0)
+                    {
+                        SaveImageAvailable = true;
+                    }
                 }
 
                 /* notify thread */

@@ -5,6 +5,10 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
 {
     public class SACCHBurst : NormalBurst
     {
+        public bool EncryptionState = false;
+        public int EncryptionType = 0;
+        public TCHBurst AssociatedTCH = null;
+
         public static bool ShowEncryptedMessage = false;
         public static bool DumpEncryptedMessage = false;
 
@@ -76,13 +80,27 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                 return eSuccessState.Succeeded;
             }
 
+            /* get the e[] bits from burst - without stealing flags */
+            UnmapToE(decodedBurst);
+            //Array.Copy(decodedBurst, 3, BurstBufferE, 0, 57);
+            //Array.Copy(decodedBurst, 88, BurstBufferE, 57, 57);
+
+            if (EncryptionState && DumpEncryptedMessage)
+            {
+                StatusMessage = "(Encrypted) e[]: ";
+                DumpBits(BurstBufferE);
+                return eSuccessState.Unknown;
+            }            
+
             bool isComplete;
 
             /* decide between normal SACCH and SACCH/TCH */
             if (!TCHType)
             {
-                /* thats a normal SACCH */
-                UnmapToI(decodedBurst, sequence);
+                /* thats a normal SACCH. use the 114 e[] bits as i[] */
+                CopyEToI(sequence);
+                //Array.Copy(BurstBufferE, BurstBufferI[sequence], 114);
+                //UnmapToI(decodedBurst, sequence);
 
                 FN[sequence] = param.FN;
 
@@ -91,9 +109,11 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
             }
             else
             {
-                /* thats a SACCH/TCH */
-                Array.Copy(decodedBurst, 3, BurstBufferI[TCHSeq], 0, 57);
-                Array.Copy(decodedBurst, 88, BurstBufferI[TCHSeq], 57, 57);
+                /* thats a SACCH/TCH. use the 114 e[] bits as i[] */
+                CopyEToI(TCHSeq);
+                //Array.Copy(BurstBufferE, BurstBufferI[TCHSeq], 114);
+                //Array.Copy(decodedBurst, 3, BurstBufferI[TCHSeq], 0, 57);
+                //Array.Copy(decodedBurst, 88, BurstBufferI[TCHSeq], 57, 57);
 
                 /* when we caught four bursts, the block is complete */
                 TCHSeq++;

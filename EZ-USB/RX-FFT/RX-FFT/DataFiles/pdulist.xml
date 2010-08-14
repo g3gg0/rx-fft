@@ -245,13 +245,13 @@
 	</field>
   </pdudesc>  
   <pdudesc ref="10.5.2.8a" name="Channel Request Description" type="3" length="5"/>
-  <pdudesc ref="10.5.2.9" name="Cipher Mode Setting" type="1" fields="true">
-	<field name="SC" type="stringIndex" strings="2">
+  <pdudesc ref="10.5.2.9" name="Cipher Mode Setting" type="1" fields="true" trigger-post="CipherCommand">
+	<field name="SC" type="stringIndex" strings="2" set="CipherState">
 		<bits octet="1" start="1" count="1"/>
 		<string index="0" text="No ciphering"/>
 		<string index="1" text="Start ciphering"/>
 	</field>
-	<field name="Algorithm" type="stringIndex" strings="8">
+	<field name="Algorithm" type="stringIndex" strings="8" set="CipherType">
 		<bits octet="1" start="2" count="1"/>
 		<string index="0" text="A5/1"/>
 		<string index="1" text="A5/2"/>
@@ -396,13 +396,13 @@
    	<field name="RA" type="hexnumber" parser="ParseRA">
 		<bits octet="1" start="1" count="8"/>
 	</field>
-   	<field name="T1'" type="integer">
+   	<field name="T1'" type="integer" set="RefT1">
 		<bits octet="1" start="4" count="5"/>
 	</field>
-   	<field name="T2" type="integer">
+   	<field name="T2" type="integer" set="RefT2">
 		<bits octet="3" start="1" count="5"/>
 	</field>
-   	<field name="T3" type="integer">
+   	<field name="T3" type="integer" set="RefT3">
 		<bits octet="2" start="1" count="3"/>
 		<bits octet="3" start="6" count="3"/>
 	</field>

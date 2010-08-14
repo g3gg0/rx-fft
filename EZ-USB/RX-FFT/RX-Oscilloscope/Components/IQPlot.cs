@@ -40,16 +40,23 @@ namespace RX_Oscilloscope.Components
             {
                 waveForm.SamplingRate = value;
 
-                try
+                if (InvokeRequired)
                 {
-                    BeginInvoke(new MethodInvoker(delegate()
+                    try
                     {
-                        txtSamplingRate.Frequency = (long)value;
-                        UpdateSampleTimes();
-                    }));
+                        BeginInvoke(new MethodInvoker(delegate()
+                        {
+                            SamplingRate = value;
+                        }));
+                    }
+                    catch (Exception)
+                    { }
                 }
-                catch (Exception)
-                {}
+                else
+                {
+                    txtSamplingRate.Frequency = (long)value;
+                    UpdateSampleTimes();
+                }
             }
         }
 

@@ -78,12 +78,13 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <OutputPath>bin\x86\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <Optimize>true</Optimize>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <Optimize>false</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>x86</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <UseVSHostingProcess>false</UseVSHostingProcess>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="lua51, Version=0.0.0.0, Culture=neutral, PublicKeyToken=1e1fb15b02227b8a, processorArchitecture=x86">
@@ -117,13 +118,6 @@
     <Compile Include="DeviceControls\FileSourceDeviceControl.Designer.cs">
       <DependentUpon>FileSourceDeviceControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="Dialogs\DemodulationDialog.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Dialogs\DemodulationDialog.Designer.cs">
-      <DependentUpon>DemodulationDialog.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Demodulation.cs" />
     <Compile Include="DeviceControls\DeviceControl.cs" />
     <Compile Include="Dialogs\FilterDetailDialog.cs">
       <SubType>Form</SubType>
@@ -148,6 +142,12 @@
     </Compile>
     <Compile Include="Dialogs\MarkerListDialog.Designer.cs">
       <DependentUpon>MarkerListDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\ScanBandDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\ScanBandDialog.Designer.cs">
+      <DependentUpon>ScanBandDialog.cs</DependentUpon>
     </Compile>
     <Compile Include="FrequencyMarkerList.cs" />
     <Compile Include="Icons.Designer.cs">
@@ -176,10 +176,6 @@
       <DependentUpon>FileSourceDeviceControl.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Dialogs\DemodulationDialog.resx">
-      <DependentUpon>DemodulationDialog.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
     <EmbeddedResource Include="Dialogs\FilterDetailDialog.resx">
       <DependentUpon>FilterDetailDialog.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -194,6 +190,10 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Dialogs\MarkerListDialog.resx">
       <DependentUpon>MarkerListDialog.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\ScanBandDialog.resx">
+      <DependentUpon>ScanBandDialog.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Icons.resx">

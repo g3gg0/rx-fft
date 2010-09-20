@@ -276,6 +276,8 @@ namespace RX_FFT
         void AreaSelectionUpdate()
         {
             FFTAreaSelection sel = AreaSelection;
+            double cursorStartFreq = 0;
+            double cursorEndFreq = 0;
 
             string text = "";
 
@@ -284,6 +286,8 @@ namespace RX_FFT
                 sel.Text = text;
                 return;
             }
+
+            double filterWidth = Device.SamplingRate / DemodState.CursorWindowFilterWidthFract;
 
             if (DemodState.SignalDemodulator is AMDemodulator)
             {
@@ -302,15 +306,17 @@ namespace RX_FFT
                     case eSsbType.Usb:
                         text = "USB: ";
                         sel.AreaMode = FFTAreaSelection.eAreaMode.USB;
+                        cursorStartFreq = 0;
+                        cursorEndFreq = filterWidth;
                         break;
                     case eSsbType.Lsb:
                         text = "LSB: ";
                         sel.AreaMode = FFTAreaSelection.eAreaMode.LSB;
+                        cursorStartFreq = -filterWidth;
+                        cursorEndFreq = 0;
                         break;
                 }
             }
-
-            double filterWidth = Device.SamplingRate / DemodState.CursorWindowFilterWidthFract;
 
             sel.Text = text + FrequencyFormatter.FreqToStringAccurate(filterWidth);
 
@@ -321,7 +327,8 @@ namespace RX_FFT
             else
             {
                 FFTDisplay.FFTDisplay.HorLineFixed = true;
-                FFTDisplay.FFTDisplay.HorLineWidth = filterWidth;
+                FFTDisplay.FFTDisplay.HorLineStart = cursorStartFreq;
+                FFTDisplay.FFTDisplay.HorLineEnd = cursorEndFreq;
             }
         }
 
@@ -348,13 +355,13 @@ namespace RX_FFT
                 {
                     case eSsbType.Lsb:
                         AreaSelection.StartFreq = (long)(AreaSelection.EndFreq - filterWidth);
-                        DemodState.SSBDownmixer.TimeStep = (-0.5f / DemodState.CursorWindowFilterWidthFract) * (2 * Math.PI);
                         break;
                     case eSsbType.Usb:
                         AreaSelection.EndFreq = (long)(AreaSelection.StartFreq + filterWidth);
-                        DemodState.SSBDownmixer.TimeStep = (0.5f / DemodState.CursorWindowFilterWidthFract) * (2 * Math.PI);
                         break;
                 }
+                /* width has changed - let audio demodulator recalc xlat */
+                DemodState.ReinitSound = true;
             }
 
             AreaSelectionUpdate();
@@ -369,6 +376,7 @@ namespace RX_FFT
                 return;
             }
 
+            AreaSelectionUpdate();
             DemodState.Dialog.UpdateFrequency();
             CallScript("DemodFrequencyChanged", DemodState.DemodulationFrequency, DemodState.SignalDemodulator);
 
@@ -544,6 +552,16 @@ namespace RX_FFT
             if (OscilloscopeWindow != null && !OscilloscopeWindow.IsDisposed)
             {
                 OscilloscopeWindow.Close();
+            }
+
+            if (DemodState != null)
+            {
+                if (DemodState.Dialog != null)
+                {
+                    DemodState.Dialog.Close();
+                }
+
+                DemodState.RemoveSinks();
             }
 
             CloseDevice();
@@ -1408,11 +1426,15 @@ namespace RX_FFT
         {
             if (DeviceOpened)
             {
+                long freq = Device.GetFrequency();
+
                 /* give FFT area selection the chance to update its downmix parameters */
                 FFTAreaSelection_SelectionUpdated(null, null);
+                DemodState.DemodulationFrequencyCenter = freq;
+
                 foreach (AudioDemodulator demod in AudioDemodulators)
                 {
-                    demod.DemodState.BaseFrequency = Device.GetFrequency();
+                    demod.DemodState.BaseFrequency = freq;
                 }
                 foreach (KeyValuePair<FrequencyMarker, AudioDemodulator> pair in MarkerDemodulators)
                 {

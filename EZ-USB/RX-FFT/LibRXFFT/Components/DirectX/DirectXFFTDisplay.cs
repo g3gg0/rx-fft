@@ -63,7 +63,8 @@ namespace LibRXFFT.Components.DirectX
         public bool EnoughDataReset = false;
 
         /* variable horizontal cursor width - unit is Hz */
-        public double HorLineWidth = 0.0f;
+        public double HorLineStart = 0.0f;
+        public double HorLineEnd = 0.0f;
         public bool HorLineFixed = false;
 
 
@@ -513,10 +514,11 @@ namespace LibRXFFT.Components.DirectX
 
                 if (HorLineFixed)
                 {
-                    float absoluteWidthPerSide = (float)(XPosFromFrequency(CenterFrequency + HorLineWidth / 2) - XPosFromFrequency(CenterFrequency - HorLineWidth / 2)) / 2;
+                    float absoluteWidthStart = (float)(XPosFromFrequency(CenterFrequency + HorLineStart) - XPosFromFrequency(CenterFrequency));
+                    float absoluteWidthEnd = (float)(XPosFromFrequency(CenterFrequency + HorLineEnd) - XPosFromFrequency(CenterFrequency));
 
                     /* horizontal line */
-                    CursorVertexesHor[0].PositionRhw.X = xPos - absoluteWidthPerSide;
+                    CursorVertexesHor[0].PositionRhw.X = xPos + absoluteWidthStart;
                     CursorVertexesHor[0].PositionRhw.Y = yPos;
                     CursorVertexesHor[0].PositionRhw.Z = 0.5f;
                     CursorVertexesHor[0].PositionRhw.W = 1;
@@ -528,59 +530,59 @@ namespace LibRXFFT.Components.DirectX
                     CursorVertexesHor[1].PositionRhw.W = 1;
                     CursorVertexesHor[1].Color = colorCursor;
 
-                    CursorVertexesHor[2].PositionRhw.X = xPos + absoluteWidthPerSide;
+                    CursorVertexesHor[2].PositionRhw.X = xPos + absoluteWidthEnd;
                     CursorVertexesHor[2].PositionRhw.Y = yPos;
                     CursorVertexesHor[2].PositionRhw.Z = 0.5f;
                     CursorVertexesHor[2].PositionRhw.W = 1;
                     CursorVertexesHor[2].Color = colorCursor;
 
                     /* 1 */
-                    CursorVertexesHorSide[0].PositionRhw.X = xPos - absoluteWidthPerSide;
+                    CursorVertexesHorSide[0].PositionRhw.X = xPos + absoluteWidthStart;
                     CursorVertexesHorSide[0].PositionRhw.Y = yPos - horLineHeight;
                     CursorVertexesHorSide[0].PositionRhw.Z = 0.5f;
                     CursorVertexesHorSide[0].PositionRhw.W = 1;
                     CursorVertexesHorSide[0].Color = colorCursor & 0x00FFFFFF;
 
-                    CursorVertexesHorSide[1].PositionRhw.X = xPos - absoluteWidthPerSide;
+                    CursorVertexesHorSide[1].PositionRhw.X = xPos + absoluteWidthStart;
                     CursorVertexesHorSide[1].PositionRhw.Y = yPos;
                     CursorVertexesHorSide[1].PositionRhw.Z = 0.5f;
                     CursorVertexesHorSide[1].PositionRhw.W = 1;
                     CursorVertexesHorSide[1].Color = colorCursor;
 
                     /* 2 */
-                    CursorVertexesHorSide[2].PositionRhw.X = xPos - absoluteWidthPerSide;
+                    CursorVertexesHorSide[2].PositionRhw.X = xPos + absoluteWidthStart;
                     CursorVertexesHorSide[2].PositionRhw.Y = yPos;
                     CursorVertexesHorSide[2].PositionRhw.Z = 0.5f;
                     CursorVertexesHorSide[2].PositionRhw.W = 1;
                     CursorVertexesHorSide[2].Color = colorCursor;
 
-                    CursorVertexesHorSide[3].PositionRhw.X = xPos - absoluteWidthPerSide;
+                    CursorVertexesHorSide[3].PositionRhw.X = xPos + absoluteWidthStart;
                     CursorVertexesHorSide[3].PositionRhw.Y = yPos + horLineHeight;
                     CursorVertexesHorSide[3].PositionRhw.Z = 0.5f;
                     CursorVertexesHorSide[3].PositionRhw.W = 1;
                     CursorVertexesHorSide[3].Color = colorCursor & 0x00FFFFFF;
 
                     /* 3 */
-                    CursorVertexesHorSide[4].PositionRhw.X = xPos + absoluteWidthPerSide;
+                    CursorVertexesHorSide[4].PositionRhw.X = xPos + absoluteWidthEnd;
                     CursorVertexesHorSide[4].PositionRhw.Y = yPos - horLineHeight;
                     CursorVertexesHorSide[4].PositionRhw.Z = 0.5f;
                     CursorVertexesHorSide[4].PositionRhw.W = 1;
                     CursorVertexesHorSide[4].Color = colorCursor & 0x00FFFFFF;
 
-                    CursorVertexesHorSide[5].PositionRhw.X = xPos + absoluteWidthPerSide;
+                    CursorVertexesHorSide[5].PositionRhw.X = xPos + absoluteWidthEnd;
                     CursorVertexesHorSide[5].PositionRhw.Y = yPos;
                     CursorVertexesHorSide[5].PositionRhw.Z = 0.5f;
                     CursorVertexesHorSide[5].PositionRhw.W = 1;
                     CursorVertexesHorSide[5].Color = colorCursor;
 
                     /* 4 */
-                    CursorVertexesHorSide[6].PositionRhw.X = xPos + absoluteWidthPerSide;
+                    CursorVertexesHorSide[6].PositionRhw.X = xPos + absoluteWidthEnd;
                     CursorVertexesHorSide[6].PositionRhw.Y = yPos;
                     CursorVertexesHorSide[6].PositionRhw.Z = 0.5f;
                     CursorVertexesHorSide[6].PositionRhw.W = 1;
                     CursorVertexesHorSide[6].Color = colorCursor;
 
-                    CursorVertexesHorSide[7].PositionRhw.X = xPos + absoluteWidthPerSide;
+                    CursorVertexesHorSide[7].PositionRhw.X = xPos + absoluteWidthEnd;
                     CursorVertexesHorSide[7].PositionRhw.Y = yPos + horLineHeight;
                     CursorVertexesHorSide[7].PositionRhw.Z = 0.5f;
                     CursorVertexesHorSide[7].PositionRhw.W = 1;

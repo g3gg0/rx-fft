@@ -87,6 +87,7 @@
             this.btnSound = new System.Windows.Forms.Button();
             this.frequencySelector = new LibRXFFT.Components.GDI.FrequencySelector();
             this.cmbSourceFrequency = new System.Windows.Forms.ComboBox();
+            this.btnShmem = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -707,6 +708,7 @@
             // tabGeneral
             // 
             this.tabGeneral.BackColor = System.Drawing.SystemColors.Control;
+            this.tabGeneral.Controls.Add(this.btnShmem);
             this.tabGeneral.Controls.Add(this.btnMp3File);
             this.tabGeneral.Controls.Add(this.btnMp3);
             this.tabGeneral.Controls.Add(this.btnWav);
@@ -761,8 +763,6 @@
             // frequencySelector
             // 
             this.frequencySelector.BackColor = System.Drawing.Color.Black;
-            this.frequencySelector.ForeColorValid = System.Drawing.Color.Cyan;
-            this.frequencySelector.ForeColorInvalid = System.Drawing.Color.Red;
             this.frequencySelector.FixedLengthDecades = 10;
             this.frequencySelector.FixedLengthString = true;
             this.frequencySelector.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -785,6 +785,16 @@
             this.cmbSourceFrequency.Size = new System.Drawing.Size(121, 21);
             this.cmbSourceFrequency.TabIndex = 11;
             this.cmbSourceFrequency.SelectedIndexChanged += new System.EventHandler(this.cmbSourceFrequency_SelectedIndexChanged);
+            // 
+            // btnShmem
+            // 
+            this.btnShmem.Location = new System.Drawing.Point(33, 128);
+            this.btnShmem.Name = "btnShmem";
+            this.btnShmem.Size = new System.Drawing.Size(104, 23);
+            this.btnShmem.TabIndex = 6;
+            this.btnShmem.Text = "Add Shmem Node";
+            this.btnShmem.UseVisualStyleBackColor = true;
+            this.btnShmem.Click += new System.EventHandler(this.btnShmem_Click);
             // 
             // DemodulationDialog
             // 
@@ -883,5 +893,6 @@
         private System.Windows.Forms.Button btnWav;
         private System.Windows.Forms.Button btnMp3File;
         private System.Windows.Forms.ComboBox cmbSourceFrequency;
+        private System.Windows.Forms.Button btnShmem;
     }
 }

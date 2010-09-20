@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<pdudesc-list>
+	<pdudesc ref="GSM 04.11 8.1.4.1" name="RPDU" type="4" fields="true">
+	</pdudesc>
+	<pdudesc ref="GSM 04.11 8.1.4.2" name="CP-Cause" type="1" fields="true">
+		<field name="Cause" type="stringIndex" strings="112">
+			<bits octet="3" start="1" count="7"/>
+			<string index="17" text="Network failure"/>
+			<string index="22" text="Congestion"/>
+			<string index="81" text="Invalid Transaction Identifier value"/>
+			<string index="95" text="Semantically incorrect message"/>
+			<string index="96" text="Invalid mandatory information"/>
+			<string index="97" text="Message type non-existent or not implemented"/>
+			<string index="98" text="Message not compatible with the short message protocol state"/>
+			<string index="99" text="Information element non-existent or not implemented"/>
+			<string index="111" text="Protocol error, unspecified"/>
+		</field>	
+	</pdudesc>
+</pdudesc-list>

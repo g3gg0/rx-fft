@@ -23,7 +23,9 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             None
         }
 
-        private int DevNum;
+        private static ArrayList UsedDevNums = new ArrayList();
+
+        private int DevNum = 0;
         public AD6636 AD6636;
         private eTransferMode _CurrentMode = eTransferMode.Stopped;
         public DigitalTuner Tuner;
@@ -137,6 +139,8 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
                 lock (Lock)
                 {
+                    DevNum = GetFreeDeviceNum();
+
                     if (USBRXDeviceNative.UsbInit(DevNum))
                     {
                         if (!UseAtmelFIFO)
@@ -180,6 +184,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                                 }
                                 else if (TunerCombination == eCombinationType.MT2131)
                                 {
+                                    ReleaseDeviceNum(DevNum);
                                     return false;
                                 }
                             }
@@ -203,6 +208,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                                 }
                                 else if (TunerCombination == eCombinationType.VUHF_RX)
                                 {
+                                    ReleaseDeviceNum(DevNum);
                                     return false;
                                 }
                             }
@@ -225,6 +231,10 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
                         return true;
                     }
+                    else
+                    {
+                        ReleaseDeviceNum(DevNum);
+                    }
                 }
             }
             catch (DllNotFoundException e)
@@ -237,6 +247,35 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             }
 
             return false;
+        }
+
+        private static int GetFreeDeviceNum()
+        {
+            int dev = 0;
+
+            /* allocate a free device id */
+            lock (UsedDevNums)
+            {
+                while (UsedDevNums.Contains(dev) || !USBRXDeviceNative.UsbDevicePresent(dev))
+                {
+                    dev++;
+                }
+
+                UsedDevNums.Add(dev);
+            }
+
+            return dev;
+        }
+
+        private static void ReleaseDeviceNum(int dev)
+        {
+            lock (UsedDevNums)
+            {
+                if (UsedDevNums.Contains(dev))
+                {
+                    UsedDevNums.Remove(dev);
+                }
+            }
         }
 
         private void StartThreads()
@@ -455,7 +494,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                             while (ReadTimerLocked && !timeout)
                             {
                                 /* minimum once again */
-                                timeout = loops++ > maxLoops;
+                                timeout = (loops++ > maxLoops);
                                 Monitor.Wait(ReadTimerLock, SleepDuration);
                             }
 
@@ -713,6 +752,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             lock (Lock)
             {
                 USBRXDeviceNative.UsbClose(DevNum);
+                ReleaseDeviceNum(DevNum);
             }
         }
 

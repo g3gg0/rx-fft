@@ -5,20 +5,14 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
 {
     public class SDCCHBurst : NormalBurst
     {
-        public bool EncryptionState = false;
-        public int EncryptionType = 0;
-        public static bool ShowEncryptedMessage = false;
-        public static bool DumpEncryptedMessage = false;
-        
-        private long[] FN;
         private int SubChannel;
+        
 
         public SDCCHBurst(L3Handler l3)
         {
             L3 = l3;
             Name = "SDCCH";
             ShortName = "SD ";
-            FN = new long[4];
 
             InitBuffers(4);
         }
@@ -29,7 +23,6 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
             Name = "SDCCH " + subChannel;
             ShortName = "SD" + subChannel;
             SubChannel = subChannel;
-            FN = new long[4];
 
             InitBuffers(4);
         }
@@ -40,7 +33,6 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
             Name = name;
             ShortName = "SD" + subChannel;
             SubChannel = subChannel;
-            FN = new long[4];
 
             InitBuffers(4);
         }
@@ -61,24 +53,21 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                 return eSuccessState.Succeeded;
             }
 
-            /* get 114 e[] bits from burst into our buffer. two bits are just stealing flags */
-            UnmapToE(decodedBurst);
+            StoreBurstContext(param, decodedBurst, sequence);
 
-            if (EncryptionState && DumpEncryptedMessage)
+            /* if FNs are consecutive */
+            if (AllBurstsReceived())
             {
-                StatusMessage = "(Encrypted) e[]: ";
-                DumpBits(BurstBufferE);
-                //return eSuccessState.Unknown;
-            }
+                ClearBurstContext();
 
-            CopyEToI(sequence);
-            //UnmapToI(decodedBurst, sequence);
+                /* try to decrypt buffer if this is enabled */
+                if (!HandleEncryption(param))
+                {
+                    /* encrypted but no decryptor available, silently return */
+                    return eSuccessState.Unknown;
+                }
 
-            FN[sequence] = param.FN;
-
-            if (FN[0] + 1 == FN[1] && FN[1] + 1 == FN[2] && FN[2] + 1 == FN[3])
-            {
-                Array.Clear(FN, 0, 4);
+                CopyEToI();
 
                 /* deinterleave the 4 bursts. the result is a 456 bit block. i[] to c[] */
                 Deinterleave();
@@ -90,7 +79,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                     {
                         if (DumpEncryptedMessage)
                         {
-                            if (!EncryptionState)
+                            if (!ChannelEncrypted)
                             {
                                 StatusMessage = "(Encrypted?) De-Interleaved bits: ";
                                 DumpBits(BurstBufferC);
@@ -119,6 +108,20 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                     case eCRCState.Failed:
                         ErrorMessage = "(CRC Error)";
                         return eSuccessState.Failed;
+                }
+
+                if (ChannelEncrypted && DumpEncryptedMessage)
+                {
+                    if (StatusMessage != null)
+                    {
+                        StatusMessage += EncryptionBitString;
+                    }
+                    else
+                    {
+                        StatusMessage = EncryptionBitString;
+                    }
+
+                    EncryptionBitString = "";
                 }
 
                 /* convert u[] to d[] bytes */

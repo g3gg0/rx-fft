@@ -24,7 +24,7 @@ namespace GSM_Analyzer
 
 
             /* add all known messages */
-            foreach (L3MessageInfo info in L3Handler.L3Messages.Map.Values)
+            foreach (L3MessageInfo info in L3Handler.L3MessagesRadio.Map.Values)
                 lstFiltered.Items.Add(info);
 
             /* pre-select the already skipped messages */
@@ -33,7 +33,7 @@ namespace GSM_Analyzer
                 lstFiltered.SelectedItems.Clear();
                 foreach (string reference in L3Handler.SkipMessages.Keys)
                 {
-                    L3MessageInfo selectedItem = L3Handler.L3Messages.Get(reference);
+                    L3MessageInfo selectedItem = L3Handler.L3MessagesRadio.Get(reference);
                     if (selectedItem != null)
                         lstFiltered.SelectedItems.Add(selectedItem);
                 }
@@ -108,7 +108,7 @@ namespace GSM_Analyzer
                     lstFiltered.SelectedItems.Clear();
                     foreach (string reference in container.FilteredMessages)
                     {
-                        L3MessageInfo selectedItem = L3Handler.L3Messages.Get(reference);
+                        L3MessageInfo selectedItem = L3Handler.L3MessagesRadio.Get(reference);
                         for (int pos = 0; pos < lstFiltered.Items.Count; pos++)
                         {
                             if (lstFiltered.Items[pos].ToString() == selectedItem.ToString())

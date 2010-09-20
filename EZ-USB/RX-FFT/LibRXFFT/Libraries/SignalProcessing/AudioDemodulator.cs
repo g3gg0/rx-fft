@@ -177,9 +177,11 @@ namespace LibRXFFT.Libraries.SignalProcessing
                 {
                     case eSsbType.Lsb:
                         relative -= -0.5f / DemodState.CursorWindowFilterWidthFract;
+                        DemodState.SSBDownmixer.TimeStep = (-0.5f / DemodState.CursorWindowFilterWidthFract) * (2 * Math.PI);
                         break;
                     case eSsbType.Usb:
                         relative -= 0.5f / DemodState.CursorWindowFilterWidthFract;
+                        DemodState.SSBDownmixer.TimeStep = (0.5f / DemodState.CursorWindowFilterWidthFract) * (2 * Math.PI);
                         break;
                 }
             }
@@ -223,29 +225,30 @@ namespace LibRXFFT.Libraries.SignalProcessing
 
         void AudioReadFunc()
         {
-            try
+            long baseFreq = 0;
+            long demodFreq = 0;
+            long rate = 0;
+            int lastAudioDecim = 1;
+            int lastInputDecim = 1;
+            bool lastCursorWinEnabled = false;
+            bool lastSquelchEnabled = !DemodState.SquelchEnabled;
+
+            double[] inputI;
+            double[] inputQ;
+            byte[] AudioOutBinary = null;
+
+            SampleSource.SamplesPerBlock = 512;
+
+            PerformanceCounters.Reset();
+            PerformanceCounters.CounterRuntime.Start();
+
+            //AudioShmem.TraceReads = true;
+
+            while (AudioThreadRun)
             {
-                long baseFreq = 0;
-                long demodFreq = 0;
-                long rate = 0;
-                int lastAudioDecim = 1;
-                int lastInputDecim = 1;
-                bool lastCursorWinEnabled = false;
-                bool lastSquelchEnabled = !DemodState.SquelchEnabled;
-
-                double[] inputI;
-                double[] inputQ;
-                byte[] AudioOutBinary = null;
-
-                SampleSource.SamplesPerBlock = 512;
-
-                PerformanceCounters.Reset();
-                PerformanceCounters.CounterRuntime.Start();
-
-                //AudioShmem.TraceReads = true;
-
-                while (AudioThreadRun)
+                try
                 {
+
                     PerformanceCounters.CounterRuntime.Update();
 
                     if (DemodState.DemodulationEnabled)
@@ -275,9 +278,10 @@ namespace LibRXFFT.Libraries.SignalProcessing
 
                                         bool blockSizeChanged = AudioSampleBuffer.Length != (inputI.Length / lastInputDecim);
                                         bool rateChanged = Math.Abs(rate - InputSamplingRate) > 0;
+                                        bool updateAudio = (blockSizeChanged || DemodState.ReinitSound || rateChanged || rate == 0);
                                         lastCursorWinEnabled = DemodState.CursorPositionWindowEnabled;
 
-                                        if (blockSizeChanged || DemodState.ReinitSound || rateChanged || rate == 0)
+                                        if (updateAudio)
                                         {
                                             rate = InputSamplingRate;
 
@@ -289,8 +293,8 @@ namespace LibRXFFT.Libraries.SignalProcessing
 
                                             // // SND DemodState.SoundDevice.SetInputRate((int)DemodState.AudioRate);
 
-                                            lastAudioDecim = DemodState.AudioDecimation;
-                                            lastInputDecim = DemodState.InputSignalDecimation;
+                                            lastAudioDecim = Math.Max(1, DemodState.AudioDecimation);
+                                            lastInputDecim = Math.Max(1, DemodState.InputSignalDecimation);
 
                                             Array.Resize<double>(ref AudioSampleBuffer, inputI.Length / lastInputDecim);
                                             Array.Resize<double>(ref AudioSampleBufferDecim, inputI.Length / lastAudioDecim / lastInputDecim);
@@ -539,19 +543,19 @@ namespace LibRXFFT.Libraries.SignalProcessing
                         Thread.Sleep(100);
                     }
                 }
-                /*
-                if (DemodDialog != null)
-                    DemodDialog.UpdateInformation();
-                */
-                PerformanceCounters.CounterRuntime.Stop();
+                catch (ThreadAbortException e)
+                {
+                    AudioThreadRun = false;
+                }
+                catch (Exception e)
+                {
+                    Log.AddMessage("Exception in Audio Thread: " + e.ToString());
+                    Thread.Sleep(500);
+                }
             }
-            catch (ThreadAbortException e)
-            {
-            }
-            catch (Exception e)
-            {
-                Log.AddMessage("Exception in Audio Thread: " + e.ToString());
-            }
+
+            PerformanceCounters.CounterRuntime.Stop();
+
         }
 
 

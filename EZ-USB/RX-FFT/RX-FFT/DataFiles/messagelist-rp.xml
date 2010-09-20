@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<!-- refers to GSM 04.11 -->
+<messagedesc-list>
+  <messagedesc ref="GSM 04.11 7.3.1" name="RPDU" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="GSM 04.11 8.2.2" presence="M"/>
+      <pduslot ref="GSM 04.11 8.2.3" presence="M"/>
+      <pduslot ref="GSM 04.11 8.2.5.1" presence="M"/>
+      <pduslot ref="GSM 04.11 8.2.5.2" presence="M"/>
+      <pduslot ref="GSM 04.11 8.2.5.3" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+</messagedesc-list>

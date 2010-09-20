@@ -168,6 +168,11 @@ namespace LibRXFFT.Libraries
             return dstData;
         }
 
+        public static bool[] BitsFromBytes(byte[] srcData)
+        {
+            return BitsFromBytes(srcData, null, 8, 0, srcData.Length * 8);
+        }
+
         /// <summary>
         /// Convert a given byte array to a bool array MSB. The first bit in array will be (srcData[0] & 0x80).
         /// </summary>

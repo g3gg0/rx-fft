@@ -24,8 +24,8 @@ namespace GMSK_Demodulator
             if (ReadThread != null && ReadThread.IsAlive)
             {
                 ThreadActive = false;
+                ReadThread.Join(50);
                 ReadThread.Abort();
-                ReadThread.Join();
             }
 
             if (ShmemChannel != null)

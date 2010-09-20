@@ -22,7 +22,7 @@ namespace LibRXFFT.Libraries.SampleSources
 
         public bool BufferOverrun = false;
 
-        public static eOversamplingType DefaultOversamplingType = eOversamplingType.SinX;
+        public static eOversamplingType DefaultOversamplingType = eOversamplingType.SinC;
         public eOversamplingType OversamplingType
         {
             get { return IOversampler.Type; }
@@ -32,8 +32,8 @@ namespace LibRXFFT.Libraries.SampleSources
         public static int DefaultSinXDepth = 8;
         public int SinXDepth
         {
-            get { return IOversampler.SinXDepth; }
-            set { IOversampler.SinXDepth = value; }
+            get { return IOversampler.SinCDepth; }
+            set { IOversampler.SinCDepth = value; }
         }
 
         public int BytesPerSamplePair;
@@ -192,11 +192,11 @@ namespace LibRXFFT.Libraries.SampleSources
 
             IOversampler = new Oversampler(InternalOversampling);
             IOversampler.Type = DefaultOversamplingType;
-            IOversampler.SinXDepth = DefaultSinXDepth;
+            IOversampler.SinCDepth = DefaultSinXDepth;
 
             QOversampler = new Oversampler(InternalOversampling);
             QOversampler.Type = DefaultOversamplingType;
-            QOversampler.SinXDepth = DefaultSinXDepth;
+            QOversampler.SinCDepth = DefaultSinXDepth;
 
             SamplingRateHasChanged = true;
         }

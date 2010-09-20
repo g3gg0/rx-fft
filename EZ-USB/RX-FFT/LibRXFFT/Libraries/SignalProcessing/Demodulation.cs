@@ -123,7 +123,16 @@ namespace LibRXFFT.Libraries.SignalProcessing
                     return 1;
 
                 if (CursorWindowFilterWidthFract > 1)
-                    return CursorWindowFilterWidthFract;
+                {
+                    if (SignalDemodulator is SSBDemodulator)
+                    {
+                        return CursorWindowFilterWidthFract / 2;
+                    }
+                    else
+                    {
+                        return CursorWindowFilterWidthFract;
+                    }
+                }
 
                 return 1;
             }
@@ -248,13 +257,25 @@ namespace LibRXFFT.Libraries.SignalProcessing
             }
         }
 
-        internal void RemoveSink(SoundSinkInfo info)
+        public void RemoveSink(SoundSinkInfo info)
         {
             lock (SoundSinkInfos)
             {
                 SoundSinkInfos.Remove(info);
                 info.Sink.Stop();
+                info.Sink.Shutdown();
                 UpdateSinks();
+            }
+        }
+
+        public void RemoveSinks()
+        {
+            lock (SoundSinkInfos)
+            {
+                while (SoundSinkInfos.Count > 0)
+                {
+                    RemoveSink(SoundSinkInfos.First.Value);
+                }
             }
         }
     }

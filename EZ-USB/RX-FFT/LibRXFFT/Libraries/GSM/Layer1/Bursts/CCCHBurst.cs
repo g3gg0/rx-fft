@@ -9,6 +9,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
             L3 = l3;
             Name = "CCCH";
             ShortName = "CC ";
+
             InitBuffers(4);
         }
 
@@ -27,10 +28,17 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                 return eSuccessState.Succeeded;
             }
 
-            UnmapToI(decodedBurst, sequence);
+            StoreBurstContext(param, decodedBurst, sequence);
 
-            if (sequence == 3)
+            /* if FNs are consecutive */
+            if (AllBurstsReceived())
             {
+                /* clean up */
+                ClearBurstContext();
+
+                /* get all e[] bits and place in i[] */
+                CopyEToI();
+
                 DataBursts++;
 
                 /* deinterleave the 4 bursts. the result is a 456 bit block. i[] to c[] */
@@ -69,7 +77,9 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                 return eSuccessState.Succeeded;
             }
             else
+            {
                 StatusMessage = null;
+            }
 
             return eSuccessState.Unknown;
         }

@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<pdudesc-list>
+	<pdudesc ref="GSM 04.11 8.2.2" name="Message type indicator" length="1" type="3" fields="true">
+		<field name="MTI" type="stringIndex" strings="7">
+			<bits octet="1" start="1" count="3"/>
+			<string index="0" text="(ms->n) RP-DATA"/>
+			<string index="1" text="(n->ms) RP-DATA"/>
+			<string index="2" text="(ms->n) RP-ACK"/>
+			<string index="3" text="(n->ms) RP-ACK"/>
+			<string index="4" text="(ms->n) RP-ERROR"/>
+			<string index="5" text="(n->ms) RP-ERROR"/>
+		</field>	
+	</pdudesc>
+	<pdudesc ref="GSM 04.11 8.2.3" name="Message reference" length="1" type="3"/>
+	<pdudesc ref="GSM 04.11 8.2.5.1" name="Originator address element" type="4" fields="true">
+		<field name="Numbering plan" type="stringIndex" strings="8">
+			<bits octet="1" start="5" count="3"/>
+			<string index="0" text="Unknown"/>
+			<string index="1" text="International number"/>
+			<string index="2" text="National number"/>
+			<string index="3" text="Network specific number"/>
+			<string index="4" text="Subscriber number"/>
+			<string index="5" text="Alphanumeric"/>
+			<string index="6" text="Abbreviated number"/>
+			<string index="7" text="Reserved for extension"/>
+		</field>	
+		<field name="Number type" type="stringIndex" strings="16">
+			<bits octet="1" start="1" count="4"/>
+			<string index="0" text="Unknown"/>
+			<string index="1" text="ISDN/telephone numbering plan"/>
+			<string index="3" text="Data numbering plan (X.121)"/>
+			<string index="4" text="Telex numbering plan"/>
+			<string index="8" text="National numbering plan"/>
+			<string index="9" text="Private numbering plan"/>
+			<string index="10" text="ERMES numbering plan (ETSI DE/PS 3 01-3)"/>
+			<string index="15" text="Reserved for extension"/>
+		</field>
+		<field name="Number" type="varbcd">
+			<bits octet="2"/>
+		</field>
+	</pdudesc>
+	
+	<pdudesc ref="GSM 04.11 8.2.5.2" name="Destination address element" type="4"/>
+	<pdudesc ref="GSM 04.11 8.2.5.3" name="RP-User Data" type="4"/>
+</pdudesc-list>

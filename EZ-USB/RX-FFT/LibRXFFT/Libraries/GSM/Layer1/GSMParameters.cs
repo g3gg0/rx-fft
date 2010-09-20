@@ -75,8 +75,12 @@ namespace LibRXFFT.Libraries.GSM.Layer1
         public eGSMState State = eGSMState.Idle;
         public eTriState CBCH = eTriState.Unknown;
 
+        public bool SkipL2Parsing = false;
         public PacketDumpWriter PacketDumper = null;
         public Burst CurrentBurstHandler = null;
+        public CryptA5 A5Algorithm = new CryptA5();
+        public bool A5AlgorithmAvailable = false;
+
 
         public double PhaseOffsetFrequency
         {
@@ -114,9 +118,6 @@ namespace LibRXFFT.Libraries.GSM.Layer1
          * has to get merged with SampleOffset
          * */
         public double SubSampleOffset = 0;
-
-        public long FN;
-        public long TN;
 
         public bool FirstSCH;
 
@@ -171,30 +172,45 @@ namespace LibRXFFT.Libraries.GSM.Layer1
         public long LAC;
         public long CellIdent;
         public byte BSIC;
-        
-        public long TC
-        {
-            get { return (FN / 51) % 8; }
-        }
 
+
+        public long FN;
+        public long TN;
+
+        /* T1 [11 bits] as specified in GSM-05.02 Ch 3.3.2.2.1 b) */
         public long T1
         {
             get { return FN / (26 * 51); }
         }
+        
+        /* T1R [6 bits] as specified in GSM-05.02 Figure 6 */
+        public long T1R
+        {
+            get { return T1 % 64; }
+        }
 
+        /* T2 [5 bits] as specified in GSM-05.02 Ch 3.3.2.2.1 b) */
         public long T2
         {
             get { return FN % 26; }
         }
 
+        /* T3 [6 bits] as specified in GSM-05.02 Ch 3.3.2.2.1 b) */
         public long T3
         {
             get { return FN % 51; }
         }
 
+        /* T3' [3 bits] as specified in GSM-05.02 Ch 3.3.2.2.1 b) */
         public long T3M
         {
             get { return (T3 - 1) / 10; }
+        }
+
+        /* COUNT [22 bits] as specified in GSM-03.20 Ch 3.1.2 */
+        public uint Count
+        {
+            get { return (uint)((T1 << 11) | (T3 << 5) | T2); }
         }
 
         public long TotalErrors;
@@ -225,7 +241,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
         public override string ToString()
         {
-            return "T1: " + String.Format("{0,5}", T1) + " T2: " + String.Format("{0,2}", T2) + " T3: " + String.Format("{0,2}", T3) + " TN: " + String.Format("{0,1}", TN) + " TC: " + String.Format("{0,1}", TC) + " FN: " + String.Format("{0,8}", FN);
+            return "T1: " + String.Format("{0,5}", T1) + " T2: " + String.Format("{0,2}", T2) + " T3: " + String.Format("{0,2}", T3) + " TN: " + String.Format("{0,1}", TN) + " FN: " + String.Format("{0,8}", FN);
         }
 
 

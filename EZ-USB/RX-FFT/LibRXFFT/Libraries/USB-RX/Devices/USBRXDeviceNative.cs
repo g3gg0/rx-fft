@@ -27,12 +27,13 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         public static int PIN_STATE_HIGH = 1;
 
         /* those are the bits set via UsbSetTimeout when DevNum is 0x80 */
-        public static ushort MODE_NORMAL = 0x00000000;
-        public static ushort MODE_NOATMEL = 0x00000001;
-        public static ushort MODE_FASTI2C = 0x00000002;
-        public static ushort MODE_POWERLINE = 0x00000004;
-        public static ushort MODE_CONSOLE = 0x00000008;
-        public static ushort MODE_PREBUFFER = 0x00000010;
+        public static ushort MODE_NORMAL = 0x0000;
+        public static ushort MODE_NOATMEL = 0x0001;
+        public static ushort MODE_FASTI2C = 0x0002;
+        public static ushort MODE_POWERLINE = 0x0004;
+        public static ushort MODE_CONSOLE = 0x0008;
+        public static ushort MODE_PREBUFFER = 0x0010;
+        public static ushort MODE_FORCEINIT = 0x1000;
 
         [DllImport("usb2.dll", CallingConvention = CallingConvention.StdCall)]
         public static extern int UsbGetShmemID(int DevNum);

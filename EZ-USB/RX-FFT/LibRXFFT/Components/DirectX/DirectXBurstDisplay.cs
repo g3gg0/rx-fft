@@ -1,4 +1,6 @@
 ﻿using SlimDX.Direct3D9;
+using System.Collections;
+using System.Drawing;
 
 namespace LibRXFFT.Components.DirectX
 {
@@ -9,12 +11,26 @@ namespace LibRXFFT.Components.DirectX
         Vertex[] CursorVertexes = new Vertex[6];
         public bool[] BurstBits = new bool[0];
 
+        public LabelledLine MaxPowerLine = new LabelledLine();
+        public LabelledLine DecisionPowerLine = new LabelledLine();
+
+        public DirectXBurstDisplay() : base()
+        {
+            DecisionPowerLine.Label = "Decision Level";
+            DecisionPowerLine.Color = (uint)Color.LightGreen.ToArgb();
+            DecisionPowerLine.Position = 0;
+
+            LabelledHorLines.AddLast(DecisionPowerLine);
+        }
 
         protected void DrawBit(int bitNum, uint color1, uint color2, uint colorText)
         {
             float stubLength = (float)DirectXHeight / 3;
-            float bitStartPos = (float)(XAxisGridOffset * XZoomFactor - DisplayXOffset + ((bitNum - 0.5f) * XAxisUnit * XZoomFactor));
-            float bitEndPos = (float)(XAxisGridOffset * XZoomFactor - DisplayXOffset + ((bitNum + 0.5f) * XAxisUnit * XZoomFactor));
+            float bitStartPos = (float)(XAxisGridOffset * XZoomFactor - DisplayXOffset + ((bitNum - 0.5f) * ((XAxisUnit / PlotVertsEntries) * DirectXWidth) * XZoomFactor));
+            float bitEndPos = (float)(XAxisGridOffset * XZoomFactor - DisplayXOffset + ((bitNum + 0.5f) * ((XAxisUnit / PlotVertsEntries) * DirectXWidth) * XZoomFactor));
+
+            //float bitStartPos = (float)(XAxisGridOffset * XZoomFactor - DisplayXOffset + ((bitNum - 0.5f) * XAxisUnit * XZoomFactor * (DirectXWidth / PlotVertsEntries)));
+            //float bitEndPos = (float)(XAxisGridOffset * XZoomFactor - DisplayXOffset + ((bitNum + 0.5f) * XAxisUnit * XZoomFactor * (DirectXWidth / PlotVertsEntries)));
             float yPos = DirectXHeight / 2;
 
             if (bitNum >= 0 && bitNum < BurstBits.Length)
@@ -75,7 +91,8 @@ namespace LibRXFFT.Components.DirectX
             float stubWidth = 20;
             float xPos = (float)LastMousePos.X;
             float xStartPos = (float)((XAxisSampleOffset + XAxisGridOffset) * XZoomFactor);
-            int bitNum = (int)((xPos - XAxisGridOffset * XZoomFactor + DisplayXOffset) / (XAxisUnit * XZoomFactor) + 0.5f);
+            //int bitNum = (int)((xPos - XAxisGridOffset * XZoomFactor + DisplayXOffset) / (XAxisUnit * XZoomFactor) + 0.5f);
+            int bitNum = (int)((xPos - (XAxisGridOffset * XZoomFactor - DisplayXOffset)) / (((XAxisUnit / PlotVertsEntries) * DirectXWidth) * XZoomFactor) + 0.5f);
 
             uint colorText = 0xFFFF3030;
 
@@ -120,6 +137,8 @@ namespace LibRXFFT.Components.DirectX
             CursorVertexes[3].Color = 0x00FF3030;
 
             Device.DrawUserPrimitives(PrimitiveType.LineStrip, 3, CursorVertexes);
+
+            base.RenderOverlay();
         }
     }
 }

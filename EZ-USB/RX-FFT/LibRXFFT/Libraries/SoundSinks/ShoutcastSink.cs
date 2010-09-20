@@ -162,31 +162,41 @@ namespace LibRXFFT.Libraries.SoundSinks
             }
             Status = "(idle)";
         }
+        private byte[] ProcessByteBuffer = new byte[0];
+        private short[] ProcessShortBuffer = new short[0];
 
         public void Process(double[] data)
         {
-            short[] buff = new short[data.Length];
+            if (ProcessShortBuffer.Length != data.Length)
+            {
+                Array.Resize<short>(ref ProcessShortBuffer, data.Length);
+            }
 
             for (int pos = 0; pos < data.Length; pos++)
             {
-                buff[pos] = (short)(data[pos] * short.MaxValue);
+                ProcessShortBuffer[pos] = (short)(data[pos] * short.MaxValue);
             }
 
-            Process(buff);
+            Process(ProcessShortBuffer);
         }
+
 
         public void Process(short[] data)
         {
-            byte[] buff = new byte[data.Length * 2];
+            if (ProcessByteBuffer.Length != data.Length * 2)
+            {
+                Array.Resize<byte>(ref ProcessByteBuffer, data.Length * 2);
+            }
 
             for (int pos = 0; pos < data.Length; pos++)
             {
-                buff[2 * pos] = (byte)(data[pos] & 0xFF);
-                buff[2 * pos + 1] = (byte)(data[pos] >> 8);
+                ProcessByteBuffer[2 * pos] = (byte)(data[pos] & 0xFF);
+                ProcessByteBuffer[2 * pos + 1] = (byte)(data[pos] >> 8);
             }
 
-            Process(buff);
+            Process(ProcessByteBuffer);
         }
+
 
         public void Process(byte[] data)
         {
@@ -307,6 +317,10 @@ namespace LibRXFFT.Libraries.SoundSinks
         {
             get;
             set;
+        }
+
+        public void Shutdown()
+        {
         }
 
         #endregion

@@ -22,16 +22,16 @@ namespace GSM_Analyzer
 
             if (ChannelScanThread != null)
             {
+                ChannelScanThread.Join(50);
                 ChannelScanThread.Abort();
-                ChannelScanThread.Join();
                 ChannelScanThread = null;
             }
 
             if (ReadThread != null && ReadThread.IsAlive)
             {
                 ThreadActive = false;
+                ReadThread.Join(50);
                 ReadThread.Abort();
-                ReadThread.Join();
             }
 
             if (Source != null)
@@ -714,7 +714,7 @@ namespace GSM_Analyzer
             this.chkDump.TabIndex = 21;
             this.chkDump.Text = "Dump";
             this.chkDump.UseVisualStyleBackColor = true;
-            this.chkDump.CheckedChanged += new System.EventHandler(this.chkDump_CheckedChanged);
+            this.chkDump.MouseClick += new System.Windows.Forms.MouseEventHandler(chkDump_MouseClick);
             // 
             // GSMAnalyzer
             // 

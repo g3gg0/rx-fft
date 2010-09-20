@@ -15,6 +15,8 @@ namespace LibRXFFT.Libraries.SoundSinks
 
         void Start();
         void Stop();
+        void Shutdown();
+
         void Process(double[] samples);
     }
 }

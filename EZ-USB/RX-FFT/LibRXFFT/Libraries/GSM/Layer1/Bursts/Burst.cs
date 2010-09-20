@@ -1,6 +1,7 @@
 using System;
 using LibRXFFT.Libraries.GSM.Layer2;
 using LibRXFFT.Libraries.GSM.Layer3;
+using System.Text;
 
 namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
 {
@@ -29,6 +30,8 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
         public string Name = "Unknown";
         public string ShortName = "Unk";
 
+        private StringBuilder Builder = new StringBuilder();
+
 
         public enum eSuccessState
         {
@@ -37,35 +40,58 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
             Unknown
         }
 
-        protected void DumpBits(bool[] data)
+        protected string DumpBits(bool[] data)
         {
-            string msg = "";
+            return DumpBits(data, true);
+        }
+
+        protected string DumpBits(bool[] data, bool statusMessage)
+        {
+            Builder.Length = 0;
 
             foreach (bool value in data)
             {
                 if (value)
-                    msg += "1";
+                {
+                    Builder.Append("1");
+                }
                 else
-                    msg += "0";
+                {
+                    Builder.Append("0");
+                }
             }
 
-            if (StatusMessage == null)
-                StatusMessage = msg;
-            else
-                StatusMessage += msg;
+            if (statusMessage)
+            {
+                if (StatusMessage == null)
+                {
+                    StatusMessage = Builder.ToString();
+                }
+                else
+                {
+                    StatusMessage += Builder.ToString();
+                }
+            }
+            return Builder.ToString();
         }
 
         protected void DumpBytes(byte[] data)
         {
-            string msg = "";
+            Builder.Length = 0;
 
             foreach (byte value in data)
-                msg += String.Format("{0:X02} ", value);
+            {
+                Builder.AppendFormat("{0:X02} ", value);
+            }
 
             if (StatusMessage == null)
-                StatusMessage = msg;
+            {
+                StatusMessage = Builder.ToString();
+            }
             else
-                StatusMessage += msg;
+            {
+                StatusMessage += Builder.ToString();
+            }
         }
 
 

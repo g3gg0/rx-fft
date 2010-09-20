@@ -23,6 +23,7 @@ namespace LibRXFFT.Components.DirectX
         private double[] FFTResult = new double[256];
 
         private bool WindowActivated = false;
+        private bool DecimateFiltered = false;
 
         public enum eDataType
         {
@@ -105,9 +106,11 @@ namespace LibRXFFT.Components.DirectX
                         MenuItem menuItem4 = new MenuItem("FFT 1024");
                         MenuItem menuItem5 = new MenuItem("FFT 2048");
                         MenuItem menuItem6 = new MenuItem("FFT 4096");
+                        MenuItem menuItem7 = new MenuItem("-");
+                        MenuItem menuItem8 = new MenuItem("Show decimated [Filtered]");
                         menuItem1.Enabled = false;
 
-                        contextMenu.MenuItems.AddRange(new MenuItem[] { menuItem1, menuItem2, menuItem3, menuItem4, menuItem5, menuItem6 });
+                        contextMenu.MenuItems.AddRange(new MenuItem[] { menuItem1, menuItem2, menuItem3, menuItem4, menuItem5, menuItem6, menuItem7, menuItem8 });
 
                         switch (FFTSize)
                         {
@@ -139,6 +142,10 @@ namespace LibRXFFT.Components.DirectX
                         menuItem6.Click += new EventHandler(delegate(object sender, EventArgs e)
                         {
                             FFTSize = 4096;
+                        }); 
+                        menuItem8.Click += new EventHandler(delegate(object sender, EventArgs e)
+                        {
+                            DecimateFiltered ^= true;
                         });
 
                         System.Drawing.Point popupPos = this.PointToClient(MousePosition);
@@ -220,8 +227,20 @@ namespace LibRXFFT.Components.DirectX
                     fft = FFTTransformerTranslated;
                     break;
                 case eDataType.Filtered:
+                    if (DecimateFiltered)
+                    {
+                        return;
+                    }
                     display = FFTFiltered;
                     fft = FFTTransformerFiltered;
+                    break;
+                case eDataType.Decimated:
+                    if (!DecimateFiltered)
+                    {
+                        return;
+                    }
+                    display = FFTFiltered;
+                    fft = FFTTransformerDecimated;
                     break;
                 default:
                     return;

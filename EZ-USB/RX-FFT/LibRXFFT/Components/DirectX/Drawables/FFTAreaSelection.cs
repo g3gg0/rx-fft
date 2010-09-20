@@ -6,6 +6,7 @@ using SlimDX.Direct3D9;
 using SlimDX;
 using System.Drawing;
 using System.Windows.Forms;
+using System.Runtime.InteropServices;
 
 namespace LibRXFFT.Components.DirectX.Drawables
 {
@@ -138,7 +139,9 @@ namespace LibRXFFT.Components.DirectX.Drawables
         public override bool ProcessInputEvent(InputEvent evt)
         {
             bool handled = false;
-            bool modifierPressed = (evt.KeyData & Modifier) == Modifier;
+            //bool modifierPressed = (evt.KeyData & Modifier) == Modifier;
+            bool modifierPressed = (UserControl.ModifierKeys & Modifier) == Modifier;
+
 
             switch (evt.Type)
             {
@@ -204,7 +207,7 @@ namespace LibRXFFT.Components.DirectX.Drawables
                     else
                     {
                         /* if area selected */
-                        if (FreqWidth > 0)
+                        if (Visible)
                         {
                             bool withinHor = (MainPlot.CursorFrequency >= Math.Min(StartFreq, EndFreq) && MainPlot.CursorFrequency <= Math.Max(StartFreq, EndFreq));
                             bool withinVert = (MainPlot.CursorStrength >= Math.Min(StartStrength, EndStrength) && MainPlot.CursorStrength <= Math.Max(StartStrength, EndStrength));

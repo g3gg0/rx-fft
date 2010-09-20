@@ -7,6 +7,7 @@ using RX_FFT.Components.GDI;
 using System.Threading;
 using LibRXFFT.Libraries.Timers;
 using System.IO;
+using System.Collections;
 
 namespace RX_Setup
 {
@@ -57,6 +58,59 @@ namespace RX_Setup
 
             StatsThread.Abort();
             base.OnClosing(e);
+        }
+
+
+        private void btnConnect_MouseClick(object sender, System.Windows.Forms.MouseEventArgs e)
+        {
+            ArrayList openedDevices = new ArrayList();
+
+            if (e.Button == MouseButtons.Right)
+            {
+                for (int devNum = 0; devNum < 6; devNum++)
+                {
+                    txtLog.AppendText("CUSB2DLL::LoadUsb2Dll() -> Usb2Dll loaded successfully!" + Environment.NewLine);
+                    txtLog.AppendText("CUSB2DLL::Check(" + devNum + ") -> Usb2Dll loaded successfully!" + Environment.NewLine);
+                    
+                    bool present = USBRXDeviceNative.UsbDevicePresent(devNum);
+                    txtLog.AppendText("CUSB2DLL::Check(" + devNum + ") -> UsbDevicePresent(" + devNum + ")=" + (present ? "1 -> Device present! " : "0 -> Device not present! ") + Environment.NewLine);
+
+                    if (present)
+                    {
+                        bool initialized = USBRXDeviceNative.UsbDeviceInitialized(devNum);
+                        txtLog.AppendText("CUSB2DLL::Check(" + devNum + ") -> UsbDeviceInitialized(" + devNum + ")=" + (initialized ? "1 -> Device initialized! " : "0 -> Device not initialized! ") + Environment.NewLine);
+
+                        txtLog.AppendText("CUSB_RX1::CheckUSB_RX1DeviceList(): USB_RX1 at devNum=" + devNum + " available" + Environment.NewLine);
+
+                        if (!initialized)
+                        {
+                            bool init = USBRXDeviceNative.UsbInit(devNum);
+                            txtLog.AppendText("CUSB2DLL::Init(" + devNum + ") -> UsbInit(" + devNum + ")=" + (init ? "1 -> Usb interface initialized sucessfully!" : "0 -> Usb interface not initialized!") + Environment.NewLine);
+                        }
+
+                        bool open = USBRXDeviceNative.UsbOpen(devNum);
+                        txtLog.AppendText("CUSB2DLL::Init(" + devNum + ") -> UsbOpen(" + devNum + ")=" + (open ? "1 -> Usb device opened sucessfully!" : "0 -> Usb interface not opened!") + Environment.NewLine);
+
+                        byte[] param = new byte[1];
+                        bool speed = USBRXDeviceNative.UsbCheckSpeed(devNum, param);
+                        txtLog.AppendText("CUSB2DLL::Init(" + devNum + ") -> UsbCheckSpeed(" + devNum + ",...)=" + ((param[0] != 0x00) ? "1 -> Usb interface is connected to a high-speed bus" : "0 -> Usb interface is connected to a low-speed bus ") + Environment.NewLine);
+
+                        openedDevices.Add(devNum);
+                    }
+                    else
+                    {
+                        txtLog.AppendText("CUSB2DLL::~CUSB2DLL() -> Usb2Dll closed for [" + devNum + "]!" + Environment.NewLine);
+                    }
+                }
+
+                foreach (int devNum in openedDevices)
+                {
+                    byte data = 0x06;
+                    bool sent = USBRXDeviceNative.UsbI2CWriteByte(devNum, 0x20, data);
+
+                    txtLog.AppendText("CUSB_RX1::I2CCommand(" + data + ") for m_DevNum=" + devNum + " returns " + (sent ? "1" : "0") + Environment.NewLine);
+                }
+            }
         }
 
         private void btnConnect_Click(object sender, EventArgs e)

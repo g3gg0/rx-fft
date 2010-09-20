@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<!-- refers to GSM 04.11 -->
+<messagedesc-list>
+  <messagedesc ref="GSM 04.11 7.2.1" name="CP-DATA" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="GSM 04.11 8.1.3" presence="M"/>
+      <pduslot ref="GSM 04.11 8.1.4.1" presence="M"/>
+    </pduslot-list>
+  </messagedesc>
+  <messagedesc ref="GSM 04.11 7.2.2" name="CP-ACK" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="GSM 04.11 8.1.3" presence="M"/>
+    </pduslot-list>
+  </messagedesc>  
+  <messagedesc ref="GSM 04.11 7.2.3" name="CP-ERROR" significance="dual" direction="downlink">
+    <pduslot-list>
+      <pduslot ref="10.2" presence="M"/>
+      <pduslot ref="10.3.1" presence="M"/>
+      <pduslot ref="GSM 04.11 8.1.3" presence="M"/>
+      <pduslot ref="GSM 04.11 8.1.4.2" presence="M"/>
+    </pduslot-list>
+  </messagedesc> 
+</messagedesc-list>

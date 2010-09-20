@@ -4,6 +4,7 @@ using LibRXFFT.Libraries.GSM.Layer1.ChannelCoding;
 using LibRXFFT.Libraries.GSM.Layer1.GMSK;
 using LibRXFFT.Libraries.GSM.Layer3;
 using System.Collections.Generic;
+using RX_FFT.Components.GDI;
 
 namespace LibRXFFT.Libraries.GSM.Layer1
 {
@@ -50,6 +51,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             Parameters.UsedBursts.AddLast(BCCH);
             Parameters.UsedBursts.AddLast(CCCH);
 
+            L3.PDUDataTriggers.Add("ServiceRequest", TriggerServiceRequest);
             L3.PDUDataTriggers.Add("CCCH-CONF", TriggerCCCHCONF);
             L3.PDUDataTriggers.Add("ChannelAssignment", TriggerChannelAssignment);
             L3.PDUDataTriggers.Add("CBCHUpdate", TriggerCBCHUpdate);
@@ -106,6 +108,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             long subChannel;
             long timeSlot;
             sTimeslotReference reference;
+            bool hopping = false;
 
             lock (L3Handler.PDUDataFields)
             {
@@ -125,6 +128,11 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                 if (!L3Handler.PDUDataRawFields.ContainsKey("RefT3"))
                     return;
 
+                if (L3Handler.PDUDataRawFields.ContainsKey("Hopping"))
+                {
+                    hopping = (L3Handler.PDUDataRawFields["Hopping"] == 1);
+                }
+
                 channelType = (eTimeSlotType)L3Handler.PDUDataRawFields["ChannelType"];
                 subChannel = L3Handler.PDUDataRawFields["SubChannel"];
                 timeSlot = L3Handler.PDUDataRawFields["TimeSlot"];
@@ -134,8 +142,10 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                 reference.T3 = L3Handler.PDUDataRawFields["RefT3"];
             }
 
-            /* assigned time slot type does not match? */
-            if (true || Parameters.TimeSlotHandlers[timeSlot] == null || Parameters.TimeSlotInfo[timeSlot].Type != channelType)
+            /* was: assigned time slot type does not match? */
+            /* now: make sure thats no hopping channel. no chance yet to decode */
+
+            if (!hopping /*|| Parameters.TimeSlotHandlers[timeSlot] == null || Parameters.TimeSlotInfo[timeSlot].Type != channelType*/)
             {
                 lock (Parameters.TimeSlotHandlers)
                 {
@@ -144,7 +154,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                         case eTimeSlotType.TCHF:
                             if (Parameters.TimeSlotHandlers[timeSlot] != null && Parameters.TimeSlotHandlers[timeSlot][0].Reference == reference)
                             {
-                                AddMessage("   [L1] TimeSlot " + timeSlot + " already configured as TCH/F (was " + Parameters.TimeSlotInfo[timeSlot].Type + ")" + Environment.NewLine);
+                                //AddMessage("   [L1] TimeSlot " + timeSlot + " already configured as TCH/F (was " + Parameters.TimeSlotInfo[timeSlot].Type + ")" + Environment.NewLine);
                             }
                             else
                             {
@@ -173,6 +183,12 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                                 Parameters.UsedBursts.AddLast(tch);
                                 Parameters.UsedBursts.AddLast(sacch);
 
+                                if (Parameters.CurrentBurstHandler is NormalBurst && ((NormalBurst)Parameters.CurrentBurstHandler).ChannelEncrypted)
+                                {
+                                    tch.ChannelEncrypted = true;
+                                    sacch.ChannelEncrypted = true;
+                                }
+
                                 for (int frame = 0; frame < 25; frame++)
                                 {
                                     if (frame == 12)
@@ -189,7 +205,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                             /* TODO: this is wrong! have to check subchannel reference! */
                             if (Parameters.TimeSlotHandlers[timeSlot] != null && Parameters.TimeSlotHandlers[timeSlot][0].Reference == reference)
                             {
-                                AddMessage("   [L1] TimeSlot " + timeSlot + " already configured as TCH/H (was " + Parameters.TimeSlotInfo[timeSlot].Type + ")" + Environment.NewLine);
+                                //AddMessage("   [L1] TimeSlot " + timeSlot + " already configured as TCH/H (was " + Parameters.TimeSlotInfo[timeSlot].Type + ")" + Environment.NewLine);
                             }
                             else
                             {
@@ -198,15 +214,15 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                                     Parameters.TimeSlotHandlers[timeSlot] = new sTimeSlotParam[26];
                                 }
 
-                                /* release the old bursts first */
-                                for (int frame = 0; frame < Parameters.TimeSlotHandlers[timeSlot].Length; frame++)
+                                /* make sure the old bursts get released */
+                                ReleaseTimeSlotBursts(timeSlot);
+
+                                /* if length did not fit, reallocate */
+                                if (Parameters.TimeSlotHandlers.Length != 26)
                                 {
-                                    Burst burst = Parameters.TimeSlotHandlers[timeSlot][frame].Burst;
-                                    if (burst != null && !burst.Released)
-                                    {
-                                        burst.Release();
-                                    }
+                                    Parameters.TimeSlotHandlers[timeSlot] = new sTimeSlotParam[26];
                                 }
+
 
                                 AddMessage("   [L1] TimeSlot " + timeSlot + " now configured as TCH/H (was " + Parameters.TimeSlotInfo[timeSlot].Type + ")" + Environment.NewLine);
 
@@ -269,14 +285,14 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                                     Parameters.TimeSlotHandlers[timeSlot][(chan + 8) * 4 + 3] = new sTimeSlotParam(tmpSACCH, 3);
                                 }
 #else
-                                if (Parameters.TimeSlotHandlers[timeSlot] == null)
+                                if (Parameters.TimeSlotHandlers[timeSlot] == null || Parameters.TimeSlotHandlers[timeSlot].Length != 51)
                                 {
                                     Parameters.TimeSlotHandlers[timeSlot] = new sTimeSlotParam[51];
                                 }
 
                                 if (Parameters.TimeSlotHandlers[timeSlot][subChannel * 4].Reference == reference)
                                 {
-                                    AddMessage("   [L1] TimeSlot " + timeSlot + " already configured as SDCCH/8 (was " + Parameters.TimeSlotInfo[timeSlot].Type + ")" + Environment.NewLine);
+                                    //AddMessage("   [L1] TimeSlot " + timeSlot + " already configured as SDCCH/8 (was " + Parameters.TimeSlotInfo[timeSlot].Type + ")" + Environment.NewLine);
                                 }
                                 else
                                 {
@@ -345,6 +361,41 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             }
         }
 
+        private void ReleaseTimeSlotBursts(long timeSlot)
+        {
+            for (int frame = 0; frame < Parameters.TimeSlotHandlers[timeSlot].Length; frame++)
+            {
+                Burst burst = Parameters.TimeSlotHandlers[timeSlot][frame].Burst;
+                if (burst != null && !burst.Released)
+                {
+                    burst.Release();
+                }
+            }
+        }
+
+        private void TriggerServiceRequest(L3Handler L3Handler)
+        {
+            string ident = null;
+            string type = null;
+
+            lock (L3Handler.PDUDataFields)
+            {
+                if (L3Handler.PDUDataFields.ContainsKey("Identity"))
+                {
+                    ident = L3Handler.PDUDataFields["Identity"];
+                }
+                if (L3Handler.PDUDataFields.ContainsKey("ServiceType"))
+                {
+                    type = L3Handler.PDUDataFields["ServiceType"];
+                }
+            }
+
+            if (ident != null && type != null)
+            {
+                AddMessage("   [Log] " + ident + " Requests '" + type + "'" + Environment.NewLine);
+            }
+        }
+
         private void TriggerCBCHReset(L3Handler L3Handler)
         {
             lock (L3Handler.PDUDataFields)
@@ -363,7 +414,6 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                 if (L3Handler.PDUDataRawFields.ContainsKey("TimeSlot"))
                     L3Handler.PDUDataRawFields.Remove("TimeSlot");
             }
-
         }
 
 
@@ -442,7 +492,6 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                 Parameters.TimeSlotHandlers[timeSlot][frame + 2] = new sTimeSlotParam(Burst, 2);
                 Parameters.TimeSlotHandlers[timeSlot][frame + 3] = new sTimeSlotParam(Burst, 3);
             }
-
         }
 
         private void TriggerCCCHCONF(L3Handler L3Handler)
@@ -703,26 +752,20 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                     type = (int)L3Handler.PDUDataRawFields["CipherType"];
             }
 
+            AddMessage("   [L1] [" + Parameters.CurrentBurstHandler.Name + "] Will switch encrypted state" + Environment.NewLine);
+
             /* find the associated TCH and update its encryption state */
-            if (Parameters.CurrentBurstHandler != null && Parameters.CurrentBurstHandler.GetType() == typeof(SACCHBurst))
+            if (Parameters.CurrentBurstHandler != null && (Parameters.CurrentBurstHandler.GetType() == typeof(SACCHBurst) ||Parameters.CurrentBurstHandler.GetType() == typeof(SDCCHBurst)))
             {
-                SACCHBurst sacch = (SACCHBurst)Parameters.CurrentBurstHandler;
+                NormalBurst channel = (NormalBurst)Parameters.CurrentBurstHandler;
 
-                sacch.EncryptionState = (state != 0);
-                sacch.EncryptionType = type;
-            }
-            else if (Parameters.CurrentBurstHandler != null && Parameters.CurrentBurstHandler.GetType() == typeof(SDCCHBurst))
-            {
-                SDCCHBurst sdcch = (SDCCHBurst)Parameters.CurrentBurstHandler;
-
-                sdcch.EncryptionState = (state != 0);
-                sdcch.EncryptionType = type;
+                channel.ChannelEncrypted = (state != 0);
+                channel.EncryptionType = type;
             }
             else
             {
-                AddMessage("ERROR: Got SACCH message but it was not in a SACCH. (" + Parameters.CurrentBurstHandler + ")");
+                AddMessage("ERROR: Got DCCH message but it was not in a DCCH. (" + Parameters.CurrentBurstHandler + ")");
             }
-
         }
 
         public void Handle(double[] timeSlotSamples, double[] timeSlotStrengths)
@@ -801,85 +844,116 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                 Parameters.PacketDumper.Write(Parameters, BurstBitsUndiffed);
             }
 
+            /* 
+             * process if there is a handler, but not if there is a dumper with skipping activated
+             * dont skip SCH bursts and BCCH
+             */
             if (handler != null)
             {
-                /* only run data handler if raw handler didn't fail */
-                if (rawHandlerState != Burst.eSuccessState.Failed)
-                {
-                    try
-                    {
-                        dataHandlerState = handler.ParseData(Parameters, BurstBitsUndiffed, sequence);
-                    }
-                    catch (Exception e)
-                    {
-                        AddMessage("Handler " + handler + " caused an exception: " + e.ToString());
-                    }
-                }
+                bool dump = Parameters.PacketDumper != null;
+                bool skip = Parameters.SkipL2Parsing;
 
-                /* if everything went ok so far, pass the data to the associated handler */
-                if (rawHandlerState == Burst.eSuccessState.Failed || dataHandlerState == Burst.eSuccessState.Failed)
+                /* 
+                 * SCH will correct sample offsets and BCCH is needed until we received the
+                 * first network configuration information in SYSTEM INFORMATION TYPE 3. 
+                 * with wrong network config we will miss a lot of SCHs which will cause drifting etc.
+                 */
+                bool important = (handler is SCHBurst) || ((handler is BCCHBurst) && Parameters.TimeSlotInfo[0].Configures == 0);
+
+                if (dump && skip && !important)
                 {
-                    Parameters.Error();
-                    AddMessage("   [L1] [" + handler.Name + "] - [" + Parameters + "]" + Environment.NewLine);
-                    AddMessage("        ERROR: " + handler.ErrorMessage + Environment.NewLine);
-                    AddMessage(Environment.NewLine);
-                }
-                else
-                {
-                    /* only update success counters when this burst was processed successfully */
-                    if (dataHandlerState == Burst.eSuccessState.Succeeded)
+                    if (rawHandlerState == Burst.eSuccessState.Failed)
+                    {
+                        Parameters.Error();
+                        AddMessage("   [L1] [" + handler.Name + "] - [" + Parameters + "]" + Environment.NewLine);
+                        AddMessage("        ERROR: " + handler.ErrorMessage + Environment.NewLine);
+                        AddMessage(Environment.NewLine);
+                    }
+                    else
                     {
                         Parameters.Success();
                     }
-
-                    /* show L2 messages, if handler wishes */
-                    bool showL2 = handler.L2.ShowMessage && !string.IsNullOrEmpty(handler.L2.StatusMessage);
-
-                    /* show L3 messages, if there is any */
-                    bool showL3 = !string.IsNullOrEmpty(handler.L3.StatusMessage);
-
-                    /* only show L1 when one of L2/L3 has a message */
-                    if (showL2 || showL3 || handler.StatusMessage != null)
-                    {
-                        AddMessage("   [L1] [ARFCN: " + Parameters.ARFCN + "] ");
-                        AddMessage("[MCC: " + Parameters.MCC + "] ");
-                        AddMessage("[MNC: " + Parameters.MNC + "] ");
-                        AddMessage("[LAC: " + Parameters.LAC + "] ");
-                        AddMessage("[CellID: " + Parameters.CellIdent + "] ");
-                        AddMessage(Environment.NewLine);
-                        AddMessage("   [L1] [" + handler.Name + "] - [" + Parameters + "]" + Environment.NewLine);
-                    }
-
-                    if (handler.StatusMessage != null)
-                    {
-                        AddMessage("        " + handler.StatusMessage + Environment.NewLine);
-                        AddMessage(Environment.NewLine);
-                    }
-
-                    /* show L2 if L2 wants to, or if L3 has some message */
-                    if (showL3 || showL2)
-                        AddMessage("   [L2] " + handler.L2.StatusMessage);
-
-                    /* L3 handler has a message to show */
-                    if (showL3)
-                        AddMessage("   [L3] " + handler.L3.StatusMessage);
-
-                    /* if something shown, add newline */
-                    if (showL2 || showL3)
-                        AddMessage(Environment.NewLine);
                 }
-
-                /* and reset these "flags" */
-                handler.StatusMessage = null;
-                handler.ErrorMessage = null;
-                handler.L2.ShowMessage = false;
-                handler.L3.StatusMessage = null;
-
-                /* does the Layer 3 provide any sniffed information? */
-                if (handler.L3.SniffResult != null)
+                else
                 {
-                    AddMessage("   [L3] sniffed: " + handler.L3.SniffResult + Environment.NewLine);
-                    handler.L3.SniffResult = null;
+                    /* only run data handler if raw handler didn't fail */
+                    if (rawHandlerState != Burst.eSuccessState.Failed)
+                    {
+                        try
+                        {
+                            dataHandlerState = handler.ParseData(Parameters, BurstBitsUndiffed, sequence);
+                        }
+                        catch (Exception e)
+                        {
+                            AddMessage("Handler " + handler + " caused an exception: " + e.ToString());
+                        }
+                    }
+
+                    /* if everything went ok so far, pass the data to the associated handler */
+                    if (rawHandlerState == Burst.eSuccessState.Failed || dataHandlerState == Burst.eSuccessState.Failed)
+                    {
+                        Parameters.Error();
+                        AddMessage("   [L1] [" + handler.Name + "] - [" + Parameters + "]" + Environment.NewLine);
+                        AddMessage("        ERROR: " + handler.ErrorMessage + Environment.NewLine);
+                        AddMessage(Environment.NewLine);
+                    }
+                    else
+                    {
+                        /* only update success counters when this burst was processed successfully */
+                        if (dataHandlerState == Burst.eSuccessState.Succeeded)
+                        {
+                            Parameters.Success();
+                        }
+
+                        /* show L2 messages, if handler wishes */
+                        bool showL2 = handler.L2.ShowMessage && !string.IsNullOrEmpty(handler.L2.StatusMessage);
+
+                        /* show L3 messages, if there is any */
+                        bool showL3 = !string.IsNullOrEmpty(handler.L3.StatusMessage);
+
+                        /* only show L1 when one of L2/L3 has a message */
+                        if (showL2 || showL3 || handler.StatusMessage != null)
+                        {
+                            AddMessage("   [L1] [ARFCN: " + Parameters.ARFCN + "] ");
+                            AddMessage("[MCC: " + Parameters.MCC + "] ");
+                            AddMessage("[MNC: " + Parameters.MNC + "] ");
+                            AddMessage("[LAC: " + Parameters.LAC + "] ");
+                            AddMessage("[CellID: " + Parameters.CellIdent + "] ");
+                            AddMessage(Environment.NewLine);
+                            AddMessage("   [L1] [" + handler.Name + "] - [" + Parameters + "]" + Environment.NewLine);
+                        }
+
+                        if (handler.StatusMessage != null)
+                        {
+                            AddMessage("        " + handler.StatusMessage + Environment.NewLine);
+                            AddMessage(Environment.NewLine);
+                        }
+
+                        /* show L2 if L2 wants to, or if L3 has some message */
+                        if (showL3 || showL2)
+                            AddMessage("   [L2] " + handler.L2.StatusMessage);
+
+                        /* L3 handler has a message to show */
+                        if (showL3)
+                            AddMessage("   [L3] " + handler.L3.StatusMessage);
+
+                        /* if something shown, add newline */
+                        if (showL2 || showL3)
+                            AddMessage(Environment.NewLine);
+                    }
+
+                    /* and reset these "flags" */
+                    handler.StatusMessage = null;
+                    handler.ErrorMessage = null;
+                    handler.L2.ShowMessage = false;
+                    handler.L3.StatusMessage = null;
+
+                    /* does the Layer 3 provide any sniffed information? */
+                    if (handler.L3.SniffResult != null)
+                    {
+                        AddMessage("   [L3] sniffed: " + handler.L3.SniffResult + Environment.NewLine);
+                        handler.L3.SniffResult = null;
+                    }
                 }
             }
         }
@@ -931,6 +1005,11 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
             Burst.eSuccessState dataHandlerState = Burst.eSuccessState.Unknown;
 
+            if (Parameters.PacketDumper != null)
+            {
+                Parameters.PacketDumper.Write(Parameters, burstBits);
+            }
+
             if (handler != null)
             {
                 try
@@ -945,6 +1024,8 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                 /* if everything went ok so far, pass the data to the associated handler */
                 if (dataHandlerState == Burst.eSuccessState.Failed)
                 {
+                    Log.AddMessage("ERROR in " + handler.GetType());
+
                     Parameters.Error();
                     AddMessage("   [L1] [" + handler.Name + "] - [" + Parameters + "]" + Environment.NewLine);
                     AddMessage("        ERROR: " + handler.ErrorMessage + Environment.NewLine);

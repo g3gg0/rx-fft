@@ -11,6 +11,7 @@ namespace LibRXFFT.Libraries.GSM.Layer3
         public string Reference;
         public string Name;
         public ArrayList Fields = new ArrayList();
+        public string SetField;
         public string TriggerPre;
         public string TriggerPost;
     }
@@ -50,6 +51,9 @@ namespace LibRXFFT.Libraries.GSM.Layer3
             {
                 if ("type".Equals(reader.Name))
                     info.Type = int.Parse(reader.Value);
+
+                if ("set".Equals(reader.Name))
+                    info.SetField = reader.Value;
 
                 if ("trigger-pre".Equals(reader.Name))
                     info.TriggerPre = reader.Value;

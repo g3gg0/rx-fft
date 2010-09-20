@@ -247,7 +247,7 @@ namespace RX_FFT
 
         private void demodulationMenu_Click(object sender, EventArgs e)
         {
-            if (DemodState.Dialog != null)
+            if (DemodState.Dialog != null && DemodState.Dialog.Visible)
             {
                 DemodState.Dialog.Close();
                 DemodState.Dialog = null;

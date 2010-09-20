@@ -1,0 +1,699 @@
+<?xml version="1.0"?>
+<pdudesc-list>
+  <pdudesc ref="10.5.1.1" name="Cell identity" type="3" length="2" fields="true" trigger-post="LAIUpdate">
+	<field name="Cell Identity" type="integer" set="CellIdent">
+		<bits octet="1" start="1" count="8"/>
+		<bits octet="2" start="1" count="8"/>
+	</field>
+  </pdudesc>
+  <pdudesc ref="10.5.1.2" name="Ciphering Key Sequence Number" type="1"/>
+  <pdudesc ref="10.5.1.3" name="Location Area Identification" type="3" length="5" fields="true" trigger-post="LAIUpdate">
+	<field name="MCC/MNC" type="bcd" length="6" set="MCC/MNC">
+		<bits octet="1" start="1" count="4"/>
+		<bits octet="1" start="5" count="4"/>
+		<bits octet="2" start="1" count="4"/>
+		<bits octet="3" start="1" count="4"/>
+		<bits octet="3" start="5" count="4"/>
+		<bits octet="2" start="5" count="4"/>
+	</field>
+	<field name="LAC" type="integer" set="LAC">
+		<bits octet="4" start="1" count="8"/>
+		<bits octet="5" start="1" count="8"/>
+	</field>
+  </pdudesc>
+  <pdudesc ref="10.5.1.4" name="Mobile Identity" type="4" length="1"/>
+  <pdudesc ref="10.5.1.5" name="Mobile Station Classmark 1" type="3" length="1" fields="true">
+	<field name="RF power cap. class" type="integer" offset="1">
+		<bits octet="1" start="1" count="3"/>
+	</field>
+	<field name="A5/1" type="stringIndex" strings="2">
+		<bits octet="1" start="4" count="1"/>
+		<string index="0" text="encryption algorithm A5/1 available"/>
+		<string index="1" text="encryption algorithm A5/1 not available"/>
+	</field>
+	<field name="ES IND" type="stringIndex" strings="2">
+		<bits octet="1" start="5" count="1"/>
+		<string index="0" text="'Controlled Early Classmark Sending' option is not implemented in the MS"/>
+		<string index="1" text="'Controlled Early Classmark Sending' option is implemented in the MS"/>
+	</field>
+	<field name="Revision level" type="stringIndex" strings="4">
+		<bits octet="1" start="6" count="2"/>
+		<string index="0" text="Reserved for GSM phase 1"/>
+		<string index="1" text="Used by GSM phase 2 mobile stations"/>
+		<string index="2" text="Used by mobile stations supporting R99 or later versions of the protocol"/>
+		<string index="3" text="Reserved for future use."/>
+	</field>
+  </pdudesc>
+  <pdudesc ref="10.5.1.6" name="Mobile Station Classmark 2" type="4" length="3" fields="true">
+	<field name="RF power cap. class" type="integer" offset="1">
+		<bits octet="1" start="1" count="3"/>
+	</field>
+	<field name="A5/1" type="stringIndex" strings="2">
+		<bits octet="1" start="4" count="1"/>
+		<string index="0" text="encryption algorithm A5/1 available"/>
+		<string index="1" text="encryption algorithm A5/1 not available"/>
+	</field>
+	<field name="A5/2" type="stringIndex" strings="2">
+		<bits octet="3" start="1" count="1"/>
+		<string index="0" text="encryption algorithm A5/2 not available"/>
+		<string index="1" text="encryption algorithm A5/2 available"/>
+	</field>
+	<field name="A5/3" type="stringIndex" strings="2">
+		<bits octet="2" start="2" count="1"/>
+		<string index="0" text="encryption algorithm A5/3 not available"/>
+		<string index="1" text="encryption algorithm A5/3 available"/>
+	</field>
+	<field name="ES IND" type="stringIndex" strings="2">
+		<bits octet="1" start="5" count="1"/>
+		<string index="0" text="'Controlled Early Classmark Sending' option is not implemented in the MS"/>
+		<string index="1" text="'Controlled Early Classmark Sending' option is implemented in the MS"/>
+	</field>
+	<field name="Revision level" type="stringIndex" strings="4">
+		<bits octet="1" start="6" count="2"/>
+		<string index="0" text="Reserved for GSM phase 1"/>
+		<string index="1" text="Used by GSM phase 2 mobile stations"/>
+		<string index="2" text="Used by mobile stations supporting R99 or later versions of the protocol"/>
+		<string index="3" text="Reserved for future use."/>
+	</field>
+	<field name="FC" type="stringIndex" strings="2">
+		<bits octet="2" start="1" count="1"/>
+		<string index="0" text="The MS does not support the E-GSM or R-GSM band"/>
+		<string index="1" text="The MS does support the E-GSM or R-GSM"/>
+	</field>
+	<field name="VGCS" type="stringIndex" strings="2">
+		<bits octet="2" start="2" count="1"/>
+		<string index="0" text="no VGCS capability or no notifications wanted"/>
+		<string index="1" text="VGCS capability and notifications wanted"/>
+	</field>
+	<field name="VBS" type="stringIndex" strings="2">
+		<bits octet="2" start="3" count="1"/>
+		<string index="0" text="no VBS capability or no notifications wanted"/>
+		<string index="1" text="VBS capability and notifications wanted"/>
+	</field>
+	<field name="SM cap." type="stringIndex" strings="2">
+		<bits octet="2" start="4" count="1"/>
+		<string index="0" text="Mobile station does not support mobile terminated point to point SMS"/>
+		<string index="1" text="Mobile station supports mobile terminated point to point SMS"/>
+	</field>
+	<field name="SS SI" type="stringIndex" strings="4">
+		<bits octet="2" start="5" count="2"/>
+		<string index="0" text="phase 1"/>
+		<string index="1" text="capability of handling of ellipsis notation and phase 2 error handling"/>
+		<string index="2" text="for future use (2)"/>
+		<string index="3" text="for future use (3)"/>
+	</field>
+	<field name="PS cap." type="stringIndex" strings="2">
+		<bits octet="2" start="7" count="1"/>
+		<string index="0" text="pseudo-synchronization capability not present"/>
+		<string index="1" text="pseudo-synchronization capability present"/>
+	</field>
+	<field name="CMSP" type="stringIndex" strings="2">
+		<bits octet="2" start="3" count="1"/>
+		<string index="0" text="'Network initiated MO CM connection request' not supported"/>
+		<string index="1" text="'Network initiated MO CM connection request' supported for at least one CM protocol"/>
+	</field>
+	<field name="SoLSA" type="stringIndex" strings="2">
+		<bits octet="2" start="4" count="1"/>
+		<string index="0" text="The ME does not support SoLSA."/>
+		<string index="1" text="The ME supports SoLSA."/>
+	</field>
+	<field name="LCSVA cap." type="stringIndex" strings="2">
+		<bits octet="2" start="6" count="1"/>
+		<string index="0" text="LCS value added location request notification capability not supported"/>
+		<string index="1" text="LCS value added location request notification capability supported"/>
+	</field>
+	<field name="CM3" type="stringIndex" strings="2">
+		<bits octet="2" start="8" count="1"/>
+		<string index="0" text="The MS does not support any options that are indicated in CM3"/>
+		<string index="1" text="The MS supports options that are indicated in classmark 3 IE"/>
+	</field>
+  </pdudesc>
+  <pdudesc ref="10.5.1.7" name="Mobile Station Classmark 3" type="4"/>
+  <pdudesc ref="10.5.1.8" name="Spare Half Octet" type="1"/>
+  <pdudesc ref="10.5.1.9" name="Descriptive group or broadcast call reference" type="3" length="5"/>
+  <pdudesc ref="10.5.1.10" name="Group Cipher Key Number" type="1"/>
+  <pdudesc ref="10.5.1.10a" name="PD and SAPI $(CCBS)$" type="3" length="1"/>
+  <pdudesc ref="10.5.1.11" name="Priority Level" type="1"/>
+  <pdudesc ref="10.5.2.1a" name="BA Range" type="4" length="4"/>
+  <pdudesc ref="10.5.2.1b" name="Cell Channel Description" type="3" length="16"/>
+  <pdudesc ref="10.5.2.1c" name="BA List Pref" type="4" length="1"/>
+  <pdudesc ref="10.5.2.2" name="Cell Description" type="3" length="2"/>
+  <pdudesc ref="10.5.2.3" name="Cell Options (BCCH)" type="3" length="1" fields="true">
+	<field name="Radio Link TO" type="integer" factor="4" offset="4">
+		<bits octet="1" start="1" count="4"/>
+	</field>
+	<field name="DTX" type="stringIndex" strings="4">
+		<bits octet="1" start="5" count="2"/>
+		<string index="0" text="The MSs may use uplink discontinuous transmission."/>
+		<string index="1" text="The MSs shall use uplink discontinuous transmission."/>
+		<string index="2" text="The MS shall not use uplink discontinuous transmission."/>
+		<string index="3" text="Undefined."/>
+	</field>
+	<field name="PWRC" type="stringIndex" strings="2">
+		<bits octet="1" start="7" count="1"/>
+		<string index="0" text="PWRC is not set"/>
+		<string index="1" text="PWRC is set"/>
+	</field>
+  </pdudesc> 
+  <pdudesc ref="10.5.2.3a" name="Cell Options (SACCH)" type="3" length="1" fields="true">
+	<field name="Radio Link TO" type="integer" factor="4" offset="4">
+		<bits octet="1" start="1" count="4"/>
+	</field>
+	<field name="DTX" type="stringIndex" strings="8">
+		<bits octet="1" start="5" count="2"/>
+		<bits octet="1" start="8" count="1"/>
+		<string index="0" text="The MS may use uplink discontinuous transmission on a TCH-F. The MS shall not use uplink discontinuous transmission on TCH-H."/>
+		<string index="1" text="The MS shall use uplink discontinuous transmission on a TCH-F. The MS shall not use uplink discontinuous transmission on TCH-H."/>
+		<string index="2" text="The MS shall not use uplink discontinuous transmission on a TCH-F. The MS shall not use uplink discontinuous transmission on TCH-H."/>
+		<string index="3" text="The MS shall use uplink discontinuous transmission on a TCH-F. The MS may use uplink discontinuous transmission on TCH-H."/>
+		<string index="4" text="The MS may use uplink discontinuous transmission on a TCH-F. The MS may use uplink discontinuous transmission on TCH-H."/>
+		<string index="5" text="The MS shall use uplink discontinuous transmission on a TCH-F. The MS shall use uplink discontinuous transmission on TCH-H."/>
+		<string index="6" text="The MS shall not use uplink discontinuous transmission on a TCH-F. The MS shall use uplink discontinuous transmission on TCH-H."/>
+		<string index="7" text="The MS may use uplink discontinuous transmission on a TCH-F. The MS shall use uplink discontinuous transmission on TCH-H."/>
+
+		<string index="0" text="The MSs may use uplink discontinuous transmission."/>
+		<string index="1" text="The MSs shall use uplink discontinuous transmission."/>
+		<string index="2" text="The MS shall not use uplink discontinuous transmission."/>
+		<string index="3" text="Undefined."/>
+	</field>
+	<field name="PWRC" type="stringIndex" strings="2">
+		<bits octet="1" start="7" count="1"/>
+		<string index="0" text="PWRC is not set"/>
+		<string index="1" text="PWRC is set"/>
+	</field>
+  </pdudesc> 
+  <pdudesc ref="10.5.2.4" name="Cell Selection Parameters" type="3" length="2" fields="true">
+	<field name="MS-TXPWR-MAX-CCH" type="integer">
+		<bits octet="1" start="1" count="5"/>
+	</field>
+	<field name="RXLEV-ACCESS-MIN" type="integer">
+		<bits octet="2" start="1" count="6"/>
+	</field>
+	<field name="NECI"  type="stringIndex" strings="2" set="NECI">
+		<bits octet="2" start="7" count="1"/>
+		<string index="0" text="New establishment causes are not supported"/>
+		<string index="1" text="New establishment causes are supported"/>
+	</field>
+	<field name="ACS"  type="stringIndex" strings="2">
+		<bits octet="2" start="8" count="1"/>
+		<string index="0" text="The SI 4 rest octets, if present, and SI 7 and SI 8 rest octets, if so indicated in the SI 4 rest octets shall be used to derive the value of PI and possibly C2 parameters and/or other parameters"/>
+		<string index="1" text="System information type 16 and 17 are broadcast on the BCCH."/>
+	</field>
+	<field name="CELL-RESELECT-HYST" type="stringIndex" strings="8">
+		<bits octet="1" start="6" count="3"/>
+		<string index="0" text="0 dB RXLEV hysteresis for LA re-selection"/>
+		<string index="1" text="2 dB RXLEV hysteresis for LA re-selection"/>
+		<string index="2" text="4 dB RXLEV hysteresis for LA re-selection"/>
+		<string index="3" text="6 dB RXLEV hysteresis for LA re-selection"/>
+		<string index="4" text="8 dB RXLEV hysteresis for LA re-selection"/>
+		<string index="5" text="10 dB RXLEV hysteresis for LA re-selection"/>
+		<string index="6" text="12 dB RXLEV hysteresis for LA re-selection"/>
+		<string index="7" text="14 dB RXLEV hysteresis for LA re-selection"/>
+	</field>	
+  </pdudesc>
+  <pdudesc ref="10.5.2.4a" name="MAC Mode and Channel Coding Requested" type="1"/>
+  <pdudesc ref="10.5.2.5" name="Channel Description" type="3" length="3"/> <!-- handled in software -->
+  <pdudesc ref="10.5.2.5a" name="Channel Description 2" type="3" length="3"/> <!-- handled in software -->
+  <pdudesc ref="10.5.2.6" name="Channel Mode" type="3" length="1" fields="true">
+	<field name="Mode" type="stringIndex" strings="256">
+		<bits octet="1" start="1" count="8"/>
+		<string index="0" text="signalling only"/>
+		<string index="1" text="speech full rate or half rate version 1"/>
+		<string index="2" text="speech full rate or half rate version 2"/>
+		<string index="33" text="speech full rate or half rate version 3"/>
+		<string index="65" text="data, 14.5 kbit/s radio interface rate"/>
+		<string index="15" text="data, 12.0 kbit/s radio interface rate"/>
+		<string index="11" text="data, 6.0 kbit/s radio interface rate"/>
+		<string index="19" text="data, 3.6 kbit/s radio interface rate"/>
+	</field>	
+  </pdudesc>
+  <pdudesc ref="10.5.2.7" name="Channel Mode 2" type="3" length="1"/>
+  <pdudesc ref="10.5.2.8" name="Channel Needed" type="1" fields="true">
+	<field name="Channel (first)" type="stringIndex" strings="4">
+		<bits octet="1" start="1" count="2"/>
+		<string index="0" text="Any Channel"/>
+		<string index="1" text="SDCCH"/>
+		<string index="2" text="TCH/F (Full rate)"/>
+		<string index="3" text="TCH/H or TCH/F (Dual rate)"/>
+	</field>
+	<field name="Channel (second)" type="stringIndex" strings="4">
+		<bits octet="1" start="3" count="2"/>
+		<string index="0" text="Any Channel"/>
+		<string index="1" text="SDCCH"/>
+		<string index="2" text="TCH/F (Full rate)"/>
+		<string index="3" text="TCH/H or TCH/F (Dual rate)"/>
+	</field>
+  </pdudesc>  
+  <pdudesc ref="10.5.2.8a" name="Channel Request Description" type="3" length="5"/>
+  <pdudesc ref="10.5.2.9" name="Cipher Mode Setting" type="1" fields="true" trigger-post="CipherCommand">
+	<field name="SC" type="stringIndex" strings="2" set="CipherState">
+		<bits octet="1" start="1" count="1"/>
+		<string index="0" text="No ciphering"/>
+		<string index="1" text="Start ciphering"/>
+	</field>
+	<field name="Algorithm" type="stringIndex" strings="8" set="CipherType">
+		<bits octet="1" start="2" count="1"/>
+		<string index="0" text="A5/1"/>
+		<string index="1" text="A5/2"/>
+		<string index="2" text="A5/3"/>
+		<string index="3" text="A5/4"/>
+		<string index="4" text="A5/5"/>
+		<string index="5" text="A5/6"/>
+		<string index="6" text="A5/7"/>
+		<string index="7" text="reserved"/>
+	</field>
+  </pdudesc>
+  <pdudesc ref="10.5.2.10" name="Cipher Response" type="1" fields="true">
+	<field name="CR" type="stringIndex" strings="2">
+		<bits octet="1" start="1" count="1"/>
+		<string index="0" text="IMEISV shall not be included"/>
+		<string index="1" text="IMEISV shall be included"/>
+	</field>
+  </pdudesc>
+  <pdudesc ref="10.5.2.11" name="Control Channel Description" type="3" length="3" fields="true">
+	<field name="ATT" type="stringIndex" strings="2">
+		<bits octet="1" start="7" count="1"/>
+		<string index="0" text="MSs in the cell are not allowed to apply IMSI attach and detach procedure."/>
+		<string index="1" text="MSs in the cell shall apply IMSI attach and detach procedure."/>
+	</field>
+	<field name="BS-AG-BLKS-RES" type="integer">
+		<bits octet="1" start="4" count="3"/>
+	</field>
+	<field name="T 3212" type="integer">
+		<bits octet="3" start="1" count="8"/>
+	</field>
+	<field name="CCCH-CONF" type="stringIndex" strings="7" trigger-post="CCCH-CONF" set="CCCH-CONF">
+		<bits octet="1" start="1" count="3"/>
+		<string index="0" text="1 basic physical channel used for CCCH, not combined with SDCCHs"/>
+		<string index="1" text="1 basic physical channel used for CCCH, combined with SDCCHs"/>
+		<string index="2" text="2 basic physical channel used for CCCH, not combined with SDCCHs"/>
+		<string index="4" text="3 basic physical channel used for CCCH, not combined with SDCCHs"/>
+		<string index="6" text="4 basic physical channels used for CCCH,not combined with SDCCHs"/>
+	</field>
+	<field name="BS-PA-MFRMS" type="integer" offset="2">
+		<bits octet="2" start="1" count="3"/>
+	</field>
+  </pdudesc>
+  
+  <pdudesc ref="10.5.2.12" name="Frequency Channel Sequence" type="3" length="9"/>
+  <pdudesc ref="10.5.2.13" name="Frequency List" type="4"/>
+  <pdudesc ref="10.5.2.14" name="Frequency Short List" type="3" length="9"/>
+  <pdudesc ref="10.5.2.14a" name="Frequency Short List 2" type="3" length="7"/>
+  <pdudesc ref="10.5.2.14b" name="Group Channel Description" type="4" length="2"/>
+  <pdudesc ref="10.5.2.14c" name="GPRS Resumption" type="1"/>
+  <pdudesc ref="10.5.2.15" name="Handover Reference" type="3" length="1"/>
+  <pdudesc ref="10.5.2.16" name="IA Rest Octets" type="5"/>
+  <pdudesc ref="10.5.2.17" name="IAR Rest Octets" type="5" length="4"/>
+  <pdudesc ref="10.5.2.18" name="IAX Rest Octets" type="5"/>
+  <pdudesc ref="10.5.2.20" name="Measurement Results" type="3" length="16"/>
+  <pdudesc ref="10.5.2.20a" name="GPRS Measurement Results" type="3" length="2"/>
+  <pdudesc ref="10.5.2.21" name="Mobile Allocation" type="4" length="1"/>
+  <pdudesc ref="10.5.2.21a" name="Mobile Time Difference" type="4" length="3"/>
+  <pdudesc ref="10.5.2.21aa" name="MultiRate configuration" type="4" length="2"/>
+  <pdudesc ref="10.5.2.21b" name="Multislot Allocation" type="4" length="1"/>
+  <pdudesc ref="10.5.2.21c" name="NC mode" type="1"/>
+  <pdudesc ref="10.5.2.22" name="Neighbour Cells Description" type="3" length="16"/>
+  <pdudesc ref="10.5.2.22a" name="Neighbour Cells Description 2" type="3" length="16"/>
+  <pdudesc ref="10.5.2.23" name="P1 Rest Octets" type="5"/>
+  <pdudesc ref="10.5.2.24" name="P2 Rest Octets" type="5"/>
+  <pdudesc ref="10.5.2.25" name="P3 Rest Octets" type="5" length="4"/>
+  <pdudesc ref="10.5.2.25a" name="Packet Channel Description" type="3" length="3"/>
+  <pdudesc ref="10.5.2.25b" name="Dedicated mode or TBF" type="1" fields="true">
+	<field name="T/D" type="stringIndex" strings="2">
+		<bits octet="1" start="1" count="1"/>
+		<string index="0" text="Dedicated Mode Resource"/>
+		<string index="1" text="Temporary Block Flow (TBF)"/>
+	</field>
+	<field name="Downlink" type="stringIndex" strings="2">
+		<bits octet="1" start="2" count="1"/>
+		<string index="0" text="No meaning"/>
+		<string index="1" text="Assign resource identified in rest octets"/>
+	</field>
+	<field name="TMA" type="stringIndex" strings="2">
+		<bits octet="1" start="3" count="1"/>
+		<string index="0" text="No meaning"/>
+		<string index="1" text="First message"/>
+	</field>
+  </pdudesc>
+  <pdudesc ref="10.5.2.25c" name="RR Packet Uplink Assignment" type="4"/>
+  <pdudesc ref="10.5.2.25d" name="RR Packet Downlink Assignment" type="4"/>
+  <pdudesc ref="10.5.2.26" name="Page Mode" type="1" fields="true">
+  	<field name="Paging Mode" type="stringIndex" strings="4">
+		<bits octet="1" start="1" count="2"/>
+		<string index="0" text="Normal Paging"/>
+		<string index="1" text="Extended Paging"/>
+		<string index="2" text="Paging reorganization"/>
+		<string index="3" text="Same as before"/>
+	</field>
+  </pdudesc>
+  <pdudesc ref="10.5.2.27" name="NCC Permitted" type="3" length="1"/>
+  <pdudesc ref="10.5.2.28" name="Power Command" type="3" length="1"/>
+  <pdudesc ref="10.5.2.28a" name="Power Command and access type" type="3" length="1"/>
+  <pdudesc ref="10.5.2.29" name="RACH Control Parameters" type="3" length="3" fields="true">
+   	<field name="RA" type="stringIndex" strings="2">
+		<bits octet="1" start="1" count="1"/>
+		<string index="0" text="Call Reestablishment allowed in the cell"/>
+		<string index="1" text="Call Reestablishment not allowed in the cell"/>
+	</field>
+   	<field name="CBA" type="stringIndex" strings="2">
+		<bits octet="1" start="2" count="1"/>
+		<string index="0" text="The cell is not barred, see TS. GSM-03.22"/>
+		<string index="1" text="The cell is barred, see TS. GSM-03.22"/>
+	</field>
+   	<field name="EC" type="stringIndex" strings="2">
+		<bits octet="2" start="3" count="1"/>
+		<string index="0" text="Emergency call allowed in the cell to all MSs"/>
+		<string index="1" text="Emergency call not allowed in the cell except for the MSs that belong to one of the classes between 11 to 15"/>
+	</field>
+   	<field name="Max retrans" type="stringIndex" strings="4">
+		<bits octet="1" start="7" count="2"/>
+		<string index="0" text="Maximum 1 retransmission"/>
+		<string index="1" text="Maximum 2 retransmissions"/>
+		<string index="2" text="Maximum 4 retransmissions"/>
+		<string index="3" text="Maximum 7 retransmissions"/>
+	</field>
+   	<field name="Tx-integer" type="stringIndex" strings="16">
+		<bits octet="1" start="3" count="4"/>
+		<string index="0" text="3 slots used to spread transmission"/>
+		<string index="1" text="4 slots used to spread transmission"/>
+		<string index="2" text="5 slots used to spread transmission"/>
+		<string index="3" text="6 slots used to spread transmission"/>
+		<string index="4" text="7 slots used to spread transmission"/>
+		<string index="5" text="8 slots used to spread transmission"/>
+		<string index="6" text="9 slots used to spread transmission"/>
+		<string index="7" text="10 slots used to spread transmission"/>
+		<string index="8" text="11 slots used to spread transmission"/>
+		<string index="9" text="12 slots used to spread transmission"/>
+		<string index="10" text="14 slots used to spread transmission"/>
+		<string index="11" text="16 slots used to spread transmission"/>
+		<string index="12" text="20 slots used to spread transmission"/>
+		<string index="13" text="25 slots used to spread transmission"/>
+		<string index="14" text="32 slots used to spread transmission"/>
+		<string index="15" text="50 slots used to spread transmission"/>
+	</field>
+  </pdudesc>
+  <pdudesc ref="10.5.2.30" name="Request Reference" type="3" length="3" fields="true">
+   	<field name="RA" type="hexnumber" parser="ParseRA">
+		<bits octet="1" start="1" count="8"/>
+	</field>
+   	<field name="T1'" type="integer" set="RefT1">
+		<bits octet="1" start="4" count="5"/>
+	</field>
+   	<field name="T2" type="integer" set="RefT2">
+		<bits octet="3" start="1" count="5"/>
+	</field>
+   	<field name="T3" type="integer" set="RefT3">
+		<bits octet="2" start="1" count="3"/>
+		<bits octet="3" start="6" count="3"/>
+	</field>
+  </pdudesc>
+  <pdudesc ref="10.5.2.31" name="RR Cause" type="3" length="1" fields="true">
+	<field name="RR cause" type="stringIndex" strings="256">
+		<bits octet="1" start="1" count="8"/>
+		<string index="0" text="Normal event"/>
+		<string index="1" text="Abnormal release, unspecified"/>
+		<string index="2" text="Abnormal release, channel unacceptable"/>
+		<string index="3" text="Abnormal release, timer expired"/>
+		<string index="4" text="Abnormal release, no activity on the radio path"/>
+		<string index="5" text="Preemptive release"/>
+		<string index="8" text="Handover impossible, timing advance out of range"/>
+		<string index="9" text="Channel mode unacceptable"/>
+		<string index="10" text="Frequency not implemented"/>
+		<string index="65" text="Call already cleared"/>
+		<string index="95" text="Semantically incorrect message"/>
+		<string index="96" text="Invalid mandatory information"/>
+		<string index="97" text="Message type non-existent or not implemented"/>
+		<string index="98" text="Message type not compatible with protocol state"/>
+		<string index="100" text="Conditional IE error"/>
+		<string index="101" text="No cell allocation available"/>
+		<string index="111" text="Protocol error unspecified"/>
+	</field>
+  </pdudesc> 
+  <pdudesc ref="10.5.2.32" name="SI 1 Rest Octets" type="5"/>
+  <pdudesc ref="10.5.2.33" name="SI 2bis Rest Octets" type="5"/>
+  <pdudesc ref="10.5.2.33a" name="SI 2ter Rest Octets" type="5" length="4"/>
+  <pdudesc ref="10.5.2.34" name="SI 3 Rest Octets" type="5" length="5"/>
+  <pdudesc ref="10.5.2.35" name="SI 4 Rest Octets" type="5" length="1"/>
+  <pdudesc ref="10.5.2.36" name="SI 7 Rest Octets" type="5" length="21"/>
+  <pdudesc ref="10.5.2.37" name="SI 8 Rest Octets" type="5" length="21"/>
+  <pdudesc ref="10.5.2.37a" name="SI 9 Rest Octets" type="5" length="17"/>
+  <pdudesc ref="10.5.2.37b" name="SI 13 Rest Octets" type="5" length="21"/>
+  <pdudesc ref="10.5.2.37e" name="SI 16 Rest Octets" type="5" length="21"/>
+  <pdudesc ref="10.5.2.37f" name="SI 17 Rest Octets" type="5" length="21"/>
+  <pdudesc ref="10.5.2.38" name="Starting Time" type="3" length="2"/>
+  <pdudesc ref="10.5.2.39" name="Synchronization Indication" type="1"/>
+  <pdudesc ref="10.5.2.40" name="Timing Advance" type="3" length="1" fields="true">
+   	<field name="TA" type="integer">
+		<bits octet="1" start="1" count="6"/>
+	</field>
+  </pdudesc>
+  <pdudesc ref="10.5.2.41" name="Time Difference" type="4" length="1"/>
+  <pdudesc ref="10.5.2.41a" name="TLLI" type="3" length="4"/>
+  <pdudesc ref="10.5.2.42" name="TMSI/P-TMSI" type="3" length="4" fields="true">
+  	<field name="TMSI/P-TMSI" type="hexnumber" set="TMSI/P-IMSI">
+		<bits octet="1" start="1" count="8"/>
+		<bits octet="2" start="1" count="8"/>
+		<bits octet="3" start="1" count="8"/>
+		<bits octet="4" start="1" count="8"/>
+	</field>
+  </pdudesc>
+  <pdudesc ref="10.5.2.42a" name="VGCS target mode Indication" type="4" length="1"/>
+  <pdudesc ref="10.5.2.43" name="Wait Indication" type="3" length="1" fields="true">
+   	<field name="T3122/T3142 (in s)" type="integer">
+		<bits octet="1" start="1" count="8"/>
+	</field>
+  </pdudesc>
+  <pdudesc ref="10.5.2.45" name="EXTENDED MEASUREMENT RESULTS" type="3" length="16"/>
+  <pdudesc ref="10.5.2.46" name="Extended Measurement Frequency List" type="3" length="16"/>
+  <pdudesc ref="10.5.2.47" name="Suspension Cause" type="3" length="1"/>
+  <pdudesc ref="10.5.2.48" name="APDU ID" type="1"/>
+  <pdudesc ref="10.5.2.49" name="APDU Flags" type="1"/>
+  <pdudesc ref="10.5.2.50" name="APDU Data" type="4"/>
+  <pdudesc ref="10.5.3.1" name="Authentication parameter RAND" type="3" length="16" set="RAND" trigger-post="RANDreceived" />
+  <pdudesc ref="10.5.3.1.1" name="Authentication parameter AUTN" type="4" length="16"/>
+  <pdudesc ref="10.5.3.2" name="Authentication parameter SRES" type="3" length="4"/>
+  <pdudesc ref="10.5.3.3" name="CM service type" type="1" fields="true">
+	<field name="Service Type" type="stringIndex" strings="15" set="ServiceType">
+		<bits octet="1" start="1" count="4"/>
+		<string index="1" text="Mobile originating call establishment or packet mode connection establishment"/>
+		<string index="2" text="Emergency call establishment"/>
+		<string index="4" text="Short message service"/>
+		<string index="8" text="Supplementary service activation"/>
+		<string index="9" text="Voice group call establishment"/>
+		<string index="10" text="Voice broadcast call establishment"/>
+		<string index="11" text="Location Services"/>
+	</field>
+  </pdudesc>
+  <pdudesc ref="10.5.3.4" name="Identity type" type="1" fields="true">
+	<field name="Type of identity" type="stringIndex" strings="7">
+		<bits octet="1" start="1" count="3"/>
+		<string index="1" text="IMSI"/>
+		<string index="2" text="IMEI"/>
+		<string index="3" text="IMEISV"/>
+		<string index="4" text="TMSI"/>
+	</field>
+  </pdudesc> 
+  <pdudesc ref="10.5.3.5" name="Location updating type" type="1" fields="true">
+	<field name="LUT" type="stringIndex" strings="4">
+		<bits octet="1" start="1" count="2"/>
+		<string index="0" text="Normal location updating"/>
+		<string index="1" text="Periodic updating"/>
+		<string index="2" text="IMSI attach"/>
+		<string index="3" text="Reserved"/>
+	</field>
+   	<field name="FOR" type="stringIndex" strings="2">
+		<bits octet="1" start="4" count="1"/>
+		<string index="0" text="No follow-on request pending"/>
+		<string index="1" text="Follow-on request pending"/>
+	</field>
+  </pdudesc> 
+  <pdudesc ref="10.5.3.5a" name="Network Name" type="4" length="1"/>
+  <pdudesc ref="10.5.3.6" name="Reject cause" type="3" length="1" fields="true">
+	<field name="Reject cause" type="stringIndex" strings="256">
+		<bits octet="1" start="1" count="8"/>
+		<string index="2" text="IMSI unknown in HLR"/>
+		<string index="3" text="Illegal MS"/>
+		<string index="4" text="IMSI unknown in VLR"/>
+		<string index="5" text="IMEI not accepted"/>
+		<string index="6" text="Illegal ME"/>
+		<string index="11" text="PLMN not allowed"/>
+		<string index="12" text="Location Area not allowed"/>
+		<string index="13" text="Roaming not allowed in this location area"/>
+		<string index="15" text="No Suitable Cells In Location Area"/>
+		<string index="16" text="Network failure"/>
+		<string index="20" text="MAC failure"/>
+		<string index="21" text="Synch failure"/>
+		<string index="22" text="Congestion"/>
+		<string index="23" text="GSM authentication unacceptable"/>
+		<string index="25" text="Not authorized for this CSG"/>
+		<string index="32" text="Service option not supported"/>
+		<string index="33" text="Requested service option not subscribed"/>
+		<string index="34" text="Service option temporarily out of order"/>
+		<string index="38" text="Call cannot be identified"/>
+		<string index="95" text="Semantically incorrect message"/>
+		<string index="96" text="Invalid mandatory information"/>
+		<string index="97" text="Message type non-existent or not implemented"/>
+		<string index="98" text="Message type not compatible with the protocol state"/>
+		<string index="99" text="Information element non-existent or not implemented"/>
+		<string index="100" text="Conditional IE error"/>
+		<string index="101" text="Message not compatible with the protocol state"/>
+		<string index="111" text="Protocol error, unspecified"/>
+	</field>
+  </pdudesc> 
+  <pdudesc ref="10.5.3.7" name="Follow-on Proceed" type="2"/>
+  <pdudesc ref="10.5.3.8" name="Time Zone" type="3" length="1"/>
+  <pdudesc ref="10.5.3.9" name="Time Zone and Time" type="3" length="7" fields="true">
+	<field name="Year" type="bcd" length="2">
+		<bits octet="1" start="1" count="4"/>
+		<bits octet="1" start="5" count="4"/>
+	</field>  
+	<field name="Month" type="bcd" length="2">
+		<bits octet="2" start="1" count="4"/>
+		<bits octet="2" start="5" count="4"/>
+	</field>  
+	<field name="Day" type="bcd" length="2">
+		<bits octet="3" start="1" count="4"/>
+		<bits octet="3" start="5" count="4"/>
+	</field>  
+	<field name="Hour" type="bcd" length="2">
+		<bits octet="4" start="1" count="4"/>
+		<bits octet="4" start="5" count="4"/>
+	</field>  
+	<field name="Minute" type="bcd" length="2">
+		<bits octet="5" start="1" count="4"/>
+		<bits octet="5" start="5" count="4"/>
+	</field>  
+	<field name="Second" type="bcd" length="2">
+		<bits octet="6" start="1" count="4"/>
+		<bits octet="6" start="5" count="4"/>
+	</field>  
+	<field name="Time zone" type="bcd" length="2">
+		<bits octet="7" start="1" count="4"/>
+		<bits octet="7" start="5" count="4"/>
+	</field>  
+  </pdudesc> 
+  <pdudesc ref="10.5.3.10" name="CTS permission" type="2"/>
+  <pdudesc ref="10.5.3.11" name="LSA Identifier" type="4"/>
+  <pdudesc ref="10.5.4.4" name="Auxiliary states" type="4" length="1"/>
+  <pdudesc ref="10.5.4.5" name="Bearer capability" type="4" length="1"/>
+  <pdudesc ref="10.5.4.5a" name="Call Control Capabilities" type="4" length="1"/>
+  <pdudesc ref="10.5.4.6" name="Call state" type="3" length="1" fields="true">
+	<field name="Standard" type="stringIndex" strings="4">
+		<bits octet="1" start="7" count="2"/>
+		<string index="0" text="Standardized coding as described in CCITT Rec. Q.931"/>
+		<string index="1" text="Reserved for other international standards"/>
+		<string index="2" text="National standard"/>
+		<string index="3" text="Standard defined for the GSM-PLMNS as described below"/>
+	</field>
+	<field name="Call state" type="stringIndex" strings="64">
+		<bits octet="1" start="1" count="6"/>
+		<string index="0" text="(null)"/>
+		<string index="2" text="MM connection pending"/>
+		<string index="34" text="CC prompt present"/>
+		<string index="35" text="Wait for network information"/>
+		<string index="36" text="CC-Establishment present"/>
+		<string index="37" text="CC-Establishment confirmed"/>
+		<string index="38" text="Recall present"/>
+		<string index="1" text="call initiated"/>
+		<string index="3" text="mobile originating call proceeding"/>
+		<string index="4" text="call delivered"/>
+		<string index="6" text="call present"/>
+		<string index="7" text="call received"/>
+		<string index="8" text="connect request"/>
+		<string index="9" text="mobile terminating call confirmed"/>
+		<string index="10" text="active"/>
+		<string index="11" text="diconnect request"/>
+		<string index="12" text="disconnect indication"/>
+		<string index="19" text="release request"/>
+		<string index="26" text="mobile originating modify"/>
+		<string index="27" text="mobile terminating modify"/>
+		<string index="28" text="connect indication"/>
+	</field>
+  </pdudesc>
+  <pdudesc ref="10.5.4.7" name="Called party BCD number" type="4" length="1"/>
+  <pdudesc ref="10.5.4.8" name="Called party subaddress" type="4" length="0"/>
+  <pdudesc ref="10.5.4.9" name="Calling party BCD number" type="4"/>
+  <pdudesc ref="10.5.4.10" name="Calling party subaddress" type="4" length="0"/>
+  <pdudesc ref="10.5.4.11" name="Cause" type="4" length="2"/>
+  <pdudesc ref="10.5.4.11a" name="CLIR suppression" type="2"/>
+  <pdudesc ref="10.5.4.11b" name="CLIR invocation" type="2"/>
+  <pdudesc ref="10.5.4.12" name="Congestion level" type="1"/>
+  <pdudesc ref="10.5.4.13" name="Connected number" type="4" length="1"/>
+  <pdudesc ref="10.5.4.14" name="Connected subaddress" type="4" length="0"/>
+  <pdudesc ref="10.5.4.15" name="Facility" type="4" length="0"/>
+  <pdudesc ref="10.5.4.16" name="High layer compatibility" type="4" length="0"/>
+  <pdudesc ref="10.5.4.17" name="Keypad facility" type="3" length="1"/>
+  <pdudesc ref="10.5.4.18" name="Low layer compatibility" type="4" length="0"/>
+  <pdudesc ref="10.5.4.19" name="More data" type="2"/>
+  <pdudesc ref="10.5.4.20" name="Notification indicator" type="3" length="1"/>
+  <pdudesc ref="10.5.4.21" name="Progress indicator" type="4" length="2" fields="true">
+	<field name="Coding" type="stringIndex" strings="4">
+		<bits octet="1" start="6" count="2"/>
+		<string index="0" text="Standardized coding as described in CCITT Rec. Q.931"/>
+		<string index="1" text="Reserved for other international standards"/>
+		<string index="2" text="National standard"/>
+		<string index="3" text="Standard defined for the GSM-PLMNS as described below"/>
+	</field>
+	<field name="Location" type="stringIndex" strings="16">
+		<bits octet="1" start="1" count="4"/>
+		<string index="0" text="User"/>
+		<string index="1" text="Private network serving the local user"/>
+		<string index="2" text="Public network serving the local user"/>
+		<string index="4" text="Public network serving the remote user"/>
+		<string index="5" text="Private network serving the remote user"/>
+		<string index="10" text="Network beyond interworking point"/>
+	</field>
+	<field name="Description" type="stringIndex" strings="128">
+		<bits octet="2" start="1" count="7"/>
+		<string index="1" text="Call is not end-to-end PLMN/ISDN, further call progress information may be available in-band"/>
+		<string index="2" text="Destination address in non-PLMN/ISDN"/>
+		<string index="3" text="Origination address in non-PLMN/ISDN"/>
+		<string index="4" text="Call has returned to the PLMN/ISDN"/>
+		<string index="8" text="In-band information or appropriate pattern now available"/>
+		<string index="32" text="Call is end-to-end PLMN/ISDN"/>
+		<string index="64" text="Queueing"/>
+	</field>
+  </pdudesc>
+  <pdudesc ref="10.5.4.21a" name="Recall type $(CCBS)$" type="3" length="1"/>
+  <pdudesc ref="10.5.4.21b" name="Redirecting party BCD number" type="4"/>
+  <pdudesc ref="10.5.4.21c" name="Redirecting party subaddress" type="4" length="0"/>
+  <pdudesc ref="10.5.4.22" name="Repeat indicator" type="1"/>
+  <pdudesc ref="10.5.4.22a" name="Reverse call setup direction" type="2"/>
+  <pdudesc ref="10.5.4.22b" name="SETUP Container $(CCBS)$" type="4"/>
+  <pdudesc ref="10.5.4.23" name="Signal" type="3" length="1"/>
+  <pdudesc ref="10.5.4.24" name="SS Version Indicator" type="4" length="0"/>
+  <pdudesc ref="10.5.4.25" name="User-user" type="4" length="1"/>
+  <pdudesc ref="10.5.4.26" name="Alerting Pattern $(NIA)$" type="4"/>
+  <pdudesc ref="10.5.4.27" name="Allowed actions $(CCBS)$" type="4" length="1"/>
+  <pdudesc ref="10.5.5.1" name="Attach result" type="1"/>
+  <pdudesc ref="10.5.5.2" name="Attach type" type="1"/>
+  <pdudesc ref="10.5.5.3" name="Ciphering algorithm" type="1"/>
+  <pdudesc ref="10.5.5.4" name="[Spare]TMSI status" type="1"/>
+  <pdudesc ref="10.5.5.5" name="Detach type" type="1"/>
+  <pdudesc ref="10.5.5.6" name="DRX parameter" type="3" length="2"/>
+  <pdudesc ref="10.5.5.7" name="Force to standby" type="1"/>
+  <pdudesc ref="10.5.5.8" name="P-TMSI signature" type="3" length="3"/>
+  <pdudesc ref="10.5.5.9" name="Identity type 2" type="1"/>
+  <pdudesc ref="10.5.5.10" name="IMEISV request" type="1"/>
+  <pdudesc ref="10.5.5.11" name="Receive N-PDU Numbers list" type="4"/>
+  <pdudesc ref="10.5.5.12" name="MS network capability" type="4"/>
+  <pdudesc ref="10.5.5.12a" name="MS Radio Access capability" type="4" length="4"/>
+  <pdudesc ref="10.5.5.14" name="GMM cause" type="3" length="1"/>
+  <pdudesc ref="10.5.5.15" name="Routing area identification" type="3" length="6"/>
+  <pdudesc ref="10.5.5.17" name="Update result" type="1"/>
+  <pdudesc ref="10.5.5.18" name="Update type" type="1"/>
+  <pdudesc ref="10.5.5.19" name="A&amp;C reference number" type="1"/>
+  <pdudesc ref="10.5.6.1" name="Access Point Name" type="4" length="1"/>
+  <pdudesc ref="10.5.6.2" name="Network service access point identifier" type="3" length="1"/>
+  <pdudesc ref="10.5.6.3" name="Protocol configuration options" type="4" length="0"/>
+  <pdudesc ref="10.5.6.4" name="Packet data protocol address" type="4"/>
+  <pdudesc ref="10.5.6.5" name="Quality of service" type="4" length="3"/>
+  <pdudesc ref="10.5.6.6" name="SM cause" type="3" length="1"/>
+  <pdudesc ref="10.5.6.8" name="AA deactivation cause" type="1"/>
+  <pdudesc ref="10.5.6.9" name="LLC service access point identifier" type="3" length="1"/>
+  <pdudesc ref="10.5.7.2" name="Radio priority" type="1"/>
+  <pdudesc ref="10.5.7.3" name="GPRS Timer" type="3" length="1"/>
+  <pdudesc ref="10.5.2.44" name="SI 10 Rest Octets" type="5"/>
+  <pdudesc ref="10.5.2.35a" name="SI 6 Rest Octets" type="5"/>
+  <pdudesc ref="10.5.2.22c" name="NT/N Rest Octets" type="5"/>
+</pdudesc-list>

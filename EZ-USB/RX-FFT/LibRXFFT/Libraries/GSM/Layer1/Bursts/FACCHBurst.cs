@@ -8,7 +8,6 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
         public static bool ShowEncryptedMessage = false;
         public static bool DumpEncryptedMessage = false;
 
-        private long[] FN;
         private int FACCHSeq = 0;
         private int SubChannel;
 
@@ -17,7 +16,6 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
             L3 = l3;
             Name = "FACCH";
             ShortName = "FA ";
-            FN = new long[4];
 
             InitBuffers(4);
         }
@@ -28,7 +26,6 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
             Name = "FACCH " + subChan;
             ShortName = "FA" + subChan;
             SubChannel = subChan;
-            FN = new long[4];
 
             InitBuffers(4);
         }
@@ -39,7 +36,6 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
             Name = name;
             ShortName = "FA" + subChan;
             SubChannel = subChan;
-            FN = new long[4];
 
             InitBuffers(4);
         }
@@ -50,17 +46,11 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
             Name = name;
             ShortName = "FA" + subChan;
             SubChannel = subChan;
-            FN = new long[4];
 
             InitBuffers(4);
         }
 
-        public override eSuccessState ParseData(GSMParameters param, bool[] decodedBurst)
-        {
-            return ParseData(param, decodedBurst, 0);
-        }
-
-        public override eSuccessState ParseData(GSMParameters param, bool[] burstBufferC, int sequence)
+        public eSuccessState ParseFACCHData(GSMParameters param, bool[] burstBufferC)
         {
             /* decode */
             if (ConvolutionalCoder.Decode(burstBufferC, BurstBufferU) == null)

@@ -5,7 +5,6 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
 {
     class CBCHBurst : NormalBurst
     {
-        private long[] FN;
         private CBCHandler CBCHandler;
         public static eTriState CBCHEnabled = eTriState.Unknown;
         public static int CBCHTimeSlot = 0;
@@ -17,7 +16,6 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
             L3 = l3;
             Name = "CBCH";
             ShortName = "CB ";
-            FN = new long[4];
 
             CBCHandler = new CBCHandler();
 
@@ -30,7 +28,6 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
             Name = "CBCH " + subChannel;
             ShortName = "CB" + subChannel;
             SubChannel = subChannel;
-            FN = new long[4];
 
             CBCHandler = new CBCHandler();
 
@@ -42,7 +39,6 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
             L3 = l3;
             Name = name;
             SubChannel = subChannel;
-            FN = new long[4];
 
             CBCHandler = new CBCHandler();
 
@@ -64,14 +60,16 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                 return eSuccessState.Succeeded;
             }
 
-            UnmapToI(decodedBurst, sequence);
+            StoreBurstContext(param, decodedBurst, sequence);
 
-            FN[sequence] = param.FN;
-
-            if (FN[0] + 1 == FN[1] && FN[1] + 1 == FN[2] && FN[2] + 1 == FN[3])
+            /* if FNs are consecutive */
+            if (AllBurstsReceived())
             {
-                DataBursts++;
-                Array.Clear(FN, 0, 4);
+                /* clean up */
+                ClearBurstContext();
+
+                /* get all e[] bits and place in i[] */
+                CopyEToI();
 
                 /* deinterleave the 4 bursts. the result is a 456 bit block. i[] to c[] */
                 Deinterleave();
@@ -104,7 +102,9 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                 return eSuccessState.Succeeded;
             }
             else
+            {
                 StatusMessage = null;
+            }
 
             return eSuccessState.Unknown;
         }

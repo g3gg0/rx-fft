@@ -16,9 +16,25 @@ namespace LibRXFFT.Libraries.SoundDevices
         private bool Started = false;
         private int SamplingRate = 48000;
         private int InputSamplingRate = 48000;
-        private int BufferSize = 0;
+        public int BufferSize = 0;
         private int PrebufferBytes = 0;
 
+        public int BufferUsage
+        {
+            get
+            {
+                int currentPlayPosition = Secondary.CurrentPlayPosition;
+
+                /* get the number of samples that we are able to write total */
+                int bytesUsed = CurrentWritePosition - currentPlayPosition;
+                if (bytesUsed < 0)
+                {
+                    bytesUsed += BufferSize;
+                }
+
+                return bytesUsed;
+            }
+        }
         private const double SecondsToBuffer = 0.5f;
         private SoundBufferDescription Desc;
         private DirectSound Device;
@@ -139,7 +155,7 @@ namespace LibRXFFT.Libraries.SoundDevices
 
                     InputSamplingRate = rate;
                     SignalOversampler = new Oversampler((double)SamplingRate / (double)rate);
-                    SignalOversampler.Type = eOversamplingType.SinX;
+                    SignalOversampler.Type = eOversamplingType.SinC;
 
                     Start();
                 }
@@ -211,6 +227,7 @@ namespace LibRXFFT.Libraries.SoundDevices
                 Started = false;
             }
         }
+
 
         public void Write(double[] data)
         {

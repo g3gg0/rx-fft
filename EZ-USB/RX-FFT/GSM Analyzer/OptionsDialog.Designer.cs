@@ -81,12 +81,18 @@
             this.chkL2ShowAllFrames = new System.Windows.Forms.CheckBox();
             this.chkL2DumpRaw = new System.Windows.Forms.CheckBox();
             this.groupBox6 = new System.Windows.Forms.GroupBox();
+            this.label16 = new System.Windows.Forms.Label();
+            this.txtA5Kc = new System.Windows.Forms.TextBox();
+            this.groupBox7 = new System.Windows.Forms.GroupBox();
+            this.txtSimAuthHost = new System.Windows.Forms.TextBox();
+            this.label17 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
             this.groupBox4.SuspendLayout();
             this.groupBox5.SuspendLayout();
             this.groupBox6.SuspendLayout();
+            this.groupBox7.SuspendLayout();
             this.SuspendLayout();
             // 
             // chkFastAtan2
@@ -203,7 +209,7 @@
             // btnOk
             // 
             this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOk.Location = new System.Drawing.Point(368, 412);
+            this.btnOk.Location = new System.Drawing.Point(368, 444);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(75, 23);
             this.btnOk.TabIndex = 99;
@@ -632,11 +638,61 @@
             this.groupBox6.TabStop = false;
             this.groupBox6.Text = "Signal Processing";
             // 
+            // label16
+            // 
+            this.label16.AutoSize = true;
+            this.label16.Location = new System.Drawing.Point(8, 22);
+            this.label16.Name = "label16";
+            this.label16.Size = new System.Drawing.Size(23, 13);
+            this.label16.TabIndex = 101;
+            this.label16.Text = "Kc:";
+            // 
+            // txtA5Kc
+            // 
+            this.txtA5Kc.CharacterCasing = System.Windows.Forms.CharacterCasing.Upper;
+            this.txtA5Kc.Location = new System.Drawing.Point(37, 19);
+            this.txtA5Kc.Name = "txtA5Kc";
+            this.txtA5Kc.Size = new System.Drawing.Size(163, 20);
+            this.txtA5Kc.TabIndex = 102;
+            this.txtA5Kc.WordWrap = false;
+            this.txtA5Kc.TextChanged += new System.EventHandler(this.txtA5Kc_TextChanged);
+            // 
+            // groupBox7
+            // 
+            this.groupBox7.Controls.Add(this.label17);
+            this.groupBox7.Controls.Add(this.txtSimAuthHost);
+            this.groupBox7.Controls.Add(this.txtA5Kc);
+            this.groupBox7.Controls.Add(this.label16);
+            this.groupBox7.Location = new System.Drawing.Point(224, 357);
+            this.groupBox7.Name = "groupBox7";
+            this.groupBox7.Size = new System.Drawing.Size(206, 79);
+            this.groupBox7.TabIndex = 103;
+            this.groupBox7.TabStop = false;
+            this.groupBox7.Text = "A5 Decryption Parameters";
+            // 
+            // txtSimAuthHost
+            // 
+            this.txtSimAuthHost.Location = new System.Drawing.Point(100, 46);
+            this.txtSimAuthHost.Name = "txtSimAuthHost";
+            this.txtSimAuthHost.Size = new System.Drawing.Size(100, 20);
+            this.txtSimAuthHost.TabIndex = 103;
+            this.txtSimAuthHost.TextChanged += new System.EventHandler(this.txtSimAuthHost_TextChanged);
+            // 
+            // label17
+            // 
+            this.label17.AutoSize = true;
+            this.label17.Location = new System.Drawing.Point(10, 50);
+            this.label17.Name = "label17";
+            this.label17.Size = new System.Drawing.Size(79, 13);
+            this.label17.TabIndex = 104;
+            this.label17.Text = "SIM Auth Host:";
+            // 
             // OptionsDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(455, 447);
+            this.ClientSize = new System.Drawing.Size(455, 479);
+            this.Controls.Add(this.groupBox7);
             this.Controls.Add(this.groupBox6);
             this.Controls.Add(this.groupBox5);
             this.Controls.Add(this.groupBox4);
@@ -662,6 +718,8 @@
             this.groupBox5.PerformLayout();
             this.groupBox6.ResumeLayout(false);
             this.groupBox6.PerformLayout();
+            this.groupBox7.ResumeLayout(false);
+            this.groupBox7.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -720,5 +778,10 @@
         private System.Windows.Forms.CheckBox chkL1PreallocateTCH;
         private System.Windows.Forms.GroupBox groupBox6;
         private System.Windows.Forms.CheckBox chkL2DumpFaulty;
+        private System.Windows.Forms.Label label16;
+        private System.Windows.Forms.TextBox txtA5Kc;
+        private System.Windows.Forms.GroupBox groupBox7;
+        private System.Windows.Forms.Label label17;
+        private System.Windows.Forms.TextBox txtSimAuthHost;
     }
 }

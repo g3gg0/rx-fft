@@ -256,7 +256,7 @@ namespace LibRXFFT.Libraries.USB_RX.Misc
             if (ret == null)
                 throw new NoSuchFieldException("Could not find Field '" + key + "' in Section '" + section + "'");
 
-            return Double.Parse(ret.Replace(',', '.'));
+            return Double.Parse(ret.Replace('.', ','));
 
         }
 

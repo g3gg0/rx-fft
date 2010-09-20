@@ -22,7 +22,10 @@ namespace LibRXFFT.Components.DirectX
             {
                 try
                 {
-                    Monitor.Pulse(SaveBufferTrigger); 
+                    lock (SaveBufferTrigger)
+                    {
+                        Monitor.Pulse(SaveBufferTrigger);
+                    }
                     //SaveBufferTrigger.Release(1);
                     if (!SaveThread.Join(300))
                     {

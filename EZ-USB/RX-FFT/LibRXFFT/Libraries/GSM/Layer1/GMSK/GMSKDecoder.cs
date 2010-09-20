@@ -85,7 +85,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.GMSK
                 if (DecisionPower == 0)
                     DecisionPower = MaxPower * MinPowerFact;
                 else
-                    DecisionPower = (5*DecisionPower + (MaxPower * MinPowerFact)) / 6;
+                    DecisionPower = (5 * DecisionPower + (MaxPower * MinPowerFact)) / 6;
             }
 
             for (int currentBit = 1; currentBit < Burst.NetBitCount; currentBit++)
@@ -180,10 +180,6 @@ namespace LibRXFFT.Libraries.GSM.Layer1.GMSK
 
             BurstsProcessed++;
             return dstData;
-
         }
-
-
-
     }
 }

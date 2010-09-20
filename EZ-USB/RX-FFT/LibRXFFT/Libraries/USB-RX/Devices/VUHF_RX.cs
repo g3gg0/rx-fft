@@ -39,6 +39,11 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             if (DeviceTypeDisabled)
                 return false;
 
+            if (!I2cDevice.I2CDeviceAck(BusID))
+            {
+                return false;
+            }
+
             byte[] buffer = new byte[32];
             if (!I2cDevice.I2CWriteByte(BusID, 211))
             {

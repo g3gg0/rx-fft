@@ -25,8 +25,8 @@ namespace GSM_Analyzer
         private void Refresh()
         {
             chkL1DumpFrames.Checked = Burst.DumpRawData;
-            chkL1ShowEncrypted.Checked = SDCCHBurst.ShowEncryptedMessage;
-            chkL1DumpEncrypted.Checked = SDCCHBurst.DumpEncryptedMessage;
+            chkL1ShowEncrypted.Checked = NormalBurst.ShowEncryptedMessage;
+            chkL1DumpEncrypted.Checked = NormalBurst.DumpEncryptedMessage;
             chkL1PreallocateTCH.Checked = TimeSlotHandler.PreallocateTCHs;
 
             chkL2ShowAllFrames.Checked = L2Handler.ShowAllMessages;
@@ -52,13 +52,25 @@ namespace GSM_Analyzer
 
             chkFastAtan2.Checked = Analyzer.Demodulator.UseFastAtan2;
 
+            txtSimAuthHost.Text = Analyzer.AuthHostAddress;
+
+            if(Analyzer.Parameters.A5Algorithm != null)
+            {
+                string hex = "";
+                for (int pos = 0; pos < Analyzer.Parameters.A5Algorithm.Key.Length; pos++)
+                {
+                    hex += string.Format("{0:X2}", Analyzer.Parameters.A5Algorithm.Key[pos]);
+                }
+                txtA5Kc.Text = hex;
+            }
+
             if (Analyzer.Source != null)
             {
                 chkInvert.Checked = Analyzer.Demodulator.InvertedSpectrum;
                 txtRate.Text = Analyzer.Source.InputSamplingRate.ToString();
                 txtInternalOvers.Text = Analyzer.Source.InternalOversampling.ToString();
                 radioOvsLinear.Checked = Analyzer.Source.OversamplingType == eOversamplingType.Linear;
-                radioOvsSinx.Checked = Analyzer.Source.OversamplingType == eOversamplingType.SinX;
+                radioOvsSinx.Checked = Analyzer.Source.OversamplingType == eOversamplingType.SinC;
                 txtSinxDepth.Text = Analyzer.Source.SinXDepth.ToString();
             }
             else
@@ -67,7 +79,7 @@ namespace GSM_Analyzer
                 txtRate.Text = Analyzer.DefaultSamplingRate.ToString();
                 txtInternalOvers.Text = Analyzer.InternalOversampling.ToString();
                 radioOvsLinear.Checked = SampleSource.DefaultOversamplingType == eOversamplingType.Linear;
-                radioOvsSinx.Checked = SampleSource.DefaultOversamplingType == eOversamplingType.SinX;
+                radioOvsSinx.Checked = SampleSource.DefaultOversamplingType == eOversamplingType.SinC;
                 txtSinxDepth.Text = SampleSource.DefaultSinXDepth.ToString();
             }
         }
@@ -198,9 +210,9 @@ namespace GSM_Analyzer
             if (radioOvsSinx.Checked)
             {
                 if (Analyzer.Source != null)
-                    Analyzer.Source.OversamplingType = eOversamplingType.SinX;
+                    Analyzer.Source.OversamplingType = eOversamplingType.SinC;
 
-                SampleSource.DefaultOversamplingType = eOversamplingType.SinX;
+                SampleSource.DefaultOversamplingType = eOversamplingType.SinC;
             }
         }
 
@@ -264,14 +276,12 @@ namespace GSM_Analyzer
 
         private void chkL1ShowEncrypted_CheckedChanged(object sender, EventArgs e)
         {
-            SDCCHBurst.ShowEncryptedMessage = chkL1ShowEncrypted.Checked;
-            SACCHBurst.ShowEncryptedMessage = chkL1ShowEncrypted.Checked;
+            NormalBurst.ShowEncryptedMessage = chkL1ShowEncrypted.Checked;
         }
 
         private void chkL1DumpEncrypted_CheckedChanged(object sender, EventArgs e)
         {
-            SDCCHBurst.DumpEncryptedMessage = chkL1DumpEncrypted.Checked;
-            SACCHBurst.DumpEncryptedMessage = chkL1DumpEncrypted.Checked;
+            NormalBurst.DumpEncryptedMessage = chkL1DumpEncrypted.Checked;
         }
 
         private void chkL3CellBroadcast_CheckedChanged(object sender, EventArgs e)
@@ -320,6 +330,36 @@ namespace GSM_Analyzer
         private void chkL1PreallocateTCH_CheckedChanged(object sender, EventArgs e)
         {
             TimeSlotHandler.PreallocateTCHs = chkL1PreallocateTCH.Checked;
+        }
+
+        private void txtA5Kc_TextChanged(object sender, EventArgs e)
+        {
+            if (txtA5Kc.Text.Length == 16)
+            {
+                byte[] key = new byte[8];
+
+                for (int pos = 0; pos < 8; pos++)
+                {
+                    string byteStr = txtA5Kc.Text.Substring(pos * 2, 2);
+
+                    if (!byte.TryParse(byteStr, System.Globalization.NumberStyles.HexNumber, null, out key[pos]))
+                    {
+                        Analyzer.Parameters.A5AlgorithmAvailable = false;
+                        return;
+                    }
+                }
+                Analyzer.Parameters.A5Algorithm.Key = key;
+                Analyzer.Parameters.A5AlgorithmAvailable = true;
+            }
+            else
+            {
+                Analyzer.Parameters.A5AlgorithmAvailable = false;
+            }
+        }
+
+        private void txtSimAuthHost_TextChanged(object sender, EventArgs e)
+        {
+            Analyzer.AuthHostAddress = txtSimAuthHost.Text;
         }
 
 

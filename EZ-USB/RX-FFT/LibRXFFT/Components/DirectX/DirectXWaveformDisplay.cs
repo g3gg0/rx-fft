@@ -649,6 +649,45 @@ namespace LibRXFFT.Components.DirectX
                     ScaleVertexesUsed++;
 
                 }
+
+
+                if (XAxisVerts == null || XAxisVerts.Length < XAxisLines * 4)
+                {
+                    XAxisVerts = new Vertex[XAxisLines * 4];
+                }
+
+                uint color1 = 0xFF101010;
+                uint color2 = 0xFF404040;
+                uint color3 = 0xFFFFFFFF;
+
+                for (int pos = 0; pos < XAxisLines; pos++)
+                {
+                    float x = (float)(XAxisGridOffset * XZoomFactor - DisplayXOffset + (pos * ((XAxisUnit / PlotVertsEntries) * DirectXWidth) * XZoomFactor));
+
+                    XAxisVerts[pos * 4 + 0].PositionRhw.X = x;
+                    XAxisVerts[pos * 4 + 0].PositionRhw.Y = 0;
+                    XAxisVerts[pos * 4 + 0].PositionRhw.Z = 0.5f;
+                    XAxisVerts[pos * 4 + 0].PositionRhw.W = 1;
+                    XAxisVerts[pos * 4 + 0].Color = color1;
+
+                    XAxisVerts[pos * 4 + 1].PositionRhw.X = x;
+                    XAxisVerts[pos * 4 + 1].PositionRhw.Y = DirectXHeight / 2;
+                    XAxisVerts[pos * 4 + 1].PositionRhw.Z = 0.5f;
+                    XAxisVerts[pos * 4 + 1].PositionRhw.W = 1;
+                    XAxisVerts[pos * 4 + 1].Color = color2;
+
+                    XAxisVerts[pos * 4 + 2].PositionRhw.X = x;
+                    XAxisVerts[pos * 4 + 2].PositionRhw.Y = DirectXHeight / 2;
+                    XAxisVerts[pos * 4 + 2].PositionRhw.Z = 0.5f;
+                    XAxisVerts[pos * 4 + 2].PositionRhw.W = 1;
+                    XAxisVerts[pos * 4 + 2].Color = color2;
+
+                    XAxisVerts[pos * 4 + 3].PositionRhw.X = x;
+                    XAxisVerts[pos * 4 + 3].PositionRhw.Y = DirectXHeight;
+                    XAxisVerts[pos * 4 + 3].PositionRhw.Z = 0.5f;
+                    XAxisVerts[pos * 4 + 3].PositionRhw.W = 1;
+                    XAxisVerts[pos * 4 + 3].Color = color1;
+                }
             }
 
             if (LimiterDisplayEnabled)

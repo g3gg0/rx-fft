@@ -1,4 +1,5 @@
 <?xml version="1.0"?>
+<!-- refers to ETSI 24.008 / GSM 04.18 -->
 <messagedesc-list>
   <messagedesc ref="9.1.1" name="ADDITIONAL ASSIGNMENT" significance="dual" direction="downlink">
     <pduslot-list>
@@ -750,7 +751,7 @@
       <pduslot ref="10.5.3.6" presence="M"/>
     </pduslot-list>
   </messagedesc>
-  <messagedesc ref="9.2.9" name="CM SERVICE REQUEST" significance="dual" direction="uplink">
+  <messagedesc ref="9.2.9" name="CM SERVICE REQUEST" significance="dual" direction="uplink" trigger-post="ServiceRequest">
     <pduslot-list>
       <pduslot ref="10.2" presence="M"/>
       <pduslot ref="10.3.1" presence="M"/>

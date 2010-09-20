@@ -250,8 +250,5 @@ namespace DemodulatorCollection
             btnOpen.ContextMenu = menu;
             btnOpen.ContextMenu.Show(btnOpen, new Point(10, 10));
         }
-
-
-
     }
 }

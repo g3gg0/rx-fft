@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <packettype-list>
-<packettype type="01" ref-down="7.2.1" ref-up="7.2.1" desc="CP-DATA"/>
-<packettype type="04" ref-down="7.2.2" ref-up="7.2.2" desc="CP-ACK"/>
-<packettype type="10" ref-down="7.2.3" ref-up="7.2.3" desc="CP-ERROR"/>
+<packettype type="01" ref-down="GSM 04.11 7.2.1" ref-up="GSM 04.11 7.2.1" desc="CP-DATA"/>
+<packettype type="04" ref-down="GSM 04.11 7.2.2" ref-up="GSM 04.11 7.2.2" desc="CP-ACK"/>
+<packettype type="10" ref-down="GSM 04.11 7.2.3" ref-up="GSM 04.11 7.2.3" desc="CP-ERROR"/>
 </packettype-list>
 <!-- Unused sections
 -->

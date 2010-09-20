@@ -35,15 +35,16 @@
             this.btnFirmwareProgram = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.btnI2cScan = new System.Windows.Forms.Button();
+            this.btnI2cTest = new System.Windows.Forms.Button();
+            this.btnAtmelDelay = new System.Windows.Forms.Button();
             this.btnStress = new System.Windows.Forms.Button();
             this.lblStats = new System.Windows.Forms.Label();
-            this.btnAtmelDelay = new System.Windows.Forms.Button();
-            this.btnI2cTest = new System.Windows.Forms.Button();
-            this.btnI2cScan = new System.Windows.Forms.Button();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
-            this.btnCypressEepromRead = new System.Windows.Forms.Button();
             this.btnCypressEepromProgram = new System.Windows.Forms.Button();
+            this.btnCypressEepromRead = new System.Windows.Forms.Button();
+            this.txtLog = new System.Windows.Forms.TextBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -59,6 +60,7 @@
             this.btnConnect.Text = "Connect";
             this.btnConnect.UseVisualStyleBackColor = true;
             this.btnConnect.Click += new System.EventHandler(this.btnConnect_Click);
+            this.btnConnect.MouseDown += new System.Windows.Forms.MouseEventHandler(this.btnConnect_MouseClick);
             // 
             // txtStatus
             // 
@@ -122,6 +124,36 @@
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "I²C Basics";
             // 
+            // btnI2cScan
+            // 
+            this.btnI2cScan.Location = new System.Drawing.Point(116, 48);
+            this.btnI2cScan.Name = "btnI2cScan";
+            this.btnI2cScan.Size = new System.Drawing.Size(99, 23);
+            this.btnI2cScan.TabIndex = 9;
+            this.btnI2cScan.Text = "I²C Scan";
+            this.btnI2cScan.UseVisualStyleBackColor = true;
+            this.btnI2cScan.Click += new System.EventHandler(this.btnI2cScan_Click);
+            // 
+            // btnI2cTest
+            // 
+            this.btnI2cTest.Location = new System.Drawing.Point(11, 19);
+            this.btnI2cTest.Name = "btnI2cTest";
+            this.btnI2cTest.Size = new System.Drawing.Size(99, 23);
+            this.btnI2cTest.TabIndex = 8;
+            this.btnI2cTest.Text = "I²C Atmel Test";
+            this.btnI2cTest.UseVisualStyleBackColor = true;
+            this.btnI2cTest.Click += new System.EventHandler(this.btnI2cTest_Click);
+            // 
+            // btnAtmelDelay
+            // 
+            this.btnAtmelDelay.Location = new System.Drawing.Point(11, 48);
+            this.btnAtmelDelay.Name = "btnAtmelDelay";
+            this.btnAtmelDelay.Size = new System.Drawing.Size(99, 23);
+            this.btnAtmelDelay.TabIndex = 7;
+            this.btnAtmelDelay.Text = "I²C Atmel delays";
+            this.btnAtmelDelay.UseVisualStyleBackColor = true;
+            this.btnAtmelDelay.Click += new System.EventHandler(this.btnAtmelDelay_Click);
+            // 
             // btnStress
             // 
             this.btnStress.Location = new System.Drawing.Point(116, 19);
@@ -139,36 +171,6 @@
             this.lblStats.Name = "lblStats";
             this.lblStats.Size = new System.Drawing.Size(0, 13);
             this.lblStats.TabIndex = 6;
-            // 
-            // btnAtmelDelay
-            // 
-            this.btnAtmelDelay.Location = new System.Drawing.Point(11, 48);
-            this.btnAtmelDelay.Name = "btnAtmelDelay";
-            this.btnAtmelDelay.Size = new System.Drawing.Size(99, 23);
-            this.btnAtmelDelay.TabIndex = 7;
-            this.btnAtmelDelay.Text = "I²C Atmel delays";
-            this.btnAtmelDelay.UseVisualStyleBackColor = true;
-            this.btnAtmelDelay.Click += new System.EventHandler(this.btnAtmelDelay_Click);
-            // 
-            // btnI2cTest
-            // 
-            this.btnI2cTest.Location = new System.Drawing.Point(11, 19);
-            this.btnI2cTest.Name = "btnI2cTest";
-            this.btnI2cTest.Size = new System.Drawing.Size(99, 23);
-            this.btnI2cTest.TabIndex = 8;
-            this.btnI2cTest.Text = "I²C Atmel Test";
-            this.btnI2cTest.UseVisualStyleBackColor = true;
-            this.btnI2cTest.Click += new System.EventHandler(this.btnI2cTest_Click);
-            // 
-            // btnI2cScan
-            // 
-            this.btnI2cScan.Location = new System.Drawing.Point(116, 48);
-            this.btnI2cScan.Name = "btnI2cScan";
-            this.btnI2cScan.Size = new System.Drawing.Size(99, 23);
-            this.btnI2cScan.TabIndex = 9;
-            this.btnI2cScan.Text = "I²C Scan";
-            this.btnI2cScan.UseVisualStyleBackColor = true;
-            this.btnI2cScan.Click += new System.EventHandler(this.btnI2cScan_Click);
             // 
             // groupBox3
             // 
@@ -191,16 +193,6 @@
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Cypress EEPROM";
             // 
-            // btnCypressEepromRead
-            // 
-            this.btnCypressEepromRead.Location = new System.Drawing.Point(11, 20);
-            this.btnCypressEepromRead.Name = "btnCypressEepromRead";
-            this.btnCypressEepromRead.Size = new System.Drawing.Size(99, 23);
-            this.btnCypressEepromRead.TabIndex = 0;
-            this.btnCypressEepromRead.Text = "Read";
-            this.btnCypressEepromRead.UseVisualStyleBackColor = true;
-            this.btnCypressEepromRead.Click += new System.EventHandler(this.btnCypressEepromRead_Click);
-            // 
             // btnCypressEepromProgram
             // 
             this.btnCypressEepromProgram.Location = new System.Drawing.Point(116, 20);
@@ -211,11 +203,31 @@
             this.btnCypressEepromProgram.UseVisualStyleBackColor = true;
             this.btnCypressEepromProgram.Click += new System.EventHandler(this.btnCypressEepromProgram_Click);
             // 
+            // btnCypressEepromRead
+            // 
+            this.btnCypressEepromRead.Location = new System.Drawing.Point(11, 20);
+            this.btnCypressEepromRead.Name = "btnCypressEepromRead";
+            this.btnCypressEepromRead.Size = new System.Drawing.Size(99, 23);
+            this.btnCypressEepromRead.TabIndex = 0;
+            this.btnCypressEepromRead.Text = "Read";
+            this.btnCypressEepromRead.UseVisualStyleBackColor = true;
+            this.btnCypressEepromRead.Click += new System.EventHandler(this.btnCypressEepromRead_Click);
+            // 
+            // txtLog
+            // 
+            this.txtLog.Font = new System.Drawing.Font("Courier New", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txtLog.Location = new System.Drawing.Point(256, 13);
+            this.txtLog.Multiline = true;
+            this.txtLog.Name = "txtLog";
+            this.txtLog.Size = new System.Drawing.Size(416, 321);
+            this.txtLog.TabIndex = 9;
+            // 
             // RXSetup
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(251, 347);
+            this.ClientSize = new System.Drawing.Size(684, 347);
+            this.Controls.Add(this.txtLog);
             this.Controls.Add(this.groupBox4);
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.lblStats);
@@ -235,6 +247,7 @@
 
         }
 
+
         #endregion
 
         private System.Windows.Forms.Button btnConnect;
@@ -253,6 +266,7 @@
         private System.Windows.Forms.GroupBox groupBox4;
         private System.Windows.Forms.Button btnCypressEepromProgram;
         private System.Windows.Forms.Button btnCypressEepromRead;
+        private System.Windows.Forms.TextBox txtLog;
     }
 }
 

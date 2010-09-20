@@ -186,26 +186,33 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             if (TransferFailure)
                 return TransferString;
 
-            lock (TransferLock)
+            try
             {
-                TransferDirection = eTransferDirection.Receive;
-                Monitor.Pulse(TransferLock);
-
-                while (TransferDirection == eTransferDirection.Receive)
+                lock (TransferLock)
                 {
-                    Monitor.Wait(TransferLock, 5);
-                }
+                    TransferDirection = eTransferDirection.Receive;
+                    Monitor.Pulse(TransferLock);
 
-                if (TransferFailure)
-                {
-                    if (DeviceDisappeared != null)
+                    while (TransferDirection == eTransferDirection.Receive)
                     {
-                        DeviceDisappeared(this, null);
+                        Monitor.Wait(TransferLock, 5);
+                    }
+
+                    if (TransferFailure)
+                    {
+                        if (DeviceDisappeared != null)
+                        {
+                            DeviceDisappeared(this, null);
+                        }
                     }
                 }
-
-                return TransferString;
             }
+            catch (Exception e)
+            {
+            }
+
+            return TransferString;
+
         }
 
 
@@ -217,21 +224,27 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             if (TransferFailure)
                 return;
 
-            lock (TransferLock)
+            try
             {
-                TransferDirection = eTransferDirection.Send;
-                TransferString = cmd;
-                Monitor.Pulse(TransferLock);
-
-                while (TransferDirection == eTransferDirection.Send)
+                lock (TransferLock)
                 {
-                    Monitor.Wait(TransferLock, 5);
+                    TransferDirection = eTransferDirection.Send;
+                    TransferString = cmd;
+                    Monitor.Pulse(TransferLock);
+
+                    while (TransferDirection == eTransferDirection.Send)
+                    {
+                        Monitor.Wait(TransferLock, 5);
+                    }
+                }
+
+                if (TransferFailure && DeviceDisappeared != null)
+                {
+                    DeviceDisappeared(this, null);
                 }
             }
-
-            if (TransferFailure && DeviceDisappeared != null)
+            catch (Exception e)
             {
-                DeviceDisappeared(this, null);
             }
 
             return;
@@ -346,7 +359,8 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                 {
                     Monitor.Pulse(TransferLock);
                 }
-                TransferThread.Join();
+                TransferThread.Join(500);
+                TransferThread.Abort();
             }
 
             if (Port != null)

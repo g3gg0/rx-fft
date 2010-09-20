@@ -1,6 +1,7 @@
 ﻿using System;
 using LibRXFFT.Libraries.GSM.Layer1.ChannelCoding;
 using LibRXFFT.Libraries.GSM.Layer2;
+using RX_FFT.Components.GDI;
 
 namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
 {
@@ -11,6 +12,21 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
             Correct,
             Fixed,
             Failed
+        }
+
+        internal class BurstData
+        {
+            /* encrypted e[] bits */
+            internal bool[] BurstBufferE = new bool[114];
+
+            /* interleaved i[] bits */
+            internal bool[] BurstBufferI = new bool[114];
+
+            /* frame number */
+            internal long FN;
+
+            /* A5 related frame number */
+            internal uint Count;
         }
 
         public const double Data1Bits = 57;
@@ -34,10 +50,12 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
 
         internal bool[] FireCRCBuffer;
 
-        /* encrypted e[] bits */
-        internal bool[] BurstBufferE;
 
-        /* interleaved i[] bits */
+        /* Burstblock contains 4 or 8 bursts and their context */
+        internal BurstData[] BurstBlock;
+
+
+        /* interleaved i[] bits, references to BurstBlock */
         internal bool[][] BurstBufferI;
 
         /* convolutional coded c[] bits */
@@ -50,16 +68,20 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
         internal byte[] BurstBufferD;
 
 
-        internal void InitBuffers(int BurstCount)
+        internal void InitBuffers(int burstCount)
         {
-            BurstBufferE = new bool[114];
-            BurstBufferI = new bool[BurstCount][];
+            BurstBufferI = new bool[burstCount][];
             BurstBufferC = new bool[456];
             BurstBufferU = new bool[228];
             BurstBufferD = new byte[23];
 
-            for (int pos = 0; pos < BurstBufferI.Length; pos++)
-                BurstBufferI[pos] = new bool[114];
+            BurstBlock = new BurstData[burstCount];
+
+            for (int pos = 0; pos < BurstBlock.Length; pos++)
+            {
+                BurstBlock[pos] = new BurstData();
+                BurstBufferI[pos] = BurstBlock[pos].BurstBufferI;
+            }
 
             FireCRCBuffer = new bool[CRC.PolynomialFIRE.Length - 1];
         }
@@ -74,21 +96,55 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
             return true;
         }
 
-        internal void UnmapToI(bool[] decodedBurst, int dstBurst)
+        internal void StoreBurstContext(GSMParameters param, bool[] decodedBurst, int sequence)
         {
-            Array.Copy(decodedBurst, (int)Data1BitsPos, BurstBufferI[dstBurst], 0, (int)Data1Bits);
-            Array.Copy(decodedBurst, (int)Data2BitsPos, BurstBufferI[dstBurst], (int)Data1Bits, (int)Data2Bits);
+            /* get 114 e[] bits from burst into our buffer. two bits are just stealing flags - skip them */
+            UnmapToE(decodedBurst, sequence);
+
+            /* store context */
+            BurstBlock[sequence].FN = param.FN;
+            BurstBlock[sequence].Count = param.Count;
         }
 
-        internal void UnmapToE(bool[] decodedBurst)
+        internal bool AllBurstsReceived()
         {
-            Array.Copy(decodedBurst, (int)Data1BitsPos, BurstBufferE, 0, (int)Data1Bits);
-            Array.Copy(decodedBurst, (int)Data2BitsPos, BurstBufferE, (int)Data1Bits, (int)Data2Bits);
+            for (int pos = 1; pos < BurstBlock.Length; pos++)
+            {
+                if ((BurstBlock[pos - 1].FN + 1) != BurstBlock[pos].FN)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
-        internal void CopyEToI(int dstBurst)
+        internal void ClearBurstContext()
         {
-            Array.Copy(BurstBufferE, BurstBufferI[dstBurst], (int)(Data1Bits + Data2Bits));
+            for (int pos = 0; pos < BurstBlock.Length; pos++)
+            {
+                BurstBlock[pos].FN = 0;
+            }
+        }
+
+        internal void UnmapToI(bool[] bits, int dstBurst)
+        {
+            Array.Copy(bits, (int)Data1BitsPos, BurstBlock[dstBurst].BurstBufferI, 0, (int)Data1Bits);
+            Array.Copy(bits, (int)Data2BitsPos, BurstBlock[dstBurst].BurstBufferI, (int)Data1Bits, (int)Data2Bits);
+        }
+
+        internal void UnmapToE(bool[] bits, int dstBurst)
+        {
+            Array.Copy(bits, (int)Data1BitsPos, BurstBlock[dstBurst].BurstBufferE, 0, (int)Data1Bits);
+            Array.Copy(bits, (int)Data2BitsPos, BurstBlock[dstBurst].BurstBufferE, (int)Data1Bits, (int)Data2Bits);
+        }
+
+        internal void CopyEToI()
+        {
+            for (int dstBurst = 0; dstBurst < BurstBlock.Length; dstBurst++)
+            {
+                Array.Copy(BurstBlock[dstBurst].BurstBufferE, BurstBlock[dstBurst].BurstBufferI, (int)(Data1Bits + Data2Bits));
+            }
         }
 
         internal void Deinterleave()
@@ -132,6 +188,60 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
         internal bool IsHU(bool[] decodedBurst)
         {
             return decodedBurst[(int)HUBitsPos];
+        }
+
+
+        /* for burst types which allow encryption */
+        public bool ChannelEncrypted = false;
+        public int EncryptionType = 0;
+        public static bool ShowEncryptedMessage = false;
+        public static bool DumpEncryptedMessage = false;
+        public string EncryptionBitString = "";
+        
+
+        internal bool HandleEncryption(GSMParameters param)
+        {
+            /* this channel was flagged as encrypted */
+            if (ChannelEncrypted)
+            {
+                CryptedBursts++;
+
+                /* do we have an A5 decryptor? */
+                if (param.A5AlgorithmAvailable)
+                {
+                    /* now decrypt all 4 bursts */
+                    for (int dstBurst = 0; dstBurst < BurstBlock.Length; dstBurst++)
+                    {
+                        if (DumpEncryptedMessage)
+                        {
+                            EncryptionBitString += "Burst #" + dstBurst + " (Encrypted) e[]: " + DumpBits(BurstBlock[dstBurst].BurstBufferE);
+                        }
+
+                        /* update COUNT and let it decrypt our burst */
+                        param.A5Algorithm.CryptDownlink(BurstBlock[dstBurst].BurstBufferE, BurstBlock[dstBurst].Count);
+
+                        if (DumpEncryptedMessage)
+                        {
+                            EncryptionBitString += " (Decrypted) e[]: " + DumpBits(BurstBlock[dstBurst].BurstBufferE) + Environment.NewLine;
+                        }
+                    }
+
+                    return true;
+                }
+                else if (DumpEncryptedMessage)
+                {
+                    StatusMessage = "";
+
+                    /* no decryption available - just dump if requested */
+                    for (int dstBurst = 0; dstBurst < BurstBlock.Length; dstBurst++)
+                    {
+                        StatusMessage += "Burst #" + dstBurst + " (Encrypted) e[]: " + DumpBits(BurstBlock[dstBurst].BurstBufferE) + Environment.NewLine;
+                    }
+                }
+                return false;
+            }
+
+            return true;
         }
     }
 }

@@ -49,6 +49,20 @@ namespace LibRXFFT.Components.GDI
             UpdateFromConfig();
         }
 
+        protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+        {
+            foreach (SoundSinkInfo info in DemodState.SoundSinkInfos)
+            {
+                tabSoundOut.Controls.Remove(info.Page);
+            }
+            base.OnClosing(e);
+        }
+
+        public void Shutdown()
+        {
+            DemodState.RemoveSinks();
+        }
+
         public void UpdateFromConfig()
         {
             UpdateFrequencyInternal();
@@ -163,6 +177,8 @@ namespace LibRXFFT.Components.GDI
 
         private void cmbSourceFrequency_SelectedIndexChanged(object sender, EventArgs e)
         {
+            long lastFreq = DemodState.DemodulationFrequency;
+
             try
             {
                 int pos = Array.FindIndex<string>(SourceFrequencyDesc, item => cmbSourceFrequency.Text == item );
@@ -178,7 +194,12 @@ namespace LibRXFFT.Components.GDI
 
             switch (DemodState.SourceFrequency)
             {
+                /* when selecting "custom", use the last active frequency */
                 case DemodulationState.eSourceFrequency.Fixed:
+                    DemodState.DemodulationFrequencyFixed = lastFreq;
+                    selectorFixed = false;
+                    break;
+
                 case DemodulationState.eSourceFrequency.Selection:
                     selectorFixed = false;
                     break;
@@ -434,6 +455,7 @@ namespace LibRXFFT.Components.GDI
                 DemodState.DemodulationEnabled = chkEnableDemod.Checked;
 
                 DemodState.UpdateSinks();
+                DemodState.ReinitSound = true;
                 UpdateInformationInternal(true);
             }
         }
@@ -453,7 +475,8 @@ namespace LibRXFFT.Components.GDI
             lock (DemodState)
             {
                 DemodState.SignalDemodulator = new AMDemodulator();
-                UpdateInformationInternal(true);                
+                DemodState.ReinitSound = true;
+                UpdateInformationInternal(true);
             }
         }
 
@@ -462,6 +485,7 @@ namespace LibRXFFT.Components.GDI
             lock (DemodState)
             {
                 DemodState.SignalDemodulator = new SSBDemodulator(eSsbType.Lsb);
+                DemodState.ReinitSound = true;
                 UpdateInformationInternal(true);
             }
         }
@@ -471,6 +495,7 @@ namespace LibRXFFT.Components.GDI
             lock (DemodState)
             {
                 DemodState.SignalDemodulator = new SSBDemodulator(eSsbType.Usb);
+                DemodState.ReinitSound = true;
                 UpdateInformationInternal(true);
             }
         }
@@ -480,6 +505,7 @@ namespace LibRXFFT.Components.GDI
             lock (DemodState)
             {
                 DemodState.SignalDemodulator = new FMDemodulator();
+                DemodState.ReinitSound = true;
                 UpdateInformationInternal(true);                
             }
         }
@@ -489,6 +515,7 @@ namespace LibRXFFT.Components.GDI
             lock (DemodState)
             {
                 DemodState.SignalDemodulator = new FMDemodulator();
+                DemodState.ReinitSound = true;
                 UpdateInformationInternal(true);                
             }
         }
@@ -773,7 +800,6 @@ namespace LibRXFFT.Components.GDI
             }
         }
 
-
         private void btnSound_Click(object sender, EventArgs e)
         {
             SoundSinkInfo info = new SoundSinkInfo();
@@ -816,6 +842,15 @@ namespace LibRXFFT.Components.GDI
             DemodState.AddSink(info);
         }
 
+        private void btnShmem_Click(object sender, EventArgs e)
+        {
+            SoundSinkInfo info = new SoundSinkInfo();
+            info.Page = new TabPage("Shared Mem");
+            info.Sink = new SharedMemSink(info.Page);
+
+            PrepareSinkTab(info);
+            DemodState.AddSink(info);
+        }
 
         private void PrepareSinkTab(SoundSinkInfo info)
         {
@@ -824,14 +859,14 @@ namespace LibRXFFT.Components.GDI
             Label closeLabel = new Label();
             closeLabel.Text = "X";
             closeLabel.Dock = DockStyle.Right | DockStyle.Top;
-            closeLabel.Anchor = AnchorStyles.Right | AnchorStyles.Top;
-            closeLabel.Location = new System.Drawing.Point(info.Page.Size.Width - 15, 0);
+            //closeLabel.Anchor = AnchorStyles.Right | AnchorStyles.Top;
+            //closeLabel.Location = new System.Drawing.Point(info.Page.Size.Width - 15, 0);
             closeLabel.MouseClick += (object s, MouseEventArgs a) =>
             {
                 if (a.Button == MouseButtons.Left)
                 {
                     DemodState.RemoveSink(info);
-                    tabSoundOut.Controls.Remove(info.Page);
+                    //tabSoundOut.Controls.Remove(info.Page);
                 }
             };
             closeLabel.MouseEnter += (object s, EventArgs a) =>
@@ -844,6 +879,5 @@ namespace LibRXFFT.Components.GDI
             };
             info.Page.Controls.Add(closeLabel);
         }
-
     }
 }

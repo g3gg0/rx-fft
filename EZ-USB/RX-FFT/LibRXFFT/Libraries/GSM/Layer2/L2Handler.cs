@@ -1,6 +1,7 @@
 ﻿using System;
 using LibRXFFT.Libraries.GSM.Layer1.Bursts;
 using LibRXFFT.Libraries.GSM.Layer3;
+using System.Text;
 
 namespace LibRXFFT.Libraries.GSM.Layer2
 {
@@ -44,18 +45,26 @@ namespace LibRXFFT.Libraries.GSM.Layer2
             return true;
         }
 
-        public void Handle(Burst source, L3Handler l3, byte[] l2Data)
+        public void Handle(NormalBurst source, L3Handler l3, byte[] l2Data)
         {
             Handle(source, l3, l2Data, 0);
         }
 
-        public void Handle(Burst source, L3Handler l3, byte[] l2Data, int startOffset)
+        private StringBuilder Builder = new StringBuilder();
+
+        public void Handle(NormalBurst source, L3Handler l3, byte[] l2Data, int startOffset)
         {
+            Builder.Length = 0;
 
             /* BCCH and CCCH packets have pseudo L2 headers (GSM 04.07 11.3.1) */
             if (source.GetType() == typeof(BCCHBurst) || source.GetType() == typeof(CCCHBurst))
             {
-                StatusMessage = "Pseudo L2 Header" + Environment.NewLine;
+                Builder.Append( "Pseudo L2 Header").Append(Environment.NewLine);
+
+                if (source.ChannelEncrypted)
+                {
+                    Builder.Append("        ======= encrypted =======").Append(Environment.NewLine);
+                }
 
                 /* pass to L3 handler if not empty and skip pseudo length */
                 if (!PacketIsEmpty(l2Data, 1))
@@ -72,23 +81,28 @@ namespace LibRXFFT.Libraries.GSM.Layer2
 
                 if (L3Handler.ExceptFieldsEnabled || ShowMessage)
                 {
+                    Builder.Append("SAPI: ").Append(L2Data.SAPI).Append("  C/R: ").Append((L2Data.CR ? "1" : "0")).Append("  EA: ").Append((L2Data.EA ? "1" : "0")).Append("  ");
+                    Builder.Append("M: ").Append((L2Data.M ? "1" : "0")).Append("  ");
+                    Builder.Append("EL: ").Append((L2Data.EL ? "1" : "0")).Append("  ");
+                    Builder.Append("L: ").Append(L2Data.Length).Append("  ");
+                    /*
                     StatusMessage = "SAPI: " + L2Data.SAPI + "  C/R: " + (L2Data.CR ? "1" : "0") + "  EA: " + (L2Data.EA ? "1" : "0") + "  ";
                     StatusMessage += "M: " + (L2Data.M ? "1" : "0") + "  ";
                     StatusMessage += "EL: " + (L2Data.EL ? "1" : "0") + "  ";
                     StatusMessage += "L: " + L2Data.Length + "  ";
-
+                    */
                     switch (L2Data.FrameFormat)
                     {
                         case eFrameFormat.S_Format:
-                            StatusMessage += "S Format, N(R)=" + L2Data.NR + " S=" + L2Data.S + " " + (eSupervisory)L2Data.S;
+                            Builder.Append("S Format, N(R)=").Append(L2Data.NR).Append(" S=").Append(L2Data.S).Append(" ").Append((eSupervisory)L2Data.S);
                             break;
 
                         case eFrameFormat.U_Format:
-                            StatusMessage += "U Format, U=" + L2Data.U + " " + (eUnnumbered)L2Data.U;
+                            Builder.Append("U Format, U=").Append(L2Data.U).Append(" ").Append((eUnnumbered)L2Data.U);
                             break;
 
                         case eFrameFormat.I_Format:
-                            StatusMessage += "I Format, N(R)=" + L2Data.NR + " N(S)=" + L2Data.NS + " ";
+                            Builder.Append("I Format, N(R)=").Append(L2Data.NR).Append(" N(S)=").Append(L2Data.NS).Append(" ");
                             break;
                     }
                 }
@@ -106,17 +120,16 @@ namespace LibRXFFT.Libraries.GSM.Layer2
                     else
                     {
                         if (L3Handler.ExceptFieldsEnabled || ShowMessage)
-                            StatusMessage += "!! Retransmission !! ";
+                            Builder.Append("!! Retransmission !! ");
                     }
                 }
                 else
                 {
                     if (DumpFaulty)
                     {
-                        StatusMessage += "Faulty length?! Length = " + (packetBufferOffset + L2Data.Length) +
-                                         Environment.NewLine;
-                        StatusMessage += "          Raw Data" + Environment.NewLine;
-                        StatusMessage += "             " + DumpBytes(l2Data) + Environment.NewLine;
+                        Builder.Append("Faulty length?! Length = ").Append((packetBufferOffset + L2Data.Length)).Append(Environment.NewLine);
+                        Builder.Append("          Raw Data").Append(Environment.NewLine);
+                        Builder.Append("             ").Append(DumpBytes(l2Data)).Append(Environment.NewLine);
                         ShowMessage = true;
                     }
                 }
@@ -130,9 +143,14 @@ namespace LibRXFFT.Libraries.GSM.Layer2
                     if (L3Handler.ExceptFieldsEnabled || ShowMessage)
                     {
                         if (NumPackets > 1)
-                            StatusMessage += "(packet " + NumPackets + ", total " + packetBufferOffset + " bytes)" + Environment.NewLine;
+                            Builder.Append("(packet ").Append(NumPackets).Append(", total ").Append(packetBufferOffset).Append(" bytes)").Append(Environment.NewLine);
                         else
-                            StatusMessage += Environment.NewLine;
+                            Builder.Append(Environment.NewLine);
+                    }
+
+                    if (source.ChannelEncrypted)
+                    {
+                        Builder.Append("        ======= encrypted =======").Append(Environment.NewLine);
                     }
 
                     /* but only pass it through when there is any data */
@@ -143,7 +161,9 @@ namespace LibRXFFT.Libraries.GSM.Layer2
                         Array.Copy(packetBuffer, buf, buf.Length);
 
                         if (!PacketIsEmpty(buf))
+                        {
                             l3.Handle(buf);
+                        }
                     }
 
                     /* reset the buffer etc */
@@ -155,26 +175,28 @@ namespace LibRXFFT.Libraries.GSM.Layer2
                 }
                 else if (L3Handler.ExceptFieldsEnabled || ShowMessage)
                 {
-                    StatusMessage += "(packet " + NumPackets + ")" + Environment.NewLine;
+                    Builder.Append("(packet ").Append(NumPackets).Append(")").Append(Environment.NewLine);
                 }
             }
 
             if (DumpRawData && (L3Handler.ExceptFieldsEnabled || ShowMessage))
             {
-                StatusMessage += "          Raw Data" + Environment.NewLine;
-                StatusMessage += "             " + DumpBytes(l2Data) + Environment.NewLine;
+                Builder.Append("        Raw Data").Append(Environment.NewLine);
+                Builder.Append("             ").Append(DumpBytes(l2Data)).Append(Environment.NewLine);
             }
+
+            StatusMessage = Builder.ToString();
         }
 
 
         private static string DumpBytes(byte[] data)
         {
-            string msg = "";
+            StringBuilder msg = new StringBuilder();
 
             foreach (byte value in data)
-                msg += String.Format("{0:X02} ", value);
+                msg.AppendFormat("{0:X02} ", value);
 
-            return msg;
+            return msg.ToString();
         }
 
         internal enum eUnnumbered

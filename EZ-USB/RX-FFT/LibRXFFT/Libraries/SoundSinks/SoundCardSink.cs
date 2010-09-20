@@ -14,11 +14,13 @@ namespace LibRXFFT.Libraries.SoundSinks
     {
         private DXSoundDevice SoundDevice = null;
         private Guid SelectedDevice = Guid.Empty;
+        private SoundCardSinkControl Control = null;
 
         public SoundCardSink(Control displayControl)
         {
-            SoundCardSinkControl ctrl = new SoundCardSinkControl(this);
-            displayControl.Controls.Add(ctrl);
+            Control = new SoundCardSinkControl(this);
+            Control.Dock = DockStyle.Fill;
+            displayControl.Controls.Add(Control);
         }
 
         public DeviceInfo[] GetDevices()
@@ -54,6 +56,30 @@ namespace LibRXFFT.Libraries.SoundSinks
             }
         }
 
+        public int BufferSize
+        {
+            get
+            {
+                if (SoundDevice != null)
+                {
+                    return SoundDevice.BufferSize;
+                }
+                return 0;
+            }
+        }
+
+        public int BufferUsage
+        {
+            get
+            {
+                if (SoundDevice != null)
+                {
+                    return SoundDevice.BufferUsage;
+                }
+                return 0;
+            }
+        }
+
         public void Start()
         {
             if (SoundDevice == null)
@@ -79,6 +105,13 @@ namespace LibRXFFT.Libraries.SoundSinks
                 SoundDevice.Stop();
                 SoundDevice = null;
             }
+        }
+
+        public void Shutdown()
+        {
+            Stop();
+            Control.Shutdown();
+            Control = null;
         }
 
         public void Process(double[] samples)

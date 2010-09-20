@@ -2,6 +2,7 @@ using System;
 using LibRXFFT.Libraries.GSM.Layer1.ChannelCoding;
 using LibRXFFT.Libraries.GSM.Layer2;
 using LibRXFFT.Libraries.SignalProcessing;
+using RX_FFT.Components.GDI;
 
 namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
 {
@@ -40,7 +41,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
         {
             double startOffset = Parameters.SampleStartPosition;
 
-            int bitTolerance = 2;
+            int bitTolerance = 5;
 
             /* only the first SCH has to be searched in a much higher range */
             if (Parameters.FirstSCH)
@@ -64,6 +65,8 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
             Parameters.SampleOffset += position - sequencePos;
             Parameters.SubSampleOffset = 0;
 
+            //Log.AddMessage("Offset: " + Parameters.SampleOffset + "  SCH: " + (position - sequencePos));
+        
             return eSuccessState.Succeeded;
         }
 

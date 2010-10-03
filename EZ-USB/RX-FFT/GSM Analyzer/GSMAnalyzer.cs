@@ -38,6 +38,7 @@ namespace GSM_Analyzer
         }
         private RadioChannelHandler ChannelHandler;
         private Thread ChannelScanThread;
+        public ChannelSplitter Splitter;
 
         private Thread ReadThread;
         private bool ThreadActive;
@@ -49,7 +50,7 @@ namespace GSM_Analyzer
 
         internal TimeSlotHandler Handler;
         internal GSMParameters Parameters;
-        internal GMSKDemodulator Demodulator;
+        internal GMSKDemodulator[] Demodulator;
         private FilterDialog FilterWindow;
         private BurstVisualizer BurstWindow;
         private SpectrumVisualizer SpectrumWindow;
@@ -68,6 +69,7 @@ namespace GSM_Analyzer
         public double SubSampleOffset = 0;
 
         internal double DefaultSamplingRate = 2184533;
+        internal double SymbolRate = 270833;
         private double BT = 0.3d;
 
         public string AuthHostAddress = "";
@@ -89,21 +91,64 @@ namespace GSM_Analyzer
         {
             get
             {
-                return CurrentSampleRate / 270833;
+                return CurrentSampleRate / SymbolRate;
             }
         }
 
+        public bool InvertedSpectrum
+        {
+            get
+            {
+                if (Source != null)
+                {
+                    InvertedSpectrum = Source.InvertedSpectrum;
+                }
+
+                return InvertedSpectrum;
+            }
+            set
+            {
+                if (Source != null)
+                {
+                    Source.InvertedSpectrum = value;
+                }
+
+                InvertedSpectrum = value;
+            }
+        }
 
         public GSMAnalyzer()
         {
             InitializeComponent();
 
             try
-            {
+            {                
+                Splitter = new ChannelSplitter();
+                Splitter.Config.BaseFrequency = 0;
+                Splitter.Config.Channels = new ChannelSplitter.ChannelConfig[2];
+                Splitter.Config.Channels[0] = new ChannelSplitter.ChannelConfig();
+                Splitter.Config.Channels[1] = new ChannelSplitter.ChannelConfig();
+                Splitter.Config.Channels[0].ChannelWidth = SymbolRate; /* 270 kHz channel width */
+                Splitter.Config.Channels[1].ChannelWidth = SymbolRate; /* 270 kHz channel width */
+
+                /* hack: one channel aside */
+                Splitter.Config.Channels[0].FrequencyOffset = 500000;
+                Splitter.Config.Channels[1].FrequencyOffset = -500000;
+
+                Splitter.UpdateConfig();
+
+
+
                 Parameters = new GSMParameters();
-                Demodulator = new GMSKDemodulator();
+                Demodulator = new GMSKDemodulator[Splitter.Config.Channels.Length];
+                for (int chan = 0; chan < Demodulator.Length; chan++)
+                {
+                    Demodulator[chan] = new GMSKDemodulator();
+                }
 
                 Log.Init();
+
+                /* set up a channel handler for resolving ARFCN to frequencies */
                 ChannelHandler = new RadioChannelHandler(Device);
                 ChannelHandler.FrequencyOffset = 0;
 
@@ -153,8 +198,7 @@ namespace GSM_Analyzer
         public void RegisterTriggers(L3Handler L3Handler)
         {
             L3Handler.PDUDataTriggers.Add("LAIUpdate", TriggerLAIUpdate);
-            L3Handler.PDUDataTriggers.Add("RANDreceived", TriggerRandReceived);
-            
+            L3Handler.PDUDataTriggers.Add("RANDreceived", TriggerRandReceived);            
         }
 
 
@@ -175,6 +219,7 @@ namespace GSM_Analyzer
                 return;
             }
 
+            /* try to connect to an auth host */
             if (AuthHost == null && AuthHostAddress.Length > 0)
             {
                 try
@@ -504,7 +549,15 @@ namespace GSM_Analyzer
                 };
                 contextMenu.MenuItems.Add(menuItem);
 
-                menuItem = new MenuItem("Dump via network...");
+                menuItem = new MenuItem("Dump via GSMTAP");
+                contextMenu.MenuItems.Add(menuItem);
+                menuItem.Click += (object s, EventArgs ev) =>
+                {
+                    Parameters.PacketDumper = new GsmTapWriter();
+                    chkDump.CheckState = CheckState.Checked;
+                };
+
+                menuItem = new MenuItem("Forward to Master...");
                 menuItem.Enabled = false;
                 contextMenu.MenuItems.Add(menuItem);
 
@@ -663,11 +716,10 @@ namespace GSM_Analyzer
             long frameStartPosition = 0;
             long currentPosition = 0;
             long updateLoops = 0;
+            int displayedChannel = 0;
 
             double oldSamplingRate = Source.OutputSamplingRate;
 
-            double[] burstBuffer = new double[(int)((Handler.SpareBits + Burst.TotalBitCount) * Oversampling)];
-            double[] burstStrengthBuffer = new double[(int)((Handler.SpareBits + Burst.TotalBitCount) * Oversampling)];
 
             long burstSamples = (long)Math.Ceiling(Burst.TotalBitCount * Oversampling);
             double burstSamplesAccurate = Burst.TotalBitCount * Oversampling;
@@ -679,8 +731,20 @@ namespace GSM_Analyzer
             double burstCount = 0;
             long burstBufferPos = 0;
 
-            double[] sourceSignal = new double[Source.OutputBlockSize];
-            double[] sourceStrength = new double[Source.OutputBlockSize];
+            /* for every channel a set of buffers */
+            int channels = Splitter.Config.Channels.Length;
+            double[][] burstBuffer = new double[channels][];
+            double[][] burstStrengthBuffer = new double[channels][];
+            double[][] sourceSignal = new double[channels][];
+            double[][] sourceStrength = new double[channels][];
+
+            for (int chan = 0; chan < channels; chan++)
+            {
+                burstBuffer[chan] = new double[(int)((Handler.SpareBits + Burst.TotalBitCount) * Oversampling)];
+                burstStrengthBuffer[chan] = new double[(int)((Handler.SpareBits + Burst.TotalBitCount) * Oversampling)];
+                sourceSignal[chan] = new double[Source.OutputBlockSize];
+                sourceStrength[chan] = new double[Source.OutputBlockSize];
+            }
 
             /* update sampling rate in spectrum window */
             lock (SpectrumWindowLock)
@@ -699,6 +763,7 @@ namespace GSM_Analyzer
             {
                 while (ThreadActive)
                 {
+                    /* check if sample source was not able to read a whole block */
                     if (!Source.Read() || Source.SamplesRead != Source.OutputBlockSize)
                     {
                         if (Source.SamplesRead != Source.OutputBlockSize && Source.SamplesRead != 0)
@@ -715,19 +780,21 @@ namespace GSM_Analyzer
                     {
                         if (Source.BufferOverrun)
                         {
-                            AddMessage("----------------------------------------------------------------------------------------------------------------------------" + Environment.NewLine);
-                            AddMessage("  Important: Input buffer overrun. Your computer might be too slow. Please close some applications and/or visualizations" + Environment.NewLine);
-                            AddMessage("----------------------------------------------------------------------------------------------------------------------------" + Environment.NewLine);
+                            AddMessage("------------------------------------------------------------------------------------------------------------------------------------------------------" + Environment.NewLine);
+                            AddMessage("  Important: Input buffer overrun. Your computer might be too slow. Please close some applications and/or visualizations or reduce sampling rate" + Environment.NewLine);
+                            AddMessage("------------------------------------------------------------------------------------------------------------------------------------------------------" + Environment.NewLine);
                             AddMessage(Environment.NewLine);
                             Source.Flush();
                         }
-                        
-                        Demodulator.ProcessData(Source.SourceSamplesI, Source.SourceSamplesQ, sourceSignal, sourceStrength);
 
-                        /* to allow external rate change */
+                        /* handle external rate change */
                         if (Source.SamplingRateHasChanged)
                         {
                             Source.SamplingRateHasChanged = false;
+
+                            /* update channel splitter */
+                            Splitter.Config.SamplingRate = Source.OutputSamplingRate;
+                            Splitter.UpdateConfig();
 
                             if (Oversampling > 1)
                             {
@@ -737,8 +804,6 @@ namespace GSM_Analyzer
 
                                 InitTimeSlotHandler();
 
-                                burstBuffer = new double[(int)((Handler.SpareBits + Burst.TotalBitCount) * Oversampling)];
-                                burstStrengthBuffer = new double[(int)((Handler.SpareBits + Burst.TotalBitCount) * Oversampling)];
                                 burstSamples = (long)Math.Ceiling(Burst.TotalBitCount * Oversampling);
                                 burstSamplesAccurate = Burst.TotalBitCount * Oversampling;
                                 deltaSamplesPerBurst = burstSamples - burstSamplesAccurate;
@@ -746,8 +811,14 @@ namespace GSM_Analyzer
                                 burstCount = 0;
                                 sampleDelta = 0;
 
-                                sourceSignal = new double[Source.OutputBlockSize];
-                                sourceStrength = new double[Source.OutputBlockSize];
+                                for (int chan = 0; chan < channels; chan++)
+                                {
+                                    burstBuffer[chan] = new double[(int)((Handler.SpareBits + Burst.TotalBitCount) * Oversampling)];
+                                    burstStrengthBuffer[chan] = new double[(int)((Handler.SpareBits + Burst.TotalBitCount) * Oversampling)];
+
+                                    sourceSignal[chan] = new double[Source.OutputBlockSize];
+                                    sourceStrength[chan] = new double[Source.OutputBlockSize];
+                                }
 
                                 Parameters.Reset();
                                 Parameters.Oversampling = Oversampling;
@@ -765,19 +836,33 @@ namespace GSM_Analyzer
                             }
                         }
 
+                        /* split signal into channels */
+                        Splitter.ProcessData(Source.SourceSamplesI, Source.SourceSamplesQ);
 
+                        /* demodulate every channel */
+                        for (int num = 0; num < channels; num++)
+                        {
+                            ChannelSplitter.ChannelConfig chan = Splitter.Config.Channels[num];
+
+                            Demodulator[num].ProcessData(chan.SampleBufferI, chan.SampleBufferQ, sourceSignal[num], sourceStrength[num]);
+                        }
+
+                        /* go through every sample */
                         for (int pos = 0; pos < Source.OutputBlockSize; pos++)
                         {
-                            double signal = sourceSignal[pos] + Parameters.PhaseOffsetValue;
-                            double strength = sourceStrength[pos];
+                            double signal = sourceSignal[0][pos] + Parameters.PhaseOffsetValue;
+                            double strength = sourceStrength[0][pos];
 
                             bool burstSampled = false;
 
                             /* write this sample into the burst buffer */
-                            if (burstBufferPos < burstBuffer.Length && burstBufferPos > 0)
+                            for (int chan = 0; chan < channels; chan++)
                             {
-                                burstBuffer[burstBufferPos] = signal;
-                                burstStrengthBuffer[burstBufferPos] = strength;
+                                if (burstBufferPos < burstBuffer[chan].Length && burstBufferPos > 0)
+                                {
+                                    burstBuffer[chan][burstBufferPos] = sourceSignal[chan][pos] + Parameters.PhaseOffsetValue;
+                                    burstStrengthBuffer[chan][burstBufferPos] = sourceStrength[chan][pos];
+                                }
                             }
                             burstBufferPos++;
 
@@ -803,10 +888,13 @@ namespace GSM_Analyzer
                                 {
                                     lock (Source.SampleBufferLock)
                                     {
-                                        SpectrumWindow.ProcessIQSample(Source.SourceSamplesI[pos], Source.SourceSamplesQ[pos]);
+                                        SpectrumWindow.ProcessIQSample(Splitter.Config.Channels[displayedChannel].SampleBufferI[pos], Splitter.Config.Channels[displayedChannel].SampleBufferQ[pos]);
                                     }
+
                                     if (!SpectrumWindow.Visible)
+                                    {
                                         SpectrumWindow = null;
+                                    }
                                 }
                             }
 
@@ -872,7 +960,7 @@ namespace GSM_Analyzer
                                             if (BurstWindow != null)
                                             {
                                                 BurstWindow.XAxisGridOffset = 0;
-                                                BurstWindow.ProcessBurst(burstBuffer, burstStrengthBuffer);
+                                                BurstWindow.ProcessBurst(burstBuffer[displayedChannel], burstStrengthBuffer[displayedChannel]);
                                             }
                                         }
 
@@ -896,7 +984,7 @@ namespace GSM_Analyzer
                                             /* let the handler process this packet */
                                             Parameters.SampleOffset = 0;
                                             Parameters.SubSampleOffset = 0;
-                                            Handler.Handle(burstBuffer, burstStrengthBuffer);
+                                            Handler.Handle(burstBuffer[0], burstStrengthBuffer[0]);
 
                                             if (Parameters.Errors > 0)
                                             {
@@ -925,7 +1013,7 @@ namespace GSM_Analyzer
                                             if (BurstWindow != null)
                                             {
                                                 BurstWindow.XAxisGridOffset = Parameters.SampleOffset;
-                                                BurstWindow.ProcessBurst(burstBuffer, burstStrengthBuffer);
+                                                BurstWindow.ProcessBurst(burstBuffer[displayedChannel], burstStrengthBuffer[displayedChannel]);
                                             }
                                         }
 
@@ -945,7 +1033,7 @@ namespace GSM_Analyzer
                                             int startPos = (int)(Parameters.SampleOffset + 5.5f * Oversampling);
                                             int samples = (int)((Burst.NetBitCount - 5) * Oversampling);
 
-                                            Parameters.SubSampleOffset = OffsetEstimator.EstimateOffset(burstBuffer, startPos, samples, Oversampling, Oversampling / 2);
+                                            Parameters.SubSampleOffset = OffsetEstimator.EstimateOffset(burstBuffer[0], startPos, samples, Oversampling, Oversampling / 2);
                                         }
                                         else
                                         {
@@ -967,14 +1055,14 @@ namespace GSM_Analyzer
                                                 BurstWindow.Oversampling = Oversampling;
                                                 BurstWindow.SampleDisplay.UpdateAxis = true;
                                                 BurstWindow.SampleDisplay.DirectXLock.ReleaseMutex();
-                                                BurstWindow.ProcessBurst(burstBuffer, burstStrengthBuffer);
+                                                BurstWindow.ProcessBurst(burstBuffer[displayedChannel], burstStrengthBuffer[displayedChannel]);
 
                                                 if (!BurstWindow.Visible)
                                                     BurstWindow = null;
                                             }
                                         }
 
-                                        Handler.Handle(burstBuffer, burstStrengthBuffer);
+                                        Handler.Handle(burstBuffer[0], burstStrengthBuffer[0]);
 
                                         lock (BurstWindowLock)
                                         {

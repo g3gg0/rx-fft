@@ -50,7 +50,7 @@ namespace GSM_Analyzer
             txtOffset3.Text = Analyzer.BurstLengthJitter[2].ToString();
             txtOffset4.Text = Analyzer.BurstLengthJitter[3].ToString();
 
-            chkFastAtan2.Checked = Analyzer.Demodulator.UseFastAtan2;
+            chkFastAtan2.Checked = GMSKDemodulator.UseFastAtan2;
 
             txtSimAuthHost.Text = Analyzer.AuthHostAddress;
 
@@ -64,9 +64,10 @@ namespace GSM_Analyzer
                 txtA5Kc.Text = hex;
             }
 
+            chkInvert.Checked = Analyzer.InvertedSpectrum;
+
             if (Analyzer.Source != null)
             {
-                chkInvert.Checked = Analyzer.Demodulator.InvertedSpectrum;
                 txtRate.Text = Analyzer.Source.InputSamplingRate.ToString();
                 txtInternalOvers.Text = Analyzer.Source.InternalOversampling.ToString();
                 radioOvsLinear.Checked = Analyzer.Source.OversamplingType == eOversamplingType.Linear;
@@ -75,7 +76,6 @@ namespace GSM_Analyzer
             }
             else
             {
-                chkInvert.Checked = GMSKDemodulator.InvertedSpectrumDefault;
                 txtRate.Text = Analyzer.DefaultSamplingRate.ToString();
                 txtInternalOvers.Text = Analyzer.InternalOversampling.ToString();
                 radioOvsLinear.Checked = SampleSource.DefaultOversamplingType == eOversamplingType.Linear;
@@ -91,15 +91,23 @@ namespace GSM_Analyzer
 
         private void chkFastAtan2_CheckedChanged(object sender, EventArgs e)
         {
-            Analyzer.Demodulator.UseFastAtan2 = chkFastAtan2.Checked;
+            GMSKDemodulator.UseFastAtan2 = chkFastAtan2.Checked;
         }
 
         private void chkInvert_CheckedChanged(object sender, EventArgs e)
         {
+            Analyzer.InvertedSpectrum = chkInvert.Checked;
+            /*
             if (Analyzer.Source != null)
-                Analyzer.Demodulator.InvertedSpectrum = chkInvert.Checked;
+            {
+                for (int chan = 0; chan < Analyzer.Splitter.Config.Channels.Length; chan++)
+                {
+                    Analyzer.Demodulator[chan].InvertedSpectrum = chkInvert.Checked;
+                }
+            }
 
             GMSKDemodulator.InvertedSpectrumDefault = chkInvert.Checked;
+            */
         }
 
         private void chkL3DumpRaw_CheckedChanged(object sender, EventArgs e)

@@ -76,7 +76,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
             PackBytes();
             DataBursts++;
 
-            L2.Handle(this, L3, BurstBufferD);
+            L2.Handle(param, this, L3, BurstBufferD);
 
             return eSuccessState.Succeeded;
         }

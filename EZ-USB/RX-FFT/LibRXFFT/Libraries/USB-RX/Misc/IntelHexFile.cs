@@ -82,6 +82,10 @@ namespace LibRXFFT.Libraries.USB_RX.Misc
                     if (checksum(hexVals) != hexVals[4 + dataLength])
                         throw new Exception("invalid checksum in record " + recordNum);
                 }
+                else
+                {
+                    /* what do? */
+                }
             }
 
             byte[] buffer = new byte[maxAddress + 1 - minAddress];

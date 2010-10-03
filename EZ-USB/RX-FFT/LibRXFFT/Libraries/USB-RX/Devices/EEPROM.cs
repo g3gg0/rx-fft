@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using LibRXFFT.Libraries.USB_RX.Interfaces;
 using System.Threading;
+using RX_FFT.Components.GDI;
 
 namespace LibRXFFT.Libraries.USB_RX.Devices
 {
@@ -12,7 +13,16 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         private I2CInterface I2CDevice;
         private int BusID;
         private static int DefaultBusID = 0x51;
+        private bool Use16Bit = false;
         public int Size = 128;
+        public int AddressWidth
+        {
+            get
+            {
+                return Use16Bit ? 16 : 8;
+            }
+        }
+
         public EEPROM(I2CInterface device)
             : this(device, DefaultBusID)
         {
@@ -30,24 +40,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             byte checkData = 0; 
             int size = 0;
 
-            byte[] buffer = new byte[8];
-            buffer[0] = 0xC0; // C0 HEADER
-            buffer[1] = 0xB4; // Cypress 0x04B4
-            buffer[2] = 0x04; // 
-            buffer[3] = 0x00; // Product 0xEE00
-            buffer[4] = 0xEE; // 
-            buffer[5] = 0x00; // Release 0x0001
-            buffer[6] = 0x01; // 
-            buffer[7] = 0x01; // Config Byte 0x01
-
-            if (!WriteBytes(0, buffer))
-            {
-                return false;
-            }
-            if (!ReadBytes(0, buffer))
-            {
-                return false;
-            }
+            AutodetectAddressing();
 
             /* backup original byte at pos 0 */
             if (!ReadByte(0, ref baseData))
@@ -77,7 +70,6 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             {
                 size = (1 << sizeBit);
                 byte backupData = 0;
-
 
                 /* backup original data */
                 if (!ReadByte(size, ref backupData))
@@ -120,27 +112,160 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             return true;
         }
 
-        private bool WriteBytes(int pos, byte[] data)
+        public bool AutodetectAddressing()
         {
-            byte[] buffer = new byte[data.Length + 2];
+            byte[] buffer = new byte[3];
+            byte[] backup8 = new byte[2];
+            byte[] backup16 = new byte[1];
 
-            Array.Copy(data, 0, buffer, 2, data.Length);
-            buffer[0] = (byte)(pos >> 8);
-            buffer[1] = (byte)(pos & 0xFF);
+            /* first backup data at 0x00 and 0x01 */
+            /* transmit read address */
+            if (!I2CDevice.I2CWriteBytes(BusID, new byte[] { (byte)0 }))
+            {
+                return false;
+            }
+
+            Thread.Sleep(10);
+
+            /* read data */
+            if (!I2CDevice.I2CReadBytes(BusID, backup8))
+            {
+                return false;
+            }
+
+
+            /* first backup data at 0x00 for 16 bit eeproms */
+            /* transmit read address */
+            if (!I2CDevice.I2CWriteBytes(BusID, new byte[] { (byte)0, (byte)0 }))
+            {
+                return false;
+            }
+
+            Thread.Sleep(10);
+
+            /* read data */
+            if (!I2CDevice.I2CReadBytes(BusID, backup16))
+            {
+                return false;
+            }
+
+
+            /* write the test word */
+            buffer[0] = (byte)0;
+            buffer[1] = (byte)0;
+            buffer[2] = (byte)0xAA;
 
             if (!I2CDevice.I2CWriteBytes(BusID, buffer))
             {
                 return false;
             }
 
+            Thread.Sleep(10);
+
+            /* read back what was placed in EEPROM */
+            if (!I2CDevice.I2CWriteBytes(BusID, new byte[] { (byte)0 }))
+            {
+                return false;
+            }
+
+            Thread.Sleep(10);
+
+            if (!I2CDevice.I2CReadBytes(BusID, buffer))
+            {
+                return false;
+            }
+
+            /* the second 0x00 upon address write got interpreted as data - its a 8 bit eeprom */
+            if (buffer[0] == 0x00 && buffer[1] == 0xAA)
+            {
+                Use16Bit = false;
+
+                /* addressig is determined now, write back backed up data. may be crap if the eeprom is 16 bit wide. */
+                WriteBytes(0, backup8);
+
+                return true;
+            }
+
+
+            /* read back what was placed in EEPROM, but use 16 bit addressing */
+            if (!I2CDevice.I2CWriteBytes(BusID, new byte[] { (byte)0, (byte)0 }))
+            {
+                return false;
+            }
+
+            Thread.Sleep(10);
+
+            if (!I2CDevice.I2CReadBytes(BusID, buffer))
+            {
+                return false;
+            }
+
+
+            if (buffer[0] == 0xAA)
+            {
+                Use16Bit = true;
+
+                /* addressig is determined now, write back backed up data. may be crap if the eeprom is 16 bit wide. */
+                WriteBytes(0, backup16);
+            }
+            else
+            {
+                /* default to 16 bit EEPROM */
+                Use16Bit = true;
+
+                /* addressig is determined now, write back backed up data. may be crap if the eeprom is 16 bit wide. */
+                WriteBytes(0, backup16);
+            }
+
+            return true;
+        }
+
+        public bool WriteBytes(int pos, byte[] data)
+        {
+            if (Use16Bit)
+            {
+                byte[] buffer = new byte[data.Length + 2];
+
+                Array.Copy(data, 0, buffer, 2, data.Length);
+                buffer[0] = (byte)(pos >> 8);
+                buffer[1] = (byte)(pos & 0xFF);
+
+                if (!I2CDevice.I2CWriteBytes(BusID, buffer))
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                byte[] buffer = new byte[data.Length + 1];
+
+                Array.Copy(data, 0, buffer, 1, data.Length);
+                buffer[0] = (byte)(pos & 0xFF);
+
+                if (!I2CDevice.I2CWriteBytes(BusID, buffer))
+                {
+                    return false;
+                }
+            }
+
             return WaitAck();
         }
 
-        private bool WriteByte(int pos, byte data)
+        public bool WriteByte(int pos, byte data)
         {
-            if (!I2CDevice.I2CWriteBytes(BusID, new byte[] { (byte)(pos >> 8), (byte)(pos & 0xFF), data }))
+            if (Use16Bit)
             {
-                return false;
+                if (!I2CDevice.I2CWriteBytes(BusID, new byte[] { (byte)(pos >> 8), (byte)(pos & 0xFF), data }))
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                if (!I2CDevice.I2CWriteBytes(BusID, new byte[] { (byte)(pos & 0xFF), data }))
+                {
+                    return false;
+                }
             }
 
             return WaitAck();
@@ -159,14 +284,24 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             return false;
         }
 
-        private bool ReadByte(int pos, ref byte data)
+        public bool ReadByte(int pos, ref byte data)
         {
             byte[] buffer = new byte[1];
 
-            /* transmit read address */
-            if (!I2CDevice.I2CWriteBytes(BusID, new byte[] { (byte)(pos >> 8), (byte)(pos & 0xFF) }))
+            if (Use16Bit)
             {
-                return false;
+                /* transmit read address */
+                if (!I2CDevice.I2CWriteBytes(BusID, new byte[] { (byte)(pos >> 8), (byte)(pos & 0xFF) }))
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                if (!I2CDevice.I2CWriteBytes(BusID, new byte[] { (byte)(pos & 0xFF) }))
+                {
+                    return false;
+                }
             }
 
             Thread.Sleep(10);
@@ -181,13 +316,24 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             return WaitAck();
         }
 
-        private bool ReadBytes(int pos, byte[] data)
+        public bool ReadBytes(int pos, byte[] data)
         {
-            /* transmit read address */
-            if (!I2CDevice.I2CWriteBytes(BusID, new byte[] { (byte)(pos >> 8), (byte)(pos & 0xFF) }))
+            if (Use16Bit)
             {
-                return false;
+                /* transmit read address */
+                if (!I2CDevice.I2CWriteBytes(BusID, new byte[] { (byte)(pos >> 8), (byte)(pos & 0xFF) }))
+                {
+                    return false;
+                }
             }
+            else
+            {
+                if (!I2CDevice.I2CWriteBytes(BusID, new byte[] { (byte)(pos & 0xFF) }))
+                {
+                    return false;
+                }
+            }
+
 
             Thread.Sleep(10);
 

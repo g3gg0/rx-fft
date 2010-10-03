@@ -27,20 +27,20 @@ namespace LibRXFFT.Libraries.Filters
 
         public IIRFilter(IIRCoefficients.IIRFilterCoeff coeffs)
         {
-            Gain = coeffs.Gain;
-            Section = coeffs.Section;
-            Num = coeffs.Num;
-            Den = coeffs.Den;
-            try
-            {
-                NativeContext = IIRInit(Gain, Section, Num, Den);
-            }
-            catch (Exception e)
-            {
-            }
+                Gain = coeffs.Gain;
+                Section = coeffs.Section;
+                Num = coeffs.Num;
+                Den = coeffs.Den;
+                try
+                {
+                    NativeContext = IIRInit(Gain, Section, Num, Den);
+                }
+                catch (Exception e)
+                {
+                }
 
-            m1 = new double[Section];
-            m2 = new double[Section];
+                m1 = new double[Section];
+                m2 = new double[Section];
         }
 
         public override void Dispose()

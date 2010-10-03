@@ -25,6 +25,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
         private static ArrayList UsedDevNums = new ArrayList();
 
+        private int MaxDevices = 16;
         private int DevNum = 0;
         public AD6636 AD6636;
         private eTransferMode _CurrentMode = eTransferMode.Stopped;
@@ -249,16 +250,20 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             return false;
         }
 
-        private static int GetFreeDeviceNum()
+        private int GetFreeDeviceNum()
         {
             int dev = 0;
 
             /* allocate a free device id */
             lock (UsedDevNums)
             {
-                while (UsedDevNums.Contains(dev) || !USBRXDeviceNative.UsbDevicePresent(dev))
+                while (UsedDevNums.Contains(dev) || !USBRXDeviceNative.UsbDevicePresent(dev) )
                 {
                     dev++;
+                    if (dev > MaxDevices)
+                    {
+                        return -1;
+                    }
                 }
 
                 UsedDevNums.Add(dev);

@@ -370,5 +370,48 @@
    0.000000000000e+000} /*   14 */
         };
 
+
+        internal static Filter GetBestFitting(double fract)
+        {
+            if (fract < (1.0 / 512))
+            {
+                return new IIRFilter(IIRLowPass_512);
+            }
+            if (fract < (1.0 / 256))
+            {
+                return new IIRFilter(IIRLowPass_256);
+            }
+            if (fract < (1.0 / 128))
+            {
+                return new IIRFilter(IIRLowPass_128);
+            }
+            if (fract < (1.0 / 64))
+            {
+                return new IIRFilter(IIRLowPass_64);
+            }
+            if (fract < (1.0 / 32))
+            {
+                return new IIRFilter(IIRLowPass_32);
+            }
+            if (fract < (1.0 / 16))
+            {
+                return new IIRFilter(IIRLowPass_16);
+            }
+            if (fract < (1.0 / 8))
+            {
+                return new IIRFilter(IIRLowPass_8);
+            }
+            if (fract < (1.0 / 4))
+            {
+                return new IIRFilter(IIRLowPass_4);
+            }
+            if (fract < (1.0 / 2))
+            {
+                return new IIRFilter(IIRLowPass_2);
+            }
+
+            /* return dummy filter */
+            return new IIRFilter(IIRLowPass_2);
+        }
     }
 }

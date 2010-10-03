@@ -811,7 +811,16 @@ namespace LibRXFFT.Components.DirectX
                 else
                 {
                     if (PlotVertsEntries > 0)
-                        Device.DrawUserPrimitives(PrimitiveType.LineStrip, PlotVertsEntries, PlotVerts);
+                    {
+                        if (true)
+                        {
+                            Device.DrawUserPrimitives(PrimitiveType.LineStrip, PlotVertsEntries, PlotVerts);
+                        }
+                        else
+                        {
+                            Device.DrawUserPrimitives(PrimitiveType.PointList, PlotVertsEntries, PlotVerts);
+                        }
+                    }
                 }
             }
         }

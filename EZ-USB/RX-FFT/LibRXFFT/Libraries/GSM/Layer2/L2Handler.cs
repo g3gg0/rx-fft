@@ -2,6 +2,7 @@
 using LibRXFFT.Libraries.GSM.Layer1.Bursts;
 using LibRXFFT.Libraries.GSM.Layer3;
 using System.Text;
+using LibRXFFT.Libraries.GSM.Layer1;
 
 namespace LibRXFFT.Libraries.GSM.Layer2
 {
@@ -45,15 +46,22 @@ namespace LibRXFFT.Libraries.GSM.Layer2
             return true;
         }
 
-        public void Handle(NormalBurst source, L3Handler l3, byte[] l2Data)
-        {
-            Handle(source, l3, l2Data, 0);
-        }
 
         private StringBuilder Builder = new StringBuilder();
 
-        public void Handle(NormalBurst source, L3Handler l3, byte[] l2Data, int startOffset)
+        public void Handle(GSMParameters param, NormalBurst source, L3Handler l3, byte[] l2Data)
         {
+            Handle(param, source, l3, l2Data, 0);
+        }
+
+
+        public void Handle(GSMParameters param, NormalBurst source, L3Handler l3, byte[] l2Data, int startOffset)
+        {
+            if (param.PacketDumper != null)
+            {
+                param.PacketDumper.WriteL2Data(param, l2Data);
+            }
+
             Builder.Length = 0;
 
             /* BCCH and CCCH packets have pseudo L2 headers (GSM 04.07 11.3.1) */
@@ -347,5 +355,6 @@ namespace LibRXFFT.Libraries.GSM.Layer2
             }
 
         }
+
     }
 }

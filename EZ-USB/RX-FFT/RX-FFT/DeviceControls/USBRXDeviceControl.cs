@@ -233,7 +233,7 @@ namespace RX_FFT.DeviceControls
         {
             get
             {
-                if (USBRX != null & USBRX.Tuner != null)
+                if (USBRX != null && USBRX.Tuner != null)
                 {
                     return USBRX.Tuner.SamplingRate;
                 }

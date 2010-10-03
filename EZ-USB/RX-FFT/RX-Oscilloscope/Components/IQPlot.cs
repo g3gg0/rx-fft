@@ -13,12 +13,17 @@ namespace RX_Oscilloscope.Components
     public partial class IQPlot : UserControl
     {
         private int SamplesTotal = 10000;
+        private PlotVertsHistory History;
 
 
         public IQPlot()
         {
             InitializeComponent();
+            waveForm.MaxSamples = SamplesTotal;
             waveForm.KeepText = true;
+
+            History = new PlotVertsHistory(waveForm);
+            History.HistLength = 1;
 
             DockPanel panel = new DockPanel(waveForm, eOrientation.RightBorder);
             new DensityMap(panel).Granularity = 32;
@@ -98,5 +103,17 @@ namespace RX_Oscilloscope.Components
 
         }
 
+        private void txtEyePlotBlocks_ValueChanged(object sender, System.EventArgs e)
+        {
+            History.HistLength = txtEyePlotBlocks.Value;
+        }
+
+        private void chkEyePlot_CheckedChanged(object sender, EventArgs e)
+        {
+            txtEyePlotBlocks.Enabled = chkEyePlot.Checked;
+            waveForm.RealTimeMode = chkEyePlot.Checked;
+            History.HistLength = txtEyePlotBlocks.Value;
+            History.Enabled = chkEyePlot.Checked;
+        }
     }
 }

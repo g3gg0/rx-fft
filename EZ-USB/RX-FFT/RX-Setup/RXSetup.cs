@@ -17,6 +17,7 @@ namespace RX_Setup
         private long TotalTransfers = 0;
         private Thread StatsThread;
         private USBRXDevice Device;
+        private EEPROM EEPROMDevice = null;
 
         private double TransfersPerSecond = 0.0f;
 
@@ -69,37 +70,37 @@ namespace RX_Setup
             {
                 for (int devNum = 0; devNum < 6; devNum++)
                 {
-                    txtLog.AppendText("CUSB2DLL::LoadUsb2Dll() -> Usb2Dll loaded successfully!" + Environment.NewLine);
-                    txtLog.AppendText("CUSB2DLL::Check(" + devNum + ") -> Usb2Dll loaded successfully!" + Environment.NewLine);
+                    Log.AddMessage("CUSB2DLL::LoadUsb2Dll() -> Usb2Dll loaded successfully!" );
+                    Log.AddMessage("CUSB2DLL::Check(" + devNum + ") -> Usb2Dll loaded successfully!" );
                     
                     bool present = USBRXDeviceNative.UsbDevicePresent(devNum);
-                    txtLog.AppendText("CUSB2DLL::Check(" + devNum + ") -> UsbDevicePresent(" + devNum + ")=" + (present ? "1 -> Device present! " : "0 -> Device not present! ") + Environment.NewLine);
+                    Log.AddMessage("CUSB2DLL::Check(" + devNum + ") -> UsbDevicePresent(" + devNum + ")=" + (present ? "1 -> Device present! " : "0 -> Device not present! ") );
 
                     if (present)
                     {
                         bool initialized = USBRXDeviceNative.UsbDeviceInitialized(devNum);
-                        txtLog.AppendText("CUSB2DLL::Check(" + devNum + ") -> UsbDeviceInitialized(" + devNum + ")=" + (initialized ? "1 -> Device initialized! " : "0 -> Device not initialized! ") + Environment.NewLine);
+                        Log.AddMessage("CUSB2DLL::Check(" + devNum + ") -> UsbDeviceInitialized(" + devNum + ")=" + (initialized ? "1 -> Device initialized! " : "0 -> Device not initialized! ") );
 
-                        txtLog.AppendText("CUSB_RX1::CheckUSB_RX1DeviceList(): USB_RX1 at devNum=" + devNum + " available" + Environment.NewLine);
+                        Log.AddMessage("CUSB_RX1::CheckUSB_RX1DeviceList(): USB_RX1 at devNum=" + devNum + " available" + Environment.NewLine);
 
                         if (!initialized)
                         {
                             bool init = USBRXDeviceNative.UsbInit(devNum);
-                            txtLog.AppendText("CUSB2DLL::Init(" + devNum + ") -> UsbInit(" + devNum + ")=" + (init ? "1 -> Usb interface initialized sucessfully!" : "0 -> Usb interface not initialized!") + Environment.NewLine);
+                            Log.AddMessage("CUSB2DLL::Init(" + devNum + ") -> UsbInit(" + devNum + ")=" + (init ? "1 -> Usb interface initialized sucessfully!" : "0 -> Usb interface not initialized!") );
                         }
 
                         bool open = USBRXDeviceNative.UsbOpen(devNum);
-                        txtLog.AppendText("CUSB2DLL::Init(" + devNum + ") -> UsbOpen(" + devNum + ")=" + (open ? "1 -> Usb device opened sucessfully!" : "0 -> Usb interface not opened!") + Environment.NewLine);
+                        Log.AddMessage("CUSB2DLL::Init(" + devNum + ") -> UsbOpen(" + devNum + ")=" + (open ? "1 -> Usb device opened sucessfully!" : "0 -> Usb interface not opened!") );
 
                         byte[] param = new byte[1];
                         bool speed = USBRXDeviceNative.UsbCheckSpeed(devNum, param);
-                        txtLog.AppendText("CUSB2DLL::Init(" + devNum + ") -> UsbCheckSpeed(" + devNum + ",...)=" + ((param[0] != 0x00) ? "1 -> Usb interface is connected to a high-speed bus" : "0 -> Usb interface is connected to a low-speed bus ") + Environment.NewLine);
+                        Log.AddMessage("CUSB2DLL::Init(" + devNum + ") -> UsbCheckSpeed(" + devNum + ",...)=" + ((param[0] != 0x00) ? "1 -> Usb interface is connected to a high-speed bus" : "0 -> Usb interface is connected to a low-speed bus ") );
 
                         openedDevices.Add(devNum);
                     }
                     else
                     {
-                        txtLog.AppendText("CUSB2DLL::~CUSB2DLL() -> Usb2Dll closed for [" + devNum + "]!" + Environment.NewLine);
+                        Log.AddMessage("CUSB2DLL::~CUSB2DLL() -> Usb2Dll closed for [" + devNum + "]!" );
                     }
                 }
 
@@ -108,7 +109,7 @@ namespace RX_Setup
                     byte data = 0x06;
                     bool sent = USBRXDeviceNative.UsbI2CWriteByte(devNum, 0x20, data);
 
-                    txtLog.AppendText("CUSB_RX1::I2CCommand(" + data + ") for m_DevNum=" + devNum + " returns " + (sent ? "1" : "0") + Environment.NewLine);
+                    Log.AddMessage("CUSB_RX1::I2CCommand(" + data + ") for m_DevNum=" + devNum + " returns " + (sent ? "1" : "0") );
                 }
             }
         }
@@ -146,6 +147,7 @@ namespace RX_Setup
                     WorkerThread = null;
                 }
 
+                EEPROMDevice = null;
                 Device.Close();
                 Device = null;
 
@@ -213,6 +215,12 @@ namespace RX_Setup
 
         private void btnFirmwareRead_Click(object sender, EventArgs e)
         {
+
+            if (Device == null)
+            {
+                return;
+            }
+
             if (WorkerThread != null)
             {
                 MessageBox.Show("Test already running. Stopping...");
@@ -220,7 +228,7 @@ namespace RX_Setup
                 return;
             }
 
-            if (Device == null || !Device.AtmelProgrammer.SetProgrammingMode(true) || Device.AtmelProgrammer.VendorCode != 0x1E)
+            if (!Device.AtmelProgrammer.SetProgrammingMode(true) || Device.AtmelProgrammer.VendorCode != 0x1E)
             {
                 MessageBox.Show("Failed to enter programming mode.");
                 return;
@@ -298,6 +306,12 @@ namespace RX_Setup
 
         private void btnFirmwareProgram_Click(object sender, EventArgs e)
         {
+
+            if (Device == null)
+            {
+                return;
+            }
+
             if (WorkerThread != null)
             {
                 MessageBox.Show("Test already running. Stopping...");
@@ -305,7 +319,7 @@ namespace RX_Setup
                 return;
             }
 
-            if (Device == null || !Device.AtmelProgrammer.SetProgrammingMode(true) || Device.AtmelProgrammer.VendorCode != 0x1E)
+            if (!Device.AtmelProgrammer.SetProgrammingMode(true) || Device.AtmelProgrammer.VendorCode != 0x1E)
             {
                 MessageBox.Show("Failed to enter programming mode.");
                 return;
@@ -786,6 +800,12 @@ namespace RX_Setup
 
         private void btnStress_Click(object sender, EventArgs e)
         {
+            if (Device == null)
+            {
+                return;
+            }
+
+            
             if (WorkerThread != null)
             {
                 MessageBox.Show("Test already running. Stopping...");
@@ -852,6 +872,12 @@ namespace RX_Setup
 
         private void btnAtmelDelay_Click(object sender, EventArgs e)
         {
+
+            if (Device == null)
+            {
+                return;
+            }
+
             if (WorkerThread != null)
             {
                 MessageBox.Show("Test already running. Stopping...");
@@ -1183,6 +1209,11 @@ namespace RX_Setup
 
         private void btnI2cTest_Click(object sender, EventArgs e)
         {
+            if (Device == null)
+            {
+                return;
+            }
+
             if (WorkerThread != null)
             {
                 MessageBox.Show("Test already running. Stopping...");
@@ -1272,6 +1303,12 @@ namespace RX_Setup
 
         private void btnI2cScan_Click(object sender, EventArgs e)
         {
+
+            if (Device == null)
+            {
+                return;
+            }
+
             if (WorkerThread != null)
             {
                 MessageBox.Show("Test already running. Stopping...");
@@ -1338,57 +1375,52 @@ namespace RX_Setup
 
             if (Device == null)
             {
-                MessageBox.Show("Not connected.");
                 return;
             }
 
             Log.AddMessage(" EEPROM dump");
             Log.AddMessage("------------------------------------");
 
-            EEPROM eep = new EEPROM(Device);
-            Log.AddMessage("");
-            Log.AddMessage(" Autodetect size...");
-            if (eep.AutodetectSize())
+            if (EEPROMDevice == null)
             {
-                Log.AddMessage("   Size: " + eep.Size + " byte");
-            }
-            else
-            {
-                Log.AddMessage("   Size: FAILED!");
+                EEPROMDevice = new EEPROM(Device);
+                Log.AddMessage("");
+                Log.AddMessage(" Autodetect size...");
+                if (EEPROMDevice.AutodetectSize())
+                {
+                    Log.AddMessage("   Size: " + EEPROMDevice.Size + " byte");
+                    Log.AddMessage("   Address width: " + EEPROMDevice.AddressWidth + " byte");
+                }
+                else
+                {
+                    Log.AddMessage("   Size: FAILED!");
+                    return;
+                }
             }
 
-
-            /*
             string oldText = btnCypressEepromRead.Text;
             TotalTransfers = 0;
             TestStartTime = DateTime.Now;
             WorkerThread = new Thread(() =>
             {
-                MemoryDump16BitLE data = Device.AtmelProgrammer.ReadFlash(Device.AtmelProgrammer.FlashStart, Device.AtmelProgrammer.FlashSize, (AtmelProgrammer.BlockProcessInfo info) =>
+                int blocksize = 16;
+                byte[] buffer = new byte[blocksize];
+                byte[] dumpData = new byte[EEPROMDevice.Size];
+                int blocks = (int)(EEPROMDevice.Size / blocksize);
+                int totalLen = blocks * blocksize;
+
+                /* now copy hex dump data */
+                for (int block = 0; block < blocks; block++)
                 {
-                    TotalTransfers++;
                     BeginInvoke(new Action(() =>
                     {
-                        btnFirmwareRead.Text = (uint)((info.BlockNum * 100) / info.BlockCount) + "%";
+                        btnCypressEepromRead.Text = "Block: " + block + "/" + blocks;
                     }));
-                    if (AbortStressTest)
-                    {
-                        info.Cancel = true;
-                    }
-                });
 
-                BeginInvoke(new Action(() =>
-                {
-                    btnFirmwareRead.Text = oldText;
-                }));
-
-                Device.AtmelProgrammer.SetProgrammingMode(false);
-
-                if (data == null)
-                {
-                    MessageBox.Show("Read was aborted");
-                    return;
+                    EEPROMDevice.ReadBytes(block * blocksize, buffer);
+                    Array.Copy(buffer, 0, dumpData, block * blocksize, blocksize);
                 }
+
 
                 BeginInvoke(new Action(() =>
                 {
@@ -1404,7 +1436,7 @@ namespace RX_Setup
                             writeFile = File.OpenWrite(dlg.FileName);
                             writer = new BinaryWriter(writeFile);
 
-                            writer.Write(((MemoryDump8Bit)data).Data);
+                            writer.Write(dumpData);
                             writer.Close();
                         }
                         catch (Exception ex)
@@ -1423,16 +1455,150 @@ namespace RX_Setup
 
                 }));
 
+                BeginInvoke(new Action(() =>
+                {
+                    btnCypressEepromRead.Text = oldText;
+                }));
+
                 WorkerThread = null;
             });
-            
             WorkerThread.Start();
-             * */
         }
 
         private void btnCypressEepromProgram_Click(object sender, EventArgs e)
         {
 
+            if (Device == null)
+            {
+                return;
+            }
+
+            if (WorkerThread != null)
+            {
+                MessageBox.Show("Test already running. Stopping...");
+                AbortStressTest = true;
+                return;
+            }
+            
+            if (EEPROMDevice == null)
+            {
+                EEPROMDevice = new EEPROM(Device);
+                Log.AddMessage("");
+                Log.AddMessage(" Autodetect size...");
+                if (EEPROMDevice.AutodetectSize())
+                {
+                    Log.AddMessage("   Size: " + EEPROMDevice.Size + " byte");
+                    Log.AddMessage("   Address width: " + EEPROMDevice.AddressWidth + " byte");
+                }
+                else
+                {
+                    Log.AddMessage("   Size: FAILED!");
+                    return;
+                }
+            }
+
+            FileDialog dlg = new OpenFileDialog();
+
+            dlg.DefaultExt = ".hex";
+            if (dlg.ShowDialog() == DialogResult.OK)
+            {
+                MemoryDump8Bit dump;
+                try
+                {
+                    IntelHexFile hf = new IntelHexFile(dlg.FileName);
+                    dump = hf.Parse();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Failed to read the hex-file");
+                    return;
+                }
+
+                string oldText = btnCypressEepromProgram.Text;
+                TotalTransfers = 0;
+                TestStartTime = DateTime.Now;
+                WorkerThread = new Thread(() =>
+                {
+                    ArrayList buildBuffer = new ArrayList();
+
+                    /* serialize the data to transfer */
+                    {
+                        BeginInvoke(new Action(() =>
+                        {
+                            btnCypressEepromProgram.Text = "Preparing...";
+                        }));
+
+                        /* add default usb ids, force disconnect after loading */
+                        buildBuffer.AddRange(new byte[] { 0xC2, 0xB4, 0x04, 0x01, 0xEE, 0x00, 0x01, 0x41 });
+
+                        /* split firmware into 1023 byte blocks */
+                        int maxBlockSize = 1023;
+                        int blocks = (int)((dump.Length + maxBlockSize - 1) / maxBlockSize);
+
+                        for (int block = 0; block < blocks; block++)
+                        {
+                            /* either the rest of the dump or the maximum bloxk size */
+                            int blockLength = (int)(Math.Min(dump.Length - (block * maxBlockSize), maxBlockSize));
+                            int address = (int)(dump.StartAddress + block * maxBlockSize);
+                            byte[] blockBuffer = new byte[blockLength];
+
+                            Array.Copy(dump.Data, block * maxBlockSize, blockBuffer, 0, blockLength);
+
+                            /* block header */
+                            buildBuffer.AddRange(new byte[] { (byte)(blockLength >> 8), (byte)(blockLength & 0xFF), (byte)(address >> 8), (byte)(address & 0xFF) });
+                            buildBuffer.AddRange(blockBuffer);
+                        }
+
+                        /* finally the last words to init CPUCS */
+                        buildBuffer.AddRange(new byte[] { 0x80, 0x01, 0xE6, 0x00, 0x00 });
+                    }
+
+                    /* get the whole buffer into a plain array */
+                    byte[] eepromBuffer = (byte[])buildBuffer.ToArray(typeof(byte));
+
+                    /* first some safety check */
+                    Log.AddMessage("Firmware requires " + eepromBuffer.Length + " bytes of EEPROM");
+                    if (eepromBuffer.Length > EEPROMDevice.Size)
+                    {
+                        Log.AddMessage("Aborting. EEPROM is too small for this firmware.");
+                    }
+                    else
+                    {
+                        /* and transfer this in 16 byte blocks to EEPROM */
+                        int blocksize = 16;
+                        int blocks = (int)((eepromBuffer.Length + (blocksize - 1)) / blocksize);
+                        int dataPos = 0;
+
+                        for (int block = 0; block < blocks; block++)
+                        {
+                            int blockLength = Math.Min(eepromBuffer.Length - (block * blocksize), blocksize);
+                            byte[] buffer = new byte[blockLength];
+
+                            BeginInvoke(new Action(() =>
+                            {
+                                btnCypressEepromProgram.Text = "Block: " + block + "/" + blocks;
+                            }));
+
+                            Array.Copy(eepromBuffer, dataPos, buffer, 0, blockLength);
+                            EEPROMDevice.WriteBytes(dataPos, buffer);
+                            dataPos += blockLength;
+                        }
+                    }
+
+                    BeginInvoke(new Action(() =>
+                    {
+                        btnCypressEepromProgram.Text = oldText;
+                    }));
+
+                    WorkerThread = null;
+                });
+                WorkerThread.Start();
+            }
+            else
+            {
+                Log.AddMessage("Writing default EEPROM header");
+                EEPROMDevice.WriteBytes(0, new byte[] { 0xC0, 0xB4, 0x04, 0x01, 0xEE, 0x00, 0x01, 0x01 });
+            }
         }
     }
 }

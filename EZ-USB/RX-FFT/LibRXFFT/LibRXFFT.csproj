@@ -279,6 +279,7 @@
     <Compile Include="Libraries\Filters\IIRFilter.cs" />
     <Compile Include="Libraries\GSM\Layer1\CryptA5.cs" />
     <Compile Include="Libraries\GSM\Layer1\PacketDump\GsmAnalyzerDump.cs" />
+    <Compile Include="Libraries\GSM\Layer1\PacketDump\GsmTapWriter.cs" />
     <Compile Include="Libraries\GSM\Layer1\PacketDump\PacketDumpReader.cs" />
     <Compile Include="Libraries\GSM\Layer1\PacketDump\PacketDumpWriter.cs" />
     <Compile Include="Libraries\GSM\Layer3\SMSDecoder.cs" />
@@ -294,6 +295,7 @@
     <Compile Include="Libraries\SampleSources\WaveFileIO.cs" />
     <Compile Include="Libraries\SignalProcessing\AttenuationCorrection.cs" />
     <Compile Include="Libraries\SignalProcessing\AudioDemodulator.cs" />
+    <Compile Include="Libraries\SignalProcessing\ChannelSplitter.cs" />
     <Compile Include="Libraries\SignalProcessing\Demodulation.cs" />
     <Compile Include="Libraries\SignalProcessing\Downmixer.cs" />
     <Compile Include="Libraries\Demodulators\FMDemodulator.cs" />

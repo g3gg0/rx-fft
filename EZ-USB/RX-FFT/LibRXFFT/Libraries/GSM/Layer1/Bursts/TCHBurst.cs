@@ -106,8 +106,6 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                     return eSuccessState.Unknown;
                 }
 
-                CopyEToI();
-
                 /* deinterleave the 8 TCH bursts. the result is a 456 bit block. i[] to c[] */
                 Deinterleave();
 
@@ -245,6 +243,10 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                 if (success == eSuccessState.Succeeded)
                 {
                     BurstShiftCount = 4;
+                }
+                else
+                {
+                    BurstShiftCount = 7;
                 }
                 
                 /* save the last n bursts for the next block */

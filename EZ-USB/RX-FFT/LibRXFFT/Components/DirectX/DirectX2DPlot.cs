@@ -21,6 +21,8 @@ namespace LibRXFFT.Components.DirectX
         protected Vertex[] ScaleVertexes = new Vertex[100];
         protected Vertex[] OverlayVertexes = new Vertex[100];
 
+        public bool RealTimeMode = false;
+
         /* the cursor rectangle that contains signal information */
         protected Vertex[] CursorRectVertexes = new Vertex[4];
         protected Vertex[] CursorRectBorderVertexes = new Vertex[4];
@@ -219,16 +221,35 @@ namespace LibRXFFT.Components.DirectX
                     SamplesWritten = 0;
                 }
 
-                if (SamplesWritten >= SampleValues.Length / 2)
+                if (SamplesWritten >= MaxSamples)
+                {
+                    if (RealTimeMode)
+                    {
+                        if (SlavePlot != null)
+                            SlavePlot.PrepareLinePoints();
+                        PrepareLinePoints();
+                        SamplesWritten = 0;
+                        lock (LinePointsLock)
+                        {
+                            CreateVertexBufferForPoints(LinePoints, LinePointEntries);
+                        }
+
+                        NeedsRender = true;
+                    }
+                    else
+                    {
+                        NeedsUpdate = true;
+                        return;
+                    }
+                }
+                else
                 {
                     NeedsUpdate = true;
-                    return;
                 }
 
                 SampleValues[SamplesWritten, 0] = iValue;
                 SampleValues[SamplesWritten, 1] = qValue;
                 SamplesWritten++;
-                NeedsUpdate = true;
             }
         }
 
@@ -792,7 +813,7 @@ namespace LibRXFFT.Components.DirectX
             {
                 try
                 {
-                    if (NeedsUpdate)
+                    if (NeedsUpdate && !RealTimeMode)
                     {
                         if (SlavePlot != null)
                             SlavePlot.PrepareLinePoints();
@@ -809,6 +830,5 @@ namespace LibRXFFT.Components.DirectX
             }
             NestingDepth--;
         }
-
     }
 }

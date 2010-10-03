@@ -7,7 +7,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.GMSK
     public class GMSKDemodulator
     {
         private double LastPhase;
-        public bool UseFastAtan2 = false;
+        public static bool UseFastAtan2 = false;
         public bool InvertedSpectrum = false;
 
         private SharedMem ShmemOutChan;

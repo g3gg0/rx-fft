@@ -67,8 +67,6 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                     return eSuccessState.Unknown;
                 }
 
-                CopyEToI();
-
                 /* deinterleave the 4 bursts. the result is a 456 bit block. i[] to c[] */
                 Deinterleave();
 
@@ -128,7 +126,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                 PackBytes();
 
                 DataBursts++;
-                L2.Handle(this, L3, BurstBufferD);
+                L2.Handle(param, this, L3, BurstBufferD);
 
                 return eSuccessState.Succeeded;
             }

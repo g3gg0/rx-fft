@@ -212,7 +212,6 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             }
 
             return TransferString;
-
         }
 
 

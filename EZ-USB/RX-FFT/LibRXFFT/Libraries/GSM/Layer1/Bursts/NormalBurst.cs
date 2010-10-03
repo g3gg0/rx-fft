@@ -201,6 +201,8 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
 
         internal bool HandleEncryption(GSMParameters param)
         {
+            CopyEToI();
+
             /* this channel was flagged as encrypted */
             if (ChannelEncrypted)
             {
@@ -212,17 +214,13 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                     /* now decrypt all 4 bursts */
                     for (int dstBurst = 0; dstBurst < BurstBlock.Length; dstBurst++)
                     {
+                        /* update COUNT and let it decrypt our burst */
+                        param.A5Algorithm.CryptDownlink(BurstBlock[dstBurst].BurstBufferI, BurstBlock[dstBurst].Count);
+
                         if (DumpEncryptedMessage)
                         {
                             EncryptionBitString += "Burst #" + dstBurst + " (Encrypted) e[]: " + DumpBits(BurstBlock[dstBurst].BurstBufferE);
-                        }
-
-                        /* update COUNT and let it decrypt our burst */
-                        param.A5Algorithm.CryptDownlink(BurstBlock[dstBurst].BurstBufferE, BurstBlock[dstBurst].Count);
-
-                        if (DumpEncryptedMessage)
-                        {
-                            EncryptionBitString += " (Decrypted) e[]: " + DumpBits(BurstBlock[dstBurst].BurstBufferE) + Environment.NewLine;
+                            EncryptionBitString += " (Decrypted) i[]: " + DumpBits(BurstBlock[dstBurst].BurstBufferI) + Environment.NewLine;
                         }
                     }
 

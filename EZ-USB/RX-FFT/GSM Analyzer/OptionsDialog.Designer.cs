@@ -84,8 +84,8 @@
             this.label16 = new System.Windows.Forms.Label();
             this.txtA5Kc = new System.Windows.Forms.TextBox();
             this.groupBox7 = new System.Windows.Forms.GroupBox();
-            this.txtSimAuthHost = new System.Windows.Forms.TextBox();
             this.label17 = new System.Windows.Forms.Label();
+            this.txtSimAuthHost = new System.Windows.Forms.TextBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -209,7 +209,7 @@
             // btnOk
             // 
             this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOk.Location = new System.Drawing.Point(368, 444);
+            this.btnOk.Location = new System.Drawing.Point(355, 444);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(75, 23);
             this.btnOk.TabIndex = 99;
@@ -387,7 +387,7 @@
             // 
             // txtOffset4
             // 
-            this.txtOffset4.Location = new System.Drawing.Point(152, 143);
+            this.txtOffset4.Location = new System.Drawing.Point(150, 143);
             this.txtOffset4.Name = "txtOffset4";
             this.txtOffset4.Size = new System.Drawing.Size(33, 20);
             this.txtOffset4.TabIndex = 14;
@@ -547,7 +547,7 @@
             // chkL1DumpEncrypted
             // 
             this.chkL1DumpEncrypted.AutoSize = true;
-            this.chkL1DumpEncrypted.Location = new System.Drawing.Point(10, 43);
+            this.chkL1DumpEncrypted.Location = new System.Drawing.Point(10, 42);
             this.chkL1DumpEncrypted.Name = "chkL1DumpEncrypted";
             this.chkL1DumpEncrypted.Size = new System.Drawing.Size(136, 17);
             this.chkL1DumpEncrypted.TabIndex = 17;
@@ -569,7 +569,7 @@
             // chkL1ShowEncrypted
             // 
             this.chkL1ShowEncrypted.AutoSize = true;
-            this.chkL1ShowEncrypted.Location = new System.Drawing.Point(10, 19);
+            this.chkL1ShowEncrypted.Location = new System.Drawing.Point(10, 18);
             this.chkL1ShowEncrypted.Name = "chkL1ShowEncrypted";
             this.chkL1ShowEncrypted.Size = new System.Drawing.Size(161, 17);
             this.chkL1ShowEncrypted.TabIndex = 15;
@@ -603,7 +603,7 @@
             // chkL2ShowAllFrames
             // 
             this.chkL2ShowAllFrames.AutoSize = true;
-            this.chkL2ShowAllFrames.Location = new System.Drawing.Point(10, 17);
+            this.chkL2ShowAllFrames.Location = new System.Drawing.Point(10, 19);
             this.chkL2ShowAllFrames.Name = "chkL2ShowAllFrames";
             this.chkL2ShowAllFrames.Size = new System.Drawing.Size(169, 17);
             this.chkL2ShowAllFrames.TabIndex = 16;
@@ -670,14 +670,6 @@
             this.groupBox7.TabStop = false;
             this.groupBox7.Text = "A5 Decryption Parameters";
             // 
-            // txtSimAuthHost
-            // 
-            this.txtSimAuthHost.Location = new System.Drawing.Point(100, 46);
-            this.txtSimAuthHost.Name = "txtSimAuthHost";
-            this.txtSimAuthHost.Size = new System.Drawing.Size(100, 20);
-            this.txtSimAuthHost.TabIndex = 103;
-            this.txtSimAuthHost.TextChanged += new System.EventHandler(this.txtSimAuthHost_TextChanged);
-            // 
             // label17
             // 
             this.label17.AutoSize = true;
@@ -687,11 +679,19 @@
             this.label17.TabIndex = 104;
             this.label17.Text = "SIM Auth Host:";
             // 
+            // txtSimAuthHost
+            // 
+            this.txtSimAuthHost.Location = new System.Drawing.Point(100, 46);
+            this.txtSimAuthHost.Name = "txtSimAuthHost";
+            this.txtSimAuthHost.Size = new System.Drawing.Size(100, 20);
+            this.txtSimAuthHost.TabIndex = 103;
+            this.txtSimAuthHost.TextChanged += new System.EventHandler(this.txtSimAuthHost_TextChanged);
+            // 
             // OptionsDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(455, 479);
+            this.ClientSize = new System.Drawing.Size(442, 479);
             this.Controls.Add(this.groupBox7);
             this.Controls.Add(this.groupBox6);
             this.Controls.Add(this.groupBox5);

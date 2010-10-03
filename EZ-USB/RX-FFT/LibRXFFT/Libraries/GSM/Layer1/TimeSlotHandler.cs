@@ -841,7 +841,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
             if (Parameters.PacketDumper != null)
             {
-                Parameters.PacketDumper.Write(Parameters, BurstBitsUndiffed);
+                Parameters.PacketDumper.WriteRawBurst(Parameters, BurstBitsUndiffed);
             }
 
             /* 
@@ -1007,7 +1007,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
             if (Parameters.PacketDumper != null)
             {
-                Parameters.PacketDumper.Write(Parameters, burstBits);
+                Parameters.PacketDumper.WriteRawBurst(Parameters, burstBits);
             }
 
             if (handler != null)
@@ -1090,6 +1090,5 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                 }
             }
         }
-
     }
 }

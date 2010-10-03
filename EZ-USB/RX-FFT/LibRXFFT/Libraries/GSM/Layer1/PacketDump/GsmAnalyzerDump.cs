@@ -252,7 +252,11 @@ namespace LibRXFFT.Libraries.GSM.Layer1.PacketDump
 
         #region GSMPacketDumper Member
 
-        public void Write(GSMParameters param, bool[] burstBits)
+        public void WriteL2Data(GSMParameters param, byte[] l2Data)
+        {
+        }
+
+        public void WriteRawBurst(GSMParameters param, bool[] burstBits)
         {
             bool dummyBurst = false;
             bool skippable = true;

@@ -52,7 +52,6 @@ namespace RX_Oscilloscope.Components
             new DensityMap(panel).Granularity = 32;
             new WaveformAreaSelectionDetails(new WaveformAreaSelection(waveForm), panel);
 
-
             UpdateScale();
         }
 

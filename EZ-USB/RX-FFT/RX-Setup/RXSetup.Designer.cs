@@ -44,7 +44,6 @@
             this.groupBox4 = new System.Windows.Forms.GroupBox();
             this.btnCypressEepromProgram = new System.Windows.Forms.Button();
             this.btnCypressEepromRead = new System.Windows.Forms.Button();
-            this.txtLog = new System.Windows.Forms.TextBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -213,21 +212,11 @@
             this.btnCypressEepromRead.UseVisualStyleBackColor = true;
             this.btnCypressEepromRead.Click += new System.EventHandler(this.btnCypressEepromRead_Click);
             // 
-            // txtLog
-            // 
-            this.txtLog.Font = new System.Drawing.Font("Courier New", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtLog.Location = new System.Drawing.Point(256, 13);
-            this.txtLog.Multiline = true;
-            this.txtLog.Name = "txtLog";
-            this.txtLog.Size = new System.Drawing.Size(416, 321);
-            this.txtLog.TabIndex = 9;
-            // 
             // RXSetup
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(684, 347);
-            this.Controls.Add(this.txtLog);
+            this.ClientSize = new System.Drawing.Size(258, 347);
             this.Controls.Add(this.groupBox4);
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.lblStats);
@@ -266,7 +255,6 @@
         private System.Windows.Forms.GroupBox groupBox4;
         private System.Windows.Forms.Button btnCypressEepromProgram;
         private System.Windows.Forms.Button btnCypressEepromRead;
-        private System.Windows.Forms.TextBox txtLog;
     }
 }
 

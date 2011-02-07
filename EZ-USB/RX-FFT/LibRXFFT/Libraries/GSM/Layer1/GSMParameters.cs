@@ -3,6 +3,7 @@ using LibRXFFT.Libraries.GSM.Layer1.Bursts;
 using System.Collections;
 using System.Collections.Generic;
 using LibRXFFT.Libraries.GSM.Layer1.PacketDump;
+using LuaInterface;
 
 namespace LibRXFFT.Libraries.GSM.Layer1
 {
@@ -65,22 +66,81 @@ namespace LibRXFFT.Libraries.GSM.Layer1
         }
     }
 
+    public interface CipherCracker
+    {
+        byte[] Crack(bool[] key1, uint count1, bool[] key2, uint count2);
+        bool Available { get; }
+        int SearchDuration { get; }
+    }
 
     public class GSMParameters
     {
+        public LinkedList<NormalBurst> ActiveBursts = new LinkedList<NormalBurst>();
         public LinkedList<NormalBurst> UsedBursts = new LinkedList<NormalBurst>();
+
         public sTimeSlotParam[][] TimeSlotHandlers;
         public sTimeSlotInfo[] TimeSlotInfo;
+        public DateTime TimeStamp = DateTime.Now;
 
         public eGSMState State = eGSMState.Idle;
         public eTriState CBCH = eTriState.Unknown;
 
         public bool SkipL2Parsing = false;
+        public bool ReportL1Errors = true;
         public PacketDumpWriter PacketDumper = null;
         public Burst CurrentBurstHandler = null;
-        public CryptA5 A5Algorithm = new CryptA5();
-        public bool A5AlgorithmAvailable = false;
 
+        public LinkedList<byte[]> A5KeyStore = new LinkedList<byte[]>();
+
+        public CipherCracker CipherCracker = null;
+
+        public Lua LuaVm = null; 
+
+        public void AddA5Key(byte[] key)
+        {
+            /* dont add invalid keys */
+            if (key == null || key.Length != 8)
+            {
+                return;
+            }
+
+            /* dont add already existing keys */
+            lock (A5KeyStore)
+            {
+                bool exists = false;
+
+                foreach (byte[] checkKey in A5KeyStore)
+                {
+                    bool match = true;
+
+                    for (int pos = 0; pos < checkKey.Length; pos++)
+                    {
+                        if (checkKey[pos] != key[pos])
+                        {
+                            match = false;
+                        }
+                    }
+
+                    if (match)
+                    {
+                        exists = true;
+                    }
+                }
+
+                if (!exists)
+                {
+                    A5KeyStore.AddLast(key);
+                }
+            }
+        }
+
+        public void ClearA5Keys()
+        {
+            lock (A5KeyStore)
+            {
+                A5KeyStore.Clear();
+            }
+        }
 
         public double PhaseOffsetFrequency
         {
@@ -139,6 +199,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             LAC = -1;
             CellIdent = -1;
 
+            ActiveBursts.Clear();
             UsedBursts.Clear();
             TimeSlotInfo = new sTimeSlotInfo[8];
             TimeSlotHandlers = new sTimeSlotParam[8][];
@@ -296,7 +357,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
             foreach (NormalBurst burst in UsedBursts)
             {
-                retVal += string.Format("  {0,12}:  [Data: {1,6}]  [Crypt: {2,6}]  [Dummy: {3,6}]   [{4}] - [{5}]" + Environment.NewLine, burst.Name, burst.DataBursts, burst.CryptedBursts, burst.DummyBursts, burst.AllocationTime, burst.Released?burst.ReleaseTime.ToString():"now");
+                retVal += string.Format("  {0,12}:  [Data: {1,6}]  [Crypt: {2,6}]  [Dummy: {3,6}]   [{4}] - [{5}]" + Environment.NewLine, burst.Name, burst.DataBursts, burst.CryptedFrames, burst.DummyBursts, burst.AllocationTime, burst.Released?burst.ReleaseTime.ToString():"now");
             }
 
             retVal += Environment.NewLine;

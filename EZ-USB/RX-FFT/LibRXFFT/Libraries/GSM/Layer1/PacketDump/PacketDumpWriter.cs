@@ -7,9 +7,9 @@ namespace LibRXFFT.Libraries.GSM.Layer1.PacketDump
 {
     public interface PacketDumpWriter
     {
-        void WriteRawBurst(GSMParameters Parameters, bool[] BurstBitsUndiffed);
+        void WriteRawBurst(bool[] BurstBitsUndiffed);
         void Close();
 
-        void WriteL2Data(GSMParameters param, byte[] l2Data);
+        void WriteL2Data(byte[] l2Data);
     }
 }

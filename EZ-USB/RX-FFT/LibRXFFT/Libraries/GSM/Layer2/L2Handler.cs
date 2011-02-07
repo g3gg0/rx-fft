@@ -9,7 +9,9 @@ namespace LibRXFFT.Libraries.GSM.Layer2
     public class L2Handler
     {
         public static bool ShowAllMessages = false;
+        public static bool ShowCryptedMessages = false;
         public static bool DumpRawData = false;
+        public static bool DumpCryptedData = false;        
         public static bool DumpFaulty = false;
 
         byte[] packetBuffer = new byte[8192];
@@ -59,7 +61,7 @@ namespace LibRXFFT.Libraries.GSM.Layer2
         {
             if (param.PacketDumper != null)
             {
-                param.PacketDumper.WriteL2Data(param, l2Data);
+                param.PacketDumper.WriteL2Data(l2Data);
             }
 
             Builder.Length = 0;
@@ -67,16 +69,24 @@ namespace LibRXFFT.Libraries.GSM.Layer2
             /* BCCH and CCCH packets have pseudo L2 headers (GSM 04.07 11.3.1) */
             if (source.GetType() == typeof(BCCHBurst) || source.GetType() == typeof(CCCHBurst))
             {
-                Builder.Append( "Pseudo L2 Header").Append(Environment.NewLine);
+                Builder.Append("Pseudo L2 Header").Append(Environment.NewLine);
 
                 if (source.ChannelEncrypted)
                 {
-                    Builder.Append("        ======= encrypted =======").Append(Environment.NewLine);
+                    Builder.Append("======= encrypted =======").Append(Environment.NewLine);
+                }
+
+                /* call LUA script */
+                if (param.LuaVm != null)
+                {
+                    LuaHelpers.CallFunction(param.LuaVm, "L2DataReceived", true, source, null, param);
                 }
 
                 /* pass to L3 handler if not empty and skip pseudo length */
                 if (!PacketIsEmpty(l2Data, 1))
-                    l3.Handle(l2Data, 1);
+                {
+                    l3.Handle(l2Data, 1, param);
+                }
             }
             else
             {
@@ -84,8 +94,21 @@ namespace LibRXFFT.Libraries.GSM.Layer2
                 /* always show empty/multiframe messages if requested */
                 ShowMessage = ShowAllMessages;
 
+                /* show if encrypted */
+                if (source.ChannelEncrypted)
+                {
+                    ShowMessage |= ShowCryptedMessages;
+                    Builder.Append("======= encrypted =======").Append(Environment.NewLine);
+                }
+
                 L2Data.Payload = l2Data;
                 L2Data.StartOffset = startOffset;
+
+                /* call LUA script */
+                if (param.LuaVm != null)
+                {
+                    LuaHelpers.CallFunction(param.LuaVm, "L2DataReceived", true, source, L2Data, param);
+                }
 
                 if (L3Handler.ExceptFieldsEnabled || ShowMessage)
                 {
@@ -93,12 +116,7 @@ namespace LibRXFFT.Libraries.GSM.Layer2
                     Builder.Append("M: ").Append((L2Data.M ? "1" : "0")).Append("  ");
                     Builder.Append("EL: ").Append((L2Data.EL ? "1" : "0")).Append("  ");
                     Builder.Append("L: ").Append(L2Data.Length).Append("  ");
-                    /*
-                    StatusMessage = "SAPI: " + L2Data.SAPI + "  C/R: " + (L2Data.CR ? "1" : "0") + "  EA: " + (L2Data.EA ? "1" : "0") + "  ";
-                    StatusMessage += "M: " + (L2Data.M ? "1" : "0") + "  ";
-                    StatusMessage += "EL: " + (L2Data.EL ? "1" : "0") + "  ";
-                    StatusMessage += "L: " + L2Data.Length + "  ";
-                    */
+
                     switch (L2Data.FrameFormat)
                     {
                         case eFrameFormat.S_Format:
@@ -136,8 +154,8 @@ namespace LibRXFFT.Libraries.GSM.Layer2
                     if (DumpFaulty)
                     {
                         Builder.Append("Faulty length?! Length = ").Append((packetBufferOffset + L2Data.Length)).Append(Environment.NewLine);
-                        Builder.Append("          Raw Data").Append(Environment.NewLine);
-                        Builder.Append("             ").Append(DumpBytes(l2Data)).Append(Environment.NewLine);
+                        Builder.Append("Raw L2 data").Append(Environment.NewLine);
+                        Builder.Append("    ").Append(DumpBytes(l2Data)).Append(Environment.NewLine);
                         ShowMessage = true;
                     }
                 }
@@ -156,11 +174,6 @@ namespace LibRXFFT.Libraries.GSM.Layer2
                             Builder.Append(Environment.NewLine);
                     }
 
-                    if (source.ChannelEncrypted)
-                    {
-                        Builder.Append("        ======= encrypted =======").Append(Environment.NewLine);
-                    }
-
                     /* but only pass it through when there is any data */
                     if (packetBufferOffset > 0)
                     {
@@ -170,7 +183,7 @@ namespace LibRXFFT.Libraries.GSM.Layer2
 
                         if (!PacketIsEmpty(buf))
                         {
-                            l3.Handle(buf);
+                            l3.Handle(buf, 0, param);
                         }
                     }
 
@@ -189,8 +202,8 @@ namespace LibRXFFT.Libraries.GSM.Layer2
 
             if (DumpRawData && (L3Handler.ExceptFieldsEnabled || ShowMessage))
             {
-                Builder.Append("        Raw Data").Append(Environment.NewLine);
-                Builder.Append("             ").Append(DumpBytes(l2Data)).Append(Environment.NewLine);
+                Builder.Append("Raw L2 data").Append(Environment.NewLine);
+                Builder.Append("    ").Append(DumpBytes(l2Data)).Append(Environment.NewLine);
             }
 
             StatusMessage = Builder.ToString();

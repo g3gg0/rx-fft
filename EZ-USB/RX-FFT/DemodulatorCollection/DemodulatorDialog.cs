@@ -12,12 +12,14 @@ using RX_FFT.Components.GDI;
 using DemodulatorCollection.BitClockSinks;
 using DemodulatorCollection.Demodulators;
 using DemodulatorCollection.Interfaces;
+using RX_FFT.DeviceControls;
+using LibRXFFT.Components.DeviceControls;
 
 namespace DemodulatorCollection
 {
     public partial class DemodulatorDialog : Form
     {
-        private SampleSource SampleSource;
+        private DeviceControl SampleSource;
         private Thread ProcessThread;
         private bool Processing;
         private DigitalDemodulator Demodulator;
@@ -48,7 +50,7 @@ namespace DemodulatorCollection
                 return;
 
             DigitalDemodulator demod = new PKDemodulator();
-            demod.SamplingRate = SampleSource.OutputSamplingRate;
+            demod.SamplingRate = SampleSource.SamplingRate;
             demod.Init();
             Demodulator = demod;
         }
@@ -61,7 +63,7 @@ namespace DemodulatorCollection
                 return;
 
             DigitalDemodulator demod = new PDDemodulator();
-            demod.SamplingRate = SampleSource.OutputSamplingRate;
+            demod.SamplingRate = SampleSource.SamplingRate;
             demod.Init();
             Demodulator = demod;
         }
@@ -74,7 +76,7 @@ namespace DemodulatorCollection
                 return;
 
             DigitalDemodulator demod = new ASKDemodulator();
-            demod.SamplingRate = SampleSource.OutputSamplingRate;
+            demod.SamplingRate = SampleSource.SamplingRate;
             demod.Init();
             Demodulator = demod;
         }
@@ -89,7 +91,7 @@ namespace DemodulatorCollection
             DigitalDemodulator demod = new PSKDemodulator();
             demod.BitSink = new POCSAGDecoder();
 
-            demod.SamplingRate = SampleSource.OutputSamplingRate;
+            demod.SamplingRate = SampleSource.SamplingRate;
             demod.Init();
             Demodulator = demod;
         }
@@ -104,7 +106,7 @@ namespace DemodulatorCollection
 
             DigitalDemodulator demod = new ScriptableDemodulator();
 
-            demod.SamplingRate = SampleSource.OutputSamplingRate;
+            demod.SamplingRate = SampleSource.SamplingRate;
             demod.Init();
 
             Demodulator = demod;
@@ -129,17 +131,17 @@ namespace DemodulatorCollection
             }
             if (SampleSource != null)
             {
-                SampleSource.Close();
+                SampleSource.CloseControl();
                 SampleSource = null;
             }
         }
 
         void SampleSource_SamplingRateChanged(object sender, EventArgs e)
         {
-            Log.AddMessage("Sampling rate changed: " + FrequencyFormatter.FreqToStringAccurate(SampleSource.OutputSamplingRate));
+            Log.AddMessage("Sampling rate changed: " + FrequencyFormatter.FreqToStringAccurate(SampleSource.SamplingRate));
             if (Demodulator != null)
             {
-                Demodulator.SamplingRate = SampleSource.OutputSamplingRate;
+                Demodulator.SamplingRate = SampleSource.SamplingRate;
             }
         }
 
@@ -147,14 +149,14 @@ namespace DemodulatorCollection
         {
             while (Processing)
             {
-                if (SampleSource.Read())
+                if (SampleSource.ReadBlock())
                 {
-                    for (int pos = 0; pos < SampleSource.SamplesRead; pos++)
+                    for (int pos = 0; pos < SampleSource.SampleSource.SamplesRead; pos++)
                     {
-                        lock (SampleSource.SampleBufferLock)
+                        lock (SampleSource.SampleSource.SampleBufferLock)
                         {
-                            double I = SampleSource.SourceSamplesI[pos];
-                            double Q = SampleSource.SourceSamplesQ[pos];
+                            double I = SampleSource.SampleSource.SourceSamplesI[pos];
+                            double Q = SampleSource.SampleSource.SourceSamplesQ[pos];
 
                             if (Demodulator != null)
                             {
@@ -185,17 +187,31 @@ namespace DemodulatorCollection
                 ContextMenu menu = new ContextMenu();
 
                 menu.MenuItems.Add(new MenuItem("Shared Memory", new EventHandler(btnOpen_SharedMemory)));
-//                menu.MenuItems.Add(new MenuItem("USRP CFile", new EventHandler(btnOpen_CFile)));
+                menu.MenuItems.Add(new MenuItem("IQ Wave File", new EventHandler(btnOpen_IQFile)));
                 btnOpen.ContextMenu = menu;
                 btnOpen.ContextMenu.Show(btnOpen, new Point(10, 10));
             }
         }
 
+
+        private void btnOpen_IQFile(object sender, EventArgs e)
+        {
+            SampleSource = new FileSourceDeviceControl();
+
+            Processing = true;
+            ProcessThread = new Thread(ProcessMain);
+            ProcessThread.Start();
+
+            btnOpen.Text = "Close";
+            return;
+        }
+
         public void OpenSharedMem(int srcChan)
         {
-            SampleSource = new ShmemSampleSource("GSM Analyzer", srcChan, 1, 0);
+            //SampleSource = new ShmemSampleSource("GSM Analyzer", srcChan, 1, 0);
+            SampleSource = new SharedMemDeviceControl(srcChan);
 
-            SampleSource.DataFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPoint;
+            SampleSource.SampleSource.DataFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPoint;
             SampleSource.SamplingRateChanged += new EventHandler(SampleSource_SamplingRateChanged);
 
             Processing = true;
@@ -203,7 +219,6 @@ namespace DemodulatorCollection
             ProcessThread.Start();
 
             Log.AddMessage("Select your filter again to start decoding.");
-
 
             btnOpen.Text = "Close";
         }

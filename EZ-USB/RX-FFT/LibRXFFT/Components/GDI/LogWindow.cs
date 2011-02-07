@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows.Forms;
+using System.IO;
 
 namespace RX_FFT.Components.GDI
 {
@@ -7,6 +8,8 @@ namespace RX_FFT.Components.GDI
     {
         private string LogText = "";
         private Timer UpdateTimer = new Timer();
+        private TextWriter LogFile = null;
+        public bool EnableLogFile = true;
 
         public LogWindow()
         {
@@ -19,6 +22,8 @@ namespace RX_FFT.Components.GDI
 
         protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
         {
+            UpdateTimer.Stop();
+
             Visible = false;
             e.Cancel = true;
             base.OnClosing(e);
@@ -46,6 +51,20 @@ namespace RX_FFT.Components.GDI
         {
             lock (txtLog)
             {
+                if (LogFile == null && EnableLogFile)
+                {
+                    string name = "GSMAnalyzer_" + DateTime.Now.ToShortDateString() + ".log";
+                    FileStream file = File.Open(name, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
+                    LogFile = new StreamWriter(file);
+                    LogText += "Logging to '" + name + "'" + Environment.NewLine;
+                }
+
+                if (LogFile != null)
+                {
+                    LogFile.WriteLine(msg);
+                    LogFile.Flush();
+                }
+
                 LogText += (msg + Environment.NewLine);
             }
         }

@@ -78,7 +78,8 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <OutputPath>bin\x86\Release\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>
+    </DefineConstants>
     <Optimize>false</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>x86</PlatformTarget>
@@ -112,13 +113,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DeviceControls\FileSourceDeviceControl.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="DeviceControls\FileSourceDeviceControl.Designer.cs">
-      <DependentUpon>FileSourceDeviceControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="DeviceControls\DeviceControl.cs" />
     <Compile Include="Dialogs\FilterDetailDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -172,10 +166,6 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="DeviceControls\FileSourceDeviceControl.resx">
-      <DependentUpon>FileSourceDeviceControl.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
     <EmbeddedResource Include="Dialogs\FilterDetailDialog.resx">
       <DependentUpon>FilterDetailDialog.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -214,10 +204,6 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="DeviceControls\USBRXDeviceControl.resx">
-      <DependentUpon>USBRXDeviceControl.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
     <EmbeddedResource Include="Dialogs\WaitDialog.resx">
       <DependentUpon>WaitDialog.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -234,24 +220,6 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
-    </Compile>
-    <Compile Include="DeviceControls\RandomDataDeviceControl.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="DeviceControls\RandomDataDeviceControl.Designer.cs">
-      <DependentUpon>RandomDataDeviceControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="DeviceControls\SharedMemDeviceControl.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="DeviceControls\SharedMemDeviceControl.Designer.cs">
-      <DependentUpon>SharedMemDeviceControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="DeviceControls\USBRXDeviceControl.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="DeviceControls\USBRXDeviceControl.Designer.cs">
-      <DependentUpon>USBRXDeviceControl.cs</DependentUpon>
     </Compile>
     <Compile Include="Dialogs\WaitDialog.cs">
       <SubType>Form</SubType>

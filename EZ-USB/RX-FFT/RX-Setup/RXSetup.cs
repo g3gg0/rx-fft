@@ -21,6 +21,8 @@ namespace RX_Setup
 
         private double TransfersPerSecond = 0.0f;
 
+        private Hashtable I2CDeviceNames = new Hashtable();
+
         public RXSetup()
         {
             InitializeComponent();
@@ -37,6 +39,11 @@ namespace RX_Setup
                 }
             });
             StatsThread.Start();
+
+            I2CDeviceNames.Add(0x20, "(RX-USB Atmel)");
+            I2CDeviceNames.Add(0x21, "(VUHF_RX Atmel)");
+            I2CDeviceNames.Add(0x51, "(EEPROM)");
+            I2CDeviceNames.Add(0x60, "(MT2131)");
         }
 
         protected override void OnClosing(CancelEventArgs e)
@@ -121,21 +128,27 @@ namespace RX_Setup
                 txtStatus.Text = "Connecting...";
 
                 Device = new USBRXDevice();
-                //Device.ShowConsole(true);
                 Device.TunerCombination = USBRXDevice.eCombinationType.None;
+
+                if (Form.ModifierKeys == Keys.Shift)
+                {
+                    Device.ShowConsole(true);
+                    USBRXDeviceNative.UsbSetTimeout(0, USBRXDeviceNative.MODE_FORCEINIT);
+                }
 
                 if (!Device.Init())
                 {
                     Log.AddMessage("Init failed");
                     Device = null;
+                    return;
                 }
-                else
-                {
-                    Device.I2CSleep = 0;
-                    Device.I2CRetries = 0;
-                    Device.I2CSetTimeout(1, 0);
-                    btnConnect.Text = "Disconnect";
-                }
+
+                EEPROMDevice = new EEPROM(Device);
+
+                Device.I2CSleep = 0;
+                Device.I2CRetries = 0;
+                Device.I2CSetTimeout(1, 0);
+                btnConnect.Text = "Disconnect";
             }
             else
             {
@@ -178,7 +191,7 @@ namespace RX_Setup
 
             try
             {
-                Log.AddMessage("Programming mode...");
+                Log.AddMessage("Atmel programming...");
                 if (!Device.AtmelProgrammer.SetProgrammingMode(true))
                 {
                     Log.AddMessage("Programming mode failed");
@@ -187,13 +200,13 @@ namespace RX_Setup
                 {
                     Log.AddMessage("  Device Name:  " + Device.AtmelProgrammer.DeviceName);
 
-                    Log.AddMessage("  Vendor:  " + string.Format("{0:x4}", Device.AtmelProgrammer.VendorCode));
-                    Log.AddMessage("  Family:  " + string.Format("{0:x4}", Device.AtmelProgrammer.FamilyCode));
-                    Log.AddMessage("  Part No: " + string.Format("{0:x4}", Device.AtmelProgrammer.PartNumberCode));
+                    Log.AddMessage("  Vendor:       " + string.Format("{0:x4}", Device.AtmelProgrammer.VendorCode));
+                    Log.AddMessage("  Family:       " + string.Format("{0:x4}", Device.AtmelProgrammer.FamilyCode));
+                    Log.AddMessage("  Part No:      " + string.Format("{0:x4}", Device.AtmelProgrammer.PartNumberCode));
 
-                    Log.AddMessage("  Fuses:   " + string.Format("{0:x4}", Device.AtmelProgrammer.FuseBits));
-                    Log.AddMessage("  XFuses:  " + string.Format("{0:x4}", Device.AtmelProgrammer.XFuseBits));
-                    Log.AddMessage("  Locks:   " + string.Format("{0:x4}", Device.AtmelProgrammer.LockBits));
+                    Log.AddMessage("  Fuses:        " + string.Format("{0:x4}", Device.AtmelProgrammer.FuseBits));
+                    Log.AddMessage("  XFuses:       " + string.Format("{0:x4}", Device.AtmelProgrammer.XFuseBits));
+                    Log.AddMessage("  Locks:        " + string.Format("{0:x4}", Device.AtmelProgrammer.LockBits));
                 }
                 if (!Device.AtmelProgrammer.SetProgrammingMode(false))
                 {
@@ -202,15 +215,75 @@ namespace RX_Setup
 
                 Thread.Sleep(800);
                 Log.AddMessage("");
-                Log.AddMessage("Normal mode...");
-                Log.AddMessage("  Atmel Serial: " + Device.Atmel.SerialNumber);
+                Log.AddMessage("Atmel commands...");
+                Log.AddMessage("  Atmel serial: " + Device.Atmel.SerialNumber);
                 Log.AddMessage("  AD6636 TCXO:  " + Device.Atmel.TCXOFreq);
+                Log.AddMessage("  Filter count: " + Device.Atmel.GetFilterCount());
+                Log.AddMessage("");
+
+                Log.AddMessage("EEPROM...");
+                DetectEEPROM();
                 Log.AddMessage("");
             }
             catch (AtmelProgrammer.DeviceErrorException ex)
             {
                 Log.AddMessage("Programming failed.");
             }
+        }
+
+        private void DetectEEPROM()
+        {
+            if (!EEPROMDevice.Exists)
+            {
+                Log.AddMessage("   No EEPROM found");
+                return;
+            }
+
+            if (!EEPROMDevice.AutodetectAddressing())
+            {
+                Log.AddMessage("   Width:       FAILED!");
+                return;
+            }
+
+            if (EEPROMDevice.AutodetectSize())
+            {
+                Log.AddMessage("   Width:       " + EEPROMDevice.AddressWidth + " bit");
+                Log.AddMessage("   Size:        " + EEPROMDevice.Size + " byte");
+            }
+            else
+            {
+                Log.AddMessage("   Width:       " + EEPROMDevice.AddressWidth + " bit");
+                Log.AddMessage("   Size:        FAILED!");
+                return;
+            }
+
+            byte headerType = 0;
+
+            if(!EEPROMDevice.ReadByte(0, ref headerType))
+            {
+                Log.AddMessage("   Header:      FAILED!");
+            }
+
+            switch (headerType)
+            {
+                case 0x00:
+                case 0xFF:
+                    Log.AddMessage("   Header:      Unprogrammed (" + headerType.ToString("X2") + ")");
+                    break;
+
+                case 0xC0:
+                    Log.AddMessage("   Header:      without firmware (" + headerType.ToString("X2") + ")");
+                    break;
+
+                case 0xC2:
+                    Log.AddMessage("   Header:      with firmware (" + headerType.ToString("X2") + ")");
+                    break;
+
+                default:
+                    Log.AddMessage("   Header:      Illegal (" + headerType.ToString("X2") + ")");
+                    break;
+            }
+
         }
 
         private void btnFirmwareRead_Click(object sender, EventArgs e)
@@ -1229,65 +1302,63 @@ namespace RX_Setup
                 Log.AddMessage("------------------------------------");
                 try
                 {
-                    while (true)
+                    Log.AddMessage("");
+                    Log.AddMessage(" I²C ACK");
+                    I2CTestAck(0x51, "EEPROM");
+                    I2CTestAck(0x20, "Atmel ");
+                    Log.AddMessage("");
+
+                    Log.AddMessage(" I²C ACK-Storm");
+                    Random rnd = new Random(DateTime.Now.Millisecond);
+                    for (int tries = 0; tries < 1000; tries++)
                     {
-                        Log.AddMessage("");
-                        Log.AddMessage(" I²C ACK");
-                        I2CTestAck(0x51, "EEPROM");
-                        I2CTestAck(0x20, "Atmel ");
-                        Log.AddMessage("");
-
-                        Log.AddMessage(" I²C ACK-Storm");
-                        Random rnd = new Random(DateTime.Now.Millisecond);
-                        for (int tries = 0; tries < 1000; tries++)
-                        {
-                            Device.I2CDeviceAck(rnd.Next(0x7F));
-                        }
-                        I2CTestAck(0x51, "EEPROM");
-
-                        for (int tries = 0; tries < 1000; tries++)
-                        {
-                            Device.I2CDeviceAck(rnd.Next(0x7F));
-                        }
-                        I2CTestAck(0x20, "Atmel ");
-
-                        Log.AddMessage("");
-                        Log.AddMessage(" I²C Read (1 byte)");
-                        I2CTestRead(0x51, "EEPROM", 1);
-                        I2CTestRead(0x20, "Atmel ", 1);
-                        Log.AddMessage("");
-                        Log.AddMessage(" I²C Read (8 byte)");
-                        I2CTestRead(0x51, "EEPROM", 8);
-                        I2CTestRead(0x20, "Atmel ", 8);
-                        Log.AddMessage("");
-                        Log.AddMessage(" I²C Read (32 byte)");
-                        I2CTestRead(0x51, "EEPROM", 32);
-                        I2CTestRead(0x20, "Atmel ", 32);
-
-
-                        Log.AddMessage("");
-                        Log.AddMessage(" Atmel SPI programming");
-                        AtmelSPITest();
-
-                        Log.AddMessage("");
-                        Log.AddMessage(" Atmel serial number");
-                        AtmelSerialTest();
-
-                        TotalTransfers = 0;
-                        TestStartTime = DateTime.Now;
-                        Log.AddMessage("");
-                        Log.AddMessage(" Atmel mixed access");
-                        AtmelMixedTest();
-                        Log.AddMessage("   - Transfers/s: " + TransfersPerSecond.ToString("0.00"));
-
-
-                        TotalTransfers = 0;
-                        TestStartTime = DateTime.Now;
-                        Log.AddMessage("");
-                        Log.AddMessage(" AD6636 mixed access");
-                        AD6636MixedTest();
-                        Log.AddMessage("   - Transfers/s: " + TransfersPerSecond.ToString("0.00"));
+                        Device.I2CDeviceAck(rnd.Next(0x7F));
                     }
+                    I2CTestAck(0x51, "EEPROM");
+
+                    for (int tries = 0; tries < 1000; tries++)
+                    {
+                        Device.I2CDeviceAck(rnd.Next(0x7F));
+                    }
+                    I2CTestAck(0x20, "Atmel ");
+
+                    Log.AddMessage("");
+                    Log.AddMessage(" I²C Read (1 byte)");
+                    I2CTestRead(0x51, "EEPROM", 1);
+                    I2CTestRead(0x20, "Atmel ", 1);
+                    Log.AddMessage("");
+                    Log.AddMessage(" I²C Read (8 byte)");
+                    I2CTestRead(0x51, "EEPROM", 8);
+                    I2CTestRead(0x20, "Atmel ", 8);
+                    Log.AddMessage("");
+                    Log.AddMessage(" I²C Read (32 byte)");
+                    I2CTestRead(0x51, "EEPROM", 32);
+                    I2CTestRead(0x20, "Atmel ", 32);
+
+
+                    Log.AddMessage("");
+                    Log.AddMessage(" Atmel SPI programming");
+                    AtmelSPITest();
+
+                    Log.AddMessage("");
+                    Log.AddMessage(" Atmel serial number");
+                    AtmelSerialTest();
+
+                    TotalTransfers = 0;
+                    TestStartTime = DateTime.Now;
+                    Log.AddMessage("");
+                    Log.AddMessage(" Atmel mixed access");
+                    AtmelMixedTest();
+                    Log.AddMessage("   - Transfers/s: " + TransfersPerSecond.ToString("0.00"));
+
+
+                    TotalTransfers = 0;
+                    TestStartTime = DateTime.Now;
+                    Log.AddMessage("");
+                    Log.AddMessage(" AD6636 mixed access");
+                    AD6636MixedTest();
+                    Log.AddMessage("   - Transfers/s: " + TransfersPerSecond.ToString("0.00"));
+
                 }
                 catch (Exception)
                 {
@@ -1303,7 +1374,6 @@ namespace RX_Setup
 
         private void btnI2cScan_Click(object sender, EventArgs e)
         {
-
             if (Device == null)
             {
                 return;
@@ -1329,6 +1399,12 @@ namespace RX_Setup
                     {
                         int tries = 0;
                         int success = 0;
+                        string devName = "";
+
+                        if (I2CDeviceNames.ContainsKey(dev))
+                        {
+                            devName = (string)I2CDeviceNames[dev];
+                        }
 
                         for (tries = 0; tries < 50; tries++)
                         {
@@ -1342,11 +1418,11 @@ namespace RX_Setup
                         {
                             if (success != tries)
                             {
-                                Log.AddMessage("    0x" + dev.ToString("X2") + "     (" + (tries-success) + "/" + tries + " failed)" );
+                                Log.AddMessage("    0x" + dev.ToString("X2") + " " + devName + "      (" + (tries-success) + "/" + tries + " failed)" );
                             }
                             else
                             {
-                                Log.AddMessage("    0x" + dev.ToString("X2"));
+                                Log.AddMessage("    0x" + dev.ToString("X2") + " " + devName + " ");
                             }
                         }
                     }
@@ -1355,7 +1431,7 @@ namespace RX_Setup
                 {
                 }
                 Log.AddMessage("------------------------------------");
-                Log.AddMessage(" I²C test finished");
+                Log.AddMessage(" I²C scan finished");
 
                 WorkerThread = null;
             });
@@ -1378,26 +1454,6 @@ namespace RX_Setup
                 return;
             }
 
-            Log.AddMessage(" EEPROM dump");
-            Log.AddMessage("------------------------------------");
-
-            if (EEPROMDevice == null)
-            {
-                EEPROMDevice = new EEPROM(Device);
-                Log.AddMessage("");
-                Log.AddMessage(" Autodetect size...");
-                if (EEPROMDevice.AutodetectSize())
-                {
-                    Log.AddMessage("   Size: " + EEPROMDevice.Size + " byte");
-                    Log.AddMessage("   Address width: " + EEPROMDevice.AddressWidth + " byte");
-                }
-                else
-                {
-                    Log.AddMessage("   Size: FAILED!");
-                    return;
-                }
-            }
-
             string oldText = btnCypressEepromRead.Text;
             TotalTransfers = 0;
             TestStartTime = DateTime.Now;
@@ -1414,7 +1470,7 @@ namespace RX_Setup
                 {
                     BeginInvoke(new Action(() =>
                     {
-                        btnCypressEepromRead.Text = "Block: " + block + "/" + blocks;
+                        btnCypressEepromRead.Text = (uint)((block * 100) / blocks) + "%";
                     }));
 
                     EEPROMDevice.ReadBytes(block * blocksize, buffer);
@@ -1426,7 +1482,9 @@ namespace RX_Setup
                 {
                     FileDialog dlg = new SaveFileDialog();
 
+                    dlg.Filter = "Raw EEPROM Image (*.bin)|*.bin|All files (*.*)|*.*";
                     dlg.DefaultExt = ".bin";
+
                     if (dlg.ShowDialog() == DialogResult.OK)
                     {
                         FileStream writeFile = null;
@@ -1467,7 +1525,6 @@ namespace RX_Setup
 
         private void btnCypressEepromProgram_Click(object sender, EventArgs e)
         {
-
             if (Device == null)
             {
                 return;
@@ -1479,38 +1536,41 @@ namespace RX_Setup
                 AbortStressTest = true;
                 return;
             }
-            
-            if (EEPROMDevice == null)
-            {
-                EEPROMDevice = new EEPROM(Device);
-                Log.AddMessage("");
-                Log.AddMessage(" Autodetect size...");
-                if (EEPROMDevice.AutodetectSize())
-                {
-                    Log.AddMessage("   Size: " + EEPROMDevice.Size + " byte");
-                    Log.AddMessage("   Address width: " + EEPROMDevice.AddressWidth + " byte");
-                }
-                else
-                {
-                    Log.AddMessage("   Size: FAILED!");
-                    return;
-                }
-            }
 
             FileDialog dlg = new OpenFileDialog();
 
+            dlg.Filter = "HEX Firmware data (*.hex)|*.hex|Raw EEPROM Image (*.bin)|*.bin|All files (*.*)|*.*";
             dlg.DefaultExt = ".hex";
+
             if (dlg.ShowDialog() == DialogResult.OK)
             {
                 MemoryDump8Bit dump;
+                bool rawImage = false;
+
                 try
                 {
-                    IntelHexFile hf = new IntelHexFile(dlg.FileName);
-                    dump = hf.Parse();
+                    if (dlg.FileName.EndsWith(".hex"))
+                    {
+                        IntelHexFile hf = new IntelHexFile(dlg.FileName);
+                        dump = hf.Parse();
+                        rawImage = false;
+                    }
+                    else if (dlg.FileName.EndsWith(".bin"))
+                    {
+                        dump = new MemoryDump8Bit();
+                        dump.StartAddress = 0;
+                        dump.Data = File.ReadAllBytes(dlg.FileName);
+                        rawImage = true;
+                    }
+                    else
+                    {
+                        MessageBox.Show("Unknown file type.");
+                        return;
+                    }
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Failed to read the hex-file");
+                    MessageBox.Show("Failed to read EEPROM file");
                     return;
                 }
 
@@ -1519,42 +1579,51 @@ namespace RX_Setup
                 TestStartTime = DateTime.Now;
                 WorkerThread = new Thread(() =>
                 {
-                    ArrayList buildBuffer = new ArrayList();
+                    byte[] eepromBuffer;
 
-                    /* serialize the data to transfer */
+                    if (rawImage)
                     {
-                        BeginInvoke(new Action(() =>
+                        eepromBuffer = dump.Data;
+                    }
+                    else
+                    {
+                        ArrayList buildBuffer = new ArrayList();
+
+                        /* serialize the data to transfer */
                         {
-                            btnCypressEepromProgram.Text = "Preparing...";
-                        }));
+                            BeginInvoke(new Action(() =>
+                            {
+                                btnCypressEepromProgram.Text = "Preparing...";
+                            }));
 
-                        /* add default usb ids, force disconnect after loading */
-                        buildBuffer.AddRange(new byte[] { 0xC2, 0xB4, 0x04, 0x01, 0xEE, 0x00, 0x01, 0x41 });
+                            /* add default usb ids, force disconnect after loading */
+                            buildBuffer.AddRange(new byte[] { 0xC2, 0xB4, 0x04, 0x01, 0xEE, 0x00, 0x01, 0x41 });
 
-                        /* split firmware into 1023 byte blocks */
-                        int maxBlockSize = 1023;
-                        int blocks = (int)((dump.Length + maxBlockSize - 1) / maxBlockSize);
+                            /* split firmware into 1023 byte blocks */
+                            int maxBlockSize = 1023;
+                            int blocks = (int)((dump.Length + maxBlockSize - 1) / maxBlockSize);
 
-                        for (int block = 0; block < blocks; block++)
-                        {
-                            /* either the rest of the dump or the maximum bloxk size */
-                            int blockLength = (int)(Math.Min(dump.Length - (block * maxBlockSize), maxBlockSize));
-                            int address = (int)(dump.StartAddress + block * maxBlockSize);
-                            byte[] blockBuffer = new byte[blockLength];
+                            for (int block = 0; block < blocks; block++)
+                            {
+                                /* either the rest of the dump or the maximum bloxk size */
+                                int blockLength = (int)(Math.Min(dump.Length - (block * maxBlockSize), maxBlockSize));
+                                int address = (int)(dump.StartAddress + block * maxBlockSize);
+                                byte[] blockBuffer = new byte[blockLength];
 
-                            Array.Copy(dump.Data, block * maxBlockSize, blockBuffer, 0, blockLength);
+                                Array.Copy(dump.Data, block * maxBlockSize, blockBuffer, 0, blockLength);
 
-                            /* block header */
-                            buildBuffer.AddRange(new byte[] { (byte)(blockLength >> 8), (byte)(blockLength & 0xFF), (byte)(address >> 8), (byte)(address & 0xFF) });
-                            buildBuffer.AddRange(blockBuffer);
+                                /* block header */
+                                buildBuffer.AddRange(new byte[] { (byte)(blockLength >> 8), (byte)(blockLength & 0xFF), (byte)(address >> 8), (byte)(address & 0xFF) });
+                                buildBuffer.AddRange(blockBuffer);
+                            }
+
+                            /* finally the last words to init CPUCS */
+                            buildBuffer.AddRange(new byte[] { 0x80, 0x01, 0xE6, 0x00, 0x00 });
                         }
 
-                        /* finally the last words to init CPUCS */
-                        buildBuffer.AddRange(new byte[] { 0x80, 0x01, 0xE6, 0x00, 0x00 });
+                        /* get the whole buffer into a plain array */
+                        eepromBuffer = (byte[])buildBuffer.ToArray(typeof(byte));
                     }
-
-                    /* get the whole buffer into a plain array */
-                    byte[] eepromBuffer = (byte[])buildBuffer.ToArray(typeof(byte));
 
                     /* first some safety check */
                     Log.AddMessage("Firmware requires " + eepromBuffer.Length + " bytes of EEPROM");
@@ -1576,7 +1645,7 @@ namespace RX_Setup
 
                             BeginInvoke(new Action(() =>
                             {
-                                btnCypressEepromProgram.Text = "Block: " + block + "/" + blocks;
+                                btnCypressEepromProgram.Text = (uint)((block * 100) / blocks) + "%";
                             }));
 
                             Array.Copy(eepromBuffer, dataPos, buffer, 0, blockLength);
@@ -1598,6 +1667,37 @@ namespace RX_Setup
             {
                 Log.AddMessage("Writing default EEPROM header");
                 EEPROMDevice.WriteBytes(0, new byte[] { 0xC0, 0xB4, 0x04, 0x01, 0xEE, 0x00, 0x01, 0x01 });
+            }
+        }
+
+        private void btnSetSerial_Click(object sender, EventArgs e)
+        {
+            if (Device == null)
+            {
+                return;
+            }
+
+            if (WorkerThread != null)
+            {
+                MessageBox.Show("Test already running. Stopping...");
+                AbortStressTest = true;
+                return;
+            }
+
+            SerialDialog dlg = new SerialDialog(Device.Atmel.SerialNumber, Device.Atmel.TCXOFreq);
+
+            if (dlg.ShowDialog() == DialogResult.OK)
+            {
+                Device.Atmel.SerialNumber = dlg.Serial;
+                Device.Atmel.TCXOFreq = dlg.TCXOFreq;
+            }
+        }
+
+        private void chkSlowI2C_CheckedChanged(object sender, EventArgs e)
+        {
+            if (Device != null)
+            {
+                Device.I2CSetSpeed(!chkSlowI2C.Checked);
             }
         }
     }

@@ -100,8 +100,8 @@ namespace LibRXFFT.Libraries.GSM.Layer1
     {
         public byte[] Key = new byte[8];
         public uint Count = 0;
-        public bool[] AtoB = new bool[114];
-        public bool[] BtoA = new bool[114];
+        public bool[] DownlinkKey = new bool[114];
+        public bool[] UplinkKey = new bool[114];
 
         /* The three shift registers. */
         private uint R1 = 0;
@@ -217,14 +217,14 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             for (i = 0; i < 114; i++)
             {
                 clock();
-                AtoB[i] = (getbit() != 0);
+                DownlinkKey[i] = (getbit() != 0);
             }
 
             /* Generate 114 bits of keystream for the B->A direction. */
             for (i = 0; i < 114; i++)
             {
                 clock();
-                BtoA[i] = (getbit() != 0);
+                UplinkKey[i] = (getbit() != 0);
             }
         }
 
@@ -301,10 +301,10 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
             /* Compare against the test vector. */
             for (i = 0; i < 114; i++)
-                if (a5.AtoB[i] != goodAtoB[i])
+                if (a5.DownlinkKey[i] != goodAtoB[i])
                     failed = true;
             for (i = 0; i < 114; i++)
-                if (a5.BtoA[i] != goodBtoA[i])
+                if (a5.UplinkKey[i] != goodBtoA[i])
                     failed = true;
 
             if (failed)
@@ -329,10 +329,10 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                 builder.Append("observed output:\r\n");
                 builder.Append(" A->B: ");
                 for (i = 0; i < 114; i++)
-                    builder.Append(a5.AtoB[i] ? 1 : 0);
+                    builder.Append(a5.DownlinkKey[i] ? 1 : 0);
                 builder.Append("  B->A: ");
                 for (i = 0; i < 114; i++)
-                    builder.Append(a5.BtoA[i] ? 1 : 0);
+                    builder.Append(a5.UplinkKey[i] ? 1 : 0);
                 builder.Append("\r\n");
 
                 builder.Append("\r\nI don't know why this broke; contact the authors.\r\n");
@@ -348,7 +348,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             /* GSM 03.20 Ch. 3.1.2 */
             for (int pos = 0; pos < 114; pos++)
             {
-                burstBufferE[pos] ^= AtoB[pos];
+                burstBufferE[pos] ^= DownlinkKey[pos];
             }
         }
 
@@ -360,7 +360,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             /* GSM 03.20 Ch. 3.1.2 */
             for (int pos = 0; pos < 114; pos++)
             {
-                burstBufferE[pos] ^= BtoA[pos];
+                burstBufferE[pos] ^= UplinkKey[pos];
             }
         }
     }

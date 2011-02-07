@@ -12,6 +12,7 @@ namespace LibRXFFT.Libraries
     public class LuaHelpers
     {
         public static LinkedList<string> RegisteredNamespaces = new LinkedList<string>();
+        public static LinkedList<string> RegisteredAssemblies = new LinkedList<string>();
 
         public static void RegisterNamespace(string p)
         {
@@ -20,6 +21,16 @@ namespace LibRXFFT.Libraries
                 if (!RegisteredNamespaces.Contains(p))
                 {
                     RegisteredNamespaces.AddLast(p);
+                }
+            }
+        }
+        public static void RegisterAssembly(string p)
+        {
+            lock (RegisteredAssemblies)
+            {
+                if (!RegisteredAssemblies.Contains(p))
+                {
+                    RegisteredAssemblies.AddLast(p);
                 }
             }
         }
@@ -114,10 +125,17 @@ namespace LibRXFFT.Libraries
             Log.AddMessage("LUA", obj.ToString());
         }
 
-        [AttrLuaFunc("new", "Instanciate a new object", new[] { "Class name to instanciate", "optional parameters" })]
-        public static object LuaNew(string className, params object[] parameters)
+        private static Type FindType(string className)
         {
             Type type = Type.GetType(className);
+
+            foreach (string assembly in RegisteredAssemblies)
+            {
+                if (type == null)
+                {
+                    type = Type.GetType(className + ", " + assembly);
+                }
+            }
 
             foreach (string name in RegisteredNamespaces)
             {
@@ -125,7 +143,36 @@ namespace LibRXFFT.Libraries
                 {
                     type = Type.GetType(name + "." + className);
                 }
+
+                foreach (string assembly in RegisteredAssemblies)
+                {
+                    if (type == null)
+                    {
+                        type = Type.GetType(name + "." + className + ", " + assembly);
+                    }
+                }
             }
+
+            return type;
+        }
+
+        [AttrLuaFunc("new", "Instanciate a new object", new[] { "Class name to instanciate" })]
+        public static object LuaNew(string className)
+        {
+            Type type = FindType(className);
+
+            if (type == null)
+            {
+                return null;
+            }
+
+            return Activator.CreateInstance(type);
+        }
+
+        [AttrLuaFunc("new_args", "Instanciate a new object", new[] { "Class name to instanciate", "optional parameters" })]
+        public static object LuaNewParam(string className, params object[] parameters)
+        {
+            Type type = FindType(className);
 
             if (type == null)
             {
@@ -144,13 +191,21 @@ namespace LibRXFFT.Libraries
 
         public static object[] CallFunction(Lua luaVm, string name, params object[] parameters)
         {
+            return CallFunction(luaVm, name, false, parameters);
+        }
+
+        public static object[] CallFunction(Lua luaVm, string name, bool mayNotExist, params object[] parameters)
+        {
             try
             {
                 LuaFunction func = luaVm.GetFunction(name);
 
                 if (func == null)
                 {
-                    Log.AddMessage("Failed to call " + name + " (Reason: Function not found). Stopping.");
+                    if(!mayNotExist)
+                    {
+                        Log.AddMessage("Failed to call " + name + " (Reason: Function not found). Stopping.");
+                    }
                 }
                 else
                 {

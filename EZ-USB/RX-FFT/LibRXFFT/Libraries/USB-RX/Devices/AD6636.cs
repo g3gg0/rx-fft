@@ -23,28 +23,32 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         private FilterInformation CurrentFilter;
 
 
-        private static int AD6636_REG_NCOFREQ = 0x70;
-        private static int AD6636_REG_NCOFREQ_L = 4;
         private static int AD6636_REG_IOAC = 0x02;
         private static int AD6636_REG_IOAC_L = 1;
+        private static int AD6636_REG_CEN = 0x03;
+        private static int AD6636_REG_CEN_L = 1;
         private static int AD6636_REG_SOFTSYNC = 0x05;
         private static int AD6636_REG_SOFTSYNC_L = 1;
+        private static int AD6636_REG_NCOFREQ = 0x70;
+        private static int AD6636_REG_NCOFREQ_L = 4;
+        private static int AD6636_REG_MRCFC = 0x7C;
+        private static int AD6636_REG_MRCFC_L = 2;
         private static int AD6636_REG_AGCHOR = 0xA0;
         private static int AD6636_REG_AGCHOR_L = 2;
         private static int AD6636_REG_AGCCR = 0xA2;
         private static int AD6636_REG_AGCCR_L = 2;
-        private static int AD6636_REG_AGCSGR = 0xA4;
-        private static int AD6636_REG_AGCSGR_L = 2;
+        private static int AD6636_REG_AGCSG = 0xA4;
+        private static int AD6636_REG_AGCSG_L = 2;
         private static int AD6636_REG_AGCUD = 0xA6;
         private static int AD6636_REG_AGCUD_L = 2;
         private static int AD6636_REG_AGCPL = 0xA8;
         private static int AD6636_REG_AGCPL_L = 1;
         private static int AD6636_REG_AGCAS = 0xA9;
         private static int AD6636_REG_AGCAS_L = 1;
-        private static int AD6636_REG_AGCLG = 0xAC;
-        private static int AD6636_REG_AGCLG_L = 1;
         private static int AD6636_REG_AGCET = 0xAA;
         private static int AD6636_REG_AGCET_L = 2;
+        private static int AD6636_REG_AGCLG = 0xAC;
+        private static int AD6636_REG_AGCLG_L = 1;
         private static int AD6636_REG_PPOC = 0xBC;
         private static int AD6636_REG_PPOC_L = 3;
         private static int AD6636_REG_OPC = 0xC0;
@@ -54,12 +58,12 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 	    {
 		    {1, 1, 0},
 		    {2, 1, 0},
-		    {3, 1, 0x0F},
+		    {3, 1, 0x3F},
 		    {4, 1, 0},
 		    {6, 2, 0x600},
 		    {10, 2, 0},
-		    {12, 4, 0x2009000},
-		    {16, 2, 0x48},
+		    {12, 4, 0}, /* PN inactive, channels from ADC A real */
+		    {16, 2, 0x48}, /* PLL Mul 4, PDD Div 4 */
 		    {20, 2, 0},
 		    {22, 2, 0},
 		    {24, 2, 0},
@@ -94,7 +98,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 		    {99, 1, 0},
 		    {100, 2, 0},
 		    {102, 2, 0},
-		    {192, 2, 0x28F},
+		    {AD6636_REG_OPC, AD6636_REG_OPC_L, 0x028F}, /* independent channels, no complex filters, PCLK master, Div 2 */
             {-1, -1, -1}
 	    };
 
@@ -163,19 +167,30 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
         public bool SetMgcValue(int value)
         {
+            return SetMgcValue(CurrentChannel, value);
+        }
+
+        public bool SetMgcValue(int channel, int gain)
+        {
             bool success = true;
-            value = Math.Min(96, value);
+            gain = Math.Min(96, gain);
             lock (this)
             {
-                success &= this.Device.AD6636WriteReg(AD6636_REG_IOAC, AD6636_REG_IOAC_L, 0x0B);
+                success &= this.Device.AD6636WriteReg(AD6636_REG_IOAC, AD6636_REG_IOAC_L, (1 << channel));
 
-                if (value > 0)
+                if (gain >= 0)
                 {
-                    int mgcFactor = (int)(4095 - (value - 1) * 41.36);
+                    int register = (int)FloatToRegister(96-gain, 4, 8, 6.02, 0.024);
+
                     success &= this.Device.AD6636WriteReg(AD6636_REG_AGCCR, AD6636_REG_AGCCR_L, 0x040C);
+                    success &= this.Device.AD6636WriteReg(AD6636_REG_AGCSG, AD6636_REG_AGCSG_L, register);
+                    success &= this.Device.AD6636WriteReg(AD6636_REG_AGCUD, AD6636_REG_AGCUD_L, 0);
+                    success &= this.Device.AD6636WriteReg(AD6636_REG_AGCPL, AD6636_REG_AGCPL_L, 0);
+                    success &= this.Device.AD6636WriteReg(AD6636_REG_AGCAS, AD6636_REG_AGCAS_L, 0);
+                    success &= this.Device.AD6636WriteReg(AD6636_REG_AGCET, AD6636_REG_AGCET_L, 0);
                     success &= this.Device.AD6636WriteReg(AD6636_REG_AGCLG + 0, AD6636_REG_AGCLG_L, 0);
                     success &= this.Device.AD6636WriteReg(AD6636_REG_AGCLG + 1, AD6636_REG_AGCLG_L, 0);
-                    success &= this.Device.AD6636WriteReg(AD6636_REG_AGCSGR, AD6636_REG_AGCSGR_L, mgcFactor);
+                    success &= this.Device.AD6636WriteReg(AD6636_REG_AGCLG + 2, AD6636_REG_AGCLG_L, 0);
                 }
                 else
                 {
@@ -184,28 +199,60 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
                 AgcState = false;
 
-                _Amplification = value;
+                _Amplification = gain;
                 success &= SoftSync();
             }
             return success;
         }
 
+        private ulong FloatToRegister(double value, int expBits, int mantBits, double expSteps, double mantSteps)
+        {
+            ulong exp = 0;
+            ulong expMax = (1UL << expBits) - 1;
+            double mant = value;
+            double mantMax = (mantSteps * (1 << mantBits));
+
+            /* increase exponent while value is larger than maximum mantissa value */
+            while (mant > mantMax && exp < expMax)
+            {
+                mant -= expSteps;
+                exp++;
+            }
+
+            /* value still too high? */
+            if (mant > mantMax)
+            {
+                return ulong.MaxValue;
+            }
+
+            ulong mantValue = ((ulong)Math.Round(mant / mantSteps));
+
+            return (exp << mantBits) | mantValue;
+        }
+
         public bool SetAgc()
+        {
+            return SetAgc(CurrentChannel);
+        }
+
+        public bool SetAgc(int channel)
         {
             bool success = true;
             lock (this)
             {
-                success &= this.Device.AD6636WriteReg(AD6636_REG_IOAC, AD6636_REG_IOAC_L, 0x0B);
+                double level = 8.0; /* wanted signal level in dB from 0-24 */
+                success &= this.Device.AD6636WriteReg(AD6636_REG_IOAC, AD6636_REG_IOAC_L, (1 << channel));
+
                 success &= this.Device.AD6636WriteReg(AD6636_REG_AGCCR, AD6636_REG_AGCCR_L, 0x040C);
-                success &= this.Device.AD6636WriteReg(AD6636_REG_AGCSGR, AD6636_REG_AGCSGR_L, 128);
+                success &= this.Device.AD6636WriteReg(AD6636_REG_AGCSG, AD6636_REG_AGCSG_L, 128);
                 success &= this.Device.AD6636WriteReg(AD6636_REG_AGCUD, AD6636_REG_AGCUD_L, 16);
                 success &= this.Device.AD6636WriteReg(AD6636_REG_AGCPL, AD6636_REG_AGCPL_L, 4);
                 success &= this.Device.AD6636WriteReg(AD6636_REG_AGCAS, AD6636_REG_AGCAS_L, 2);
                 success &= this.Device.AD6636WriteReg(AD6636_REG_AGCET, AD6636_REG_AGCET_L, 64);
                 success &= this.Device.AD6636WriteReg(AD6636_REG_AGCLG + 0, AD6636_REG_AGCLG_L, 16);
                 success &= this.Device.AD6636WriteReg(AD6636_REG_AGCLG + 1, AD6636_REG_AGCLG_L, 8);
-                success &= this.Device.AD6636WriteReg(AD6636_REG_AGCLG + 2, AD6636_REG_AGCLG_L, 6);
-                
+                success &= this.Device.AD6636WriteReg(AD6636_REG_AGCLG + 2, AD6636_REG_AGCLG_L, (int)(level / 0.094));
+
                 AgcState = true;
 
                 success &= SoftSync();
@@ -214,20 +261,22 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             return success;
         }
 
-        public bool SelectChannel(int index)
+        public bool SelectChannel(int channel)
         {
             bool success = true;
-            int bitMask = (1 << index);
 
             lock (this)
             {
-                success &= this.Device.AD6636WriteReg(3, 1, 0);
-                success &= this.Device.AD6636WriteReg(3, 1, bitMask);
-                success &= this.Device.AD6636WriteReg(188, 3, 1);
+                /* channel enable */
+                //success &= this.Device.AD6636WriteReg(AD6636_REG_CEN, AD6636_REG_CEN_L, 0);
+                success &= this.Device.AD6636WriteReg(0x0C, 4, 0);
+                success &= this.Device.AD6636WriteReg(AD6636_REG_CEN, AD6636_REG_CEN_L, (1 << channel));
+                /* enable corresponding AGCn output */
+                success &= this.Device.AD6636WriteReg(AD6636_REG_PPOC, AD6636_REG_PPOC_L, (1 << channel));
 
                 success &= SoftSync();
 
-                CurrentChannel = index;
+                CurrentChannel = channel;
             }
             return success;
         }
@@ -252,7 +301,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
         public bool SetFilter(AD6636FilterFile filter)
         {
-            return SetFilter(0, filter);
+            return SetFilter(CurrentChannel, filter);
         }
 
         public bool SetFilter(int channel, AD6636FilterFile filter)
@@ -264,27 +313,10 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
             lock (this)
             {
-                switch (channel)
-                {
-                    case 0:
-                        success &= this.Device.AD6636WriteReg(AD6636_REG_IOAC, AD6636_REG_IOAC_L, 1);
-                        success &= this.Device.AD6636WriteReg(124, 2, 13);
-                        break;
-                    case 1:
-                        success &= this.Device.AD6636WriteReg(AD6636_REG_IOAC, AD6636_REG_IOAC_L, 2);
-                        success &= this.Device.AD6636WriteReg(124, 2, 1037);
-                        break;
-                    case 2:
-                        success &= this.Device.AD6636WriteReg(AD6636_REG_IOAC, AD6636_REG_IOAC_L, 4);
-                        success &= this.Device.AD6636WriteReg(124, 2, 2049);
-                        break;
-                    case 3:
-                        success &= this.Device.AD6636WriteReg(AD6636_REG_IOAC, AD6636_REG_IOAC_L, 8);
-                        success &= this.Device.AD6636WriteReg(124, 2, 3073);
-                        break;
-                    default:
-                        return false;
-                }
+                /* set the MRCF channel to modify */
+                success &= this.Device.AD6636WriteReg(AD6636_REG_IOAC, AD6636_REG_IOAC_L, (1 << channel));
+                /* set the source FIR to read from */
+                success &= this.Device.AD6636WriteReg(AD6636_REG_MRCFC, AD6636_REG_MRCFC_L, (channel << 10));
 
                 success &= this.Device.AD6636WriteReg(104, 2, 0);
                 success &= this.Device.AD6636WriteReg(108, 2, 5);
@@ -370,9 +402,8 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             bool success = true;
             lock (this)
             {
-
                 /* read from cache */
-                long regValue = this.Device.AD6636ReadReg(192, 2, true);
+                long regValue = this.Device.AD6636ReadReg(AD6636_REG_OPC, AD6636_REG_OPC_L, true);
                 long bitVal = 0;
 
                 switch (div)
@@ -394,8 +425,28 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                 regValue &= 0x00FF;
                 regValue |= bitVal << 8;
 
-                success &= this.Device.AD6636WriteReg(192, 2, regValue);
+                success &= this.Device.AD6636WriteReg(AD6636_REG_OPC, AD6636_REG_OPC_L, regValue);
             }
+            return success;
+        }
+
+
+        private bool HopSync()
+        {
+            return HopSync(0x0F);
+        }
+
+        public bool HopSync(int channelMask)
+        {
+            bool success = true;
+
+            lock (this)
+            {
+                success &= this.Device.AD6636WriteReg(AD6636_REG_SOFTSYNC, AD6636_REG_SOFTSYNC_L, 0x00);
+                success &= this.Device.AD6636WriteReg(AD6636_REG_SOFTSYNC, AD6636_REG_SOFTSYNC_L, 0x80 | channelMask);
+                success &= this.Device.AD6636WriteReg(AD6636_REG_SOFTSYNC, AD6636_REG_SOFTSYNC_L, 0x80 | channelMask);
+            }
+
             return success;
         }
 
@@ -418,6 +469,37 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             return success;
         }
 
+        public bool SetFrequency(int channel, long frequency)
+        {
+            bool success = true;
+
+            if (CurrentFrequency == frequency)
+            {
+                return true;
+            }
+
+            if (LowestFrequency <= frequency && frequency <= HighestFrequency)
+            {
+                double regValue = frequency * this.NCOMul;
+                lock (this)
+                {
+
+                    this.Device.AD6636WriteReg(AD6636_REG_IOAC, AD6636_REG_IOAC_L, (1 << channel));
+                    this.Device.AD6636WriteReg(AD6636_REG_NCOFREQ, AD6636_REG_NCOFREQ_L, (long)Math.Round(regValue));
+                    HopSync();
+
+                    CurrentFrequency = frequency;
+                }
+                success = true;
+            }
+
+            if (FrequencyChanged != null)
+                FrequencyChanged(this, null);
+
+            return success;
+        }
+
+        /* DC offset correction */
         public long Offset
         {
             set
@@ -427,7 +509,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
                 lock (this)
                 {
-                    success &= this.Device.AD6636WriteReg(AD6636_REG_IOAC, AD6636_REG_IOAC_L, 0x0F);
+                    success &= this.Device.AD6636WriteReg(AD6636_REG_IOAC, AD6636_REG_IOAC_L, (1 << CurrentChannel));
 
                     success &= this.Device.AD6636WriteReg(0x1C, 2, val);
                     success &= this.Device.AD6636WriteReg(0x1E, 2, val);
@@ -448,11 +530,9 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
                 lock (this)
                 {
-                    success &= this.Device.AD6636WriteReg(AD6636_REG_IOAC, AD6636_REG_IOAC_L, 0x04);
-
-                    success &= this.Device.AD6636WriteReg(0xA4, 2, val);
-
-                    success &= SoftSync(0x04);
+                    success &= this.Device.AD6636WriteReg(AD6636_REG_IOAC, AD6636_REG_IOAC_L, (1 << CurrentChannel));
+                    success &= this.Device.AD6636WriteReg(AD6636_REG_AGCSG, AD6636_REG_AGCSG_L, val);
+                    success &= SoftSync((1 << CurrentChannel));
                 }
 
                 return;
@@ -605,32 +685,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
         public bool SetFrequency(long frequency)
         {
-            bool success = true;
-
-            if (CurrentFrequency == frequency)
-            {
-                return true;
-            }
-
-            if (LowestFrequency <= frequency && frequency <= HighestFrequency)
-            {
-                double regValue = frequency * this.NCOMul;
-                lock (this)
-                {
-                    
-                    this.Device.AD6636WriteReg(AD6636_REG_IOAC, AD6636_REG_IOAC_L, 0x0F);
-                    this.Device.AD6636WriteReg(AD6636_REG_NCOFREQ, AD6636_REG_NCOFREQ_L, (long)Math.Round(regValue));
-                    SoftSync();
-                    
-                    CurrentFrequency = frequency;
-                }
-                success = true;
-            }
-
-            if (FrequencyChanged != null)
-                FrequencyChanged(this, null);
-
-            return success;
+            return SetFrequency(CurrentChannel, frequency);
         }
 
         public bool InvertedSpectrum

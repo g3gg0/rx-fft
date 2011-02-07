@@ -16,7 +16,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         public long IFStepSize = 1000000;
 
         private I2CInterface I2cDevice;
-        private int BusID = 33;
+        private int BusID = 0x21;
         private long CurrentFrequency;
         private long Modulus;
         private long PFD;

@@ -46,10 +46,15 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
         {
             if (IsDummy(decodedBurst))
             {
+                State = eBurstState.Idle;
                 DummyBursts++;
 
+                DummyBurstReceived(param);
+
                 if (DumpRawData)
+                {
                     StatusMessage = "Dummy Burst";
+                }
                 return eSuccessState.Succeeded;
             }
 
@@ -63,6 +68,8 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                 /* try to decrypt buffer if this is enabled */
                 if (!HandleEncryption(param))
                 {
+                    State = eBurstState.CryptedTraffic;
+
                     /* encrypted but no decryptor available, silently return */
                     return eSuccessState.Unknown;
                 }
@@ -73,26 +80,12 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                 /* undo convolutional coding c[] to u[] */
                 if (!Deconvolution())
                 {
-                    if (ShowEncryptedMessage || DumpEncryptedMessage)
+                    if (!ChannelEncrypted)
                     {
-                        if (DumpEncryptedMessage)
-                        {
-                            if (!ChannelEncrypted)
-                            {
-                                StatusMessage = "(Encrypted?) De-Interleaved bits: ";
-                                DumpBits(BurstBufferC);
-                            }
-                            else
-                            {
-                                // we expected this to happen
-                            }
-                        }
-                        else
-                        {
-                            StatusMessage = "(Error in ConvolutionalCoder, maybe encrypted)";
-                        }
+                        StatusMessage = "(Error in ConvolutionalCoder)";
                     }
-                    CryptedBursts++;
+
+                    State = eBurstState.Failed;
                     return eSuccessState.Unknown;
                 }
 
@@ -104,11 +97,21 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                         break;
 
                     case eCRCState.Failed:
+                        State = eBurstState.Failed;
                         ErrorMessage = "(CRC Error)";
                         return eSuccessState.Failed;
                 }
 
-                if (ChannelEncrypted && DumpEncryptedMessage)
+                if (ChannelEncrypted)
+                {
+                    State = eBurstState.DecryptedTraffic;
+                }
+                else
+                {
+                    State = eBurstState.PlainTraffic;
+                }
+
+                if (ChannelEncrypted && DumpEncryptedMessageBits)
                 {
                     if (StatusMessage != null)
                     {
@@ -118,9 +121,9 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                     {
                         StatusMessage = EncryptionBitString;
                     }
-
-                    EncryptionBitString = "";
                 }
+
+                EncryptionBitString = "";
 
                 /* convert u[] to d[] bytes */
                 PackBytes();

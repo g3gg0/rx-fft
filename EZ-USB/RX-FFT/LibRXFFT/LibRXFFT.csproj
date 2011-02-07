@@ -79,8 +79,8 @@
       <HintPath>.\LuaInterface.dll</HintPath>
     </Reference>
     <Reference Include="SlimDX, Version=2.0.9.42, Culture=neutral, PublicKeyToken=b1b0c32fd1ffe4f9, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\Program Files (x86)\SlimDX SDK (February 2010)\Bin\x86\SlimDX.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
@@ -101,6 +101,37 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Components\DeviceControls\DeviceControl.cs" />
+    <Compile Include="Components\DeviceControls\FileSourceDeviceControl.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Components\DeviceControls\FileSourceDeviceControl.Designer.cs">
+      <DependentUpon>FileSourceDeviceControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Components\DeviceControls\NetworkDeviceControl.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Components\DeviceControls\NetworkDeviceControl.Designer.cs">
+      <DependentUpon>NetworkDeviceControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Components\DeviceControls\RandomDataDeviceControl.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Components\DeviceControls\RandomDataDeviceControl.Designer.cs">
+      <DependentUpon>RandomDataDeviceControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Components\DeviceControls\SharedMemDeviceControl.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Components\DeviceControls\SharedMemDeviceControl.Designer.cs">
+      <DependentUpon>SharedMemDeviceControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Components\DeviceControls\USBRXDeviceControl.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Components\DeviceControls\USBRXDeviceControl.Designer.cs">
+      <DependentUpon>USBRXDeviceControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="Components\DirectX\DemodFFTView.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -153,11 +184,11 @@
     <Compile Include="Components\DirectX\Drawables\ScrollingText.cs" />
     <Compile Include="Components\DirectX\Drawables\PlotVertsSink.cs" />
     <Compile Include="Components\DirectX\Drawables\WaveformAreaSelection.cs" />
-    <Compile Include="Components\GDI\FileFormatDialog.cs">
+    <Compile Include="Components\GDI\DataFormatDialog.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Components\GDI\FileFormatDialog.Designer.cs">
-      <DependentUpon>FileFormatDialog.cs</DependentUpon>
+    <Compile Include="Components\GDI\DataFormatDialog.Designer.cs">
+      <DependentUpon>DataFormatDialog.cs</DependentUpon>
     </Compile>
     <Compile Include="Components\GDI\FilterDetailDialog.cs">
       <SubType>Form</SubType>
@@ -386,6 +417,18 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Components\DeviceControls\FileSourceDeviceControl.resx">
+      <DependentUpon>FileSourceDeviceControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Components\DeviceControls\NetworkDeviceControl.resx">
+      <DependentUpon>NetworkDeviceControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Components\DeviceControls\USBRXDeviceControl.resx">
+      <DependentUpon>USBRXDeviceControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Components\DirectX\DemodFFTView.resx">
       <DependentUpon>DemodFFTView.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -402,8 +445,8 @@
       <DependentUpon>DirectXWaveformDisplay.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Components\GDI\FileFormatDialog.resx">
-      <DependentUpon>FileFormatDialog.cs</DependentUpon>
+    <EmbeddedResource Include="Components\GDI\DataFormatDialog.resx">
+      <DependentUpon>DataFormatDialog.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Components\GDI\FilterDetailDialog.resx">

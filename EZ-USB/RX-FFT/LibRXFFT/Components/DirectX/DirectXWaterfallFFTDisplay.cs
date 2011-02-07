@@ -634,7 +634,11 @@ namespace LibRXFFT.Components.DirectX
 
             for (int pos = 0; pos < FFTCenterWidth; pos++)
             {
-                FFTResultPartial[pos] = FFTResult[FFTResult.Length / 2 - FFTCenterWidth / 2 + pos];
+                int fftPos = FFTResult.Length / 2 - FFTCenterWidth / 2 + pos;
+                if (fftPos < FFTResult.Length)
+                {
+                    FFTResultPartial[pos] = FFTResult[fftPos];
+                }
             }
         }
 

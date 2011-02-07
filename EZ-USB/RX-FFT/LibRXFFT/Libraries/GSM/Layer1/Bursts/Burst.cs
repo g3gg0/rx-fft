@@ -16,6 +16,8 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
         public string ErrorMessage = "";
         public string StatusMessage = null;
 
+        public string Guid = System.Guid.NewGuid().ToString();
+
         public L3Handler L3 = new L3Handler();
         public L2Handler L2 = new L2Handler();
 

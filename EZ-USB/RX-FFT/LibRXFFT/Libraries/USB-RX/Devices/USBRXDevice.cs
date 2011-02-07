@@ -40,7 +40,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
         private object Lock = new object();
 
-        private bool PreQueueTransfer = false;
+        private bool PreQueueTransfer = true;
 
         public uint SamplesPerBlock { get; set; }
 
@@ -410,7 +410,11 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             if (!Atmel.SetFilter(filter.Id))
                 return false;
 
+            FIFOReset(true);
             AD6636.SetFilter(filter);
+            AD6636.SoftSync();
+            FIFOReset(false);
+
 
             return true;
         }
@@ -471,7 +475,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
         private double ExpectedReadDuration = 0;
         private int SleepDuration = 10;
-        private int MaxOvertimeFactor = 3;
+        private int MaxOvertimeFactor = 20;
         private int TimeoutsHappened = 0;
         public bool DeviceLost = false;
 
@@ -526,6 +530,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
         private void HandleTimeout()
         {
+            return;
             new Thread(() =>
                 {
                     switch (TimeoutsHappened - 4)
@@ -657,6 +662,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                 DeviceLost = false;
 
                 FIFOReset(true);
+                USBRXDeviceNative.ResetEpFifo(DevNum);
 
                 if (PreQueueTransfer)
                 {
@@ -664,7 +670,6 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                     //Log.AddMessage("ReadTrigger [new transfer]");
                     lock (Lock)
                     {
-                        USBRXDeviceNative.ResetEpFifo(DevNum);
                         USBRXDeviceNative.UsbSetControlledTransfer(DevNum, ReadBlockSize, ReadFragmentSize);
                     }
                     FIFOReset(false);
@@ -695,6 +700,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
             lock (Lock)
             {
+                USBRXDeviceNative.ResetEpFifo(DevNum);
                 USBRXDeviceNative.UsbSetGPIFMode(DevNum);
                 USBRXDeviceNative.UsbSetControlledTransfer(DevNum, 0, ReadBlockSize);
             }
@@ -721,6 +727,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
             lock (Lock)
             {
+                USBRXDeviceNative.ResetEpFifo(DevNum);
                 USBRXDeviceNative.UsbSetGPIFMode(DevNum);
             }
             ReadTimerLocked = false;
@@ -734,6 +741,8 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
         private void StopRead()
         {
+            FIFOReset(true);
+
             ReadTimer.Stop();
             ReadTimerLocked = false;
 
@@ -851,6 +860,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
         public bool I2CWriteBytes(int busID, byte[] data)
         {
+            //DiscardNextBlock = true;
             //AddAccess(eDirection.Write, busID, data.Length, data);
 
             int retries = I2CRetries;
@@ -903,6 +913,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
         public bool I2CReadBytes(int busID, byte[] data)
         {
+            //DiscardNextBlock = true;
             //AddAccess(eDirection.Read, busID, data.Length, null);
 
             int retries = I2CRetries;
@@ -941,6 +952,11 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             {
                 USBRXDeviceNative.UsbI2CSetTimeout(DevNum, (ushort)(((retries & 0xFF) << 8) | (timeout & 0xFF)));
             }
+        }
+        
+        public void I2CSetSpeed(bool fast)
+        {
+            USBRXDeviceNative.UsbI2CSetSpeed(DevNum, fast ? 1 : 0);
         }
 
         #endregion

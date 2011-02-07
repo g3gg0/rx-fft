@@ -215,7 +215,7 @@
   <pdudesc ref="10.5.2.5" name="Channel Description" type="3" length="3"/> <!-- handled in software -->
   <pdudesc ref="10.5.2.5a" name="Channel Description 2" type="3" length="3"/> <!-- handled in software -->
   <pdudesc ref="10.5.2.6" name="Channel Mode" type="3" length="1" fields="true">
-	<field name="Mode" type="stringIndex" strings="256">
+	<field name="Mode" type="stringIndex" strings="256" set="ChannelMode">
 		<bits octet="1" start="1" count="8"/>
 		<string index="0" text="signalling only"/>
 		<string index="1" text="speech full rate or half rate version 1"/>
@@ -494,7 +494,7 @@
 	</field>
   </pdudesc> 
   <pdudesc ref="10.5.3.5" name="Location updating type" type="1" fields="true">
-	<field name="LUT" type="stringIndex" strings="4">
+	<field name="LUT" type="stringIndex" strings="4" set="LocationUpdateType">
 		<bits octet="1" start="1" count="2"/>
 		<string index="0" text="Normal location updating"/>
 		<string index="1" text="Periodic updating"/>
@@ -612,7 +612,50 @@
   </pdudesc>
   <pdudesc ref="10.5.4.7" name="Called party BCD number" type="4" length="1"/>
   <pdudesc ref="10.5.4.8" name="Called party subaddress" type="4" length="0"/>
-  <pdudesc ref="10.5.4.9" name="Calling party BCD number" type="4"/>
+  <pdudesc ref="10.5.4.9" name="Calling party BCD number" type="4" fields="true">
+	<field name="Numbering plan" type="stringIndex" strings="8">
+        <bits octet="1" start="5" count="3"/>
+		<string index="0" text="Unknown"/>
+		<string index="1" text="International number"/>
+		<string index="2" text="National number"/>
+		<string index="3" text="Network specific number"/>
+		<string index="4" text="Subscriber number"/>
+		<string index="5" text="Alphanumeric"/>
+		<string index="6" text="Abbreviated number"/>
+		<string index="7" text="Reserved for extension"/>
+	</field>
+	<field name="Number type" type="stringIndex" strings="16">
+		<bits octet="1" start="1" count="4"/>
+		<string index="0" text="Unknown"/>
+		<string index="1" text="ISDN/telephone numbering plan"/>
+		<string index="3" text="Data numbering plan (X.121)"/>
+		<string index="4" text="Telex numbering plan"/>
+		<string index="8" text="National numbering plan"/>
+		<string index="9" text="Private numbering plan"/>
+		<string index="10" text="ERMES numbering plan (ETSI DE/PS 3 01-3)"/>
+		<string index="15" text="Reserved for extension"/>
+	</field>
+	<field name="Screening Indicator" type="stringIndex" strings="4">
+        <bits octet="2" start="1" count="2"/>
+		<string index="0" text="User-provided, not screened"/>
+		<string index="1" text="User-provided, verified and passed"/>
+		<string index="2" text="User-provided, verified and failed"/>
+		<string index="3" text="Network provided"/>
+	</field>
+	<field name="Present. Indicator" type="stringIndex" strings="4">
+        <bits octet="2" start="6" count="2"/>
+		<string index="0" text="Presentation allowed"/>
+		<string index="1" text="Presentation restricted"/>
+		<string index="2" text="Number not available due to interworking"/>
+		<string index="3" text="Reserved"/>
+	</field>
+
+	<field name="Number" type="varbcd">
+		<bits octet="3"/>
+	</field>
+  </pdudesc>  
+  
+  
   <pdudesc ref="10.5.4.10" name="Calling party subaddress" type="4" length="0"/>
   <pdudesc ref="10.5.4.11" name="Cause" type="4" length="2"/>
   <pdudesc ref="10.5.4.11a" name="CLIR suppression" type="2"/>

@@ -30,8 +30,9 @@ namespace LibRXFFT.Libraries.SignalProcessing
         /* global configuration */
         public class SplitterConfig
         {
-            public double BaseFrequency;
-            public double SamplingRate;
+            public double BaseFrequency = 0;
+            public double SamplingRate = 0;
+            public bool Bypass = false;
             public ChannelConfig[] Channels = new ChannelConfig[0];
         }
 
@@ -151,12 +152,21 @@ namespace LibRXFFT.Libraries.SignalProcessing
                     chan.SampleBufferQ = SampleBufferQ[num];
                 }
 
-                /* translate input signal */
-                Downmixers[num].ProcessData(iDataIn, qDataIn, SampleBufferI[num], SampleBufferQ[num]);
+                /* whyn bypassed, copy raw input data */
+                if (!Config.Bypass)
+                {
+                    /* translate input signal */
+                    Downmixers[num].ProcessData(iDataIn, qDataIn, SampleBufferI[num], SampleBufferQ[num]);
 
-                /* now low pass filter translated data */
-                LowPassFiltersI[num].Process(SampleBufferI[num], SampleBufferI[num]);
-                LowPassFiltersQ[num].Process(SampleBufferQ[num], SampleBufferQ[num]);
+                    /* now low pass filter translated data */
+                    LowPassFiltersI[num].Process(SampleBufferI[num], SampleBufferI[num]);
+                    LowPassFiltersQ[num].Process(SampleBufferQ[num], SampleBufferQ[num]);
+                }
+                else
+                {
+                    Array.Copy(iDataIn, SampleBufferI[num], iDataIn.Length);
+                    Array.Copy(qDataIn, SampleBufferQ[num], qDataIn.Length);
+                }
             }
         }
     }

@@ -20,12 +20,15 @@ using RX_FFT.Components.GDI;
 using LibRXFFT.Libraries.GSM.Layer1.PacketDump;
 using System.IO;
 using System.ServiceModel;
+using LibRXFFT.Components.DeviceControls;
+using RX_FFT.DeviceControls;
+using LuaInterface;
 
 namespace GSM_Analyzer
 {
     public partial class GSMAnalyzer : Form
     {
-        public SampleSource Source;
+        public DeviceControl Source;
         private Tuner _Device;
         public Tuner Device
         {
@@ -34,6 +37,12 @@ namespace GSM_Analyzer
             {
                 _Device = value;
                 ChannelHandler.Device = value;
+
+                txtArfcn.Enabled = (Device != null);
+                btnScan.Enabled = (Device != null);
+
+                splitContainer5.SplitterDistance = (Device != null) ? 115 : 0;
+
             }
         }
         private RadioChannelHandler ChannelHandler;
@@ -64,6 +73,9 @@ namespace GSM_Analyzer
         private StringBuilder TextBoxBuffer = new StringBuilder(32768);
         private Timer TextBoxCommitTimer = new Timer();
 
+        private bool ShowSlotUsage = false;
+        private DateTime LastUiUpdate = DateTime.Now;
+        private int UiUpdateTime = 250; /* ms */
         public bool Subsampling = false;
         public int InternalOversampling = 1;
         public double SubSampleOffset = 0;
@@ -74,14 +86,90 @@ namespace GSM_Analyzer
 
         public string AuthHostAddress = "";
         private AuthService AuthHost = null;
-        
+
+        public string KrakenHostAddress = "";
+
+        internal class KrakenCracker : CipherCracker
+        {
+            private GSMAnalyzer Analyzer = null;
+            public KrakenClient Kraken = null;
+
+            public KrakenCracker(GSMAnalyzer analyzer)
+            {
+                Analyzer = analyzer;
+            }
+
+            #region CipherCracker Member
+
+            public byte[] Crack(bool[] key1, uint count1, bool[] key2, uint count2)
+            {
+                if (!Available)
+                {
+                    return null;
+                }
+
+                return Kraken.RequestResult(key1, count1, key2, count2);
+            }
+
+            public bool Available
+            {
+                get
+                {
+                    if (Kraken == null)
+                    {
+                        if (Analyzer.KrakenHostAddress != null && Analyzer.KrakenHostAddress.Length > 0)
+                        {
+                            Kraken = new KrakenClient(Analyzer.KrakenHostAddress);
+                            Kraken.Connect();
+
+                            if (!Kraken.Connected)
+                            {
+                                Kraken.Connect();
+                            }
+
+                            if (Kraken.Connected)
+                            {
+                                return true;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (Analyzer.KrakenHostAddress == null || Analyzer.KrakenHostAddress.Length == 0)
+                        {
+                            Kraken.Disconnect();
+                            Kraken = null;
+                            return false;
+                        }
+
+                        if (!Kraken.Connected)
+                        {
+                            Kraken.Connect();
+                        }
+
+                        if (Kraken.Connected)
+                        {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+            }
+
+            public int SearchDuration
+            {
+                get { return Kraken.SearchDuration; }
+            }
+
+            #endregion
+        }
 
         internal double CurrentSampleRate
         {
             get
             {
                 if (Source != null)
-                    return Source.OutputSamplingRate;
+                    return Source.SamplingRate;
 
                 return DefaultSamplingRate;
             }
@@ -95,25 +183,26 @@ namespace GSM_Analyzer
             }
         }
 
+        public bool _InvertedSpectrum = false;
         public bool InvertedSpectrum
         {
             get
             {
                 if (Source != null)
                 {
-                    InvertedSpectrum = Source.InvertedSpectrum;
+                    _InvertedSpectrum = Source.SampleSource.InvertedSpectrum;
                 }
 
-                return InvertedSpectrum;
+                return _InvertedSpectrum;
             }
             set
             {
                 if (Source != null)
                 {
-                    Source.InvertedSpectrum = value;
+                    Source.SampleSource.InvertedSpectrum = value;
                 }
 
-                InvertedSpectrum = value;
+                _InvertedSpectrum = value;
             }
         }
 
@@ -121,32 +210,45 @@ namespace GSM_Analyzer
         {
             InitializeComponent();
 
+            Log.Init();
+
             try
-            {                
+            {
                 Splitter = new ChannelSplitter();
                 Splitter.Config.BaseFrequency = 0;
-                Splitter.Config.Channels = new ChannelSplitter.ChannelConfig[2];
-                Splitter.Config.Channels[0] = new ChannelSplitter.ChannelConfig();
-                Splitter.Config.Channels[1] = new ChannelSplitter.ChannelConfig();
-                Splitter.Config.Channels[0].ChannelWidth = SymbolRate; /* 270 kHz channel width */
-                Splitter.Config.Channels[1].ChannelWidth = SymbolRate; /* 270 kHz channel width */
 
-                /* hack: one channel aside */
-                Splitter.Config.Channels[0].FrequencyOffset = 500000;
-                Splitter.Config.Channels[1].FrequencyOffset = -500000;
+                if (false)
+                {
+                    Splitter.Config.Channels = new ChannelSplitter.ChannelConfig[2];
+                    Splitter.Config.Channels[0] = new ChannelSplitter.ChannelConfig();
+                    Splitter.Config.Channels[1] = new ChannelSplitter.ChannelConfig();
+                    Splitter.Config.Channels[0].ChannelWidth = SymbolRate; /* 270 kHz channel width */
+                    Splitter.Config.Channels[1].ChannelWidth = SymbolRate; /* 270 kHz channel width */
 
+                    /* hack: one channel aside */
+                    Splitter.Config.Channels[0].FrequencyOffset = 500000;
+                    Splitter.Config.Channels[1].FrequencyOffset = -500000;
+                }
+                else
+                {
+                    Splitter.Config.Bypass = true;
+                    Splitter.Config.Channels = new ChannelSplitter.ChannelConfig[1];
+                    Splitter.Config.Channels[0] = new ChannelSplitter.ChannelConfig();
+                }
                 Splitter.UpdateConfig();
 
 
 
                 Parameters = new GSMParameters();
+                Parameters.CipherCracker = new KrakenCracker(this);
+
+                InitLua();
+
                 Demodulator = new GMSKDemodulator[Splitter.Config.Channels.Length];
                 for (int chan = 0; chan < Demodulator.Length; chan++)
                 {
                     Demodulator[chan] = new GMSKDemodulator();
                 }
-
-                Log.Init();
 
                 /* set up a channel handler for resolving ARFCN to frequencies */
                 ChannelHandler = new RadioChannelHandler(Device);
@@ -160,6 +262,8 @@ namespace GSM_Analyzer
 
                 txtArfcn.Value = ChannelHandler.LowestChannel;
 
+                /* disable controls */
+                Device = null;
 
                 /* already init here to load XML files */
                 InitTimeSlotHandler();
@@ -167,19 +271,7 @@ namespace GSM_Analyzer
                 TextBoxCommitTimer.Tick += new EventHandler(TextBoxCommitTimer_Tick);
                 TextBoxCommitTimer.Interval = 100;
 
-                //File.Delete("c:\\temp\\gsm_dump.xml");
-                //Parameters.PacketDumper = new GsmAnalyzerDumpWriter("c:\\temp\\gsm_dump.xml");
-
-                //Parameters.PcapWriter = new LibRXFFT.Libraries.Pcap.PcapFileWriter("c:\\temp\\gsm.pcap", LibRXFFT.Libraries.Pcap.DataLinkType.WTAP_ENCAP_GSM_UM);
-
-                /*
-                double lg;
-                double bg;
-                GaussKrueger.ConvertToLatLong(3634110, 5391840, out lg, out bg);
-                txtLog.Text += (" " + bg + ", " + lg + Environment.NewLine);
-                GaussKrueger.HelmertTransformation(lg, bg, out lg, out bg);
-                txtLog.Text += (" " + bg + ", " + lg + Environment.NewLine);
-                */
+                slotUsageControl.Visible = ShowSlotUsage;
 
                 CryptA5.SelfCheck();
             }
@@ -188,6 +280,34 @@ namespace GSM_Analyzer
                 MessageBox.Show("Failed to initialize: " + e.GetType().ToString());
             }
         }
+
+        private void InitLua()
+        {
+            try
+            {
+                Parameters.LuaVm = new Lua();
+
+                LuaHelpers.RegisterLuaFunctions(Parameters.LuaVm, new LuaHelpers());
+                Parameters.LuaVm.DoFile("GSM Analyzer.lua");
+                try
+                {
+                    LuaHelpers.CallFunction(Parameters.LuaVm, "Init", this);
+                }
+                catch (Exception e)
+                {
+                    Log.AddMessage("Failed to init LUA Script: " + e.ToString());
+                }
+            }
+            catch (TypeInitializationException e)
+            {
+                Log.AddMessage("Failed to init LUA Script - Running under linux?");
+            }
+            catch (Exception e)
+            {
+                Log.AddMessage("Failed to init LUA Script: " + e.ToString());
+            }
+        }
+
 
         void TextBoxCommitTimer_Tick(object sender, EventArgs e)
         {
@@ -198,7 +318,7 @@ namespace GSM_Analyzer
         public void RegisterTriggers(L3Handler L3Handler)
         {
             L3Handler.PDUDataTriggers.Add("LAIUpdate", TriggerLAIUpdate);
-            L3Handler.PDUDataTriggers.Add("RANDreceived", TriggerRandReceived);            
+            L3Handler.PDUDataTriggers.Add("RANDreceived", TriggerRandReceived);
         }
 
 
@@ -214,7 +334,7 @@ namespace GSM_Analyzer
                 }
             }
 
-            if(rand == null)
+            if (rand == null)
             {
                 return;
             }
@@ -224,21 +344,7 @@ namespace GSM_Analyzer
             {
                 try
                 {
-                    ChannelFactory<AuthService> scf = new ChannelFactory<AuthService>(new NetTcpBinding(), "net.tcp://" + AuthHostAddress + ":8005");
-
-                    AuthHost = scf.CreateChannel();
-                    if (!AuthHost.Available())
-                    {
-                        Log.AddMessage("Auth host '" + AuthHostAddress + "' rejected - not available.");
-                        return;
-                    }
-
-                    Log.AddMessage("Connected to auth host");
-                    (AuthHost as ICommunicationObject).Faulted += new EventHandler((object s, EventArgs ev) =>
-                    {
-                        AuthHost = null;
-                        Log.AddMessage("Disconnected from auth host");
-                    });
+                    AuthHost = ConnectAuthHost();
                 }
                 catch (Exception ex)
                 {
@@ -246,7 +352,6 @@ namespace GSM_Analyzer
                     Log.AddMessage("Failed to connect to auth host '" + AuthHostAddress + "'");
                 }
             }
-
 
             if (rand.Length != 0 && AuthHost != null)
             {
@@ -258,8 +363,32 @@ namespace GSM_Analyzer
                 }
                 byte[] key = new byte[8];
                 Array.Copy(resp, 4, key, 0, 8);
-                Parameters.A5Algorithm.Key = key;
+
+                Parameters.AddA5Key(key);
             }
+        }
+
+        private AuthService ConnectAuthHost()
+        {
+            AuthService service = null;
+
+            ChannelFactory<AuthService> scf = new ChannelFactory<AuthService>(new NetTcpBinding(), "net.tcp://" + AuthHostAddress + ":8005");
+
+            service = scf.CreateChannel();
+            if (!service.Available())
+            {
+                Log.AddMessage("Auth host '" + AuthHostAddress + "' rejected - not available.");
+                return null;
+            }
+
+            Log.AddMessage("Connected to auth host");
+            (service as ICommunicationObject).Faulted += new EventHandler((object s, EventArgs ev) =>
+            {
+                AuthHost = null;
+                Log.AddMessage("Disconnected from auth host");
+            });
+
+            return service;
         }
 
         private void TriggerLAIUpdate(L3Handler L3Handler)
@@ -363,6 +492,11 @@ namespace GSM_Analyzer
 
         void UpdateUIStatus(GSMParameters param)
         {
+            if (ShowSlotUsage)
+            {
+                slotUsageControl.UpdateSlots(param.ActiveBursts);
+            }
+
             switch (param.State)
             {
                 case eGSMState.Idle:
@@ -422,9 +556,35 @@ namespace GSM_Analyzer
 
         private void UpdatePowerDetails(double averagePower, double averageIdlePower)
         {
-            lblPower.Text = DBTools.SampleTodB(averagePower).ToString("#0.0 dB");
-            lblIdlePower.Text = DBTools.SampleTodB(averageIdlePower).ToString("#0.0 dB");
-            lblSnr.Text = (DBTools.SampleTodB(averagePower) - DBTools.SampleTodB(averageIdlePower)).ToString("#0.0 dB");
+            double avg = DBTools.SampleTodB(averagePower);
+            if (double.IsNaN(avg) || double.IsInfinity(avg))
+            {
+                lblPower.Text = "--.-- dB";
+            }
+            else
+            {
+                lblPower.Text = avg.ToString("#0.0 dB");
+            }
+
+            double avgIdle = DBTools.SampleTodB(averageIdlePower);
+            if (double.IsNaN(avgIdle) || double.IsInfinity(avgIdle))
+            {
+                lblIdlePower.Text = "--.-- dB";
+            }
+            else
+            {
+                lblIdlePower.Text = avgIdle.ToString("#0.0 dB");
+            }
+
+            double snr = DBTools.SampleTodB(averagePower) - DBTools.SampleTodB(averageIdlePower);
+            if (double.IsNaN(snr) || double.IsInfinity(snr))
+            {
+                lblSnr.Text = "--.-- dB";
+            }
+            else
+            {
+                lblSnr.Text = DBTools.SampleTodB(snr).ToString("#0.0 dB");
+            }
         }
 
         /* intentionally dont pass GSMParameters due to thread safeness */
@@ -464,6 +624,8 @@ namespace GSM_Analyzer
                 lblTN.Text = "" + TN;
             else
                 lblTN.Text = "---";
+
+            lblDate.Text = Parameters.TimeStamp.ToShortDateString() + " " + Parameters.TimeStamp.ToShortTimeString();
         }
 
 
@@ -513,69 +675,18 @@ namespace GSM_Analyzer
             }
         }
 
-        void chkDump_MouseClick(object sender, System.Windows.Forms.MouseEventArgs e)
+        private void btnOpen_MouseUp(object sender, System.Windows.Forms.MouseEventArgs e)
         {
-            chkDump.CheckState = CheckState.Unchecked;
-
-            if (Parameters.PacketDumper != null)
+            try
             {
-                Parameters.PacketDumper.Close();
-                Parameters.PacketDumper = null;
+                if (e.Button == MouseButtons.Right)
+                {
+                    InitLua();
+                }
             }
-            else
+            catch (Exception ex)
             {
-                ContextMenu contextMenu = new ContextMenu();
-                MenuItem menuItem;
-
-                menuItem = new MenuItem("Dump to XML...");
-                menuItem.Click += (object s, EventArgs ev) =>
-                {
-                    FileDialog dlg = new SaveFileDialog();
-                    dlg.Filter = "GSM Analyzer Dumps (*.gad)|*.gad|All files (*.*)|*.*";
-
-                    if (dlg.ShowDialog() == DialogResult.OK)
-                    {
-                        try
-                        {
-                            File.Delete(dlg.FileName);
-                            Parameters.PacketDumper = new GsmAnalyzerDumpWriter(dlg.FileName);
-                            chkDump.CheckState = CheckState.Checked;
-                        }
-                        catch (Exception ex)
-                        {
-                            MessageBox.Show("Could not create dump file: " + ex.GetType().ToString());
-                        }
-                    }
-                };
-                contextMenu.MenuItems.Add(menuItem);
-
-                menuItem = new MenuItem("Dump via GSMTAP");
-                contextMenu.MenuItems.Add(menuItem);
-                menuItem.Click += (object s, EventArgs ev) =>
-                {
-                    Parameters.PacketDumper = new GsmTapWriter();
-                    chkDump.CheckState = CheckState.Checked;
-                };
-
-                menuItem = new MenuItem("Forward to Master...");
-                menuItem.Enabled = false;
-                contextMenu.MenuItems.Add(menuItem);
-
-                menuItem = new MenuItem("-");
-                menuItem.Enabled = false;
-                contextMenu.MenuItems.Add(menuItem);
-
-                menuItem = new MenuItem("Skip L2 processing during dump");
-                menuItem.Checked = Parameters.SkipL2Parsing;
-                menuItem.Click += (object s, EventArgs ev) => { Parameters.SkipL2Parsing ^= true; };
-                contextMenu.MenuItems.Add(menuItem);
-
-                Point popupPos = this.PointToClient(MousePosition);
-
-                popupPos.X -= 20;
-                popupPos.Y -= 20;
-
-                contextMenu.Show(this, popupPos);
+                Log.AddMessage("Failed to init LUA Script: " + e.ToString());
             }
         }
 
@@ -583,61 +694,112 @@ namespace GSM_Analyzer
         {
             if (ReadThread != null)
             {
-                ThreadActive = false;
-
-                if (!ReadThread.Join(1000))
-                    ReadThread.Abort();
-
-                ReadThread = null;
-
-                if (ChannelScanThread != null)
-                {
-                    ChannelScanThread.Abort();
-                    ChannelScanThread = null;
-                    btnScan.Text = "Scan";
-                }
-
-                if (Source != null)
-                {
-                    Source.Close();
-                    Source = null;
-                }
-
-                btnOpen.Text = "Open";
+                CloseSource();
             }
             else
             {
+                InitLua();
+
                 ContextMenu menu = new ContextMenu();
 
                 menu.MenuItems.Add(new MenuItem("Shared Memory", new EventHandler(btnOpen_SharedMemory)));
-                menu.MenuItems.Add(new MenuItem("USRP CFile", new EventHandler(btnOpen_CFile)));
+                menu.MenuItems.Add(new MenuItem("IQ Wave File", new EventHandler(btnOpen_IQFile)));
                 menu.MenuItems.Add(new MenuItem("Dumped Traffic", new EventHandler(btnOpen_DumpFile)));
-                btnOpen.ContextMenu = menu;
-                btnOpen.ContextMenu.Show(btnOpen, new Point(10, 10));
+                menu.MenuItems.Add(new MenuItem("Dumped Traffic (multi)", new EventHandler(btnOpen_DumpFileMulti)));
+                menu.MenuItems.Add(new MenuItem("Network Source", new EventHandler(btnOpen_NetworkSource)));
+                menu.MenuItems.Add(new MenuItem("-"));
+                menu.MenuItems.Add(new MenuItem("LUA Script", new EventHandler(btnOpen_LuaScript)));
+
+                menu.Show(this, new Point(10, 10));
             }
         }
 
-        private void btnOpen_CFile(object sender, EventArgs e)
+        private void CloseSource()
+        {
+            ThreadActive = false;
+
+            if (ReadThread != null)
+            {
+                if (!ReadThread.Join(500))
+                    ReadThread.Abort();
+
+                ReadThread = null;
+            }
+
+            if (ChannelScanThread != null)
+            {
+                ChannelScanThread.Abort();
+                ChannelScanThread = null;
+                btnScan.Text = "Scan";
+            }
+
+            if (Source != null)
+            {
+                Source.CloseControl();
+                Source = null;
+            }
+
+            btnOpen.Text = "Open";
+        }
+
+        private void btnOpen_LuaScript(object sender, EventArgs e)
         {
             OpenFileDialog dlg = new OpenFileDialog();
-            dlg.Filter = "USRP CFiles (*.cfile)|*.cfile|All files (*.*)|*.*";
+            dlg.Filter = "LUA Scripts (*.lua)|*.lua|All files (*.*)|*.*";
+            dlg.Multiselect = true;
 
             if (dlg.ShowDialog() == DialogResult.OK)
             {
-                Source = new FileSampleSource(dlg.FileName, InternalOversampling);
-
-                txtLog.Clear();
-                ThreadActive = true;
-                ReadThread = new Thread(SampleReadFunc);
-                ReadThread.Start();
-
-                btnOpen.Text = "Close";
+                foreach (string file in dlg.FileNames)
+                {
+                    try
+                    {
+                        Parameters.LuaVm.DoFile(file);
+                    }
+                    catch (LuaScriptException ex)
+                    {
+                        MessageBox.Show("Failed to load '" + file + "'. Reason: " + ex.Message);
+                    }
+                    catch (LuaException ex)
+                    {
+                        MessageBox.Show("Failed to load '" + file + "'. Reason: " + ex.Message);
+                    }
+                }
             }
+        }
+
+        private void btnOpen_IQFile(object sender, EventArgs e)
+        {
+            Source = new FileSourceDeviceControl(InternalOversampling);
+
+            if (!Source.Connected)
+            {
+                return;
+            }
+            txtLog.Clear();
+            ThreadActive = true;
+            ReadThread = new Thread(SampleReadFunc);
+            ReadThread.Start();
+
+            btnOpen.Text = "Close";
+            return;
+        }
+
+        public void btnOpen_NetworkSource(object sender, EventArgs e)
+        {
+            Source = new NetworkDeviceControl();
+
+            txtLog.Clear();
+            ThreadActive = true;
+            ReadThread = new Thread(SampleReadFunc);
+            ReadThread.Start();
+
+            btnOpen.Text = "Close";
         }
 
         public void OpenSharedMem(int srcChan)
         {
-            Source = new ShmemSampleSource("GSM Analyzer", srcChan, InternalOversampling, DefaultSamplingRate, 128*1024*1024);
+            Source = new SharedMemDeviceControl(srcChan);
 
             txtLog.Clear();
             ThreadActive = true;
@@ -668,7 +830,46 @@ namespace GSM_Analyzer
             return item;
         }
 
+        private void btnOpen_DumpFileMulti(object sender, EventArgs e)
+        {
+            OpenFileDialog dlg = new OpenFileDialog();
+            dlg.Filter = "GSM Analyzer Dump Files (*.gad)|*.gad|All files (*.*)|*.*";
+            dlg.Multiselect = true;
 
+            if (dlg.ShowDialog() == DialogResult.OK)
+            {
+                ThreadActive = true;
+                ReadThread = new Thread(() =>
+                {
+                    foreach (string file in dlg.FileNames)
+                    {
+                        BeginInvoke(new Action(() => { txtLog.Clear(); }));
+
+                        DumpReadFunc(file);
+
+                        /* save messages */
+                        try
+                        {
+                            FileStream stream = File.Open(file + ".txt", FileMode.OpenOrCreate, FileAccess.Write);
+                            TextWriter writer = new StreamWriter(stream);
+
+                            string messages = "";
+                            BeginInvoke(new Action(() => { messages = txtLog.Text; }));
+                            writer.WriteLine(messages);
+                            writer.Close();
+                        }
+                        catch (Exception ex)
+                        {
+                        }
+                    }
+
+                    BeginInvoke(new Action(() => { CloseSource(); }));
+                });
+                ReadThread.Start();
+
+                btnOpen.Text = "Close";
+            }
+        }
 
         private void btnOpen_DumpFile(object sender, EventArgs e)
         {
@@ -679,13 +880,16 @@ namespace GSM_Analyzer
             {
                 txtLog.Clear();
                 ThreadActive = true;
-                ReadThread = new Thread(() => { DumpReadFunc(dlg.FileName); });
+                ReadThread = new Thread(() =>
+                {
+                    DumpReadFunc(dlg.FileName);
+                    BeginInvoke(new Action(() => { CloseSource(); }));
+                });
                 ReadThread.Start();
 
                 btnOpen.Text = "Close";
             }
         }
-
 
         private void btnOpen_SharedMemory(object sender, EventArgs e)
         {
@@ -705,20 +909,19 @@ namespace GSM_Analyzer
                 menu.MenuItems.Add(item);
             }
 
-            btnOpen.ContextMenu = menu;
-            btnOpen.ContextMenu.Show(btnOpen, new Point(10, 10));
+            menu.Show(this, new Point(10, 10));
         }
 
         void SampleReadFunc()
         {
-            FCCHFinder finder = new FCCHFinder(Oversampling);
+            FCCHFinder normalFinder = new FCCHFinder(Oversampling);
+            FCCHFinder invertedFinder = new FCCHFinder(Oversampling);
 
             long frameStartPosition = 0;
             long currentPosition = 0;
-            long updateLoops = 0;
             int displayedChannel = 0;
 
-            double oldSamplingRate = Source.OutputSamplingRate;
+            double oldSamplingRate = Source.SamplingRate;
 
 
             long burstSamples = (long)Math.Ceiling(Burst.TotalBitCount * Oversampling);
@@ -742,15 +945,15 @@ namespace GSM_Analyzer
             {
                 burstBuffer[chan] = new double[(int)((Handler.SpareBits + Burst.TotalBitCount) * Oversampling)];
                 burstStrengthBuffer[chan] = new double[(int)((Handler.SpareBits + Burst.TotalBitCount) * Oversampling)];
-                sourceSignal[chan] = new double[Source.OutputBlockSize];
-                sourceStrength[chan] = new double[Source.OutputBlockSize];
+                sourceSignal[chan] = new double[Source.SampleSource.OutputBlockSize];
+                sourceStrength[chan] = new double[Source.SampleSource.OutputBlockSize];
             }
 
             /* update sampling rate in spectrum window */
             lock (SpectrumWindowLock)
             {
                 if (SpectrumWindow != null)
-                    SpectrumWindow.SamplingRate = Source.OutputSamplingRate;
+                    SpectrumWindow.SamplingRate = Source.SamplingRate;
             }
 
             /* increase shared mem read timeout */
@@ -764,43 +967,44 @@ namespace GSM_Analyzer
                 while (ThreadActive)
                 {
                     /* check if sample source was not able to read a whole block */
-                    if (!Source.Read() || Source.SamplesRead != Source.OutputBlockSize)
+                    if (!Source.ReadBlock() || Source.SampleSource.SamplesRead != Source.SampleSource.OutputBlockSize)
                     {
-                        if (Source.SamplesRead != Source.OutputBlockSize && Source.SamplesRead != 0)
+                        if (Source.SampleSource.SamplesRead != Source.SampleSource.OutputBlockSize && Source.SampleSource.SamplesRead != 0)
                         {
                             AddMessage("-------------------------------------------------------------------------------------------------------------------------------" + Environment.NewLine);
                             AddMessage("  Important: Input buffer inconsistency. Your computer might be too slow. Please close some applications and/or visualizations" + Environment.NewLine);
                             AddMessage("-------------------------------------------------------------------------------------------------------------------------------" + Environment.NewLine);
                             AddMessage(Environment.NewLine);
-                            Source.Flush();
+                            Source.SampleSource.Flush();
                         }
                         Thread.Sleep(50);
                     }
                     else
                     {
-                        if (Source.BufferOverrun)
+                        if (Source.SampleSource.BufferOverrun)
                         {
                             AddMessage("------------------------------------------------------------------------------------------------------------------------------------------------------" + Environment.NewLine);
                             AddMessage("  Important: Input buffer overrun. Your computer might be too slow. Please close some applications and/or visualizations or reduce sampling rate" + Environment.NewLine);
                             AddMessage("------------------------------------------------------------------------------------------------------------------------------------------------------" + Environment.NewLine);
                             AddMessage(Environment.NewLine);
-                            Source.Flush();
+                            Source.SampleSource.Flush();
                         }
 
                         /* handle external rate change */
-                        if (Source.SamplingRateHasChanged)
+                        if (Source.SampleSource.SamplingRateHasChanged)
                         {
-                            Source.SamplingRateHasChanged = false;
+                            Source.SampleSource.SamplingRateHasChanged = false;
 
                             /* update channel splitter */
-                            Splitter.Config.SamplingRate = Source.OutputSamplingRate;
+                            Splitter.Config.SamplingRate = Source.SamplingRate;
                             Splitter.UpdateConfig();
 
                             if (Oversampling > 1)
                             {
-                                AddMessage("[GSM] Sampling Rate changed from " + oldSamplingRate + " to " + Source.OutputSamplingRate + ", Oversampling factor: " + Oversampling + Environment.NewLine);
-                                oldSamplingRate = Source.OutputSamplingRate;
-                                finder = new FCCHFinder(Oversampling);
+                                AddMessage("[GSM] Sampling Rate changed from " + oldSamplingRate + " to " + Source.SamplingRate + ", Oversampling factor: " + Oversampling + Environment.NewLine);
+                                oldSamplingRate = Source.SamplingRate;
+                                normalFinder = new FCCHFinder(Oversampling);
+                                invertedFinder = new FCCHFinder(Oversampling);
 
                                 InitTimeSlotHandler();
 
@@ -816,8 +1020,8 @@ namespace GSM_Analyzer
                                     burstBuffer[chan] = new double[(int)((Handler.SpareBits + Burst.TotalBitCount) * Oversampling)];
                                     burstStrengthBuffer[chan] = new double[(int)((Handler.SpareBits + Burst.TotalBitCount) * Oversampling)];
 
-                                    sourceSignal[chan] = new double[Source.OutputBlockSize];
-                                    sourceStrength[chan] = new double[Source.OutputBlockSize];
+                                    sourceSignal[chan] = new double[Source.SampleSource.OutputBlockSize];
+                                    sourceStrength[chan] = new double[Source.SampleSource.OutputBlockSize];
                                 }
 
                                 Parameters.Reset();
@@ -831,13 +1035,13 @@ namespace GSM_Analyzer
                                 lock (SpectrumWindowLock)
                                 {
                                     if (SpectrumWindow != null)
-                                        SpectrumWindow.SamplingRate = Source.OutputSamplingRate;
+                                        SpectrumWindow.SamplingRate = Source.SamplingRate;
                                 }
                             }
                         }
 
                         /* split signal into channels */
-                        Splitter.ProcessData(Source.SourceSamplesI, Source.SourceSamplesQ);
+                        Splitter.ProcessData(Source.SampleSource.SourceSamplesI, Source.SampleSource.SourceSamplesQ);
 
                         /* demodulate every channel */
                         for (int num = 0; num < channels; num++)
@@ -848,7 +1052,7 @@ namespace GSM_Analyzer
                         }
 
                         /* go through every sample */
-                        for (int pos = 0; pos < Source.OutputBlockSize; pos++)
+                        for (int pos = 0; pos < Source.SampleSource.OutputBlockSize; pos++)
                         {
                             double signal = sourceSignal[0][pos] + Parameters.PhaseOffsetValue;
                             double strength = sourceStrength[0][pos];
@@ -886,7 +1090,7 @@ namespace GSM_Analyzer
                             {
                                 if (SpectrumWindow != null)
                                 {
-                                    lock (Source.SampleBufferLock)
+                                    lock (Source.SampleSource.SampleBufferLock)
                                     {
                                         SpectrumWindow.ProcessIQSample(Splitter.Config.Channels[displayedChannel].SampleBufferI[pos], Splitter.Config.Channels[displayedChannel].SampleBufferQ[pos]);
                                     }
@@ -908,7 +1112,8 @@ namespace GSM_Analyzer
 
                                     L3Handler.ReloadFiles();
                                     currentPosition = 0;
-                                    finder.Reset();
+                                    normalFinder.Reset();
+                                    invertedFinder.Reset();
 
                                     Parameters.Reset();
                                     Parameters.ResetError();
@@ -921,18 +1126,33 @@ namespace GSM_Analyzer
 
                                 case eGSMState.FCCHSearch:
 
-                                    /* let the FCCH finder search the FCCH burst */
+                                    /* let the FCCH finders search the FCCH burst */
                                     try
                                     {
-                                        if (finder.ProcessData(signal, strength))
+                                        bool normalFound = normalFinder.ProcessData(signal, strength);
+                                        bool invertedFound = invertedFinder.ProcessData(-signal, strength);
+
+                                        if (normalFound | invertedFound)
                                         {
                                             Parameters.State = eGSMState.SCHSearch;
                                             UpdateUIStatus(Parameters);
 
-                                            AddMessage("[GSM] FCCH found" + Environment.NewLine);
+                                            /* if the inverted FCCH findet found one, invert spectrum */
+                                            if (invertedFound)
+                                            {
+                                                AddMessage("[GSM] FCCH found (inverting spectrum)" + Environment.NewLine);
+                                                InvertedSpectrum ^= true;
 
-                                            /* save the position where the frame started */
-                                            frameStartPosition = finder.BurstStartPosition;
+                                                /* save the position where the frame started */
+                                                frameStartPosition = invertedFinder.BurstStartPosition;
+                                            }
+                                            else
+                                            {
+                                                AddMessage("[GSM] FCCH found" + Environment.NewLine);
+                                                /* save the position where the frame started */
+                                                frameStartPosition = normalFinder.BurstStartPosition;
+                                            }
+
                                             frameStartPosition -= (long)(Oversampling * Handler.SpareBits);
 
                                             /* update the burst buffer pointer */
@@ -1101,11 +1321,12 @@ namespace GSM_Analyzer
                                         Parameters.SubSampleOffset = 0;
 
                                         /* update UI if necessary */
-                                        if (SingleStep || updateLoops++ >= 1000)
+                                        if (SingleStep || (DateTime.Now - LastUiUpdate).TotalMilliseconds > UiUpdateTime)
                                         {
+                                            LastUiUpdate = DateTime.Now;
+
                                             UpdateUIStatus(Parameters);
                                             UpdateStats(Parameters);
-                                            updateLoops = 0;
                                         }
 
                                         if (SingleStep)
@@ -1144,9 +1365,8 @@ namespace GSM_Analyzer
 
         void DumpReadFunc(string fileName)
         {
-            long updateLoops = 0;
             bool[] burstBits = new bool[148];
-            GsmAnalyzerDumpReader reader = new GsmAnalyzerDumpReader(fileName);
+            GsmAnalyzerDumpReader reader = new GsmAnalyzerDumpReader(Parameters, fileName);
 
             L3Handler.ReloadFiles();
 
@@ -1164,16 +1384,17 @@ namespace GSM_Analyzer
             {
                 while (reader.HasData)
                 {
-                    reader.Read(Parameters, burstBits);
+                    reader.Read(burstBits);
 
-                    Handler.Handle(burstBits);
+                    Handler.Handle(burstBits, reader.BurstNumber);
 
                     /* update UI if necessary */
-                    if (SingleStep || updateLoops++ >= 50 * 9)
+                    if (SingleStep || (DateTime.Now - LastUiUpdate).TotalMilliseconds > UiUpdateTime)
                     {
+                        LastUiUpdate = DateTime.Now;
+
                         UpdateUIStatus(Parameters);
                         UpdateStats(Parameters);
-                        updateLoops = 0;
                     }
 
                     if (SingleStep)
@@ -1226,91 +1447,6 @@ namespace GSM_Analyzer
                 MessageBox.Show("   [L3] " + Handler.L3.StatusMessage);
         }
 
-        private void btnOptions_Click(object sender, EventArgs e)
-        {
-            if (OptionsWindow == null || !OptionsWindow.Visible)
-            {
-                OptionsWindow = new OptionsDialog(this);
-                OptionsWindow.Show();
-            }
-            else
-            {
-                OptionsWindow.Close();
-                OptionsWindow = null;
-            }
-        }
-
-
-        private void btnStats_Click(object sender, EventArgs e)
-        {
-            DumpStatistics();
-        }
-
-        private void btnL3Filter_Click(object sender, EventArgs e)
-        {
-            if (FilterWindow == null || !FilterWindow.Visible)
-            {
-                FilterWindow = new FilterDialog();
-                FilterWindow.Show();
-            }
-            else
-            {
-                FilterWindow.Close();
-                FilterWindow = null;
-            }
-        }
-
-        private void btnSpectrum_Click(object sender, EventArgs e)
-        {
-            lock (SpectrumWindowLock)
-            {
-                if (SpectrumWindow == null || !SpectrumWindow.Visible)
-                {
-                    try
-                    {
-                        SpectrumWindow = new SpectrumVisualizer();
-                        SpectrumWindow.Show();
-                        if (Source != null)
-                            SpectrumWindow.SamplingRate = Source.OutputSamplingRate;
-                    }
-                    catch (Exception ex)
-                    {
-                        AddMessage("Exception while initializing Spectrum Window:" + Environment.NewLine + ex.ToString());
-                    }
-                }
-                else
-                {
-                    SpectrumWindow.Close();
-                    SpectrumWindow = null;
-                }
-            }
-        }
-
-        private void btnBurst_Click(object sender, EventArgs e)
-        {
-            lock (BurstWindowLock)
-            {
-                if (BurstWindow == null || !BurstWindow.Visible)
-                {
-                    try
-                    {
-                        BurstWindow = new BurstVisualizer(Oversampling);
-                        BurstWindow.Show();
-                    }
-                    catch (Exception ex)
-                    {
-                        AddMessage("Exception while initializing Burst Window:" + Environment.NewLine + ex.ToString());
-                    }
-                }
-                else
-                {
-                    BurstWindow.Close();
-                    BurstWindow = null;
-                }
-            }
-        }
-
-
         private void chkSingleStep_CheckedChanged(object sender, EventArgs e)
         {
             SingleStep = chkSingleStep.Checked;
@@ -1328,11 +1464,6 @@ namespace GSM_Analyzer
             }
         }
 
-        private void btnClear_Click(object sender, EventArgs e)
-        {
-            txtLog.Clear();
-        }
-
         void txtArfcn_ValueChanged(object sender, System.EventArgs e)
         {
             long chan = txtArfcn.Value;
@@ -1341,7 +1472,7 @@ namespace GSM_Analyzer
             {
                 txtArfcn.BackColor = Color.White;
                 ChannelHandler.Channel = txtArfcn.Value;
-                Source.Flush();
+                Source.SampleSource.Flush();
                 Parameters.ARFCN = txtArfcn.Value;
                 Parameters.State = eGSMState.Reset;
             }
@@ -1390,7 +1521,7 @@ namespace GSM_Analyzer
 
             while (true)
             {
-                Source.Flush();
+                Source.SampleSource.Flush();
                 Parameters.State = eGSMState.Reset;
 
                 /* wait until reset done */
@@ -1460,6 +1591,173 @@ namespace GSM_Analyzer
                 ChannelHandler.Channel = ChannelHandler.NextChannel;
                 BeginInvoke(new MethodInvoker(() => txtArfcn.Value = ChannelHandler.Channel));
             }
+        }
+
+        private void btnDumpStatistics_Click(object sender, EventArgs e)
+        {
+            DumpStatistics();
+        }
+
+        private void btnToggleBurst_Click(object sender, EventArgs e)
+        {
+            lock (BurstWindowLock)
+            {
+                if (BurstWindow == null || !BurstWindow.Visible)
+                {
+                    try
+                    {
+                        BurstWindow = new BurstVisualizer(Oversampling);
+                        BurstWindow.Show();
+                    }
+                    catch (Exception ex)
+                    {
+                        AddMessage("Exception while initializing Burst Window:" + Environment.NewLine + ex.ToString());
+                    }
+                }
+                else
+                {
+                    BurstWindow.Close();
+                    BurstWindow = null;
+                }
+            }
+        }
+
+        private void btnToggleSpectrum_Click(object sender, EventArgs e)
+        {
+            lock (SpectrumWindowLock)
+            {
+                if (SpectrumWindow == null || !SpectrumWindow.Visible)
+                {
+                    try
+                    {
+                        SpectrumWindow = new SpectrumVisualizer();
+                        SpectrumWindow.Show();
+                        if (Source != null)
+                            SpectrumWindow.SamplingRate = Source.SamplingRate;
+                    }
+                    catch (Exception ex)
+                    {
+                        AddMessage("Exception while initializing Spectrum Window:" + Environment.NewLine + ex.ToString());
+                    }
+                }
+                else
+                {
+                    SpectrumWindow.Close();
+                    SpectrumWindow = null;
+                }
+            }
+        }
+
+        private void btnOptions_Click(object sender, EventArgs e)
+        {
+
+            if (OptionsWindow == null || !OptionsWindow.Visible)
+            {
+                OptionsWindow = new OptionsDialog(this);
+                OptionsWindow.Show();
+            }
+            else
+            {
+                OptionsWindow.Close();
+                OptionsWindow = null;
+            }
+        }
+
+        private void btnClear_Click(object sender, EventArgs e)
+        {
+            txtLog.Clear();
+        }
+
+        private void btnL3Filter_Click(object sender, EventArgs e)
+        {
+            if (FilterWindow == null || !FilterWindow.Visible)
+            {
+                FilterWindow = new FilterDialog();
+                FilterWindow.Show();
+            }
+            else
+            {
+                FilterWindow.Close();
+                FilterWindow = null;
+            }
+        }
+
+        private void btnDump_Click(object sender, EventArgs e)
+        {
+            btnDump.CheckState = CheckState.Unchecked;
+
+            if (Parameters.PacketDumper != null)
+            {
+                Parameters.PacketDumper.Close();
+                Parameters.PacketDumper = null;
+            }
+            else
+            {
+                ContextMenu contextMenu = new ContextMenu();
+                MenuItem menuItem;
+
+                menuItem = new MenuItem("Dump to XML...");
+                menuItem.Click += (object s, EventArgs ev) =>
+                {
+                    FileDialog dlg = new SaveFileDialog();
+                    dlg.Filter = "GSM Analyzer Dumps (*.gad)|*.gad|All files (*.*)|*.*";
+
+                    if (dlg.ShowDialog() == DialogResult.OK)
+                    {
+                        try
+                        {
+                            File.Delete(dlg.FileName);
+                            Parameters.PacketDumper = new GsmAnalyzerDumpWriter(Parameters, dlg.FileName);
+                            btnDump.CheckState = CheckState.Checked;
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show("Could not create dump file: " + ex.GetType().ToString());
+                        }
+                    }
+                };
+                contextMenu.MenuItems.Add(menuItem);
+
+                menuItem = new MenuItem("Dump via GSMTAP");
+                contextMenu.MenuItems.Add(menuItem);
+                menuItem.Click += (object s, EventArgs ev) =>
+                {
+                    Parameters.PacketDumper = new GsmTapWriter(Parameters);
+                    btnDump.CheckState = CheckState.Checked;
+                };
+
+                menuItem = new MenuItem("Forward to Master...");
+                menuItem.Enabled = false;
+                contextMenu.MenuItems.Add(menuItem);
+
+                menuItem = new MenuItem("-");
+                menuItem.Enabled = false;
+                contextMenu.MenuItems.Add(menuItem);
+
+                menuItem = new MenuItem("Skip L2 processing during dump");
+                menuItem.Checked = Parameters.SkipL2Parsing;
+                menuItem.Click += (object s, EventArgs ev) => { Parameters.SkipL2Parsing ^= true; };
+                contextMenu.MenuItems.Add(menuItem);
+
+                Point popupPos = this.PointToClient(MousePosition);
+
+                popupPos.X -= 20;
+                popupPos.Y -= 20;
+
+                contextMenu.Show(this, popupPos);
+            }
+        }
+
+        private void btnQuit_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
+
+        private void chkSlotUsage_CheckedChanged(object sender, EventArgs e)
+        {
+            ShowSlotUsage = chkSlotUsage.Checked;
+
+            slotUsageControl.Visible = ShowSlotUsage;
         }
     }
 }

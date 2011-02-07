@@ -19,17 +19,35 @@ namespace GSM_Analyzer
             Analyzer = analyzer;
             InitializeComponent();
 
-            Refresh();
+            RefreshOptions();
         }
 
-        private void Refresh()
+        private void RefreshOptions()
         {
             chkL1DumpFrames.Checked = Burst.DumpRawData;
-            chkL1ShowEncrypted.Checked = NormalBurst.ShowEncryptedMessage;
-            chkL1DumpEncrypted.Checked = NormalBurst.DumpEncryptedMessage;
+            chkL1DumpEncrypted.Checked = NormalBurst.DumpEncryptedMessageBits;
             chkL1PreallocateTCH.Checked = TimeSlotHandler.PreallocateTCHs;
+            chkL1ShowFaulty.Checked = Analyzer.Parameters.ReportL1Errors;
 
-            chkL2ShowAllFrames.Checked = L2Handler.ShowAllMessages;
+            if(L2Handler.ShowAllMessages)
+            {
+                radioL2ShowAuto.Checked = false;
+                radioL2ShowCrypted.Checked = false;
+                radioL2ShowAll.Checked = true;
+            }
+            else if (L2Handler.ShowCryptedMessages)
+            {
+                radioL2ShowAuto.Checked = false;
+                radioL2ShowCrypted.Checked = true;
+                radioL2ShowAll.Checked = false;
+            }
+            else
+            {
+                radioL2ShowAuto.Checked = true;
+                radioL2ShowCrypted.Checked = false;
+                radioL2ShowAll.Checked = false;
+            }
+
             chkL2DumpRaw.Checked = L2Handler.DumpRawData;
 
             chkL3CellBroadcast.Checked = CBCHandler.ShowCBMessages;
@@ -53,26 +71,30 @@ namespace GSM_Analyzer
             chkFastAtan2.Checked = GMSKDemodulator.UseFastAtan2;
 
             txtSimAuthHost.Text = Analyzer.AuthHostAddress;
+            txtKrakenHost.Text = Analyzer.KrakenHostAddress;
 
-            if(Analyzer.Parameters.A5Algorithm != null)
+            string hex = "";
+            lock (Analyzer.Parameters.A5KeyStore)
             {
-                string hex = "";
-                for (int pos = 0; pos < Analyzer.Parameters.A5Algorithm.Key.Length; pos++)
+                foreach (byte[] key in Analyzer.Parameters.A5KeyStore)
                 {
-                    hex += string.Format("{0:X2}", Analyzer.Parameters.A5Algorithm.Key[pos]);
+                    for (int pos = 0; pos < key.Length; pos++)
+                    {
+                        hex += string.Format("{0:X2}", key[pos]);
+                    }
+                    hex += " ";
                 }
-                txtA5Kc.Text = hex;
             }
-
+            txtA5Kc.Text = hex;
             chkInvert.Checked = Analyzer.InvertedSpectrum;
 
             if (Analyzer.Source != null)
             {
-                txtRate.Text = Analyzer.Source.InputSamplingRate.ToString();
-                txtInternalOvers.Text = Analyzer.Source.InternalOversampling.ToString();
-                radioOvsLinear.Checked = Analyzer.Source.OversamplingType == eOversamplingType.Linear;
-                radioOvsSinx.Checked = Analyzer.Source.OversamplingType == eOversamplingType.SinC;
-                txtSinxDepth.Text = Analyzer.Source.SinXDepth.ToString();
+                txtRate.Text = Analyzer.Source.SampleSource.InputSamplingRate.ToString();
+                txtInternalOvers.Text = Analyzer.Source.SampleSource.InternalOversampling.ToString();
+                radioOvsLinear.Checked = Analyzer.Source.SampleSource.OversamplingType == eOversamplingType.Linear;
+                radioOvsSinx.Checked = Analyzer.Source.SampleSource.OversamplingType == eOversamplingType.SinC;
+                txtSinxDepth.Text = Analyzer.Source.SampleSource.SinXDepth.ToString();
             }
             else
             {
@@ -97,17 +119,6 @@ namespace GSM_Analyzer
         private void chkInvert_CheckedChanged(object sender, EventArgs e)
         {
             Analyzer.InvertedSpectrum = chkInvert.Checked;
-            /*
-            if (Analyzer.Source != null)
-            {
-                for (int chan = 0; chan < Analyzer.Splitter.Config.Channels.Length; chan++)
-                {
-                    Analyzer.Demodulator[chan].InvertedSpectrum = chkInvert.Checked;
-                }
-            }
-
-            GMSKDemodulator.InvertedSpectrumDefault = chkInvert.Checked;
-            */
         }
 
         private void chkL3DumpRaw_CheckedChanged(object sender, EventArgs e)
@@ -142,10 +153,10 @@ namespace GSM_Analyzer
 
             if (Analyzer.Source != null)
             {
-                if (rate != Analyzer.Source.InputSamplingRate)
+                if (rate != Analyzer.Source.SamplingRate)
                 {
-                    Analyzer.Source.InputSamplingRate = rate;
-                    Analyzer.Source.SamplingRateHasChanged = true;
+                    Analyzer.Source.SampleSource.InputSamplingRate = rate;
+                    Analyzer.Source.SampleSource.SamplingRateHasChanged = true;
                 }
             }
             else
@@ -207,7 +218,7 @@ namespace GSM_Analyzer
             if (radioOvsLinear.Checked)
             {
                 if (Analyzer.Source != null)
-                    Analyzer.Source.OversamplingType = eOversamplingType.Linear;
+                    Analyzer.Source.SampleSource.OversamplingType = eOversamplingType.Linear;
 
                 SampleSource.DefaultOversamplingType = eOversamplingType.Linear;
             }
@@ -218,7 +229,7 @@ namespace GSM_Analyzer
             if (radioOvsSinx.Checked)
             {
                 if (Analyzer.Source != null)
-                    Analyzer.Source.OversamplingType = eOversamplingType.SinC;
+                    Analyzer.Source.SampleSource.OversamplingType = eOversamplingType.SinC;
 
                 SampleSource.DefaultOversamplingType = eOversamplingType.SinC;
             }
@@ -232,7 +243,7 @@ namespace GSM_Analyzer
                 return;
 
             if (Analyzer.Source != null)
-                Analyzer.Source.SinXDepth = depth;
+                Analyzer.Source.SampleSource.SinXDepth = depth;
 
             SampleSource.DefaultSinXDepth = depth;
         }
@@ -282,14 +293,9 @@ namespace GSM_Analyzer
             Analyzer.BurstLengthJitter[3] = offset4;
         }
 
-        private void chkL1ShowEncrypted_CheckedChanged(object sender, EventArgs e)
-        {
-            NormalBurst.ShowEncryptedMessage = chkL1ShowEncrypted.Checked;
-        }
-
         private void chkL1DumpEncrypted_CheckedChanged(object sender, EventArgs e)
         {
-            NormalBurst.DumpEncryptedMessage = chkL1DumpEncrypted.Checked;
+            NormalBurst.DumpEncryptedMessageBits = chkL1DumpEncrypted.Checked;
         }
 
         private void chkL3CellBroadcast_CheckedChanged(object sender, EventArgs e)
@@ -307,11 +313,6 @@ namespace GSM_Analyzer
             L2Handler.DumpFaulty = chkL2DumpFaulty.Checked;
         }
 
-        private void chkL2ShowAllFrames_CheckedChanged(object sender, EventArgs e)
-        {
-            L2Handler.ShowAllMessages = chkL2ShowAllFrames.Checked;
-        }
-
         private void chkL1DumpFrames_CheckedChanged(object sender, EventArgs e)
         {
             Burst.DumpRawData = chkL1DumpFrames.Checked;
@@ -326,13 +327,13 @@ namespace GSM_Analyzer
         private void btnBurstLengthA_Click(object sender, EventArgs e)
         {
             Analyzer.BurstLengthJitter = new[] { 0.0d, 0.0d, 0.0d, 0.0d };
-            Refresh();
+            RefreshOptions();
         }
 
         private void btnBurstLengthB_Click(object sender, EventArgs e)
         {
             Analyzer.BurstLengthJitter = new[] { 0.75, -0.25, -0.25, -0.25 };
-            Refresh();
+            RefreshOptions();
         }
 
         private void chkL1PreallocateTCH_CheckedChanged(object sender, EventArgs e)
@@ -340,34 +341,69 @@ namespace GSM_Analyzer
             TimeSlotHandler.PreallocateTCHs = chkL1PreallocateTCH.Checked;
         }
 
-        private void txtA5Kc_TextChanged(object sender, EventArgs e)
+        private void chkL1ShowFaulty_CheckedChanged(object sender, EventArgs e)
         {
-            if (txtA5Kc.Text.Length == 16)
-            {
-                byte[] key = new byte[8];
-
-                for (int pos = 0; pos < 8; pos++)
-                {
-                    string byteStr = txtA5Kc.Text.Substring(pos * 2, 2);
-
-                    if (!byte.TryParse(byteStr, System.Globalization.NumberStyles.HexNumber, null, out key[pos]))
-                    {
-                        Analyzer.Parameters.A5AlgorithmAvailable = false;
-                        return;
-                    }
-                }
-                Analyzer.Parameters.A5Algorithm.Key = key;
-                Analyzer.Parameters.A5AlgorithmAvailable = true;
-            }
-            else
-            {
-                Analyzer.Parameters.A5AlgorithmAvailable = false;
-            }
+            Analyzer.Parameters.ReportL1Errors = chkL1ShowFaulty.Checked;
         }
 
+        private void txtA5Kc_TextChanged(object sender, EventArgs e)
+        {
+            string[] keys = txtA5Kc.Text.Split(' ');
+
+            Analyzer.Parameters.ClearA5Keys();
+
+            foreach (string keystring in keys)
+            {
+                if (keystring.Length == 16)
+                {
+                    byte[] key = new byte[8];
+
+                    for (int pos = 0; pos < 8; pos++)
+                    {
+                        string byteStr = keystring.Substring(pos * 2, 2);
+
+                        if (!byte.TryParse(byteStr, System.Globalization.NumberStyles.HexNumber, null, out key[pos]))
+                        {
+                            key = null;
+                            break;
+                        }
+                    }
+
+                    if (key != null)
+                    {
+                        Analyzer.Parameters.AddA5Key(key);
+                    }
+                }
+            }
+
+        }
+        
         private void txtSimAuthHost_TextChanged(object sender, EventArgs e)
         {
             Analyzer.AuthHostAddress = txtSimAuthHost.Text;
+        }
+
+        private void txtKrakenHost_TextChanged(object sender, EventArgs e)
+        {
+            Analyzer.KrakenHostAddress = txtKrakenHost.Text;
+        }
+
+        private void radioL2ShowNone_CheckedChanged(object sender, EventArgs e)
+        {
+            L2Handler.ShowAllMessages = false;
+            L2Handler.ShowCryptedMessages = false;
+        }
+
+        private void radioL2ShowCrypted_CheckedChanged(object sender, EventArgs e)
+        {
+            L2Handler.ShowAllMessages = false;
+            L2Handler.ShowCryptedMessages = true;
+        }
+
+        private void radioL2ShowAll_CheckedChanged(object sender, EventArgs e)
+        {
+            L2Handler.ShowAllMessages = true;
+            L2Handler.ShowCryptedMessages = false;
         }
 
 

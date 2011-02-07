@@ -41,9 +41,11 @@
             this.btnStress = new System.Windows.Forms.Button();
             this.lblStats = new System.Windows.Forms.Label();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.btnSetSerial = new System.Windows.Forms.Button();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
             this.btnCypressEepromProgram = new System.Windows.Forms.Button();
             this.btnCypressEepromRead = new System.Windows.Forms.Button();
+            this.chkSlowI2C = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -66,7 +68,7 @@
             this.txtStatus.Enabled = false;
             this.txtStatus.Location = new System.Drawing.Point(129, 15);
             this.txtStatus.Name = "txtStatus";
-            this.txtStatus.Size = new System.Drawing.Size(110, 20);
+            this.txtStatus.Size = new System.Drawing.Size(99, 20);
             this.txtStatus.TabIndex = 1;
             // 
             // btnDetails
@@ -75,7 +77,7 @@
             this.btnDetails.Name = "btnDetails";
             this.btnDetails.Size = new System.Drawing.Size(99, 23);
             this.btnDetails.TabIndex = 2;
-            this.btnDetails.Text = "Board details";
+            this.btnDetails.Text = "Read details";
             this.btnDetails.UseVisualStyleBackColor = true;
             this.btnDetails.Click += new System.EventHandler(this.btnDetails_Click);
             // 
@@ -103,7 +105,7 @@
             // 
             this.groupBox1.Controls.Add(this.btnFirmwareRead);
             this.groupBox1.Controls.Add(this.btnFirmwareProgram);
-            this.groupBox1.Location = new System.Drawing.Point(13, 205);
+            this.groupBox1.Location = new System.Drawing.Point(13, 233);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(226, 57);
             this.groupBox1.TabIndex = 4;
@@ -112,13 +114,14 @@
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.chkSlowI2C);
             this.groupBox2.Controls.Add(this.btnI2cScan);
             this.groupBox2.Controls.Add(this.btnI2cTest);
             this.groupBox2.Controls.Add(this.btnAtmelDelay);
             this.groupBox2.Controls.Add(this.btnStress);
             this.groupBox2.Location = new System.Drawing.Point(13, 119);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(226, 80);
+            this.groupBox2.Size = new System.Drawing.Size(226, 108);
             this.groupBox2.TabIndex = 5;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "I²C Basics";
@@ -173,19 +176,30 @@
             // 
             // groupBox3
             // 
+            this.groupBox3.Controls.Add(this.btnSetSerial);
             this.groupBox3.Controls.Add(this.btnDetails);
             this.groupBox3.Location = new System.Drawing.Point(13, 47);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(226, 66);
+            this.groupBox3.Size = new System.Drawing.Size(226, 52);
             this.groupBox3.TabIndex = 7;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "General";
+            // 
+            // btnSetSerial
+            // 
+            this.btnSetSerial.Location = new System.Drawing.Point(116, 19);
+            this.btnSetSerial.Name = "btnSetSerial";
+            this.btnSetSerial.Size = new System.Drawing.Size(99, 23);
+            this.btnSetSerial.TabIndex = 3;
+            this.btnSetSerial.Text = "Set Serial/TCXO";
+            this.btnSetSerial.UseVisualStyleBackColor = true;
+            this.btnSetSerial.Click += new System.EventHandler(this.btnSetSerial_Click);
             // 
             // groupBox4
             // 
             this.groupBox4.Controls.Add(this.btnCypressEepromProgram);
             this.groupBox4.Controls.Add(this.btnCypressEepromRead);
-            this.groupBox4.Location = new System.Drawing.Point(13, 269);
+            this.groupBox4.Location = new System.Drawing.Point(13, 296);
             this.groupBox4.Name = "groupBox4";
             this.groupBox4.Size = new System.Drawing.Size(226, 65);
             this.groupBox4.TabIndex = 8;
@@ -212,11 +226,22 @@
             this.btnCypressEepromRead.UseVisualStyleBackColor = true;
             this.btnCypressEepromRead.Click += new System.EventHandler(this.btnCypressEepromRead_Click);
             // 
+            // chkSlowI2C
+            // 
+            this.chkSlowI2C.AutoSize = true;
+            this.chkSlowI2C.Location = new System.Drawing.Point(12, 77);
+            this.chkSlowI2C.Name = "chkSlowI2C";
+            this.chkSlowI2C.Size = new System.Drawing.Size(94, 17);
+            this.chkSlowI2C.TabIndex = 10;
+            this.chkSlowI2C.Text = "Slow I²C mode";
+            this.chkSlowI2C.UseVisualStyleBackColor = true;
+            this.chkSlowI2C.CheckedChanged += new System.EventHandler(this.chkSlowI2C_CheckedChanged);
+            // 
             // RXSetup
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(258, 347);
+            this.ClientSize = new System.Drawing.Size(247, 373);
             this.Controls.Add(this.groupBox4);
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.lblStats);
@@ -229,6 +254,7 @@
             this.Text = "RXSetup";
             this.groupBox1.ResumeLayout(false);
             this.groupBox2.ResumeLayout(false);
+            this.groupBox2.PerformLayout();
             this.groupBox3.ResumeLayout(false);
             this.groupBox4.ResumeLayout(false);
             this.ResumeLayout(false);
@@ -255,6 +281,8 @@
         private System.Windows.Forms.GroupBox groupBox4;
         private System.Windows.Forms.Button btnCypressEepromProgram;
         private System.Windows.Forms.Button btnCypressEepromRead;
+        private System.Windows.Forms.Button btnSetSerial;
+        private System.Windows.Forms.CheckBox chkSlowI2C;
     }
 }
 

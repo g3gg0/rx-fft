@@ -2,6 +2,7 @@
 using System.Collections;
 using System.IO;
 using System.Text;
+using RX_FFT.Components.GDI;
 
 namespace LibRXFFT.Libraries.ShmemChain
 {
@@ -196,15 +197,25 @@ namespace LibRXFFT.Libraries.ShmemChain
             }
         }
 
+        public override void Close()
+        {
+            Unregister();
+            base.Close();
+        }
+
         public override long Position
         {
             get { throw new NotSupportedException(); }
             set { throw new NotSupportedException(); }
         }
 
+
         public override int Read(byte[] buffer, int offset, int count)
         {
             int readParam = (int)readMode;
+
+            if (SharedMemNative.shmemchain_get_last_error() != -100)
+            Log.AddMessage("Shmem Error: " + SharedMemNative.shmemchain_get_last_error() + " " + SharedMemNative.shmemchain_get_last_errorcode());
 
             /* dynamic and time limited modes have the timeout in 100ms steps as parameter */
             if (readMode == eReadMode.Dynamic || readMode == eReadMode.TimeLimited || readMode == eReadMode.TimeLimitedNoPartial)

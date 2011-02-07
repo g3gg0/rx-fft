@@ -13,480 +13,106 @@ namespace LibRXFFT.Libraries.GSM.Misc
                 dstBuffer[dstStart + table[pos]] = srcBuffer[srcStart + pos];
         }
 
-
-
-        /*
-        Contributors:
-        David A. Burgess, dburgess@ketsrelsp.com
-        */
-
-
-
-        /*
-        RFC 3551                    RTP A/V Profile                    July 2003
-
-
-           Octet  Bit 0   Bit 1   Bit 2   Bit 3   Bit 4   Bit 5   Bit 6   Bit 7
-           _____________________________________________________________________
-               0    1       1       0       1    LARc0.0 LARc0.1 LARc0.2 LARc0.3
-               1 LARc0.4 LARc0.5 LARc1.0 LARc1.1 LARc1.2 LARc1.3 LARc1.4 LARc1.5
-               2 LARc2.0 LARc2.1 LARc2.2 LARc2.3 LARc2.4 LARc3.0 LARc3.1 LARc3.2
-               3 LARc3.3 LARc3.4 LARc4.0 LARc4.1 LARc4.2 LARc4.3 LARc5.0 LARc5.1
-               4 LARc5.2 LARc5.3 LARc6.0 LARc6.1 LARc6.2 LARc7.0 LARc7.1 LARc7.2
-               5  Nc0.0   Nc0.1   Nc0.2   Nc0.3   Nc0.4   Nc0.5   Nc0.6  bc0.0
-               6  bc0.1   Mc0.0   Mc0.1  xmaxc00 xmaxc01 xmaxc02 xmaxc03 xmaxc04
-               7 xmaxc05 xmc0.0  xmc0.1  xmc0.2  xmc1.0  xmc1.1  xmc1.2  xmc2.0
-               8 xmc2.1  xmc2.2  xmc3.0  xmc3.1  xmc3.2  xmc4.0  xmc4.1  xmc4.2
-               9 xmc5.0  xmc5.1  xmc5.2  xmc6.0  xmc6.1  xmc6.2  xmc7.0  xmc7.1
-              10 xmc7.2  xmc8.0  xmc8.1  xmc8.2  xmc9.0  xmc9.1  xmc9.2  xmc10.0
-              11 xmc10.1 xmc10.2 xmc11.0 xmc11.1 xmc11.2 xmc12.0 xmc12.1 xcm12.2
-              12  Nc1.0   Nc1.1   Nc1.2   Nc1.3   Nc1.4   Nc1.5   Nc1.6   bc1.0
-              13  bc1.1   Mc1.0   Mc1.1  xmaxc10 xmaxc11 xmaxc12 xmaxc13 xmaxc14
-              14 xmax15  xmc13.0 xmc13.1 xmc13.2 xmc14.0 xmc14.1 xmc14.2 xmc15.0
-              15 xmc15.1 xmc15.2 xmc16.0 xmc16.1 xmc16.2 xmc17.0 xmc17.1 xmc17.2
-              16 xmc18.0 xmc18.1 xmc18.2 xmc19.0 xmc19.1 xmc19.2 xmc20.0 xmc20.1
-              17 xmc20.2 xmc21.0 xmc21.1 xmc21.2 xmc22.0 xmc22.1 xmc22.2 xmc23.0
-              18 xmc23.1 xmc23.2 xmc24.0 xmc24.1 xmc24.2 xmc25.0 xmc25.1 xmc25.2
-              19  Nc2.0   Nc2.1   Nc2.2   Nc2.3   Nc2.4   Nc2.5   Nc2.6   bc2.0
-              20  bc2.1   Mc2.0   Mc2.1  xmaxc20 xmaxc21 xmaxc22 xmaxc23 xmaxc24
-              21 xmaxc25 xmc26.0 xmc26.1 xmc26.2 xmc27.0 xmc27.1 xmc27.2 xmc28.0
-              22 xmc28.1 xmc28.2 xmc29.0 xmc29.1 xmc29.2 xmc30.0 xmc30.1 xmc30.2
-              23 xmc31.0 xmc31.1 xmc31.2 xmc32.0 xmc32.1 xmc32.2 xmc33.0 xmc33.1
-              24 xmc33.2 xmc34.0 xmc34.1 xmc34.2 xmc35.0 xmc35.1 xmc35.2 xmc36.0
-              25 Xmc36.1 xmc36.2 xmc37.0 xmc37.1 xmc37.2 xmc38.0 xmc38.1 xmc38.2
-              26  Nc3.0   Nc3.1   Nc3.2   Nc3.3   Nc3.4   Nc3.5   Nc3.6   bc3.0
-              27  bc3.1   Mc3.0   Mc3.1  xmaxc30 xmaxc31 xmaxc32 xmaxc33 xmaxc34
-              28 xmaxc35 xmc39.0 xmc39.1 xmc39.2 xmc40.0 xmc40.1 xmc40.2 xmc41.0
-              29 xmc41.1 xmc41.2 xmc42.0 xmc42.1 xmc42.2 xmc43.0 xmc43.1 xmc43.2
-              30 xmc44.0 xmc44.1 xmc44.2 xmc45.0 xmc45.1 xmc45.2 xmc46.0 xmc46.1
-              31 xmc46.2 xmc47.0 xmc47.1 xmc47.2 xmc48.0 xmc48.1 xmc48.2 xmc49.0
-              32 xmc49.1 xmc49.2 xmc50.0 xmc50.1 xmc50.2 xmc51.0 xmc51.1 xmc51.2
-
-                                Table 3: GSM payload format
-        */
-
-
-        /*
-            This file encodes a mapping between
-            GSM 05.03 Table 2 and RFC-3551 Table 3.
-        */
-
-        /*
-            Naming convention:
-            xxx_p	position (bit index)
-            xxx_l	length (bit field length)
-            LAR	log area ratio
-            N	LTP lag
-            b	LTP gain
-            M	grid
-            Xmax	block amplitude
-            x	RPE pulses
-        */
-
-
-        /**@name Lengths of GSM 06.10 fields */
-        //@{
-        const uint LAR1_l = 6;	///< log area ratio
-        const uint LAR2_l = 6;	///< log area ratio
-        const uint LAR3_l = 5;	///< log area ratio
-        const uint LAR4_l = 5;	///< log area ratio
-        const uint LAR5_l = 4;	///< log area ratio
-        const uint LAR6_l = 4;	///< log area ratio
-        const uint LAR7_l = 3;	///< log area ratio
-        const uint LAR8_l = 3;	///< log area ratio
-        const uint N_l = 7;	///< LTP lag
-        const uint b_l = 2;	///< LTP gain
-        const uint M_l = 2;	///< grid position
-        const uint Xmax_l = 6;	///< block amplitude
-        const uint x_l = 3;	///< RPE pulses
-        //@}
-
-
-
-        /*@name Indecies of GSM 06.10 fields as they appear in RFC-3551 Table 3. */
-        //@{
-
-        /**@name Log area ratios, apply to whole frame. */
-        //@{
-        const uint LAR1_p = 0;
-        const uint LAR2_p = LAR1_p + LAR1_l;
-        const uint LAR3_p = LAR2_p + LAR2_l;
-        const uint LAR4_p = LAR3_p + LAR3_l;
-        const uint LAR5_p = LAR4_p + LAR4_l;
-        const uint LAR6_p = LAR5_p + LAR5_l;
-        const uint LAR7_p = LAR6_p + LAR6_l;
-        const uint LAR8_p = LAR7_p + LAR7_l;
-        //@}
-        /**@name Subframe 1 */
-        //@{
-        const uint N1_p = LAR8_p + LAR8_l;
-        const uint b1_p = N1_p + N_l;
-        const uint M1_p = b1_p + b_l;
-        const uint Xmax1_p = M1_p + M_l;
-        const uint x1_0_p = Xmax1_p + Xmax_l;
-        const uint x1_1_p = x1_0_p + x_l;
-        const uint x1_2_p = x1_1_p + x_l;
-        const uint x1_3_p = x1_2_p + x_l;
-        const uint x1_4_p = x1_3_p + x_l;
-        const uint x1_5_p = x1_4_p + x_l;
-        const uint x1_6_p = x1_5_p + x_l;
-        const uint x1_7_p = x1_6_p + x_l;
-        const uint x1_8_p = x1_7_p + x_l;
-        const uint x1_9_p = x1_8_p + x_l;
-        const uint x1_10_p = x1_9_p + x_l;
-        const uint x1_11_p = x1_10_p + x_l;
-        const uint x1_12_p = x1_11_p + x_l;
-        //@}
-        /**@name Subframe 2 */
-        //@{
-        const uint N2_p = x1_12_p + x_l;
-        const uint b2_p = N2_p + N_l;
-        const uint M2_p = b2_p + b_l;
-        const uint Xmax2_p = M2_p + M_l;
-        const uint x2_0_p = Xmax2_p + Xmax_l;
-        const uint x2_1_p = x2_0_p + x_l;
-        const uint x2_2_p = x2_1_p + x_l;
-        const uint x2_3_p = x2_2_p + x_l;
-        const uint x2_4_p = x2_3_p + x_l;
-        const uint x2_5_p = x2_4_p + x_l;
-        const uint x2_6_p = x2_5_p + x_l;
-        const uint x2_7_p = x2_6_p + x_l;
-        const uint x2_8_p = x2_7_p + x_l;
-        const uint x2_9_p = x2_8_p + x_l;
-        const uint x2_10_p = x2_9_p + x_l;
-        const uint x2_11_p = x2_10_p + x_l;
-        const uint x2_12_p = x2_11_p + x_l;
-        //@}
-        /**@mame Subframe 3 */
-        //@{
-        const uint N3_p = x2_12_p + x_l;
-        const uint b3_p = N3_p + N_l;
-        const uint M3_p = b3_p + b_l;
-        const uint Xmax3_p = M3_p + M_l;
-        const uint x3_0_p = Xmax3_p + Xmax_l;
-        const uint x3_1_p = x3_0_p + x_l;
-        const uint x3_2_p = x3_1_p + x_l;
-        const uint x3_3_p = x3_2_p + x_l;
-        const uint x3_4_p = x3_3_p + x_l;
-        const uint x3_5_p = x3_4_p + x_l;
-        const uint x3_6_p = x3_5_p + x_l;
-        const uint x3_7_p = x3_6_p + x_l;
-        const uint x3_8_p = x3_7_p + x_l;
-        const uint x3_9_p = x3_8_p + x_l;
-        const uint x3_10_p = x3_9_p + x_l;
-        const uint x3_11_p = x3_10_p + x_l;
-        const uint x3_12_p = x3_11_p + x_l;
-        //@}
-        /**@name Subframe 4 */
-        //@{
-        const uint N4_p = x3_12_p + x_l;
-        const uint b4_p = N4_p + N_l;
-        const uint M4_p = b4_p + b_l;
-        const uint Xmax4_p = M4_p + M_l;
-        const uint x4_0_p = Xmax4_p + Xmax_l;
-        const uint x4_1_p = x4_0_p + x_l;
-        const uint x4_2_p = x4_1_p + x_l;
-        const uint x4_3_p = x4_2_p + x_l;
-        const uint x4_4_p = x4_3_p + x_l;
-        const uint x4_5_p = x4_4_p + x_l;
-        const uint x4_6_p = x4_5_p + x_l;
-        const uint x4_7_p = x4_6_p + x_l;
-        const uint x4_8_p = x4_7_p + x_l;
-        const uint x4_9_p = x4_8_p + x_l;
-        const uint x4_10_p = x4_9_p + x_l;
-        const uint x4_11_p = x4_10_p + x_l;
-        const uint x4_12_p = x4_11_p + x_l;
-        //@}
-        //@}
-
-
-        /*
-            This array encodes GSM 05.03 Table 2.
-            It's also GSM 06.10 Table A2.1a.
-            This is the order of bits as they appear in
-            the d[] bits of the GSM TCH/F.
-            RTP[4+g610BitOrder[i]] <=> GSM[i]
-        */
-        public static uint[] g610BitOrder = new[]
+        public static void Map(bool[] srcBuffer, int srcStart, bool[] dstBuffer, int dstStart, uint[] table)
         {
-            /**@name importance class 1 */
-            //@{
-            /** LAR1:5 */	LAR1_p+LAR1_l-1-5, 		/* bit 0 */
-            /** Xmax1:5 */	Xmax1_p+Xmax_l-1-5,
-            /** Xmax2:5 */	Xmax2_p+Xmax_l-1-5,
-            /** Xmax3:5 */	Xmax3_p+Xmax_l-1-5,
-            /** Xmax4:5 */	Xmax4_p+Xmax_l-1-5,
-            //@}
-            /**@name importance class 2 */
-            //@{
-            /** LAR1:4 */	LAR1_p+LAR1_l-1-4,
-            /** LAR2:5 */	LAR2_p+LAR2_l-1-5,
-            /** LAR3:4 */	LAR3_p+LAR3_l-1-4,
-            //@}
-            /**@name importance class 3 */
-            //@{
-            /** LAR1:3 */	LAR1_p+LAR1_l-1-3,
-            /** LAR2:4 */	LAR2_p+LAR2_l-1-4,
-            /** LAR3:3 */	LAR3_p+LAR3_l-1-3,		/* bit 10 */
-            /** LAR4:4 */	LAR4_p+LAR4_l-1-4,
-            /** N1:6 */	    N1_p+N_l-1-6,
-            /** N2:6 */	    N2_p+N_l-1-6,
-            /** N3:6 */	    N3_p+N_l-1-6,
-            /** N4:6 */	    N4_p+N_l-1-6,
-            /** Xmax1:4 */	Xmax1_p+Xmax_l-1-4,
-            /** Xmax2:4 */	Xmax2_p+Xmax_l-1-4,
-            /** Xmax3:4 */	Xmax3_p+Xmax_l-1-4,
-            /** Xmax4:4 */	Xmax4_p+Xmax_l-1-4,
-            /** LAR2:3 */	LAR2_p+LAR2_l-1-3,		/* bit 20 */
-            /** LAR5:3 */	LAR5_p+LAR5_l-1-3,
-            /** LAR6:3 */	LAR6_p+LAR6_l-1-3,
-            /** N1:5 */	    N1_p+N_l-1-5,
-            /** N2:5 */	    N2_p+N_l-1-5,
-            /** N3:5 */	    N3_p+N_l-1-5,
-            /** N4:5 */	    N4_p+N_l-1-5,
-            /** N1:4 */	    N1_p+N_l-1-4,
-            /** N2:4 */	    N2_p+N_l-1-4,
-            /** N3:4 */	    N3_p+N_l-1-4,
-            /** N4:4 */	    N4_p+N_l-1-4,			/* bit 30 */
-            /** N1:3 */	    N1_p+N_l-1-3,
-            /** N2:3 */	    N2_p+N_l-1-3,
-            /** N3:3 */	    N3_p+N_l-1-3,
-            /** N4:3 */	    N4_p+N_l-1-3,
-            /** N1:2 */	    N1_p+N_l-1-2,
-            /** N2:2 */	    N2_p+N_l-1-2,
-            /** N3:2 */	    N3_p+N_l-1-2,
-            /** N4:2 */	    N4_p+N_l-1-2,
-            //@}
-            /**@name importance class 4 */
-            //@{
-            /** Xmax1:3 */	Xmax1_p+Xmax_l-1-3,
-            /** Xmax2:3 */	Xmax2_p+Xmax_l-1-3,		/* bit 40 */
-            /** Xmax3:3 */	Xmax3_p+Xmax_l-1-3,
-            /** Xmax4:3 */	Xmax4_p+Xmax_l-1-3,
-            /** LAR1:2 */	LAR1_p+LAR1_l-1-2,
-            /** LAR4:3 */	LAR4_p+LAR4_l-1-3,
-            /** LAR7:2 */	LAR7_p+LAR7_l-1-2,
-            /** N1:1 */	    N1_p+N_l-1-1,
-            /** N2:1 */	    N2_p+N_l-1-1,
-            /** N3:1 */	    N3_p+N_l-1-1,
-            /** N4:1 */ 	N4_p+N_l-1-1,
-            /** LAR5:2 */	LAR5_p+LAR5_l-1-2,		/* bit 50 */
-            /** LAR6:2 */	LAR6_p+LAR6_l-1-2,
-            /** b1:1 */ 	b1_p+b_l-1-1,
-            /** b2:1 */	    b2_p+b_l-1-1,
-            /** b3:1 */ 	b3_p+b_l-1-1,
-            /** b4:1 */	    b4_p+b_l-1-1,
-            /** N1:0 */	    N1_p+N_l-1-0,
-            /** N2:0 */ 	N2_p+N_l-1-0,
-            /** N3:0 */	    N3_p+N_l-1-0,
-            /** N4:0 */	    N4_p+N_l-1-0,
-            /** M1:1 */	    M1_p+M_l-1-1,			/* bit 60 */
-            /** M2:1 */	    M2_p+M_l-1-1,
-            /** M3:1 */	    M3_p+M_l-1-1,
-            /** M4:1 */ 	M4_p+M_l-1-1,
-            //@}
-            /**@name importance class 5 */
-            //@{
-            /** LAR1:1 */	LAR1_p+LAR1_l-1-1,
-            /** LAR2:2 */	LAR2_p+LAR2_l-1-2,
-            /** LAR3:2 */	LAR3_p+LAR3_l-1-2,
-            /** LAR8:2 */	LAR8_p+LAR8_l-1-2,
-            /** LAR4:2 */	LAR4_p+LAR4_l-1-2,
-            /** LAR5:1 */	LAR5_p+LAR5_l-1-1,
-            /** LAR7:1 */	LAR7_p+LAR7_l-1-1,		/* bit 70 */
-            /** b1:0 */	    b1_p+b_l-1-0,
-            /** b2:0 */ 	b2_p+b_l-1-0,
-            /** b3:0 */ 	b3_p+b_l-1-0,
-            /** b4:0 */	    b4_p+b_l-1-0,
-            /** Xmax1:2 */	Xmax1_p+Xmax_l-1-2,
-            /** Xmax2:2 */	Xmax2_p+Xmax_l-1-2,
-            /** Xmax3:2 */	Xmax3_p+Xmax_l-1-2,
-            /** Xmax4:2 */	Xmax4_p+Xmax_l-1-2,
-            /** x1_0:2 */	x1_0_p+x_l-1-2,
-            /** x1_1:2 */	x1_1_p+x_l-1-2,		/* bit 80 */
-            /** x1_2:2 */	x1_2_p+x_l-1-2,
-            /** x1_3:2 */	x1_3_p+x_l-1-2,
-            /** x1_4:2 */	x1_4_p+x_l-1-2,
-            /** x1_5:2 */	x1_5_p+x_l-1-2,
-            /** x1_6:2 */	x1_6_p+x_l-1-2,
-            /** x1_7:2 */	x1_7_p+x_l-1-2,
-            /** x1_8:2 */	x1_8_p+x_l-1-2,
-            /** x1_9:2 */	x1_9_p+x_l-1-2,
-            /** x1_10:2 */	x1_10_p+x_l-1-2,
-            /** x1_11:2 */	x1_11_p+x_l-1-2,		/* bit 90 */
-            /** x1_12:2 */	x1_12_p+x_l-1-2,
-            /** x2_0:2 */	x2_0_p+x_l-1-2,
-            /** x2_1:2 */	x2_1_p+x_l-1-2,
-            /** x2_2:2 */	x2_2_p+x_l-1-2,
-            /** x2_3:2 */	x2_3_p+x_l-1-2,
-            /** x2_4:2 */	x2_4_p+x_l-1-2,
-            /** x2_5:2 */	x2_5_p+x_l-1-2,
-            /** x2_6:2 */	x2_6_p+x_l-1-2,
-            /** x2_7:2 */	x2_7_p+x_l-1-2,
-            /** x2_8:2 */	x2_8_p+x_l-1-2,		/* bit 100 */
-            /** x2_9:2 */	x2_9_p+x_l-1-2,
-            /** x2_10:2 */	x2_10_p+x_l-1-2,
-            /** x2_11:2 */	x2_11_p+x_l-1-2,
-            /** x2_12:2 */	x2_12_p+x_l-1-2,
-            /** x3_0:2 */	x3_0_p+x_l-1-2,
-            /** x3_1:2 */	x3_1_p+x_l-1-2,
-            /** x3_2:2 */	x3_2_p+x_l-1-2,
-            /** x3_3:2 */	x3_3_p+x_l-1-2,
-            /** x3_4:2 */	x3_4_p+x_l-1-2,
-            /** x3_5:2 */	x3_5_p+x_l-1-2,		/* bit 110 */
-            /** x3_6:2 */	x3_6_p+x_l-1-2,
-            /** x3_7:2 */	x3_7_p+x_l-1-2,
-            /** x3_8:2 */	x3_8_p+x_l-1-2,
-            /** x3_9:2 */	x3_9_p+x_l-1-2,
-            /** x3_10:2 */	x3_10_p+x_l-1-2,
-            /** x3_11:2 */	x3_11_p+x_l-1-2,
-            /** x3_12:2 */	x3_12_p+x_l-1-2,
-            /** x4_0:2 */	x4_0_p+x_l-1-2,
-            /** x4_1:2 */	x4_1_p+x_l-1-2,
-            /** x4_2:2 */	x4_2_p+x_l-1-2,		/* bit 120 */
-            /** x4_3:2 */	x4_3_p+x_l-1-2,
-            /** x4_4:2 */	x4_4_p+x_l-1-2,
-            /** x4_5:2 */	x4_5_p+x_l-1-2,
-            /** x4_6:2 */	x4_6_p+x_l-1-2,
-            /** x4_7:2 */	x4_7_p+x_l-1-2,
-            /** x4_8:2 */	x4_8_p+x_l-1-2,
-            /** x4_9:2 */	x4_9_p+x_l-1-2,
-            /** x4_10:2 */	x4_10_p+x_l-1-2,
-            /** x4_11:2 */	x4_11_p+x_l-1-2,
-            /** x4_12:2 */	x4_12_p+x_l-1-2,		/* bit 130 */
-            /** M1:0 */	    M1_p+M_l-1-0,
-            /** M2:0 */	    M2_p+M_l-1-0,
-            /** M3:0 */	    M3_p+M_l-1-0,
-            /** M4:0 */	    M4_p+M_l-1-0,
-            /** Xmax1:1 */	Xmax1_p+Xmax_l-1-1,
-            /** Xmax2:1 */	Xmax2_p+Xmax_l-1-1,
-            /** Xmax3:1 */	Xmax3_p+Xmax_l-1-1,
-            /** Xmax4:1 */	Xmax4_p+Xmax_l-1-1,
-            /** x1_0:1 */	x1_0_p+x_l-1-1,
-            /** x1_1:1 */	x1_1_p+x_l-1-1,		/* bit 140 */
-            /** x1_2:1 */	x1_2_p+x_l-1-1,
-            /** x1_3:1 */	x1_3_p+x_l-1-1,
-            /** x1_4:1 */	x1_4_p+x_l-1-1,
-            /** x1_5:1 */	x1_5_p+x_l-1-1,
-            /** x1_6:1 */	x1_6_p+x_l-1-1,
-            /** x1_7:1 */	x1_7_p+x_l-1-1,
-            /** x1_8:1 */	x1_8_p+x_l-1-1,
-            /** x1_9:1 */	x1_9_p+x_l-1-1,
-            /** x1_10:1 */	x1_10_p+x_l-1-1,
-            /** x1_11:1 */	x1_11_p+x_l-1-1,		/* bit 150 */
-            /** x1_12:1 */	x1_12_p+x_l-1-1,
-            /** x2_0:1 */	x2_0_p+x_l-1-1,
-            /** x2_1:1 */	x2_1_p+x_l-1-1,
-            /** x2_2:1 */	x2_2_p+x_l-1-1,
-            /** x2_3:1 */	x2_3_p+x_l-1-1,
-            /** x2_4:1 */	x2_4_p+x_l-1-1,
-            /** x2_5:1 */	x2_5_p+x_l-1-1,
-            /** x2_6:1 */	x2_6_p+x_l-1-1,
-            /** x2_7:1 */	x2_7_p+x_l-1-1,
-            /** x2_8:1 */	x2_8_p+x_l-1-1,		/* bit 160 */
-            /** x2_9:1 */	x2_9_p+x_l-1-1,
-            /** x2_10:1 */	x2_10_p+x_l-1-1,
-            /** x2_11:1 */	x2_11_p+x_l-1-1,
-            /** x2_12:1 */	x2_12_p+x_l-1-1,
-            /** x3_0:1 */	x3_0_p+x_l-1-1,
-            /** x3_1:1 */	x3_1_p+x_l-1-1,
-            /** x3_2:1 */	x3_2_p+x_l-1-1,
-            /** x3_3:1 */	x3_3_p+x_l-1-1,
-            /** x3_4:1 */	x3_4_p+x_l-1-1,
-            /** x3_5:1 */	x3_5_p+x_l-1-1,		/* bit 170 */
-            /** x3_6:1 */	x3_6_p+x_l-1-1,
-            /** x3_7:1 */	x3_7_p+x_l-1-1,
-            /** x3_8:1 */	x3_8_p+x_l-1-1,
-            /** x3_9:1 */	x3_9_p+x_l-1-1,
-            /** x3_10:1 */	x3_10_p+x_l-1-1,
-            /** x3_11:1 */	x3_11_p+x_l-1-1,
-            /** x3_12:1 */	x3_12_p+x_l-1-1,
-            /** x4_0:1 */	x4_0_p+x_l-1-1,
-            /** x4_1:1 */	x4_1_p+x_l-1-1,
-            /** x4_2:1 */	x4_2_p+x_l-1-1,		/* bit 180 */
-            /** x4_3:1 */	x4_3_p+x_l-1-1,
-            //@}
-            /**@name importance class 6 */
-            //@{
-            /** x4_4:1 */	x4_4_p+x_l-1-1,
-            /** x4_5:1 */	x4_5_p+x_l-1-1,
-            /** x4_6:1 */	x4_6_p+x_l-1-1,
-            /** x4_7:1 */	x4_7_p+x_l-1-1,
-            /** x4_8:1 */	x4_8_p+x_l-1-1,
-            /** x4_9:1 */	x4_9_p+x_l-1-1,
-            /** x4_10:1 */	x4_10_p+x_l-1-1,
-            /** x4_11:1 */	x4_11_p+x_l-1-1,
-            /** x4_12:1 */	x4_12_p+x_l-1-1,		/* bit 190 */
-            /** LAR1:0 */	LAR1_p+LAR1_l-1-0,
-            /** LAR2:1 */	LAR2_p+LAR2_l-1-1,
-            /** LAR3:1 */	LAR3_p+LAR3_l-1-1,
-            /** LAR6:1 */	LAR6_p+LAR6_l-1-1,
-            /** LAR7:0 */	LAR7_p+LAR7_l-1-0,
-            /** LAR8:1 */	LAR8_p+LAR8_l-1-1,
-            /** LAR8:0 */	LAR8_p+LAR8_l-1-0,
-            /** LAR3:0 */	LAR3_p+LAR3_l-1-0,
-            /** LAR4:1 */	LAR4_p+LAR4_l-1-1,
-            /** LAR4:0 */	LAR4_p+LAR4_l-1-0,
-            /** LAR5:0 */	LAR5_p+LAR5_l-1-0,
-            /** Xmax1:0 */	Xmax1_p+Xmax_l-1-0,
-            /** Xmax2:0 */	Xmax2_p+Xmax_l-1-0,
-            /** Xmax3:0 */	Xmax3_p+Xmax_l-1-0,
-            /** Xmax4:0 */	Xmax4_p+Xmax_l-1-0,
-            /** x1_0:0 */	x1_0_p+x_l-1-0,
-            /** x1_1:0 */	x1_1_p+x_l-1-0,
-            /** x1_2:0 */	x1_2_p+x_l-1-0,
-            /** x1_3:0 */	x1_3_p+x_l-1-0,
-            /** x1_4:0 */	x1_4_p+x_l-1-0,
-            /** x1_5:0 */	x1_5_p+x_l-1-0,
-            /** x1_6:0 */	x1_6_p+x_l-1-0,
-            /** x1_7:0 */	x1_7_p+x_l-1-0,
-            /** x1_8:0 */	x1_8_p+x_l-1-0,
-            /** x1_9:0 */	x1_9_p+x_l-1-0,
-            /** x1_10:0 */	x1_10_p+x_l-1-0,
-            /** x1_11:0 */	x1_11_p+x_l-1-0,
-            /** x1_12:0 */	x1_12_p+x_l-1-0,
-            /** x2_0:0 */	x2_0_p+x_l-1-0,
-            /** x2_1:0 */	x2_1_p+x_l-1-0,
-            /** x2_2:0 */	x2_2_p+x_l-1-0,
-            /** x2_3:0 */	x2_3_p+x_l-1-0,
-            /** x2_4:0 */	x2_4_p+x_l-1-0,
-            /** x2_5:0 */	x2_5_p+x_l-1-0,
-            /** x2_6:0 */	x2_6_p+x_l-1-0,
-            /** x2_7:0 */	x2_7_p+x_l-1-0,
-            /** x2_8:0 */	x2_8_p+x_l-1-0,
-            /** x2_9:0 */	x2_9_p+x_l-1-0,
-            /** x2_10:0 */	x2_10_p+x_l-1-0,
-            /** x2_11:0 */	x2_11_p+x_l-1-0,
-            /** x2_12:0 */	x2_12_p+x_l-1-0,
-            /** x3_0:0 */	x3_0_p+x_l-1-0,
-            /** x3_1:0 */	x3_1_p+x_l-1-0,
-            /** x3_2:0 */	x3_2_p+x_l-1-0,
-            /** x3_3:0 */	x3_3_p+x_l-1-0,
-            /** x3_4:0 */	x3_4_p+x_l-1-0,
-            /** x3_5:0 */	x3_5_p+x_l-1-0,
-            /** x3_6:0 */	x3_6_p+x_l-1-0,
-            /** x3_7:0 */	x3_7_p+x_l-1-0,
-            /** x3_8:0 */	x3_8_p+x_l-1-0,
-            /** x3_9:0 */	x3_9_p+x_l-1-0,
-            /** x3_10:0 */	x3_10_p+x_l-1-0,
-            /** x3_11:0 */	x3_11_p+x_l-1-0,
-            /** x3_12:0 */	x3_12_p+x_l-1-0,
-            /** x4_0:0 */	x4_0_p+x_l-1-0,
-            /** x4_1:0 */	x4_1_p+x_l-1-0,
-            /** x4_2:0 */	x4_2_p+x_l-1-0,
-            /** x4_3:0 */	x4_3_p+x_l-1-0,
-            /** x4_4:0 */	x4_4_p+x_l-1-0,
-            /** x4_5:0 */	x4_5_p+x_l-1-0,
-            /** x4_6:0 */	x4_6_p+x_l-1-0,
-            /** x4_7:0 */	x4_7_p+x_l-1-0,
-            /** x4_8:0 */	x4_8_p+x_l-1-0,
-            /** x4_9:0 */	x4_9_p+x_l-1-0,
-            /** x4_10:0 */	x4_10_p+x_l-1-0,
-            /** x4_11:0 */	x4_11_p+x_l-1-0,
-            /** x4_12:0 */	x4_12_p+x_l-1-0,
-            /** LAR2:0 */	LAR2_p+LAR2_l-1-0,
-            /** LAR6:0 */	LAR6_p+LAR6_l-1-0
-            //@}
+            Map(srcBuffer, srcStart, dstBuffer, dstStart, table.Length, table);
+        }
+
+        public static void Map(bool[] srcBuffer, int srcStart, bool[] dstBuffer, int dstStart, int length, uint[] table)
+        {
+            for (int pos = 0; pos < length; pos++)
+                dstBuffer[dstStart + pos] = srcBuffer[srcStart + table[pos]];
+        }
+
+        /*
+         * GSM-05.03 v9.0
+         * 
+         * Table 6: Ordering of enhanced full rate speech parameters for the channel encoder 
+         * (subjective importance of encoded bits, after preliminary channel coding)
+         * 
+         * mapping w[0..259] -> d[0..259]
+         * index in this array is d[] position, value is w[] position
+         */
+        public static uint[] EFRBitOrder = new uint[]
+        {
+			8, 39, 40, 41, 42, 43, 145, 146, 147, 148, 149, 150, 93, 94, 200, 201, 
+			47, 88, 99, 140, 44, 151, 95, 202, 1, 2, 7, 9, 17, 18, 23, 45, 46, 152, 
+			153, 96, 203, 3, 4, 10, 11, 15, 8, 5, 6, 12, 16, 19, 97, 204, 0, 13, 14, 
+			20, 24, 25, 27, 154, 206, 195, 247, 89, 141, 196, 248, 252, 253, 254, 
+			255, 256, 257, 258, 259, 48, 100, 155, 207, 21, 22, 26, 28, 51, 55, 59, 
+			63, 67, 103, 107, 111, 115, 119, 158, 162, 166, 170, 174, 210, 214, 218, 
+			222, 226, 90, 142, 197, 249, 49, 101, 156, 208, 29, 30, 31, 32, 33, 34, 
+			35, 98, 205, 52, 56, 60, 64, 68, 104, 108, 112, 116, 120, 159, 163, 167, 
+			171, 175, 211, 215, 219, 223, 227, 53, 57, 61, 65, 105, 109, 113, 117, 
+			160, 164, 168, 172, 212, 220, 224, 91, 143, 198, 250, 50, 102, 157, 209, 
+			92, 144, 199, 251, 54, 58, 62, 66, 106, 110, 114, 118, 161, 165, 169, 
+			173, 213, 221, 225, 36, 37, 69, 71, 72, 121, 123, 124, 176, 178, 179, 
+			228, 230, 231, 216, 217, 70, 122, 177, 229, 73, 76, 79, 82, 85, 125, 
+			128, 131, 134, 137, 180, 183, 186, 189, 192, 232, 235, 238, 241, 244, 
+			74, 77, 80, 83, 86, 126, 129, 132, 135, 138, 181, 184, 187, 190, 193, 
+			233, 236, 239, 242, 245, 75, 78, 81, 84, 87, 127, 130, 133, 136, 139, 
+			182, 185, 188, 191, 194, 234, 237, 240, 243, 246
         };
+
+        /*
+         * GSM-05.03 Table 7
+         * 
+         * AMR 12.2 kbit/s - subjective importance bit ordering
+         * 
+         * checked against:
+         * http://bb.osmocom.org/trac/browser/src/shared/libosmocore/src/codec/gsm690.c 
+         */
+        public static uint[] AMR12BitOrder = new uint[]
+        {
+			0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 23, 15, 16, 17, 18, 
+			19, 20, 21, 22, 24, 25, 26, 27, 28, 38, 141, 39, 142, 40, 143, 41, 144, 
+			42, 145, 43, 146, 44, 147, 45, 148, 46, 149, 47, 97, 150, 200, 48, 98, 
+			151, 201, 49, 99, 152, 202, 86, 136, 189, 239, 87, 137, 190, 240, 88, 
+			138, 191, 241, 91, 194, 92, 195, 93, 196, 94, 197, 95, 198, 29, 30, 31, 
+			32, 33, 34, 35, 50, 100, 153, 203, 89, 139, 192, 242, 51, 101, 154, 204, 
+			55, 105, 158, 208, 90, 140, 193, 243, 59, 109, 162, 212, 63, 113, 166, 
+			216, 67, 117, 170, 220, 36, 37, 54, 53, 52, 58, 57, 56, 62, 61, 60, 66, 
+			65, 64, 70, 69, 68, 104, 103, 102, 108, 107, 106, 112, 111, 110, 116, 
+			115, 114, 120, 119, 118, 157, 156, 155, 161, 160, 159, 165, 164, 163, 
+			169, 168, 167, 173, 172, 171, 207, 206, 205, 211, 210, 209, 215, 214, 
+			213, 219, 218, 217, 223, 222, 221, 73, 72, 71, 76, 75, 74, 79, 78, 77, 
+			82, 81, 80, 85, 84, 83, 123, 122, 121, 126, 125, 124, 129, 128, 127, 
+			132, 131, 130, 135, 134, 133, 176, 175, 174, 179, 178, 177, 182, 181, 
+			180, 185, 184, 183, 188, 187, 186, 226, 225, 224, 229, 228, 227, 232, 
+			231, 230, 235, 234, 233, 238, 237, 236, 96, 199
+        };
+
+
+        /*
+         * GSM-05.03 Table 2 / GSM-06.10 Table A.2.1a
+         * 
+         * GSM Full Rate - subjective importance bit ordering
+         * 
+         * checked against:
+         * http://bb.osmocom.org/trac/browser/src/shared/libosmocore/src/codec/gsm610.c 
+         */
+        public static uint[] g610BitOrder = new uint[]
+        {
+			0, 47, 103, 159, 215, 1, 6, 12, 2, 7, 13, 17, 36, 92, 148, 
+			204, 48, 104, 160, 216, 8, 22, 26, 37, 93, 149, 205, 38, 94, 
+			150, 206, 39, 95, 151, 207, 40, 96, 152, 208, 49, 105, 161, 
+			217, 3, 18, 30, 41, 97, 153, 209, 23, 27, 43, 99, 155, 211, 
+			42, 98, 154, 210, 45, 101, 157, 213, 4, 9, 14, 33, 19, 24, 
+			31, 44, 100, 156, 212, 50, 106, 162, 218, 53, 56, 59, 62, 65, 
+			68, 71, 74, 77, 80, 83, 86, 89, 109, 112, 115, 118, 121, 124, 
+			127, 130, 133, 136, 139, 142, 145, 165, 168, 171, 174, 177, 
+			180, 183, 186, 189, 192, 195, 198, 201, 221, 224, 227, 230, 
+			233, 236, 239, 242, 245, 248, 251, 254, 257, 46, 102, 158, 
+			214, 51, 107, 163, 219, 54, 57, 60, 63, 66, 69, 72, 75, 78, 
+			81, 84, 87, 90, 110, 113, 116, 119, 122, 125, 128, 131, 134, 
+			137, 140, 143, 146, 166, 169, 172, 175, 178, 181, 184, 187, 
+			190, 193, 196, 199, 202, 222, 225, 228, 231, 234, 237, 240, 
+			243, 246, 249, 252, 255, 258, 5, 10, 15, 28, 32, 34, 35, 16, 
+			20, 21, 25, 52, 108, 164, 220, 55, 58, 61, 64, 67, 70, 73, 
+			76, 79, 82, 85, 88, 91, 111, 114, 117, 120, 123, 126, 129, 
+			132, 135, 138, 141, 144, 147, 167, 170, 173, 176, 179, 182, 
+			185, 188, 191, 194, 197, 200, 203, 223, 226, 229, 232, 235, 
+			238, 241, 244, 247, 250, 253, 256, 259, 11, 29            
+	    };
     }
 }

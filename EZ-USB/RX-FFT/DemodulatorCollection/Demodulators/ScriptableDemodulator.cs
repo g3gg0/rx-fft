@@ -15,19 +15,21 @@ namespace DemodulatorCollection.Demodulators
     public class ScriptableDemodulator : DigitalDemodulator, BitClockSink
     {
         private bool Running = false;
-        private Lua LuaVm;
+        private Lua _LuaVm;
         private DigitalDemodulator Demodulator;
 
         public ScriptableDemodulator()
         {
-            LuaVm = new Lua();
-            LuaVm["SamplingRate"] = 0.0f;
+            _LuaVm = new Lua();
+            _LuaVm["SamplingRate"] = 0.0f;
+
+            LuaHelpers.RegisterAssembly("DemodulatorCollection");
 
             LuaHelpers.RegisterNamespace("DemodulatorCollection.Demodulators");
             LuaHelpers.RegisterNamespace("DemodulatorCollection.BitClockSinks");
 
-            LuaHelpers.RegisterLuaFunctions(LuaVm, new LuaHelpers());
-            LuaHelpers.RegisterLuaFunctions(LuaVm, this);
+            LuaHelpers.RegisterLuaFunctions(_LuaVm, new LuaHelpers());
+            LuaHelpers.RegisterLuaFunctions(_LuaVm, this);
             
             FileDialog dlg = new OpenFileDialog();
 
@@ -35,13 +37,21 @@ namespace DemodulatorCollection.Demodulators
             {
                 try
                 {
-                    LuaVm.DoFile(dlg.FileName);
+                    _LuaVm.DoFile(dlg.FileName);
                     Running = true;
                 }
                 catch (Exception e)
                 {
                     Log.AddMessage("ScriptableDemodulator", "Failed to load the LUA file. " + e.Message);
                 }
+            }
+        }
+
+        public Lua LuaVm
+        {
+            get
+            {
+                return _LuaVm;
             }
         }
 
@@ -86,7 +96,7 @@ namespace DemodulatorCollection.Demodulators
 
             try
             {
-                return LuaHelpers.CallFunction(LuaVm, name, parameters);
+                return LuaHelpers.CallFunction(_LuaVm, name, parameters);
             }
             catch (Exception ex)
             {
@@ -106,7 +116,7 @@ namespace DemodulatorCollection.Demodulators
 
             try
             {
-                return LuaHelpers.CallFunction(LuaVm, name, parameters);
+                return LuaHelpers.CallFunction(_LuaVm, name, parameters);
             }
             catch (Exception ex)
             {
@@ -129,7 +139,7 @@ namespace DemodulatorCollection.Demodulators
             {
                 try
                 {
-                    return (double)LuaVm["SamplingRate"];
+                    return (double)_LuaVm["SamplingRate"];
                 }
                 catch (Exception e)
                 {
@@ -141,7 +151,7 @@ namespace DemodulatorCollection.Demodulators
             {
                 try
                 {
-                    LuaVm["SamplingRate"] = value;
+                    _LuaVm["SamplingRate"] = value;
                     TryCallFunction("SamplingRateChanged");
                     if (Demodulator != null)
                     {
@@ -165,7 +175,7 @@ namespace DemodulatorCollection.Demodulators
             {
                 Demodulator.Process(iValue, qValue);
             }
-            else if (LuaVm.GetFunction("ProcessSample") != null)
+            else if (_LuaVm.GetFunction("ProcessSample") != null)
             {
                 CallFunction("ProcessSample", iValue, qValue);
             }
@@ -186,7 +196,7 @@ namespace DemodulatorCollection.Demodulators
                 BitSink.Resynchronized();
                 CallDepth--;
             }
-            else if (LuaVm.GetFunction("Resynchronized") != null)
+            else if (_LuaVm.GetFunction("Resynchronized") != null)
             {
                 CallFunction("Resynchronized");
             }
@@ -200,7 +210,7 @@ namespace DemodulatorCollection.Demodulators
                 BitSink.TransmissionStart();
                 CallDepth--;
             }
-            else if (LuaVm.GetFunction("TransmissionStart") != null)
+            else if (_LuaVm.GetFunction("TransmissionStart") != null)
             {
                 CallFunction("TransmissionStart");
             }
@@ -214,7 +224,7 @@ namespace DemodulatorCollection.Demodulators
                 BitSink.TransmissionEnd();
                 CallDepth--;
             }
-            else if (LuaVm.GetFunction("TransmissionEnd") != null)
+            else if (_LuaVm.GetFunction("TransmissionEnd") != null)
             {
                 CallFunction("TransmissionEnd");
             }
@@ -228,7 +238,7 @@ namespace DemodulatorCollection.Demodulators
                 BitSink.ClockBit(state);
                 CallDepth--;
             }
-            else if (LuaVm.GetFunction("ClockBit") != null)
+            else if (_LuaVm.GetFunction("ClockBit") != null)
             {
                 CallFunction("ClockBit", state);
             }

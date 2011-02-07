@@ -21,7 +21,7 @@ namespace LibRXFFT.Libraries.SampleSources
                     /* USRP has an inverted spectrum */
                     InvertedSpectrum = true;
 
-                    DataFormat = ByteUtil.eSampleFormat.Direct64BitIQFloat64k;
+                    DataFormat = ByteUtil.eSampleFormat.Direct32BitIQFloat64k;
 
                     /* calculate sampling rate from USRPs decimation rate */
                     CFileDecimationDialog dec = new CFileDecimationDialog();
@@ -33,7 +33,7 @@ namespace LibRXFFT.Libraries.SampleSources
                         dec.Decimation = 1;
                     }
 
-                    InputSamplingRate = 64000000d / dec.Decimation;
+                    InputSamplingRate = (double)dec.ClockRate / dec.Decimation;
                     InputStream = new WaveFileReader(fileName, eFileType.CFile);
 
                     break;
@@ -41,7 +41,7 @@ namespace LibRXFFT.Libraries.SampleSources
                 case eFileType.RawIQ:
                     InvertedSpectrum = false;
 
-                    FileFormatDialog dlg = new FileFormatDialog();
+                    DataFormatDialog dlg = new DataFormatDialog();
                     dlg.SampleFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPoint;
                     dlg.EstimateDetails(fileName);
                     dlg.ShowDialog();

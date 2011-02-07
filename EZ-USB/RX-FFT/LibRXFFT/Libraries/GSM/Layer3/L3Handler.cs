@@ -6,6 +6,8 @@ using System.Linq;
 using LibRXFFT.Libraries.GSM.Misc;
 using System.Text;
 using System.Windows.Forms;
+using RX_FFT.Components.GDI;
+using LibRXFFT.Libraries.GSM.Layer1;
 
 namespace LibRXFFT.Libraries.GSM.Layer3
 {
@@ -31,6 +33,8 @@ namespace LibRXFFT.Libraries.GSM.Layer3
 
     public class L3Handler
     {
+        public static bool AlreadyWarned = false;
+
         public static L3PacketTypes L3PacketTypesRR;
         public static L3PacketTypes L3PacketTypesCC;
         public static L3PacketTypes L3PacketTypesMM;
@@ -48,7 +52,7 @@ namespace LibRXFFT.Libraries.GSM.Layer3
         public static MCCTable MCCTable;
         public static MNCTable MNCTable;
 
-        public static string DataFilePath = "DataFiles\\";
+        public static string DataFilePath = null;
 
         public static bool SniffIMSI = false;
         public string SniffResult = null;
@@ -124,21 +128,44 @@ namespace LibRXFFT.Libraries.GSM.Layer3
 
         public static void ReloadFiles()
         {
-            if (!Directory.Exists(DataFilePath))
+            bool dataValid = true;
+
+            dataValid &= CheckValid(L3PacketTypesMM);
+            dataValid &= CheckValid(L3PacketTypesCC);
+            dataValid &= CheckValid(L3PacketTypesRR);
+            dataValid &= CheckValid(L3MessagesRadio);
+            dataValid &= CheckValid(L3PduListRadio);
+            dataValid &= CheckValid(L3PacketTypesSMS);
+            dataValid &= CheckValid(L3MessagesSMS);
+            dataValid &= CheckValid(L3PduListSMS);
+            dataValid &= CheckValid(L3MessagesRP);
+            dataValid &= CheckValid(L3PduListRP);
+            dataValid &= CheckValid(MCCTable);
+            dataValid &= CheckValid(MNCTable);
+            
+            if (DataFilePath == null || !Directory.Exists(DataFilePath))
             {
-                DataFilePath = "..\\" + DataFilePath;
+                DataFilePath = Environment.CurrentDirectory + "\\DataFiles\\";
             }
             if (!Directory.Exists(DataFilePath))
             {
-                DataFilePath = "..\\" + DataFilePath;
+                DataFilePath = Environment.CurrentDirectory + "\\..\\DataFiles\\";
             }
             if (!Directory.Exists(DataFilePath))
             {
-                DataFilePath = "..\\..\\..\\..\\RX-FFT\\DataFiles\\";
+                DataFilePath = Environment.CurrentDirectory + "\\..\\..\\DataFiles\\";
             }
             if (!Directory.Exists(DataFilePath))
             {
-                MessageBox.Show("Failed to load GSM Analyzer data files");
+                DataFilePath = Environment.CurrentDirectory + "\\..\\..\\..\\..\\RX-FFT\\DataFiles\\";
+            }
+            if (!Directory.Exists(DataFilePath))
+            {
+                if (!AlreadyWarned)
+                {
+                    MessageBox.Show("Could not locate GSM Analyzer data files. Decoding is impossible.");
+                    AlreadyWarned = true;
+                }
                 return;
             }
 
@@ -162,8 +189,17 @@ namespace LibRXFFT.Libraries.GSM.Layer3
             }
             catch (Exception e)
             {
-                //MessageBox.Show("Failed to load GSM Analyzer data files");
+                if (!AlreadyWarned)
+                {
+                    MessageBox.Show("Failed to load GSM Analyzer data files. Decoding is impossible. (" + e.GetType().ToString() + ")");
+                    AlreadyWarned = true;
+                }
             }
+        }
+
+        private static bool CheckValid(object data)
+        {
+            return (data != null);
         }
 
         private string ParseRA(L3Handler handler, long value)
@@ -266,6 +302,27 @@ namespace LibRXFFT.Libraries.GSM.Layer3
                         retVal = "Originating call (SDCCH)";
                         break;
                 }
+            }
+
+
+            if (!PDUDataFields.ContainsKey("EstablishmentCause"))
+            {
+                PDUDataFields.Add("EstablishmentCause", retVal);
+            }
+            else
+            {
+                PDUDataFields["EstablishmentCause"] = retVal;
+            }
+
+
+
+            if (!PDUDataRawFields.ContainsKey("EstablishmentCause"))
+            {
+                PDUDataRawFields.Add("EstablishmentCause", value);
+            }
+            else
+            {
+                PDUDataRawFields["EstablishmentCause"] = value;
             }
 
             return retVal;
@@ -679,7 +736,14 @@ namespace LibRXFFT.Libraries.GSM.Layer3
                     int mask = (1 << bits.Count) - 1;
 
                     value <<= bits.Count;
-                    value |= (pduData[bits.Octet - 1] >> (bits.Start - 1)) & mask;
+                    if (bits.Octet <= pduData.Length)
+                    {
+                        value |= (pduData[bits.Octet - 1] >> (bits.Start - 1)) & mask;
+                    }
+                    else
+                    {
+                        builder.Append("FAILED - PDU too short (" + (pduData.Length - bits.Octet) + " byte)");
+                    }
                 }
 
                 StringBuilder pduFieldData = new StringBuilder();
@@ -795,8 +859,8 @@ namespace LibRXFFT.Libraries.GSM.Layer3
                 byte[] pduData = new byte[l3Data.Length - start];
                 Array.Copy(l3Data, start, pduData, 0, pduData.Length);
 
-                builder.Append("          Unspecified Message Type: ").Append(reference).Append(Environment.NewLine);
-                builder.Append("             ").Append(DumpBytes(pduData)).Append(Environment.NewLine);
+                builder.Append("  Unspecified Message Type: ").Append(reference).Append(Environment.NewLine);
+                builder.Append("    ").Append(DumpBytes(pduData)).Append(Environment.NewLine);
                 return builder.ToString();
             }
 
@@ -907,7 +971,7 @@ namespace LibRXFFT.Libraries.GSM.Layer3
 
                         if ((currentPos + pduLength) / 2 > l3Data.Length)
                         {
-                            builder.Append("          PDU too long: ").Append(slotInfo.Reference).Append(Environment.NewLine);
+                            builder.Append("  PDU too short: ").Append(slotInfo.Reference).Append(Environment.NewLine);
                             return builder.ToString();
                         }
 
@@ -941,34 +1005,34 @@ namespace LibRXFFT.Libraries.GSM.Layer3
 
                         if (PDUParser.ContainsKey(l3PduInfo.Reference))
                         {
-                            builder.Append("          ").Append(l3PduInfo.Name).Append(" (").Append(l3PduInfo.Reference + "):").Append(Environment.NewLine);
+                            builder.Append("  ").Append(l3PduInfo.Name).Append(" (").Append(l3PduInfo.Reference + "):").Append(Environment.NewLine);
                             string[] info = PDUParser[l3PduInfo.Reference](pduData);
                             foreach (string s in info)
                             {
                                 if (!string.IsNullOrEmpty(s))
                                 {
-                                    builder.Append("             ").Append(s).Append(Environment.NewLine);
+                                    builder.Append("    ").Append(s).Append(Environment.NewLine);
                                 }
                             }
                         }
                         else if (l3PduInfo.Fields.Count > 0)
                         {
-                            builder.Append("          ").Append(l3PduInfo.Name).Append(" (").Append(l3PduInfo.Reference + "):").Append(Environment.NewLine);
+                            builder.Append("  ").Append(l3PduInfo.Name).Append(" (").Append(l3PduInfo.Reference + "):").Append(Environment.NewLine);
                             string[] info = HandleGenericPDU(l3PduInfo.Fields, pduData);
                             foreach (string s in info)
                             {
                                 if (!string.IsNullOrEmpty(s))
                                 {
-                                    builder.Append("             ").Append(s).Append(Environment.NewLine);
+                                    builder.Append("    ").Append(s).Append(Environment.NewLine);
                                 }
                             }
                         }
                         else
                         {
-                            builder.Append("          ").Append(l3PduInfo.Name).Append(" (").Append(l3PduInfo.Reference + "):").Append(Environment.NewLine);
+                            builder.Append("  ").Append(l3PduInfo.Name).Append(" (").Append(l3PduInfo.Reference + "):").Append(Environment.NewLine);
                             if (pduData.Length > 0)
                             {
-                                builder.Append("             ").Append(DumpBytes(pduData)).Append(Environment.NewLine);
+                                builder.Append("    ").Append(DumpBytes(pduData)).Append(Environment.NewLine);
                             }
                         }
 
@@ -1004,8 +1068,8 @@ namespace LibRXFFT.Libraries.GSM.Layer3
 
                 if (hasData)
                 {
-                    builder.Append("          ").Append("Unhandled Rest Octets").Append(Environment.NewLine);
-                    builder.Append("             ").Append(DumpBytes(pduData)).Append(Environment.NewLine);
+                    builder.Append("  ").Append("Unhandled Rest Octets").Append(Environment.NewLine);
+                    builder.Append("    ").Append(DumpBytes(pduData)).Append(Environment.NewLine);
                 }
             }
 
@@ -1144,7 +1208,7 @@ namespace LibRXFFT.Libraries.GSM.Layer3
 
                         if ((currentPos + pduLength) / 2 > l3Data.Length)
                         {
-                            builder.Append("          PDU too long: ").Append(slotInfo.Reference).Append(Environment.NewLine);
+                            builder.Append("          PDU too short: ").Append(slotInfo.Reference).Append(Environment.NewLine);
                             return builder.ToString();
                         }
 
@@ -1260,13 +1324,19 @@ namespace LibRXFFT.Libraries.GSM.Layer3
             return new[] { builder.ToString() };
         }
 
-        public void Handle(byte[] l3Data)
+        public void Handle(byte[] l3Data, GSMParameters param)
         {
-            Handle(l3Data, 0);
+            Handle(l3Data, 0, param);
         }
 
-        public void Handle(byte[] l3Data, int start)
+        public void Handle(byte[] l3Data, int start, GSMParameters param)
         {
+            /* call LUA script */
+            if (param.LuaVm != null)
+            {
+                LuaHelpers.CallFunction(param.LuaVm, "L3DataReceived", true, l3Data, param);
+            }
+
             StringBuilder builder = new StringBuilder();
 
             if (l3Data.Length > 1)
@@ -1274,13 +1344,12 @@ namespace LibRXFFT.Libraries.GSM.Layer3
                 eProtocol PD = (eProtocol)(l3Data[start + 0] & 0x0F);
                 int packetType = l3Data[start + 1];
 
-                ShowMessage = true;
-
                 builder.Append(PD);
                 switch (PD)
                 {
                     case eProtocol.SMSMessage:
                         {
+                            ShowMessage = true;
                             L3PacketInfo type = L3PacketTypesSMS.Get(packetType);
                             if (type != null)
                             {
@@ -1289,10 +1358,7 @@ namespace LibRXFFT.Libraries.GSM.Layer3
                                 {
                                     if (SkipMessages.ContainsKey(type.RefDown))
                                     {
-                                        if (ExceptFieldsEnabled)
-                                            ShowMessage = false;
-                                        else
-                                            return;
+                                        ShowMessage = false;
                                     }
                                 }
 
@@ -1308,6 +1374,7 @@ namespace LibRXFFT.Libraries.GSM.Layer3
 
                     case eProtocol.RadioResource:
                         {
+                            ShowMessage = true;
                             L3PacketInfo type = L3PacketTypesRR.Get(packetType);
                             if (type != null)
                             {
@@ -1316,10 +1383,7 @@ namespace LibRXFFT.Libraries.GSM.Layer3
                                 {
                                     if (SkipMessages.ContainsKey(type.RefDown))
                                     {
-                                        if (ExceptFieldsEnabled)
-                                            ShowMessage = false;
-                                        else
-                                            return;
+                                        ShowMessage = false;
                                     }
                                 }
 
@@ -1335,6 +1399,7 @@ namespace LibRXFFT.Libraries.GSM.Layer3
 
                     case eProtocol.CallControl:
                         {
+                            ShowMessage = true;
                             L3PacketInfo type = L3PacketTypesCC.Get(packetType);
                             if (type != null)
                             {
@@ -1343,10 +1408,7 @@ namespace LibRXFFT.Libraries.GSM.Layer3
                                 {
                                     if (SkipMessages.ContainsKey(type.RefDown))
                                     {
-                                        if (ExceptFieldsEnabled)
-                                            ShowMessage = false;
-                                        else
-                                            return;
+                                        ShowMessage = false;
                                     }
                                 }
 
@@ -1362,6 +1424,7 @@ namespace LibRXFFT.Libraries.GSM.Layer3
 
                     case eProtocol.MobilityManagement:
                         {
+                            ShowMessage = true;
                             L3PacketInfo type = L3PacketTypesMM.Get(packetType);
                             if (type != null)
                             {
@@ -1371,10 +1434,7 @@ namespace LibRXFFT.Libraries.GSM.Layer3
                                 {
                                     if (SkipMessages.ContainsKey(type.RefDown))
                                     {
-                                        if (ExceptFieldsEnabled)
-                                            ShowMessage = false;
-                                        else
-                                            return;
+                                        ShowMessage = false;
                                     }
                                 }
 
@@ -1395,6 +1455,7 @@ namespace LibRXFFT.Libraries.GSM.Layer3
                         {
                             if (DumpUnhandled || DumpRawData)
                             {
+                                ShowMessage = true;
                                 builder.Append(" ").Append(packetType).Append(" (Unhandled)").Append(Environment.NewLine);
                             }
                         }
@@ -1403,8 +1464,8 @@ namespace LibRXFFT.Libraries.GSM.Layer3
 
                 if (DumpRawData)
                 {
-                    builder.Append("          Raw Data").Append(Environment.NewLine);
-                    builder.Append("             ").Append(DumpBytes(l3Data)).Append(Environment.NewLine);
+                    builder.Append("Raw L3 data").Append(Environment.NewLine);
+                    builder.Append("    ").Append(DumpBytes(l3Data)).Append(Environment.NewLine);
                 }
             }
 

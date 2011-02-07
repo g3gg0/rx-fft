@@ -32,6 +32,20 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         {
             I2CDevice = device;
             BusID = busID;
+
+            if (Exists)
+            {
+                AutodetectAddressing();
+                AutodetectSize();
+            }
+        }
+
+        public bool Exists
+        {
+            get
+            {
+                return I2CDevice.I2CDeviceAck(BusID);
+            }
         }
 
         public bool AutodetectSize()
@@ -40,33 +54,35 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             byte checkData = 0; 
             int size = 0;
 
-            AutodetectAddressing();
-
             /* backup original byte at pos 0 */
             if (!ReadByte(0, ref baseData))
             {
+                Log.AddMessage("EEPROM:AutodetectSize(): Failed to read byte at pos 0.");
                 return false;
             }
 
             /* write our own */
             if (!WriteByte(0, 0xA5))
             {
+                Log.AddMessage("EEPROM:AutodetectSize(): Failed to write byte at pos 0.");
                 return false;
             }
 
             /* read back and verify */
             if (!ReadByte(0, ref checkData) || checkData != 0xA5)
             {
+                Log.AddMessage("EEPROM:AutodetectSize(): Verification failed of byte at pos 0.");
                 if (!WriteByte(0, baseData))
                 {
+                    Log.AddMessage("EEPROM:AutodetectSize(): Failed to restore byte at pos 0.");
                     return false;
                 }
 
                 return false;
             }
 
-            /* detect size from 64 byte up to  */
-            for (int sizeBit = 1; sizeBit < 16; sizeBit++)
+            /* detect size from 64 byte up to the max size */
+            for (int sizeBit = 1; sizeBit < AddressWidth; sizeBit++)
             {
                 size = (1 << sizeBit);
                 byte backupData = 0;
@@ -74,18 +90,21 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                 /* backup original data */
                 if (!ReadByte(size, ref backupData))
                 {
+                    Log.AddMessage("EEPROM:AutodetectSize(): Failed to backup byte at pos " + size + ".");
                     return false;
                 }
 
                 /* write some test data */
                 if (!WriteByte(size, 0x5A))
                 {
+                    Log.AddMessage("EEPROM:AutodetectSize(): Failed to write test byte at pos " + size + ".");
                     return false;
                 }
 
                 /* check if it was written to address 0 */
                 if (!ReadByte(0, ref checkData))
                 {
+                    Log.AddMessage("EEPROM:AutodetectSize(): Failed to read check byte at pos " + size + ".");
                     return false;
                 }
 
@@ -98,6 +117,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                 /* address counter did not wrap, restore old data */
                 if (!WriteByte(size, backupData))
                 {
+                    Log.AddMessage("EEPROM:AutodetectSize(): Failed to restore byte at pos " + size + ".");
                     return false;
                 }
             }
@@ -105,6 +125,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             /* restore old data at position 0 */
             if (!WriteByte(0, baseData))
             {
+                Log.AddMessage("EEPROM:AutodetectSize(): Failed to restore byte at pos 0.");
                 return false;
             }
 
@@ -122,6 +143,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             /* transmit read address */
             if (!I2CDevice.I2CWriteBytes(BusID, new byte[] { (byte)0 }))
             {
+                Log.AddMessage("EEPROM:AutodetectAddressing(): Failed to read header in 8 bit mode.");
                 return false;
             }
 
@@ -130,6 +152,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             /* read data */
             if (!I2CDevice.I2CReadBytes(BusID, backup8))
             {
+                Log.AddMessage("EEPROM:AutodetectAddressing(): Failed to receive header in 8 bit mode.");
                 return false;
             }
 
@@ -138,6 +161,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             /* transmit read address */
             if (!I2CDevice.I2CWriteBytes(BusID, new byte[] { (byte)0, (byte)0 }))
             {
+                Log.AddMessage("EEPROM:AutodetectAddressing(): Failed to read header in 16 bit mode.");
                 return false;
             }
 
@@ -146,6 +170,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             /* read data */
             if (!I2CDevice.I2CReadBytes(BusID, backup16))
             {
+                Log.AddMessage("EEPROM:AutodetectAddressing(): Failed to receive header in 16 bit mode.");
                 return false;
             }
 
@@ -157,6 +182,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
             if (!I2CDevice.I2CWriteBytes(BusID, buffer))
             {
+                Log.AddMessage("EEPROM:AutodetectAddressing(): Failed to write test header in 16 bit mode.");
                 return false;
             }
 
@@ -165,6 +191,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             /* read back what was placed in EEPROM */
             if (!I2CDevice.I2CWriteBytes(BusID, new byte[] { (byte)0 }))
             {
+                Log.AddMessage("EEPROM:AutodetectAddressing(): Failed to read test header in 8 bit mode.");
                 return false;
             }
 
@@ -172,6 +199,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
             if (!I2CDevice.I2CReadBytes(BusID, buffer))
             {
+                Log.AddMessage("EEPROM:AutodetectAddressing(): Failed to receive test header in 8 bit mode.");
                 return false;
             }
 
@@ -190,6 +218,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             /* read back what was placed in EEPROM, but use 16 bit addressing */
             if (!I2CDevice.I2CWriteBytes(BusID, new byte[] { (byte)0, (byte)0 }))
             {
+                Log.AddMessage("EEPROM:AutodetectAddressing(): Failed to read test header in 16 bit mode.");
                 return false;
             }
 
@@ -197,6 +226,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
             if (!I2CDevice.I2CReadBytes(BusID, buffer))
             {
+                Log.AddMessage("EEPROM:AutodetectAddressing(): Failed to receive test header in 16 bit mode.");
                 return false;
             }
 
@@ -205,16 +235,13 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             {
                 Use16Bit = true;
 
-                /* addressig is determined now, write back backed up data. may be crap if the eeprom is 16 bit wide. */
+                /* addressig is determined now, write back backed up data. */
                 WriteBytes(0, backup16);
             }
             else
             {
-                /* default to 16 bit EEPROM */
-                Use16Bit = true;
-
-                /* addressig is determined now, write back backed up data. may be crap if the eeprom is 16 bit wide. */
-                WriteBytes(0, backup16);
+                Log.AddMessage("EEPROM:AutodetectAddressing(): Inexpected result when reading in 16 bit mode: 0x" + buffer[0].ToString("X2"));
+                return false;
             }
 
             return true;

@@ -34,11 +34,11 @@
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.lstFiltered = new System.Windows.Forms.ListBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.chkExcept = new System.Windows.Forms.CheckBox();
             this.lstExcept = new System.Windows.Forms.ListBox();
             this.btnLoad = new System.Windows.Forms.Button();
             this.btnSave = new System.Windows.Forms.Button();
             this.btnOk = new System.Windows.Forms.Button();
-            this.chkExcept = new System.Windows.Forms.CheckBox();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -105,13 +105,13 @@
             // lstFiltered
             // 
             this.lstFiltered.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lstFiltered.Font = new System.Drawing.Font("Lucida Console", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lstFiltered.Font = new System.Drawing.Font("Courier New", 7F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lstFiltered.FormattingEnabled = true;
-            this.lstFiltered.ItemHeight = 11;
+            this.lstFiltered.ItemHeight = 12;
             this.lstFiltered.Location = new System.Drawing.Point(10, 23);
             this.lstFiltered.Name = "lstFiltered";
             this.lstFiltered.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
-            this.lstFiltered.Size = new System.Drawing.Size(281, 312);
+            this.lstFiltered.Size = new System.Drawing.Size(281, 316);
             this.lstFiltered.TabIndex = 0;
             this.lstFiltered.SelectedIndexChanged += new System.EventHandler(this.lstFiltered_SelectedIndexChanged);
             // 
@@ -128,16 +128,27 @@
             this.groupBox2.TabIndex = 0;
             this.groupBox2.TabStop = false;
             // 
+            // chkExcept
+            // 
+            this.chkExcept.AutoSize = true;
+            this.chkExcept.Location = new System.Drawing.Point(7, 0);
+            this.chkExcept.Name = "chkExcept";
+            this.chkExcept.Size = new System.Drawing.Size(113, 17);
+            this.chkExcept.TabIndex = 1;
+            this.chkExcept.Text = "Except it contains:";
+            this.chkExcept.UseVisualStyleBackColor = true;
+            this.chkExcept.CheckedChanged += new System.EventHandler(this.chkExcept_CheckedChanged);
+            // 
             // lstExcept
             // 
             this.lstExcept.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lstExcept.Font = new System.Drawing.Font("Lucida Console", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lstExcept.Font = new System.Drawing.Font("Courier New", 7F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lstExcept.FormattingEnabled = true;
-            this.lstExcept.ItemHeight = 11;
+            this.lstExcept.ItemHeight = 12;
             this.lstExcept.Location = new System.Drawing.Point(10, 23);
             this.lstExcept.Name = "lstExcept";
             this.lstExcept.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
-            this.lstExcept.Size = new System.Drawing.Size(158, 312);
+            this.lstExcept.Size = new System.Drawing.Size(158, 316);
             this.lstExcept.TabIndex = 0;
             this.lstExcept.SelectedIndexChanged += new System.EventHandler(this.lstExcept_SelectedIndexChanged);
             // 
@@ -173,17 +184,6 @@
             this.btnOk.Text = "Ok";
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
-            // 
-            // chkExcept
-            // 
-            this.chkExcept.AutoSize = true;
-            this.chkExcept.Location = new System.Drawing.Point(7, 0);
-            this.chkExcept.Name = "chkExcept";
-            this.chkExcept.Size = new System.Drawing.Size(113, 17);
-            this.chkExcept.TabIndex = 1;
-            this.chkExcept.Text = "Except it contains:";
-            this.chkExcept.UseVisualStyleBackColor = true;
-            this.chkExcept.CheckedChanged += new System.EventHandler(this.chkExcept_CheckedChanged);
             // 
             // FilterDialog
             // 

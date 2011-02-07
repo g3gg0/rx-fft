@@ -10,6 +10,7 @@ namespace GSM_Analyzer
     public partial class FilterDialog : Form
     {
         private bool Initializing = true;
+        private static bool AlreadyLoaded = false;
 
         public FilterDialog()
         {
@@ -51,6 +52,18 @@ namespace GSM_Analyzer
             lstExcept.Enabled = L3Handler.ExceptFieldsEnabled;
 
             Initializing = false;
+
+            if (!AlreadyLoaded)
+            {
+                try
+                {
+                    LoadXml("default.flt.xml");
+                }
+                catch (Exception)
+                {
+                }
+                AlreadyLoaded = true;
+            }
         }
 
         private void btnOk_Click(object sender, EventArgs e)
@@ -64,32 +77,7 @@ namespace GSM_Analyzer
             dlg.Filter = "XML Filter files (*.flt.xml)|*.flt.xml|All files (*.*)|*.*";
             if (dlg.ShowDialog() == DialogResult.OK)
             {
-                string fileName = dlg.FileName;
-                if (!fileName.EndsWith(".flt.xml"))
-                {
-                    if (fileName.Contains("."))
-                        fileName = fileName.Split('.')[0] + ".flt.xml";
-                    else
-                        fileName += ".flt.xml";
-                }
-
-                XmlSerializer ser = new XmlSerializer(typeof(FilterSettings));
-                StreamWriter writer = new StreamWriter(fileName, false);
-                try
-                {
-                    FilterSettings container = new FilterSettings();
-
-                    foreach (L3MessageInfo selectedItem in lstFiltered.SelectedItems)
-                        container.FilteredMessages.Add(selectedItem.Reference);
-                    foreach (string field in lstExcept.SelectedItems)
-                        container.ExceptionFields.Add(field);
-
-                    ser.Serialize(writer, container);
-                }
-                finally
-                {
-                    writer.Close();
-                }
+                SaveXml(dlg.FileName);
             }
         }
 
@@ -99,37 +87,71 @@ namespace GSM_Analyzer
             dlg.Filter = "XML Filter files (*.flt.xml)|*.flt.xml|All files (*.*)|*.*";
             if (dlg.ShowDialog() == DialogResult.OK)
             {
-                XmlSerializer ser = new XmlSerializer(typeof(FilterSettings));
-                FileStream stream = new FileStream(dlg.FileName, FileMode.Open);
-                try
+                LoadXml(dlg.FileName);
+            }
+        }
+
+        private void LoadXml(string fileName)
+        {
+            XmlSerializer ser = new XmlSerializer(typeof(FilterSettings));
+            FileStream stream = new FileStream(fileName, FileMode.Open);
+            try
+            {
+                FilterSettings container = (FilterSettings)ser.Deserialize(stream);
+
+                lstFiltered.SelectedItems.Clear();
+                foreach (string reference in container.FilteredMessages)
                 {
-                    FilterSettings container = (FilterSettings)ser.Deserialize(stream);
-
-                    lstFiltered.SelectedItems.Clear();
-                    foreach (string reference in container.FilteredMessages)
+                    L3MessageInfo selectedItem = L3Handler.L3MessagesRadio.Get(reference);
+                    for (int pos = 0; pos < lstFiltered.Items.Count; pos++)
                     {
-                        L3MessageInfo selectedItem = L3Handler.L3MessagesRadio.Get(reference);
-                        for (int pos = 0; pos < lstFiltered.Items.Count; pos++)
-                        {
-                            if (lstFiltered.Items[pos].ToString() == selectedItem.ToString())
-                                lstFiltered.SelectedItems.Add(lstFiltered.Items[pos]);
-                        }
-                    }
-
-                    lstExcept.SelectedItems.Clear();
-                    foreach (string field in container.ExceptionFields)
-                    {
-                        for (int pos = 0; pos < lstExcept.Items.Count; pos++)
-                        {
-                            if (lstExcept.Items[pos].ToString() == field)
-                                lstExcept.SelectedItems.Add(lstExcept.Items[pos]);
-                        }
+                        if (lstFiltered.Items[pos].ToString() == selectedItem.ToString())
+                            lstFiltered.SelectedItems.Add(lstFiltered.Items[pos]);
                     }
                 }
-                finally
+
+                lstExcept.SelectedItems.Clear();
+                foreach (string field in container.ExceptionFields)
                 {
-                    stream.Close();
+                    for (int pos = 0; pos < lstExcept.Items.Count; pos++)
+                    {
+                        if (lstExcept.Items[pos].ToString() == field)
+                            lstExcept.SelectedItems.Add(lstExcept.Items[pos]);
+                    }
                 }
+            }
+            finally
+            {
+                stream.Close();
+            }
+        }
+
+        private void SaveXml(string fileName)
+        {
+            if (!fileName.EndsWith(".flt.xml"))
+            {
+                if (fileName.Contains("."))
+                    fileName = fileName.Split('.')[0] + ".flt.xml";
+                else
+                    fileName += ".flt.xml";
+            }
+
+            XmlSerializer ser = new XmlSerializer(typeof(FilterSettings));
+            StreamWriter writer = new StreamWriter(fileName, false);
+            try
+            {
+                FilterSettings container = new FilterSettings();
+
+                foreach (L3MessageInfo selectedItem in lstFiltered.SelectedItems)
+                    container.FilteredMessages.Add(selectedItem.Reference);
+                foreach (string field in lstExcept.SelectedItems)
+                    container.ExceptionFields.Add(field);
+
+                ser.Serialize(writer, container);
+            }
+            finally
+            {
+                writer.Close();
             }
         }
 

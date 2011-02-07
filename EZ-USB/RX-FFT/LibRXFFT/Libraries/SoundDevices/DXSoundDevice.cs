@@ -23,15 +23,19 @@ namespace LibRXFFT.Libraries.SoundDevices
         {
             get
             {
-                int currentPlayPosition = Secondary.CurrentPlayPosition;
+                int bytesUsed = 0;
 
-                /* get the number of samples that we are able to write total */
-                int bytesUsed = CurrentWritePosition - currentPlayPosition;
-                if (bytesUsed < 0)
+                if (Secondary != null)
                 {
-                    bytesUsed += BufferSize;
-                }
+                    int currentPlayPosition = Secondary.CurrentPlayPosition;
 
+                    /* get the number of samples that we are able to write total */
+                    bytesUsed = CurrentWritePosition - currentPlayPosition;
+                    if (bytesUsed < 0)
+                    {
+                        bytesUsed += BufferSize;
+                    }
+                }
                 return bytesUsed;
             }
         }
@@ -39,7 +43,7 @@ namespace LibRXFFT.Libraries.SoundDevices
         private SoundBufferDescription Desc;
         private DirectSound Device;
 
-        private Oversampler SignalOversampler;
+        private Oversampler SignalOversampler = new Oversampler(1);
         private double[] OversampleIn;
         private double[] OversampleOut;
         private short[] OversampledSamples;

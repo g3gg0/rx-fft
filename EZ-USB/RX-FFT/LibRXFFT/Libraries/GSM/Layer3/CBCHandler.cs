@@ -5,7 +5,7 @@ namespace LibRXFFT.Libraries.GSM.Layer3
 {
     public class CBCHandler
     {
-        public static bool ShowCBMessages = true;
+        public static bool ShowCBMessages = false;
         public string StatusMessage;
         private readonly byte[] CBCBuffer;
         private readonly byte[] CBMessage;

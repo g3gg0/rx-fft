@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace LibRXFFT.Libraries
 {
@@ -396,8 +397,8 @@ namespace LibRXFFT.Libraries
         public enum eSampleFormat
         {
             Direct16BitIQFixedPoint = 0,
-            Direct64BitIQFloat = 1,
-            Direct64BitIQFloat64k = 2,
+            Direct32BitIQFloat = 1,
+            Direct32BitIQFloat64k = 2,
             Unknown = 3
         }
         
@@ -417,24 +418,9 @@ namespace LibRXFFT.Libraries
                 int bytesPerSample;
                 int bytesPerSamplePair;
 
-                switch (dataFormat)
-                {
-                    case eSampleFormat.Direct16BitIQFixedPoint:
-                        bytesPerSamplePair = 4;
-                        bytesPerSample = 2;
-                        break;
+                bytesPerSamplePair = GetBytePerSamplePair(dataFormat);
+                bytesPerSample = GetBytePerSample(dataFormat);
 
-                    case eSampleFormat.Direct64BitIQFloat:
-                    case eSampleFormat.Direct64BitIQFloat64k:
-                        bytesPerSamplePair = 8;
-                        bytesPerSample = 4;
-                        break;
-
-                    default:
-                        bytesPerSamplePair = 0;
-                        bytesPerSample = 0;
-                        break;
-                }
 
                 int samplePos = 0;
                 int samplePairs = bytesRead / bytesPerSamplePair;
@@ -453,12 +439,12 @@ namespace LibRXFFT.Libraries
                             Q = getDoubleFromBytes(dataBuffer, bytesPerSamplePair * pos + bytesPerSample);
                             break;
 
-                        case eSampleFormat.Direct64BitIQFloat:
+                        case eSampleFormat.Direct32BitIQFloat:
                             I = BitConverter.ToSingle(dataBuffer, bytesPerSamplePair * pos);
                             Q = BitConverter.ToSingle(dataBuffer, bytesPerSamplePair * pos + bytesPerSample);
                             break;
 
-                        case eSampleFormat.Direct64BitIQFloat64k:
+                        case eSampleFormat.Direct32BitIQFloat64k:
                             I = BitConverter.ToSingle(dataBuffer, bytesPerSamplePair * pos) / 65536;
                             Q = BitConverter.ToSingle(dataBuffer, bytesPerSamplePair * pos + bytesPerSample) / 65536;
                             break;
@@ -483,6 +469,39 @@ namespace LibRXFFT.Libraries
             SamplesToBinary(dataBuffer, samplesI.Length, samplesI, samplesQ, dataFormat, InvertedSpectrum);
         }
 
+        public static int GetBytePerSamplePair(eSampleFormat format)
+        {
+            switch (format)
+            {
+                case eSampleFormat.Direct16BitIQFixedPoint:
+                    return 4;
+
+                case eSampleFormat.Direct32BitIQFloat:
+                case eSampleFormat.Direct32BitIQFloat64k:
+                    return 8;
+
+                default:
+                    return 0;
+            }
+        }
+
+        public static int GetBytePerSample(eSampleFormat format)
+        {
+            switch (format)
+            {
+                case eSampleFormat.Direct16BitIQFixedPoint:
+                    return 2;
+
+                case eSampleFormat.Direct32BitIQFloat:
+                case eSampleFormat.Direct32BitIQFloat64k:
+                    return 4;
+
+                default:
+                    return 0;
+
+            }
+        }
+
         public static void SamplesToBinary(byte[] dataBuffer, int samplePairs, double[] samplesI, double[] samplesQ, eSampleFormat dataFormat, bool invertedSpectrum)
         {
             if (false && UseNative)
@@ -495,24 +514,8 @@ namespace LibRXFFT.Libraries
                 int bytesPerSample;
                 int bytesPerSamplePair;
 
-                switch (dataFormat)
-                {
-                    case eSampleFormat.Direct16BitIQFixedPoint:
-                        bytesPerSamplePair = 4;
-                        bytesPerSample = 2;
-                        break;
-
-                    case eSampleFormat.Direct64BitIQFloat:
-                    case eSampleFormat.Direct64BitIQFloat64k:
-                        bytesPerSamplePair = 8;
-                        bytesPerSample = 4;
-                        break;
-
-                    default:
-                        bytesPerSamplePair = 0;
-                        bytesPerSample = 0;
-                        break;
-                }
+                bytesPerSamplePair = GetBytePerSamplePair(dataFormat);
+                bytesPerSample = GetBytePerSample(dataFormat);
 
                 int samplePos = 0;
 
@@ -534,16 +537,16 @@ namespace LibRXFFT.Libraries
                             putBytesFromDouble(dataBuffer, bytesPerSamplePair * pos + bytesPerSample, Q);
                             break;
 
-                        case eSampleFormat.Direct64BitIQFloat:
+                        case eSampleFormat.Direct32BitIQFloat:
                             byte[] bufI = BitConverter.GetBytes((float)I);
                             byte[] bufQ = BitConverter.GetBytes((float)Q);
                             Array.Copy(bufI, 0, dataBuffer, bytesPerSamplePair * pos, bytesPerSample);
                             Array.Copy(bufQ, 0, dataBuffer, bytesPerSamplePair * pos + bytesPerSample, bytesPerSample);
                             break;
 
-                        case eSampleFormat.Direct64BitIQFloat64k:
-                            byte[] bufI64k = BitConverter.GetBytes((float)(I / 65536));
-                            byte[] bufQ64k = BitConverter.GetBytes((float)(Q / 65536));
+                        case eSampleFormat.Direct32BitIQFloat64k:
+                            byte[] bufI64k = BitConverter.GetBytes((float)(I * 65536));
+                            byte[] bufQ64k = BitConverter.GetBytes((float)(Q * 65536));
                             Array.Copy(bufI64k, 0, dataBuffer, bytesPerSamplePair * pos, bytesPerSample);
                             Array.Copy(bufQ64k, 0, dataBuffer, bytesPerSamplePair * pos + bytesPerSample, bytesPerSample);
                             break;
@@ -555,6 +558,70 @@ namespace LibRXFFT.Libraries
 
                 return;
             }
+        }
+
+        public static string BitsToString(bool[] bits)
+        {
+            StringBuilder builder = new StringBuilder();
+
+            foreach (bool value in bits)
+            {
+                if (value)
+                {
+                    builder.Append("1");
+                }
+                else
+                {
+                    builder.Append("0");
+                }
+            }
+
+            return builder.ToString();
+        }
+
+        public static bool[] BitsFromString(string data)
+        {
+            bool[] bits = new bool[data.Length];
+
+            for (int pos = 0; pos < data.Length; pos++)
+            {
+                if (data[pos] == '1')
+                {
+                    bits[pos] = true;
+                }
+                else
+                {
+                    bits[pos] = false;
+                }
+            }
+
+            return bits;
+        }
+        public static string BytesToString(byte[] data)
+        {
+            StringBuilder builder = new StringBuilder();
+
+            for (int pos = 0; pos < data.Length; pos++)
+            {
+                builder.AppendFormat("{0:X2}", data[pos]);
+            }
+
+            return builder.ToString();
+        }
+
+        public static bool BytesFromString(string inData, ref byte[] outData)
+        {
+            for (int pos = 0; pos < 8; pos++)
+            {
+                string byteStr = inData.Substring(pos * 2, 2);
+
+                if (!byte.TryParse(byteStr, System.Globalization.NumberStyles.HexNumber, null, out outData[pos]))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }

@@ -10,8 +10,6 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
 {
     public class TCHBurst : NormalBurst
     {
-        public SACCHBurst AssociatedSACCH = null;
-
         private int TCHSeq = 0;
         private int SubChannel;
 
@@ -30,8 +28,11 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
         private bool WAV49First = true;
 
         private FileStream OutFile;
+        private FileStream OutFileRaw;
 
-        private FACCHBurst FACCH;
+        public FACCHBurst FACCH;
+        public SACCHBurst AssociatedSACCH = null;
+        public int ChannelMode = 0;
 
         public TCHBurst(L3Handler l3)
         {
@@ -71,6 +72,87 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
             InitBuffers(8);
         }
 
+
+        /*
+         * GSM-05.03 3.1.1 v9.0
+         * 
+         *     s(1..244)  EFR/AMR 244 bits
+         *         |
+         *         |   preliminary stage adding redundancy
+         *        \|/
+         *     w(1..260)
+         *         |
+         *         |   rearranged through table 6
+         *        \|/
+         *     d(1..260)
+         *         |
+         *         |   channel encoding TCH/FS
+         *        \|/
+         *       burst
+         */
+
+        internal bool[] BurstBufferW = new bool[260];
+        internal bool[] BurstBufferS = new bool[244];
+        internal bool[] BurstBufferSpeechBits = new bool[244];
+
+        internal void UnmapDToW()
+        {
+            BitMapping.Unmap(GSMFrameBufferD, 0, BurstBufferW, 0, BitMapping.EFRBitOrder);
+        }
+
+        internal void UnmapWToS()
+        {
+            /*
+             * GSM-05.03 3.1.1
+             * 
+             * w(k) = s(70)  for k = 72  and 73 
+             * w(k) = s(120) for k = 124 and 125 
+             * w(k) = s(173) for k = 179 and 180  
+             * w(k) = s(223) for k = 231 and 232 
+             * 
+             * repetition bits
+             *
+             * break here if the repetition bits don't match 
+             */
+            if ((BurstBufferW[71] ^ BurstBufferW[72]) | (BurstBufferW[123] ^ BurstBufferW[124]) | (BurstBufferW[178] ^ BurstBufferW[179]) | (BurstBufferW[230] ^ BurstBufferW[231]))
+            {
+                return;
+            }
+
+            /*
+             * GSM-05.03 3.1.1
+             * 
+             * w(k) = s(k)   for k = 1   to 71
+             * w(k) = s(k-2) for k = 74  to 123 
+             * w(k) = s(k-4) for k = 126 to 178 
+             * w(k) = s(k-6) for k = 181 to s230 
+             * w(k) = s(k-8) for k = 233 to s252
+             * 
+             */
+            for (int k = 0; k < 71; k++)
+            {
+                BurstBufferS[k] = BurstBufferW[k];
+            }
+            for (int k = 73; k < 123; k++)
+            {
+                BurstBufferS[k - 2] = BurstBufferW[k];
+            }
+            for (int k = 125; k < 178; k++)
+            {
+                BurstBufferS[k - 4] = BurstBufferW[k];
+            }
+            for (int k = 180; k < 230; k++)
+            {
+                BurstBufferS[k - 6] = BurstBufferW[k];
+            }
+            for (int k = 232; k < 252; k++)
+            {
+                BurstBufferS[k - 8] = BurstBufferW[k];
+            }
+
+            BitMapping.Map(BurstBufferS, 0, BurstBufferSpeechBits, 0, BitMapping.AMR12BitOrder);
+        }
+
         public override eSuccessState ParseData(GSMParameters param, bool[] decodedBurst)
         {
             return ParseData(param, decodedBurst, 0);
@@ -82,7 +164,14 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
 
             if (IsDummy(decodedBurst))
             {
+                State = eBurstState.Idle;
                 DummyBursts++;
+
+                //CloseFiles();
+
+                /* don't treat TCHs as a reliable source for end-of-connection detection */
+                //DummyBurstReceived(param);
+
                 if (DumpRawData)
                     StatusMessage = "Dummy Burst";
                 return eSuccessState.Succeeded;
@@ -99,19 +188,28 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
             {
                 TCHSeq = 0;
 
-                /* try to decrypt buffer if this is enabled */
-                if (!HandleEncryption(param))
+                /* try to decrypt buffer if this is enabled, but do not try to crack the key */
+                if (!HandleEncryption(param, false))
                 {
+                    State = eBurstState.CryptedTraffic;
+
                     /* encrypted but no decryptor available, silently return */
                     return eSuccessState.Unknown;
-                }
+                }                
 
                 /* deinterleave the 8 TCH bursts. the result is a 456 bit block. i[] to c[] */
                 Deinterleave();
 
-                /* was this burst stolen for a FACCH? hl(B) (in e[]) is set for the last 4 bursts */
+                /* 
+                 * GSM-05.03 4.2.5
+                 * was this burst stolen for a FACCH? hl(B) (in e[]) is set for the last 4 bursts */
                 if (IsHL(decodedBurst))
                 {
+                    /* pass encryption information to FACCH */
+                    FACCH.A5Algorithm = A5Algorithm;
+                    FACCH.A5CipherKey = A5CipherKey;
+                    FACCH.ChannelEncrypted = ChannelEncrypted;
+
                     /* pass c[] to FACCH handler */
                     success = FACCH.ParseFACCHData(param, BurstBufferC);
 
@@ -150,6 +248,15 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                         {
                             DataBursts++;
                             success = eSuccessState.Succeeded;
+
+                            if (ChannelEncrypted)
+                            {
+                                State = eBurstState.DecryptedTraffic;
+                            }
+                            else
+                            {
+                                State = eBurstState.PlainTraffic;
+                            }
 #if false
                             #region Microsoft WAV49 GSM Format
                             if (WAV49First)
@@ -186,55 +293,120 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                             WAV49First = !WAV49First;
                             #endregion
 
-#else
-                            #region write audio dump in RTP A/V Format
-                            /* GSM frame magic */
-                            RTPFrameBool[0] = true;
-                            RTPFrameBool[1] = true;
-                            RTPFrameBool[2] = false;
-                            RTPFrameBool[3] = true;
-
-                            /* directly unmap into boolean RTP frame buffer */
-                            BitMapping.Unmap(GSMFrameBufferD, 0, RTPFrameBool, 4, BitMapping.g610BitOrder);
-
-                            /* convert that RTP frame to byte[] */
-                            ByteUtil.BitsToBytes(RTPFrameBool, RTPFrameByte);
-
-                            try
+#endif
+                            if (ChannelMode != 33)
                             {
-                                if (OutFile == null)
+                                #region write audio dump in RTP A/V Format
+                                /* GSM frame magic */
+                                RTPFrameBool[0] = true;
+                                RTPFrameBool[1] = true;
+                                RTPFrameBool[2] = false;
+                                RTPFrameBool[3] = true;
+
+                                /* directly unmap into boolean RTP frame buffer */
+                                BitMapping.Unmap(GSMFrameBufferD, 0, RTPFrameBool, 4, BitMapping.g610BitOrder);
+
+                                /* convert that RTP frame to byte[] */
+                                ByteUtil.BitsToBytes(RTPFrameBool, RTPFrameByte);
+
+                                StatusMessage = "";
+
+                                if (ChannelEncrypted)
                                 {
-                                    string name = ("GSM_" + Name + "_" + param.FN + ".gsm").Replace("/", "_");
-                                    OutFile = new FileStream(name, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
+                                    StatusMessage += "======= encrypted =======" + Environment.NewLine;
                                 }
 
-                                /* and write it */
-                                OutFile.Write(RTPFrameByte, 0, RTPFrameByte.Length);
-                                StatusMessage = "GSM 06.10 Voice data (" + OutFile.Name + ")";
+                                try
+                                {
+                                    if (OutFile == null)
+                                    {
+                                        string name = ("GSM_" + Name + "_" + param.FN).Replace("/", "_");
+                                        OutFile = new FileStream(name + ".gsm", FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
+                                        //OutFileRaw = new FileStream(name + ".raw", FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
+                                        StatusMessage += "Created file: '" + name + "'" + Environment.NewLine;
+                                    }
+
+                                    /* and write it */
+                                    OutFile.Write(RTPFrameByte, 0, RTPFrameByte.Length);
+                                    OutFile.Flush();
+
+                                    /*
+                                    Array.Copy(GSMFrameBufferD, 0, RTPFrameBool, 4, GSMFrameBufferD.Length);
+                                    RTPFrameBool[0] = false;
+                                    RTPFrameBool[1] = false;
+                                    RTPFrameBool[2] = false;
+                                    RTPFrameBool[3] = false;
+                                    ByteUtil.BitsToBytes(RTPFrameBool, RTPFrameByte);
+                                    OutFileRaw.Write(RTPFrameByte, 0, RTPFrameByte.Length);
+                                    */
+
+                                    StatusMessage += "GSM 06.10 Voice data (" + OutFile.Name + ")";
+                                }
+                                catch (Exception e)
+                                {
+                                    StatusMessage += "GSM 06.10 Voice data (Writing file failed, " + e.GetType() + ")";
+                                }
+                                #endregion
                             }
-                            catch (Exception e)
+                            else
                             {
-                                StatusMessage = "GSM 06.10 Voice data (Writing file failed, " + e.GetType() + ")";
+                                #region write audio dump in AMR Format (assume 12.2kbit/s)
+
+                                UnmapDToW();
+                                UnmapWToS();
+
+                                /* convert that AMR frame to byte[] */
+                                ByteUtil.BitsToBytes(BurstBufferSpeechBits, RTPFrameByte);
+
+                                StatusMessage = "";
+
+                                if (ChannelEncrypted)
+                                {
+                                    StatusMessage += "======= encrypted =======" + Environment.NewLine;
+                                }
+
+                                try
+                                {
+                                    if (OutFile == null)
+                                    {
+                                        byte[] fileHeader = new byte[] { 0x23, 0x21, 0x41, 0x4D, 0x52, 0x0A };
+                                        string name = ("GSM_" + Name + "_" + param.FN).Replace("/", "_");
+                                        OutFile = new FileStream(name + ".amr", FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
+                                        OutFile.Write(fileHeader, 0, fileHeader.Length);
+                                    }
+
+                                    /* and write it */
+                                    OutFile.WriteByte(0x3C);
+                                    OutFile.Write(RTPFrameByte, 0, 31);
+                                    OutFile.Flush();
+
+                                    StatusMessage += "GSM 06.90 Voice data (" + OutFile.Name + ")";
+                                }
+                                catch (Exception e)
+                                {
+                                    StatusMessage += "GSM 06.90 Voice data (Writing file failed, " + e.GetType() + ")";
+                                }
+
+                                #endregion
                             }
-                            #endregion
-#endif
                         }
                         else
                         {
-                            CryptedBursts++;
+                            State = eBurstState.Failed;
+                            CryptedFrames++;
                             ErrorMessage = "(TCH/F Class Ia: CRC Error)";
                         }
                     }
                     else
                     {
-                        CryptedBursts++;
+                        State = eBurstState.Failed;
+                        CryptedFrames++;
                         ErrorMessage = "(TCH/F Class I: Error in ConvolutionalCoder)";
                     }
                 }
 
 
-                /* 
-                 * trick: 
+                /* trick: 
                  * first use the last 8 bursts until one block was successfully decoded.
                  * then use the last 4 bursts as we normally would do.
                  * this will help in finding the correct alignment within the 4 frames.
@@ -281,11 +453,23 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
         public override void Release()
         {
             base.Release();
+            CloseFiles();
+        }
 
+        private void CloseFiles()
+        {
             if (OutFile != null)
             {
                 OutFile.Close();
             }
+
+            if (OutFileRaw != null)
+            {
+                OutFileRaw.Close();
+            }
+
+            OutFile = null;
+            OutFileRaw = null;
         }
 
         private void WriteHeader(FileStream OutFile)

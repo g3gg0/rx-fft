@@ -6,7 +6,6 @@ using DemodulatorCollection;
 using GSM_Analyzer;
 using LibRXFFT.Components.DirectX;
 using LibRXFFT.Libraries;
-using RX_FFT.DeviceControls;
 using RX_FFT.Dialogs;
 using RX_Oscilloscope;
 using LibRXFFT.Components.GDI;
@@ -470,6 +469,7 @@ namespace RX_FFT
                 }
                 catch (Exception ex)
                 {
+                    MessageBox.Show("Could not open file for writing. Is it still opened in another Application?");
                 }
             }
         }

@@ -110,9 +110,24 @@ namespace LibRXFFT.Libraries.SampleSources
         private eFileType Type;
         private bool HeaderWritten = false;
         private bool TrailerWritten = false;
+        private byte[] BinarySaveData = new byte[1];
+        private int BytesPerSamplePair;
+        private int BytesPerSample;
+        private ByteUtil.eSampleFormat _DataFormat;
 
         public int SamplingRate { get; set; }
 
+        public ByteUtil.eSampleFormat DataFormat
+        {
+            get { return _DataFormat; }
+            set
+            {
+                _DataFormat = value;
+
+                BytesPerSamplePair = ByteUtil.GetBytePerSamplePair(value);
+                BytesPerSample = ByteUtil.GetBytePerSample(value);
+            }
+        }
         public WaveFileWriter(string fileName) : this(File.Open(fileName, FileMode.Create, FileAccess.Write)) { }
 
         public WaveFileWriter(string fileName, eFileType type) : this(File.Open(fileName, FileMode.Create, FileAccess.Write), type) { }
@@ -137,11 +152,17 @@ namespace LibRXFFT.Libraries.SampleSources
 
                     // Write out the header
                     WavHeader.Write(Writer);
+                    DataFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPoint;
                     break;
 
                 case eFileType.RawIQ:
+                    Writer = new BinaryWriter(stream);
+                    DataFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPoint;
+                    break;
+
                 case eFileType.CFile:
                     Writer = new BinaryWriter(stream);
+                    DataFormat = ByteUtil.eSampleFormat.Direct32BitIQFloat64k;
                     break;
             }
         }
@@ -222,6 +243,21 @@ namespace LibRXFFT.Libraries.SampleSources
             Writer.Close();
         }
 
+        internal void Write(int samples, double[] samplesI, double[] samplesQ)
+        {
+            Write(samples, samplesI, samplesQ, false);
+        }
+
+        internal void Write(int samples, double[] samplesI, double[] samplesQ, bool inverted)
+        {
+            if (BinarySaveData.Length != samples * BytesPerSamplePair)
+            {
+                Array.Resize<byte>(ref BinarySaveData, samples * BytesPerSamplePair);
+            }
+
+            ByteUtil.SamplesToBinary(BinarySaveData, samples, samplesI, samplesQ, DataFormat, inverted);
+            Write(BinarySaveData);
+        }
     }
 
     public class FormatChunk

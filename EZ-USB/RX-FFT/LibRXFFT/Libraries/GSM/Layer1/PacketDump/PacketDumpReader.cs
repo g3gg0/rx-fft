@@ -8,7 +8,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.PacketDump
     public interface PacketDumpReader
     {
         bool HasData { get; }
-        void Read(GSMParameters Parameters, bool[] BurstBitsUndiffed);
+        void Read(bool[] BurstBitsUndiffed);
         void Close();
     }
 }

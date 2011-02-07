@@ -46,6 +46,8 @@ namespace SIMAuthDaemon
         private static SIMAuthDaemonForm DaemonInstance;
         private ServiceHost CommService;
 
+        private int NetPort = 8005;
+
         internal static SIMAuthDaemonForm GetInstance()
         {
             return DaemonInstance;
@@ -128,7 +130,7 @@ namespace SIMAuthDaemon
             this.readButton.Name = "readButton";
             this.readButton.Size = new System.Drawing.Size(96, 23);
             this.readButton.TabIndex = 13;
-            this.readButton.Text = "Calc Kc/SRES";
+            this.readButton.Text = "Connect / Calc";
             this.readButton.Click += new System.EventHandler(this.btnReadDetails_Click);
             // 
             // txtRand
@@ -380,14 +382,14 @@ namespace SIMAuthDaemon
                 try
                 {
                     CommService = new ServiceHost(typeof(AuthServer));
-                    CommService.AddServiceEndpoint(typeof(AuthService), new NetTcpBinding(), "net.tcp://" + Dns.GetHostName() + ":8005");
+                    CommService.AddServiceEndpoint(typeof(AuthService), new NetTcpBinding(), "net.tcp://" + Dns.GetHostName() + ":" + NetPort);
                     CommService.Open();
-                    LogMessage("Created daemon service");
+                    LogMessage("Created daemon service. Listening for GSMAnalyzer on port " + NetPort);
                 }
                 catch (Exception e)
                 {
                     CommService = null;
-                    LogMessage("Failed to create service: " + e);
+                    LogMessage("Failed to create service on port " + NetPort + ": " + e);
                 }
             }
 

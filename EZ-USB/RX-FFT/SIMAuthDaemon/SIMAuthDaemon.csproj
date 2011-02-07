@@ -9,7 +9,7 @@
     <ApplicationIcon>Sim.ico</ApplicationIcon>
     <AssemblyKeyContainerName>
     </AssemblyKeyContainerName>
-    <AssemblyName>SimExpress</AssemblyName>
+    <AssemblyName>SIMAuthDaemon</AssemblyName>
     <AssemblyOriginatorKeyFile>
     </AssemblyOriginatorKeyFile>
     <DefaultClientScript>JScript</DefaultClientScript>

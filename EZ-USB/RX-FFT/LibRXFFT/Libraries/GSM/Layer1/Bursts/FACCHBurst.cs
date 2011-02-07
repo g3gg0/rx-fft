@@ -3,7 +3,7 @@ using LibRXFFT.Libraries.GSM.Layer3;
 
 namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
 {
-    class FACCHBurst : NormalBurst
+    public class FACCHBurst : NormalBurst
     {
         public static bool ShowEncryptedMessage = false;
         public static bool DumpEncryptedMessage = false;
@@ -56,7 +56,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
             if (ConvolutionalCoder.Decode(burstBufferC, BurstBufferU) == null)
             {
                 ErrorMessage = "(FACCH: Error in ConvolutionalCoder, maybe encrypted)";
-                CryptedBursts++;
+                CryptedFrames++;
                 return eSuccessState.Unknown;
             }
 

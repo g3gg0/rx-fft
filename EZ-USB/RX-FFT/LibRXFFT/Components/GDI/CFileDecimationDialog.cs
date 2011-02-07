@@ -6,6 +6,13 @@ namespace LibRXFFT.Components.GDI
     public partial class CFileDecimationDialog : Form
     {
         public double Decimation;
+        public long ClockRate
+        {
+            get
+            {
+                return clockRate.Frequency;
+            }
+        }
 
         public CFileDecimationDialog()
         {
@@ -38,9 +45,10 @@ namespace LibRXFFT.Components.GDI
 
         void txtDecimation_KeyPress(object sender, KeyPressEventArgs e)
         {
-            e.Handled = true;
+            //e.Handled = true;
             if (e.KeyChar == 0x0d)
             {
+                e.Handled = true;
                 Close();
             }
         }

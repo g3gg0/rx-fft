@@ -9,6 +9,7 @@ using System.Windows.Forms;
 using RX_Analyzer.Views;
 using RX_FFT.DeviceControls;
 using System.Threading;
+using LibRXFFT.Components.DeviceControls;
 
 namespace RX_Analyzer
 {
@@ -91,7 +92,7 @@ namespace RX_Analyzer
 
             if (Device != null)
             {
-                Device.Close();
+                Device.CloseControl();
                 Device = null;
             }
         }

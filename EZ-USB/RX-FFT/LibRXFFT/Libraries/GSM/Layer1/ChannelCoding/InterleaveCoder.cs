@@ -15,7 +15,9 @@
                     dstData[pos] = new bool[456];
             }
             else
+            {
                 numBlocks = dstData.Length;
+            }
 
             for (int outBlock = 0; outBlock < numBlocks; outBlock++)
             {

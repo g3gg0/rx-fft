@@ -11,10 +11,11 @@ namespace LibRXFFT.Components.GDI
         public StatusLamp()
         {
             InitializeComponent();
-            Colors = new Color[3];
+            Colors = new Color[4];
             Colors[(int) eLampState.Grayed] = Color.DarkGray;
             Colors[(int) eLampState.Red] = Color.Red;
             Colors[(int) eLampState.Green] = Color.LimeGreen;
+            Colors[(int) eLampState.Yellow] = Color.Yellow;
         }
 
         public eLampState State
@@ -33,6 +34,7 @@ namespace LibRXFFT.Components.GDI
     {
         Grayed = 0,
         Red = 1,
-        Green = 2
+        Green = 2,
+        Yellow = 3
     }
 }

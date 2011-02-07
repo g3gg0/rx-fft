@@ -77,11 +77,14 @@ namespace LibRXFFT.Components.GDI
             btn.FlatStyle = FlatStyle.Popup;
             btn.Click += new EventHandler(delegate(object sender, EventArgs e)
             {
-                FolderBrowserDialog d = new FolderBrowserDialog();
+                FileDialog d = new OpenFileDialog();
+                d.FileName = "this directory";
+                d.CheckFileExists = false;
+
                 DialogResult result = d.ShowDialog();
                 if (result == DialogResult.OK)
                 {
-                    LastFolderName = d.SelectedPath;
+                    LastFolderName = d.FileName.Replace("this directory", "");
                     UpdateFilters(LastFolderName);
                 }
             });
@@ -99,6 +102,8 @@ namespace LibRXFFT.Components.GDI
         public void UpdateFilters(string path)
         {
             FilterFiles.Clear();
+
+            LastFolderName = path;
             AddFilters(path);
         }
 

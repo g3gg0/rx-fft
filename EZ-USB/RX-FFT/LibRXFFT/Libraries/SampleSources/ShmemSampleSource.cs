@@ -92,7 +92,7 @@ namespace LibRXFFT.Libraries.SampleSources
 
             if (TraceReads)
             {
-                Log.AddMessage("ShmemSamplesource", "Read Block: " + read + "/" + InBuffer.Length);
+                Log.AddMessage("ShmemSamplesource", "Read Block: " + read + "/" + InBuffer.Length + " (" + ShmemChannel.Length + " available)");
             }
 
             /* in case buffer size has changed meanwhile, return */

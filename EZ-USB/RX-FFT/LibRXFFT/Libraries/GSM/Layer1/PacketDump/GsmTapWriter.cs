@@ -70,9 +70,11 @@ namespace LibRXFFT.Libraries.GSM.Layer1.PacketDump
         protected byte[] GsmTapBuffer = null;
         protected UdpClient Udp = new UdpClient();
         protected IPEndPoint Endpoint;
+        protected GSMParameters Parameters = null;
 
-        public GsmTapWriter()
+        public GsmTapWriter(GSMParameters param)
         {
+            Parameters = param;
             Endpoint = new IPEndPoint(IPAddress.Parse("255.255.255.255"), (int)GSMTAP_UDP_PORT);
             Header.version = GSMTAP_VERSION;
             Header.hdr_len = 4;
@@ -81,11 +83,11 @@ namespace LibRXFFT.Libraries.GSM.Layer1.PacketDump
 
         #region PacketDumpWriter Member
 
-        public void WriteRawBurst(GSMParameters Parameters, bool[] BurstBitsUndiffed)
+        public void WriteRawBurst(bool[] BurstBitsUndiffed)
         {
         }
 
-        public void WriteL2Data(GSMParameters Parameters, byte[] l2Data)
+        public void WriteL2Data(byte[] l2Data)
         {        
             Header.arfcn = (ushort)IPAddress.HostToNetworkOrder((short)Parameters.ARFCN);
             Header.frame_number = (uint)IPAddress.HostToNetworkOrder((int)Parameters.FN);

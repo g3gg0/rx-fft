@@ -15,7 +15,6 @@ using LibRXFFT.Libraries.SignalProcessing;
 using LibRXFFT.Libraries.Timers;
 using LibRXFFT.Libraries.USB_RX.Devices;
 using LibRXFFT.Libraries.USB_RX.Tuners;
-using RX_FFT.DeviceControls;
 using RX_FFT.Dialogs;
 using RX_Oscilloscope;
 using Log = RX_FFT.Components.GDI.Log;
@@ -28,6 +27,8 @@ using System.IO;
 using LuaInterface;
 using LibRXFFT.Libraries.Demodulators;
 using LibRXFFT.Components.GDI;
+using LibRXFFT.Components.DeviceControls;
+using RX_FFT.DeviceControls;
 
 namespace RX_FFT
 {
@@ -932,10 +933,8 @@ namespace RX_FFT
 
                         lock (Device.SampleSource)
                         {
-                            if (!ProcessPaused)
+                            if (!ProcessPaused && Device.ReadBlock())
                             {
-                                Device.ReadBlock();
-
                                 if (Device.TransferMode == eTransferMode.Block)
                                 {
                                     long avail = ((ShmemSampleSource)Device.SampleSource).ShmemChannel.Length;
@@ -1299,7 +1298,7 @@ namespace RX_FFT
             if (DeviceOpened)
             {
                 DeviceOpened = false;
-                Device.Close();
+                Device.CloseControl();
                 Device = null;
             }
         }
@@ -1339,6 +1338,7 @@ namespace RX_FFT
 
         void Device_InvertedSpectrumChanged(object sender, EventArgs e)
         {
+            Device.SampleSource.SavingInvertedSpectrum = Device.InvertedSpectrum;
         }
 
         void Device_TransferModeChanged(object sender, EventArgs e)
@@ -1566,6 +1566,7 @@ namespace RX_FFT
 
         private void EnableSaving(string fileName)
         {
+            Device.SampleSource.SavingInvertedSpectrum = Device.InvertedSpectrum;
             Device.SampleSource.SavingFileName = fileName;
             Device.SampleSource.SavingEnabled = true;
             saveMenu.Text = "Stop saving";

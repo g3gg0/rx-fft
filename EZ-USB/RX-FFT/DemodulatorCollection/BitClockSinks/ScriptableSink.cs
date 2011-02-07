@@ -22,6 +22,8 @@ namespace DemodulatorCollection.BitClockSinks
         public ScriptableSink()
         {
             LuaVm = new Lua();
+            
+            LuaHelpers.RegisterAssembly("DemodulatorCollection");
 
             LuaHelpers.RegisterNamespace("DemodulatorCollection.Demodulators");
             LuaHelpers.RegisterNamespace("DemodulatorCollection.BitClockSinks");

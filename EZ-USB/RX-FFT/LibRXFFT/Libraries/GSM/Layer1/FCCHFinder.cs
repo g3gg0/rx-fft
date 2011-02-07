@@ -53,7 +53,9 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                 MaxSampleValue = sampleValue;
 
             if (sampleValue > MinHighSampleValue)
+            {
                 ConsecutiveHighBits++;
+            }
             else
             {
                 BurstStartPosition = CurrentPosition;

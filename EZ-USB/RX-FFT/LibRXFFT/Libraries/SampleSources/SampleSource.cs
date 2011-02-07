@@ -7,6 +7,8 @@ namespace LibRXFFT.Libraries.SampleSources
 {
     public class SampleSource
     {
+        public ByteUtil.eSampleFormat ForwardFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPoint;
+
         public string SourceName = "<unnamed>";
         public bool InvertedSpectrum = false;
         protected Oversampler IOversampler;
@@ -17,7 +19,6 @@ namespace LibRXFFT.Libraries.SampleSources
         private WaveFileWriter SavingFile = null;
         private string _SavingFileName = "output.dat";
         private bool _SavingEnabled = false;
-        private ByteUtil.eSampleFormat SavingDataType = ByteUtil.eSampleFormat.Direct16BitIQFixedPoint;
         private int SavingBytesPerSample = 2;
 
         public bool BufferOverrun = false;
@@ -46,25 +47,8 @@ namespace LibRXFFT.Libraries.SampleSources
             set
             {
                 _DataFormat = value;
-
-                switch (value)
-                {
-                    case ByteUtil.eSampleFormat.Direct16BitIQFixedPoint:
-                        BytesPerSamplePair = 4;
-                        BytesPerSample = 2;
-                        break;
-
-                    case ByteUtil.eSampleFormat.Direct64BitIQFloat:
-                    case ByteUtil.eSampleFormat.Direct64BitIQFloat64k:
-                        BytesPerSamplePair = 8;
-                        BytesPerSample = 4;
-                        break;
-
-                    default:
-                        BytesPerSamplePair = 0;
-                        BytesPerSample = 0;
-                        break;
-                }
+                BytesPerSamplePair = ByteUtil.GetBytePerSamplePair(value);
+                BytesPerSample = ByteUtil.GetBytePerSample(value);
             }
         }
         public readonly int InternalOversampling;
@@ -72,8 +56,10 @@ namespace LibRXFFT.Libraries.SampleSources
         public double[] SourceSamplesQ;
         public double[] OversampleI;
         public double[] OversampleQ;
-        public byte[] BinarySaveData;
+        public byte[] ForwardDataBuffer;
         public object SampleBufferLock = new object();
+        public object SavingLock = new object();
+        
 
         public int SamplesRead;
         protected int _SamplesPerBlock;
@@ -119,7 +105,7 @@ namespace LibRXFFT.Libraries.SampleSources
                 _SavingFileName = value;
             }
         }
-
+        public bool SavingInvertedSpectrum = false;
         public bool SavingEnabled
         {
             get
@@ -128,18 +114,16 @@ namespace LibRXFFT.Libraries.SampleSources
             }
             set
             {
-                if (value)
+                lock (SavingLock)
                 {
-                    lock (this)
+                    if (value)
                     {
                         SavingFile = new WaveFileWriter(SavingFileName);
                         SavingFile.SamplingRate = (int)OutputSamplingRate;
                         _SavingEnabled = true;
+
                     }
-                }
-                else
-                {
-                    lock (this)
+                    else
                     {
                         _SavingEnabled = false;
                         if (SavingFile != null)
@@ -151,6 +135,7 @@ namespace LibRXFFT.Libraries.SampleSources
                 }
             }
         }
+        
 
         public bool ForwardEnabled 
         {
@@ -205,7 +190,6 @@ namespace LibRXFFT.Libraries.SampleSources
         {
             int samplesPerBlock = SamplesPerBlock;
             int oversampling = InternalOversampling;
-            int savingBytes = SavingBytesPerSample;
 
             lock (SampleBufferLock)
             {
@@ -214,7 +198,7 @@ namespace LibRXFFT.Libraries.SampleSources
                 OversampleI = new double[samplesPerBlock];
                 OversampleQ = new double[samplesPerBlock];
 
-                BinarySaveData = new byte[samplesPerBlock * 2 * savingBytes];
+                ForwardDataBuffer = new byte[samplesPerBlock * oversampling * ByteUtil.GetBytePerSamplePair(ForwardFormat)];
             }
         }
 
@@ -225,10 +209,10 @@ namespace LibRXFFT.Libraries.SampleSources
                 OutputShmemChannel.Rate = (long)OutputSamplingRate * 2;
 
                 /* convert to our standard format */
-                if (DataFormat != SavingDataType)
+                if (DataFormat != ForwardFormat)
                 {
-                    ByteUtil.SamplesToBinary(BinarySaveData, SamplesRead, SourceSamplesI, SourceSamplesQ, SavingDataType, false);
-                    OutputShmemChannel.Write(BinarySaveData);
+                    ByteUtil.SamplesToBinary(ForwardDataBuffer, SamplesRead, SourceSamplesI, SourceSamplesQ, ForwardFormat, false);
+                    OutputShmemChannel.Write(ForwardDataBuffer);
                 }
                 else
                 {
@@ -269,10 +253,13 @@ namespace LibRXFFT.Libraries.SampleSources
         {
             lock (this)
             {
-                if (!SavingEnabled)
-                    return;
-                ByteUtil.SamplesToBinary(BinarySaveData, SamplesRead, SourceSamplesI, SourceSamplesQ, SavingDataType, false);
-                SavingFile.Write(BinarySaveData);
+                lock (SavingLock)
+                {
+                    if (!SavingEnabled)
+                        return;
+
+                    SavingFile.Write(SamplesRead, SourceSamplesI, SourceSamplesQ, SavingInvertedSpectrum);
+                }
             }
         }
     }

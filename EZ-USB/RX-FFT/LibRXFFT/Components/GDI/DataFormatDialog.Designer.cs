@@ -1,6 +1,6 @@
 ﻿namespace LibRXFFT.Components.GDI
 {
-    partial class FileFormatDialog
+    partial class DataFormatDialog
     {
         /// <summary>
         /// Required designer variable.
@@ -37,8 +37,8 @@
             // 
             // frequencySelector
             // 
+            this.frequencySelector.FixedLengthDecades = 10;
             this.frequencySelector.FixedLengthString = false;
-            this.frequencySelector.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.frequencySelector.Frequency = ((long)(48000));
             this.frequencySelector.Location = new System.Drawing.Point(106, 12);
             this.frequencySelector.Name = "frequencySelector";
@@ -68,11 +68,10 @@
             // 
             // cmbType
             // 
-            this.cmbType.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.cmbType.FormattingEnabled = true;
             this.cmbType.Location = new System.Drawing.Point(106, 42);
             this.cmbType.Name = "cmbType";
-            this.cmbType.Size = new System.Drawing.Size(152, 22);
+            this.cmbType.Size = new System.Drawing.Size(152, 21);
             this.cmbType.TabIndex = 3;
             // 
             // btnOk
@@ -85,7 +84,7 @@
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
-            // FileFormatDialog
+            // DataFormatDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -96,8 +95,8 @@
             this.Controls.Add(this.label1);
             this.Controls.Add(this.frequencySelector);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
-            this.Name = "FileFormatDialog";
-            this.Text = "Please specify the file format...";
+            this.Name = "DataFormatDialog";
+            this.Text = "Please specify the data format...";
             this.ResumeLayout(false);
             this.PerformLayout();
 

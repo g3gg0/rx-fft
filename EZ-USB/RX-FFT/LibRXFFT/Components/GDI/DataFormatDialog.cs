@@ -11,9 +11,21 @@ using LibRXFFT.Libraries;
 
 namespace LibRXFFT.Components.GDI
 {
-    public partial class FileFormatDialog : Form
+    public partial class DataFormatDialog : Form
     {
-        public long SamplingRate = 0;
+        public long _SamplingRate = 0;
+        public long SamplingRate
+        {
+            get
+            {
+                return _SamplingRate;
+            }
+            set
+            {
+                _SamplingRate = value;
+                frequencySelector.Frequency = SamplingRate;
+            }
+        }
 
         public ByteUtil.eSampleFormat SampleFormat
         {
@@ -35,7 +47,7 @@ namespace LibRXFFT.Components.GDI
             }
         }
 
-        public FileFormatDialog()
+        public DataFormatDialog()
         {
             InitializeComponent();
 
@@ -43,6 +55,8 @@ namespace LibRXFFT.Components.GDI
             {
                 cmbType.Items.Add(type.Replace("Direct", ""));
             }
+
+            frequencySelector.Frequency = SamplingRate;
         }
 
         private void frequencySelector_EnterPresed(object sender, System.EventArgs e)
@@ -54,6 +68,7 @@ namespace LibRXFFT.Components.GDI
         {
             try
             {
+                frequencySelector.ParseFrequency();
                 SamplingRate = frequencySelector.CurrentFrequency;
                 SampleFormat = (ByteUtil.eSampleFormat)Enum.Parse(typeof(ByteUtil.eSampleFormat), "Direct" + cmbType.Text);
             }
@@ -61,6 +76,7 @@ namespace LibRXFFT.Components.GDI
             {
             }
 
+            DialogResult = DialogResult.OK;
             Close();
         }
 
@@ -70,7 +86,7 @@ namespace LibRXFFT.Components.GDI
             {
                 string rate = fileName.Substring(fileName.IndexOf("SR_") + 3, fileName.IndexOf("HZ") - fileName.IndexOf("SR_") - 3);
 
-                long.TryParse(rate, out SamplingRate);
+                long.TryParse(rate, out _SamplingRate);
             }
         }
     }

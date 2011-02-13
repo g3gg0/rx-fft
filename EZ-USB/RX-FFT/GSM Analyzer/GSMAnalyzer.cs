@@ -1384,8 +1384,13 @@ namespace GSM_Analyzer
             {
                 while (reader.HasData)
                 {
+                    /* get the next burst from the reader */
                     reader.Read(burstBits);
 
+                    /* let timeslot handler process the burst bits. 
+                     * passing the burst number to handler so its able to display the burst number.
+                     * used to track e.g. faulty bursts in source file 
+                     */
                     Handler.Handle(burstBits, reader.BurstNumber);
 
                     /* update UI if necessary */

@@ -22,23 +22,6 @@ namespace GSM_Analyzer
                 components.Dispose();
             }
 
-            if (ChannelScanThread != null)
-            {
-                ChannelScanThread.Join(50);
-                ChannelScanThread.Abort();
-                ChannelScanThread = null;
-            }
-
-            if (ReadThread != null && ReadThread.IsAlive)
-            {
-                ThreadActive = false;
-                ReadThread.Join(50);
-                ReadThread.Abort();
-            }
-
-            if (Source != null)
-                Source.CloseControl();
-
             base.Dispose(disposing);
         }
 
@@ -48,6 +31,23 @@ namespace GSM_Analyzer
             {
                 CloseSource();
                 TextBoxCommitTimer.Stop();
+
+                if (ChannelScanThread != null)
+                {
+                    ChannelScanThread.Join(50);
+                    ChannelScanThread.Abort();
+                    ChannelScanThread = null;
+                }
+
+                if (ReadThread != null && ReadThread.IsAlive)
+                {
+                    ThreadActive = false;
+                    ReadThread.Join(50);
+                    ReadThread.Abort();
+                }
+
+                if (Source != null)
+                    Source.CloseControl();
             }
             catch (Exception ex)
             {
@@ -67,16 +67,23 @@ namespace GSM_Analyzer
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(GSMAnalyzer));
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.splitContainer5 = new System.Windows.Forms.SplitContainer();
+            this.txtArfcn = new LibRXFFT.Components.GDI.TextBoxMouseScroll();
             this.label16 = new System.Windows.Forms.Label();
             this.btnScan = new System.Windows.Forms.Button();
             this.btnStep = new System.Windows.Forms.Button();
             this.chkSingleStep = new System.Windows.Forms.CheckBox();
+            this.grpKraken = new System.Windows.Forms.GroupBox();
+            this.krakenStatusBox1 = new GSM_Analyzer.KrakenStatusBox();
             this.groupBox5 = new System.Windows.Forms.GroupBox();
             this.chkSlotUsage = new System.Windows.Forms.CheckBox();
+            this.slotUsageControl = new GSM_Analyzer.SlotUsageControl();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
             this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
+            this.statusSearch = new LibRXFFT.Components.GDI.StatusLamp();
+            this.statusLock = new LibRXFFT.Components.GDI.StatusLamp();
+            this.statusTrain = new LibRXFFT.Components.GDI.StatusLamp();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.lblT3 = new System.Windows.Forms.Label();
             this.lblTN = new System.Windows.Forms.Label();
@@ -111,7 +118,7 @@ namespace GSM_Analyzer
             this.label14 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
             this.lblMCCMNC = new System.Windows.Forms.Label();
-            this.txtLog = new System.Windows.Forms.TextBox();
+            this.txtLog = new LibRXFFT.Components.GDI.FastTextBox();
             this.toolStripContainer1 = new System.Windows.Forms.ToolStripContainer();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.btnOpen = new System.Windows.Forms.ToolStripButton();
@@ -128,19 +135,16 @@ namespace GSM_Analyzer
             this.btnClear = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.btnQuit = new System.Windows.Forms.ToolStripButton();
-            this.asdToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
-            this.txtArfcn = new LibRXFFT.Components.GDI.TextBoxMouseScroll();
-            this.slotUsageControl = new GSM_Analyzer.SlotUsageControl();
-            this.statusSearch = new LibRXFFT.Components.GDI.StatusLamp();
-            this.statusLock = new LibRXFFT.Components.GDI.StatusLamp();
-            this.statusTrain = new LibRXFFT.Components.GDI.StatusLamp();
+            this.asdToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.btnCopy = new System.Windows.Forms.ToolStripButton();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
             this.splitContainer5.Panel1.SuspendLayout();
             this.splitContainer5.Panel2.SuspendLayout();
             this.splitContainer5.SuspendLayout();
+            this.grpKraken.SuspendLayout();
             this.groupBox5.SuspendLayout();
             this.groupBox4.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -170,7 +174,7 @@ namespace GSM_Analyzer
             // 
             this.splitContainer1.Panel2.Controls.Add(this.txtLog);
             this.splitContainer1.Panel2.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.splitContainer1.Size = new System.Drawing.Size(762, 415);
+            this.splitContainer1.Size = new System.Drawing.Size(855, 415);
             this.splitContainer1.SplitterDistance = 81;
             this.splitContainer1.SplitterWidth = 1;
             this.splitContainer1.TabIndex = 3;
@@ -194,16 +198,30 @@ namespace GSM_Analyzer
             // 
             // splitContainer5.Panel2
             // 
+            this.splitContainer5.Panel2.Controls.Add(this.grpKraken);
             this.splitContainer5.Panel2.Controls.Add(this.groupBox5);
             this.splitContainer5.Panel2.Controls.Add(this.groupBox4);
             this.splitContainer5.Panel2.Controls.Add(this.groupBox3);
             this.splitContainer5.Panel2.Controls.Add(this.groupBox2);
             this.splitContainer5.Panel2.Controls.Add(this.groupBox1);
             this.splitContainer5.Panel2.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.splitContainer5.Size = new System.Drawing.Size(762, 81);
+            this.splitContainer5.Size = new System.Drawing.Size(855, 81);
             this.splitContainer5.SplitterDistance = 0;
             this.splitContainer5.SplitterWidth = 1;
             this.splitContainer5.TabIndex = 8;
+            // 
+            // txtArfcn
+            // 
+            this.txtArfcn.Location = new System.Drawing.Point(61, 30);
+            this.txtArfcn.LowerLimit = ((long)(0));
+            this.txtArfcn.Name = "txtArfcn";
+            this.txtArfcn.Size = new System.Drawing.Size(47, 20);
+            this.txtArfcn.TabIndex = 20;
+            this.txtArfcn.Text = "0";
+            this.txtArfcn.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.txtArfcn.UpperLimit = ((long)(2048));
+            this.txtArfcn.Value = ((long)(0));
+            this.txtArfcn.ValueChanged += new System.EventHandler(this.txtArfcn_ValueChanged);
             // 
             // label16
             // 
@@ -246,29 +264,54 @@ namespace GSM_Analyzer
             this.chkSingleStep.UseVisualStyleBackColor = true;
             this.chkSingleStep.CheckedChanged += new System.EventHandler(this.chkSingleStep_CheckedChanged);
             // 
+            // grpKraken
+            // 
+            this.grpKraken.Controls.Add(this.krakenStatusBox1);
+            this.grpKraken.Location = new System.Drawing.Point(561, 2);
+            this.grpKraken.Name = "grpKraken";
+            this.grpKraken.Size = new System.Drawing.Size(127, 78);
+            this.grpKraken.TabIndex = 22;
+            this.grpKraken.TabStop = false;
+            this.grpKraken.Text = "Kraken";
+            // 
+            // krakenStatusBox1
+            // 
+            this.krakenStatusBox1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.krakenStatusBox1.Font = new System.Drawing.Font("Microsoft Sans Serif", 7F);
+            this.krakenStatusBox1.Location = new System.Drawing.Point(3, 16);
+            this.krakenStatusBox1.Name = "krakenStatusBox1";
+            this.krakenStatusBox1.Size = new System.Drawing.Size(121, 59);
+            this.krakenStatusBox1.TabIndex = 4;
+            // 
             // groupBox5
             // 
-            this.groupBox5.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox5.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.groupBox5.Controls.Add(this.chkSlotUsage);
             this.groupBox5.Controls.Add(this.slotUsageControl);
-            this.groupBox5.Location = new System.Drawing.Point(561, 2);
+            this.groupBox5.Location = new System.Drawing.Point(694, 2);
             this.groupBox5.Name = "groupBox5";
-            this.groupBox5.Size = new System.Drawing.Size(615, 78);
+            this.groupBox5.Size = new System.Drawing.Size(679, 78);
             this.groupBox5.TabIndex = 21;
             this.groupBox5.TabStop = false;
-            this.groupBox5.Text = "Slot Usage";
+            this.groupBox5.Text = "Show slot usage";
             // 
             // chkSlotUsage
             // 
             this.chkSlotUsage.AutoSize = true;
-            this.chkSlotUsage.Location = new System.Drawing.Point(75, 0);
+            this.chkSlotUsage.Location = new System.Drawing.Point(103, 1);
             this.chkSlotUsage.Name = "chkSlotUsage";
             this.chkSlotUsage.Size = new System.Drawing.Size(15, 14);
             this.chkSlotUsage.TabIndex = 21;
             this.chkSlotUsage.UseVisualStyleBackColor = true;
             this.chkSlotUsage.CheckedChanged += new System.EventHandler(this.chkSlotUsage_CheckedChanged);
+            // 
+            // slotUsageControl
+            // 
+            this.slotUsageControl.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.slotUsageControl.Location = new System.Drawing.Point(3, 16);
+            this.slotUsageControl.Name = "slotUsageControl";
+            this.slotUsageControl.Size = new System.Drawing.Size(673, 59);
+            this.slotUsageControl.TabIndex = 20;
             // 
             // groupBox4
             // 
@@ -314,6 +357,36 @@ namespace GSM_Analyzer
             this.label3.Size = new System.Drawing.Size(41, 13);
             this.label3.TabIndex = 5;
             this.label3.Text = "Locked";
+            // 
+            // statusSearch
+            // 
+            this.statusSearch.BackColor = System.Drawing.Color.DarkGray;
+            this.statusSearch.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.statusSearch.Location = new System.Drawing.Point(10, 21);
+            this.statusSearch.Name = "statusSearch";
+            this.statusSearch.Size = new System.Drawing.Size(10, 10);
+            this.statusSearch.State = LibRXFFT.Components.GDI.eLampState.Grayed;
+            this.statusSearch.TabIndex = 13;
+            // 
+            // statusLock
+            // 
+            this.statusLock.BackColor = System.Drawing.Color.DarkGray;
+            this.statusLock.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.statusLock.Location = new System.Drawing.Point(10, 55);
+            this.statusLock.Name = "statusLock";
+            this.statusLock.Size = new System.Drawing.Size(10, 10);
+            this.statusLock.State = LibRXFFT.Components.GDI.eLampState.Grayed;
+            this.statusLock.TabIndex = 13;
+            // 
+            // statusTrain
+            // 
+            this.statusTrain.BackColor = System.Drawing.Color.DarkGray;
+            this.statusTrain.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.statusTrain.Location = new System.Drawing.Point(10, 38);
+            this.statusTrain.Name = "statusTrain";
+            this.statusTrain.Size = new System.Drawing.Size(10, 10);
+            this.statusTrain.State = LibRXFFT.Components.GDI.eLampState.Grayed;
+            this.statusTrain.TabIndex = 13;
             // 
             // groupBox3
             // 
@@ -688,13 +761,9 @@ namespace GSM_Analyzer
             this.txtLog.Dock = System.Windows.Forms.DockStyle.Fill;
             this.txtLog.Font = new System.Drawing.Font("Courier New", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.txtLog.Location = new System.Drawing.Point(0, 0);
-            this.txtLog.Multiline = true;
             this.txtLog.Name = "txtLog";
-            this.txtLog.ReadOnly = true;
-            this.txtLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txtLog.Size = new System.Drawing.Size(762, 333);
+            this.txtLog.Size = new System.Drawing.Size(855, 333);
             this.txtLog.TabIndex = 0;
-            this.txtLog.WordWrap = false;
             // 
             // toolStripContainer1
             // 
@@ -703,12 +772,12 @@ namespace GSM_Analyzer
             // toolStripContainer1.ContentPanel
             // 
             this.toolStripContainer1.ContentPanel.Controls.Add(this.splitContainer1);
-            this.toolStripContainer1.ContentPanel.Size = new System.Drawing.Size(762, 415);
+            this.toolStripContainer1.ContentPanel.Size = new System.Drawing.Size(855, 415);
             this.toolStripContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.toolStripContainer1.Location = new System.Drawing.Point(0, 0);
             this.toolStripContainer1.Name = "toolStripContainer1";
             this.toolStripContainer1.RightToolStripPanelVisible = false;
-            this.toolStripContainer1.Size = new System.Drawing.Size(762, 454);
+            this.toolStripContainer1.Size = new System.Drawing.Size(855, 454);
             this.toolStripContainer1.TabIndex = 1;
             this.toolStripContainer1.Text = "Main menu";
             // 
@@ -730,6 +799,7 @@ namespace GSM_Analyzer
             this.btnOptions,
             this.toolStripSeparator2,
             this.btnAdvanced,
+            this.btnCopy,
             this.btnClear,
             this.toolStripSeparator1,
             this.btnQuit,
@@ -737,7 +807,7 @@ namespace GSM_Analyzer
             this.toolStrip1.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.HorizontalStackWithOverflow;
             this.toolStrip1.Location = new System.Drawing.Point(3, 0);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(508, 39);
+            this.toolStrip1.Size = new System.Drawing.Size(610, 39);
             this.toolStrip1.TabIndex = 0;
             // 
             // btnOpen
@@ -848,85 +918,43 @@ namespace GSM_Analyzer
             this.btnQuit.Text = "Quit";
             this.btnQuit.Click += new System.EventHandler(this.btnQuit_Click);
             // 
+            // toolStripSeparator3
+            // 
+            this.toolStripSeparator3.Name = "toolStripSeparator3";
+            this.toolStripSeparator3.Size = new System.Drawing.Size(6, 39);
+            // 
             // asdToolStripMenuItem
             // 
             this.asdToolStripMenuItem.Name = "asdToolStripMenuItem";
             this.asdToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.asdToolStripMenuItem.Text = "asd";
             // 
-            // toolStripSeparator3
+            // btnCopy
             // 
-            this.toolStripSeparator3.Name = "toolStripSeparator3";
-            this.toolStripSeparator3.Size = new System.Drawing.Size(6, 39);
-            // 
-            // txtArfcn
-            // 
-            this.txtArfcn.Location = new System.Drawing.Point(61, 30);
-            this.txtArfcn.LowerLimit = ((long)(0));
-            this.txtArfcn.Name = "txtArfcn";
-            this.txtArfcn.Size = new System.Drawing.Size(47, 20);
-            this.txtArfcn.TabIndex = 20;
-            this.txtArfcn.Text = "0";
-            this.txtArfcn.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.txtArfcn.UpperLimit = ((long)(2048));
-            this.txtArfcn.Value = ((long)(0));
-            this.txtArfcn.ValueChanged += new System.EventHandler(this.txtArfcn_ValueChanged);
-            // 
-            // slotUsageControl
-            // 
-            this.slotUsageControl.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.slotUsageControl.Location = new System.Drawing.Point(3, 16);
-            this.slotUsageControl.Name = "slotUsageControl";
-            this.slotUsageControl.Size = new System.Drawing.Size(609, 59);
-            this.slotUsageControl.TabIndex = 20;
-            // 
-            // statusSearch
-            // 
-            this.statusSearch.BackColor = System.Drawing.Color.DarkGray;
-            this.statusSearch.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.statusSearch.Location = new System.Drawing.Point(10, 21);
-            this.statusSearch.Name = "statusSearch";
-            this.statusSearch.Size = new System.Drawing.Size(10, 10);
-            this.statusSearch.State = LibRXFFT.Components.GDI.eLampState.Grayed;
-            this.statusSearch.TabIndex = 13;
-            // 
-            // statusLock
-            // 
-            this.statusLock.BackColor = System.Drawing.Color.DarkGray;
-            this.statusLock.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.statusLock.Location = new System.Drawing.Point(10, 55);
-            this.statusLock.Name = "statusLock";
-            this.statusLock.Size = new System.Drawing.Size(10, 10);
-            this.statusLock.State = LibRXFFT.Components.GDI.eLampState.Grayed;
-            this.statusLock.TabIndex = 13;
-            // 
-            // statusTrain
-            // 
-            this.statusTrain.BackColor = System.Drawing.Color.DarkGray;
-            this.statusTrain.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.statusTrain.Location = new System.Drawing.Point(10, 38);
-            this.statusTrain.Name = "statusTrain";
-            this.statusTrain.Size = new System.Drawing.Size(10, 10);
-            this.statusTrain.State = LibRXFFT.Components.GDI.eLampState.Grayed;
-            this.statusTrain.TabIndex = 13;
+            this.btnCopy.Image = ((System.Drawing.Image)(resources.GetObject("btnCopy.Image")));
+            this.btnCopy.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnCopy.Name = "btnCopy";
+            this.btnCopy.Size = new System.Drawing.Size(71, 36);
+            this.btnCopy.Text = "Copy";
+            this.btnCopy.Click += new System.EventHandler(this.btnCopy_Click);
             // 
             // GSMAnalyzer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(762, 454);
+            this.ClientSize = new System.Drawing.Size(855, 454);
             this.Controls.Add(this.toolStripContainer1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "GSMAnalyzer";
             this.Text = "GSM Analyzer";
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel2.ResumeLayout(false);
-            this.splitContainer1.Panel2.PerformLayout();
             this.splitContainer1.ResumeLayout(false);
             this.splitContainer5.Panel1.ResumeLayout(false);
             this.splitContainer5.Panel1.PerformLayout();
             this.splitContainer5.Panel2.ResumeLayout(false);
             this.splitContainer5.ResumeLayout(false);
+            this.grpKraken.ResumeLayout(false);
             this.groupBox5.ResumeLayout(false);
             this.groupBox5.PerformLayout();
             this.groupBox4.ResumeLayout(false);
@@ -998,7 +1026,7 @@ namespace GSM_Analyzer
         private System.Windows.Forms.Label label18;
         private System.Windows.Forms.Label lblSnr;
         private System.Windows.Forms.Label label19;
-        private System.Windows.Forms.TextBox txtLog;
+        private FastTextBox txtLog;
         private System.Windows.Forms.ToolStripContainer toolStripContainer1;
         private System.Windows.Forms.ToolStrip toolStrip1;
         private System.Windows.Forms.ToolStripButton btnOpen;
@@ -1021,6 +1049,9 @@ namespace GSM_Analyzer
         private System.Windows.Forms.Label lblDate;
         private System.Windows.Forms.CheckBox chkSlotUsage;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
+        private KrakenStatusBox krakenStatusBox1;
+        private System.Windows.Forms.GroupBox grpKraken;
+        private System.Windows.Forms.ToolStripButton btnCopy;
     }
 }
 

@@ -106,6 +106,7 @@ namespace RX_FFT
             this.deviceInformationMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripContainer1 = new System.Windows.Forms.ToolStripContainer();
             this.FFTDisplay = new LibRXFFT.Components.DirectX.DirectXWaterfallFFTDisplay();
+            this.openUSRPMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip1.SuspendLayout();
             this.mainMenu.SuspendLayout();
             this.toolStripContainer1.ContentPanel.SuspendLayout();
@@ -243,7 +244,8 @@ namespace RX_FFT
             this.openBO35PlainMenu,
             this.openFileMenu,
             this.openShMemMenu,
-            this.openRandomDataMenu});
+            this.openRandomDataMenu,
+            this.openUSRPMenu});
             this.openMenu.Name = "openMenu";
             this.openMenu.Size = new System.Drawing.Size(191, 22);
             this.openMenu.Text = "Open";
@@ -695,6 +697,13 @@ namespace RX_FFT
             this.FFTDisplay.VerticalSmooth = 1;
             this.FFTDisplay.WindowingFunction = LibRXFFT.Libraries.FFTW.FFTTransformer.eWindowingFunction.BlackmanHarris;
             // 
+            // openUSRPMenu
+            // 
+            this.openUSRPMenu.Name = "openUSRPMenu";
+            this.openUSRPMenu.Size = new System.Drawing.Size(250, 22);
+            this.openUSRPMenu.Text = "USRP Device";
+            this.openUSRPMenu.Click += new System.EventHandler(this.openUSRPMenu_Click);
+            // 
             // MainScreen
             // 
             this.AllowDrop = true;
@@ -795,6 +804,7 @@ namespace RX_FFT
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator7;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator8;
         private System.Windows.Forms.ToolStripMenuItem scanBandMenu;
+        private System.Windows.Forms.ToolStripMenuItem openUSRPMenu;
     }
 }
 

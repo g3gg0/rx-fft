@@ -60,7 +60,7 @@ namespace DemodulatorCollection.BitClockSinks
                 {
                     if (++ParityErrors > ParityErrorsMax)
                     {
-                        //Log.AddMessage("Parity error, lost synchronization.");
+                        Log.AddMessage("Parity error, lost synchronization.");
                         Synchronized = false;
                     }
                 }
@@ -72,7 +72,7 @@ namespace DemodulatorCollection.BitClockSinks
                     {
                         if (!Synchronized)
                         {
-                            //Log.AddMessage("Synchronized...");
+                            Log.AddMessage("Synchronized...");
                         }
 
                         Synchronized = true;

@@ -5,6 +5,7 @@ using LibRXFFT.Libraries.GSM.Layer1.GMSK;
 using LibRXFFT.Libraries.GSM.Layer3;
 using System.Collections.Generic;
 using RX_FFT.Components.GDI;
+using System.Threading;
 
 namespace LibRXFFT.Libraries.GSM.Layer1
 {
@@ -1010,6 +1011,10 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                 {
                     rawHandlerState = handler.ParseRawBurst(Parameters, timeSlotSamples, timeSlotStrengths);
                 }
+                catch (ThreadAbortException e)
+                {
+                    throw e;
+                }
                 catch (Exception e)
                 {
                     AddMessage("Handler " + handler + " caused an exception: " + e.ToString());
@@ -1073,6 +1078,10 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                         try
                         {
                             dataHandlerState = handler.ParseData(Parameters, BurstBitsUndiffed, sequence);
+                        }
+                        catch (ThreadAbortException e)
+                        {
+                            throw e;
                         }
                         catch (Exception e)
                         {
@@ -1249,6 +1258,10 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                 try
                 {
                     dataHandlerState = handler.ParseData(Parameters, burstBits, sequence);
+                }
+                catch (ThreadAbortException e)
+                {
+                    throw e;
                 }
                 catch (Exception e)
                 {

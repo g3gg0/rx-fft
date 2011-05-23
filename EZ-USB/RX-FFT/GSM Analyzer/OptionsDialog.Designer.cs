@@ -71,6 +71,7 @@
             this.radioOvsSinx = new System.Windows.Forms.RadioButton();
             this.label7 = new System.Windows.Forms.Label();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.chkL1ShowFaulty = new System.Windows.Forms.CheckBox();
             this.chkL1PreallocateTCH = new System.Windows.Forms.CheckBox();
             this.chkL1DumpEncrypted = new System.Windows.Forms.CheckBox();
             this.chkL1DumpFrames = new System.Windows.Forms.CheckBox();
@@ -89,7 +90,6 @@
             this.label17 = new System.Windows.Forms.Label();
             this.txtKrakenHost = new System.Windows.Forms.TextBox();
             this.txtSimAuthHost = new System.Windows.Forms.TextBox();
-            this.chkL1ShowFaulty = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -532,6 +532,17 @@
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "L1 Options";
             // 
+            // chkL1ShowFaulty
+            // 
+            this.chkL1ShowFaulty.AutoSize = true;
+            this.chkL1ShowFaulty.Location = new System.Drawing.Point(10, 90);
+            this.chkL1ShowFaulty.Name = "chkL1ShowFaulty";
+            this.chkL1ShowFaulty.Size = new System.Drawing.Size(112, 17);
+            this.chkL1ShowFaulty.TabIndex = 19;
+            this.chkL1ShowFaulty.Text = "Show faulty bursts";
+            this.chkL1ShowFaulty.UseVisualStyleBackColor = true;
+            this.chkL1ShowFaulty.CheckedChanged += new System.EventHandler(this.chkL1ShowFaulty_CheckedChanged);
+            // 
             // chkL1PreallocateTCH
             // 
             this.chkL1PreallocateTCH.AutoSize = true;
@@ -548,9 +559,9 @@
             this.chkL1DumpEncrypted.AutoSize = true;
             this.chkL1DumpEncrypted.Location = new System.Drawing.Point(10, 19);
             this.chkL1DumpEncrypted.Name = "chkL1DumpEncrypted";
-            this.chkL1DumpEncrypted.Size = new System.Drawing.Size(123, 17);
+            this.chkL1DumpEncrypted.Size = new System.Drawing.Size(169, 17);
             this.chkL1DumpEncrypted.TabIndex = 17;
-            this.chkL1DumpEncrypted.Text = "Dump encrypted bits";
+            this.chkL1DumpEncrypted.Text = "Dump bits for decrypted bursts";
             this.chkL1DumpEncrypted.UseVisualStyleBackColor = true;
             this.chkL1DumpEncrypted.CheckedChanged += new System.EventHandler(this.chkL1DumpEncrypted_CheckedChanged);
             // 
@@ -730,17 +741,6 @@
             this.txtSimAuthHost.Size = new System.Drawing.Size(100, 20);
             this.txtSimAuthHost.TabIndex = 103;
             this.txtSimAuthHost.TextChanged += new System.EventHandler(this.txtSimAuthHost_TextChanged);
-            // 
-            // chkL1ShowFaulty
-            // 
-            this.chkL1ShowFaulty.AutoSize = true;
-            this.chkL1ShowFaulty.Location = new System.Drawing.Point(10, 90);
-            this.chkL1ShowFaulty.Name = "chkL1ShowFaulty";
-            this.chkL1ShowFaulty.Size = new System.Drawing.Size(112, 17);
-            this.chkL1ShowFaulty.TabIndex = 19;
-            this.chkL1ShowFaulty.Text = "Show faulty bursts";
-            this.chkL1ShowFaulty.UseVisualStyleBackColor = true;
-            this.chkL1ShowFaulty.CheckedChanged += new System.EventHandler(this.chkL1ShowFaulty_CheckedChanged);
             // 
             // OptionsDialog
             // 

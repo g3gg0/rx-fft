@@ -12,7 +12,6 @@ using RX_FFT.Components.GDI;
 using DemodulatorCollection.BitClockSinks;
 using DemodulatorCollection.Demodulators;
 using DemodulatorCollection.Interfaces;
-using RX_FFT.DeviceControls;
 using LibRXFFT.Components.DeviceControls;
 
 namespace DemodulatorCollection

@@ -78,6 +78,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>.\LuaInterface.dll</HintPath>
     </Reference>
+    <Reference Include="SDR4All_DLL, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\SDR4All Toolbox\SDR4All_DLL.dll</HintPath>
+    </Reference>
     <Reference Include="SlimDX, Version=2.0.9.42, Culture=neutral, PublicKeyToken=b1b0c32fd1ffe4f9, processorArchitecture=x86">
       <HintPath>C:\Program Files (x86)\SlimDX SDK (February 2010)\Bin\x86\SlimDX.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
@@ -107,6 +111,12 @@
     </Compile>
     <Compile Include="Components\DeviceControls\FileSourceDeviceControl.Designer.cs">
       <DependentUpon>FileSourceDeviceControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Components\DeviceControls\USRPDeviceControl.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Components\DeviceControls\USRPDeviceControl.Designer.cs">
+      <DependentUpon>USRPDeviceControl.cs</DependentUpon>
     </Compile>
     <Compile Include="Components\DeviceControls\NetworkDeviceControl.cs">
       <SubType>Form</SubType>
@@ -189,6 +199,12 @@
     </Compile>
     <Compile Include="Components\GDI\DataFormatDialog.Designer.cs">
       <DependentUpon>DataFormatDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Components\GDI\FastTextBox.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Components\GDI\FastTextBox.Designer.cs">
+      <DependentUpon>FastTextBox.cs</DependentUpon>
     </Compile>
     <Compile Include="Components\GDI\FilterDetailDialog.cs">
       <SubType>Form</SubType>
@@ -421,6 +437,10 @@
       <DependentUpon>FileSourceDeviceControl.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Components\DeviceControls\USRPDeviceControl.resx">
+      <DependentUpon>USRPDeviceControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Components\DeviceControls\NetworkDeviceControl.resx">
       <DependentUpon>NetworkDeviceControl.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -447,6 +467,10 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Components\GDI\DataFormatDialog.resx">
       <DependentUpon>DataFormatDialog.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Components\GDI\FastTextBox.resx">
+      <DependentUpon>FastTextBox.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Components\GDI\FilterDetailDialog.resx">

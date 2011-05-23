@@ -7,7 +7,6 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using RX_Analyzer.Views;
-using RX_FFT.DeviceControls;
 using System.Threading;
 using LibRXFFT.Components.DeviceControls;
 

@@ -90,7 +90,6 @@ namespace LibRXFFT.Libraries.GSM.Layer2
             }
             else
             {
-
                 /* always show empty/multiframe messages if requested */
                 ShowMessage = ShowAllMessages;
 

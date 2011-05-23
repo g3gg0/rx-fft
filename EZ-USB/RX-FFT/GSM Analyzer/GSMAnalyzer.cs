@@ -21,7 +21,6 @@ using LibRXFFT.Libraries.GSM.Layer1.PacketDump;
 using System.IO;
 using System.ServiceModel;
 using LibRXFFT.Components.DeviceControls;
-using RX_FFT.DeviceControls;
 using LuaInterface;
 
 namespace GSM_Analyzer
@@ -89,10 +88,13 @@ namespace GSM_Analyzer
 
         public string KrakenHostAddress = "";
 
-        internal class KrakenCracker : CipherCracker
+        public class KrakenCracker : CipherCracker
         {
             private GSMAnalyzer Analyzer = null;
             public KrakenClient Kraken = null;
+            private int JobNumber = 0;
+            private int JobCount = 0;
+            private DateTime LastConnect = DateTime.MinValue;
 
             public KrakenCracker(GSMAnalyzer analyzer)
             {
@@ -100,6 +102,18 @@ namespace GSM_Analyzer
             }
 
             #region CipherCracker Member
+
+            public void SetJobInfo(int jobNumber, int jobCount)
+            {
+                JobNumber = jobNumber;
+                JobCount = jobCount;
+            }
+
+            public void GetJobInfo(out int jobNumber, out int jobCount)
+            {
+                jobNumber = JobNumber;
+                jobCount = JobCount;
+            }
 
             public byte[] Crack(bool[] key1, uint count1, bool[] key2, uint count2)
             {
@@ -117,24 +131,21 @@ namespace GSM_Analyzer
                 {
                     if (Kraken == null)
                     {
+                        /* first time and host configured */
                         if (Analyzer.KrakenHostAddress != null && Analyzer.KrakenHostAddress.Length > 0)
                         {
                             Kraken = new KrakenClient(Analyzer.KrakenHostAddress);
                             Kraken.Connect();
-
-                            if (!Kraken.Connected)
-                            {
-                                Kraken.Connect();
-                            }
-
-                            if (Kraken.Connected)
-                            {
-                                return true;
-                            }
+                        }
+                        else
+                        {
+                            /* no host configured */
+                            return false;
                         }
                     }
                     else
                     {
+                        /* no host configured anymore */
                         if (Analyzer.KrakenHostAddress == null || Analyzer.KrakenHostAddress.Length == 0)
                         {
                             Kraken.Disconnect();
@@ -142,27 +153,69 @@ namespace GSM_Analyzer
                             return false;
                         }
 
-                        if (!Kraken.Connected)
+                        /* host changed */
+                        if (Analyzer.KrakenHostAddress != Kraken.Hostname)
                         {
+                            Kraken.Disconnect();
+                            Kraken = new KrakenClient(Analyzer.KrakenHostAddress);
                             Kraken.Connect();
                         }
+                    }
 
-                        if (Kraken.Connected)
+                    /* check if still connected */
+                    if (!Kraken.Connected)
+                    {
+                        /* dont flood */
+                        if ((DateTime.Now - LastConnect).TotalSeconds > 10)
                         {
-                            return true;
+                            Log.AddMessage("KrakenCracker", "Trying to reconnect to Kraken server...");
+                            LastConnect = DateTime.Now;
+                            Kraken.Connect();
+
+                            if (Kraken.Connected)
+                            {
+                                Log.AddMessage("KrakenCracker", "    Connected!");
+                                return true;
+                            }
+                            else
+                            {
+                                Log.AddMessage("KrakenCracker", "    Failed!");
+                                return false;
+                            }
+                        }
+                        else
+                        {
+                            return false;
                         }
                     }
+                    else
+                    {
+                        return true;
+                    }
+
                     return false;
                 }
             }
+
 
             public int SearchDuration
             {
                 get { return Kraken.SearchDuration; }
             }
 
+            public void Close()
+            {
+                if (!Available)
+                {
+                    return;
+                }
+
+                Kraken.Disconnect();
+            }
+
             #endregion
         }
+
 
         internal double CurrentSampleRate
         {
@@ -238,9 +291,9 @@ namespace GSM_Analyzer
                 Splitter.UpdateConfig();
 
 
-
                 Parameters = new GSMParameters();
                 Parameters.CipherCracker = new KrakenCracker(this);
+                krakenStatusBox1.SetCracker((KrakenCracker)Parameters.CipherCracker);
 
                 InitLua();
 
@@ -704,9 +757,12 @@ namespace GSM_Analyzer
 
                 menu.MenuItems.Add(new MenuItem("Shared Memory", new EventHandler(btnOpen_SharedMemory)));
                 menu.MenuItems.Add(new MenuItem("IQ Wave File", new EventHandler(btnOpen_IQFile)));
+                menu.MenuItems.Add(new MenuItem("Network Source", new EventHandler(btnOpen_NetworkSource)));
+                menu.MenuItems.Add(new MenuItem("-"));
                 menu.MenuItems.Add(new MenuItem("Dumped Traffic", new EventHandler(btnOpen_DumpFile)));
                 menu.MenuItems.Add(new MenuItem("Dumped Traffic (multi)", new EventHandler(btnOpen_DumpFileMulti)));
-                menu.MenuItems.Add(new MenuItem("Network Source", new EventHandler(btnOpen_NetworkSource)));
+                menu.MenuItems.Add(new MenuItem("-"));
+                menu.MenuItems.Add(new MenuItem("Osmocon Bitstream", new EventHandler(btnOpen_OsmoconBitstream)));
                 menu.MenuItems.Add(new MenuItem("-"));
                 menu.MenuItems.Add(new MenuItem("LUA Script", new EventHandler(btnOpen_LuaScript)));
 
@@ -721,7 +777,9 @@ namespace GSM_Analyzer
             if (ReadThread != null)
             {
                 if (!ReadThread.Join(500))
+                {
                     ReadThread.Abort();
+                }
 
                 ReadThread = null;
             }
@@ -737,6 +795,12 @@ namespace GSM_Analyzer
             {
                 Source.CloseControl();
                 Source = null;
+            }
+
+            /* finally kill any connection (may be blocking) */
+            if (Parameters.CipherCracker != null)
+            {
+                Parameters.CipherCracker.Close();
             }
 
             btnOpen.Text = "Open";
@@ -795,6 +859,10 @@ namespace GSM_Analyzer
             ReadThread.Start();
 
             btnOpen.Text = "Close";
+        }
+
+        public void btnOpen_OsmoconBitstream(object sender, EventArgs e)
+        {
         }
 
         public void OpenSharedMem(int srcChan)
@@ -1763,6 +1831,13 @@ namespace GSM_Analyzer
             ShowSlotUsage = chkSlotUsage.Checked;
 
             slotUsageControl.Visible = ShowSlotUsage;
+        }
+
+        private void btnCopy_Click(object sender, EventArgs e)
+        {
+            string text = txtLog.Text;
+
+            Clipboard.SetDataObject(text, true);
         }
     }
 }

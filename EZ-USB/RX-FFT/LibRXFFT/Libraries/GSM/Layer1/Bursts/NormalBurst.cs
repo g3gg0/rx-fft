@@ -551,8 +551,6 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                         int burst = 0;
                         foreach(bool[][] guessedDataBits in guessedData)
                         {
-                            burst++;
-
                             /* calculate guessed key bits */
                             for (int burstNum = 0; burstNum < 4; burstNum++)
                             {
@@ -564,7 +562,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                             }
 
                             /* now try to crack */
-                            if (TryToCrack(guessedKeyBits, counts, param))
+                            if (TryToCrack(guessedKeyBits, counts, param, burst * 4, guessedDataBits.Length * 4))
                             {
                                 string msg = "";
 
@@ -573,7 +571,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                                 {
                                     msg += string.Format("{0:X02}", A5CipherKey[pos]);
                                 }
-                                msg += " (" + param.CipherCracker.SearchDuration + " sec, burst " + burst + ", total " + (DateTime.Now - startTime).TotalSeconds + " sec) =======";
+                                msg += " (" + param.CipherCracker.SearchDuration + " sec, burst " + (burst + 1) + ", total " + (DateTime.Now - startTime).TotalSeconds + " sec) =======";
 
                                 StatusMessage += msg + Environment.NewLine;
                                 Log.AddMessage(msg);
@@ -582,6 +580,8 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                                 found = true;
                                 break;
                             }
+
+                            burst++;
                         }
 
                         if (found)
@@ -612,7 +612,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
             }
         }
 
-        internal bool TryToCrack(bool[][] guessedKeyBits, uint[] counts, GSMParameters param)
+        internal bool TryToCrack(bool[][] guessedKeyBits, uint[] counts, GSMParameters param, int burstNum, int burstCount)
         {
             /* sanity checks */
             if (guessedKeyBits.Length < 4 || (guessedKeyBits.Length % 4) != 0)
@@ -625,8 +625,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                 return false;
             }
 
-            int tried = 0;
-
+            int burst = 0;
             for (int dstBurst = guessedKeyBits.Length - 1; dstBurst >= 0; dstBurst--)
             {
                 int block = dstBurst / 4;
@@ -641,6 +640,9 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                 {
                     Log.AddMessage("Cracking burst: " + dstBurst + " (Block: " + block + " Offset: " + offset + ") Next: " + nextBurst);
 
+                    /* make sure the UI does get all information */
+                    param.CipherCracker.SetJobInfo(burstNum + burst, burstCount);
+                    
                     byte[] key = param.CipherCracker.Crack(guessedKeyBits[dstBurst], counts[dstBurst], guessedKeyBits[nextBurst], counts[nextBurst]);
                     if (key != null)
                     {
@@ -656,6 +658,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                         return true;
                     }
                 }
+                burst++;
             }
 
             return false;

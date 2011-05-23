@@ -7,6 +7,7 @@ using System.IO;
 using LibRXFFT.Libraries;
 using RX_FFT.Components.GDI;
 using System.Threading;
+using System.Globalization;
 
 /* 
  * Kraken Status codes:
@@ -30,16 +31,37 @@ using System.Threading;
 
 namespace GSM_Analyzer
 {
+    public enum KrakenJobStatus
+    {
+        Unknown,
+        Submitted,
+        Accepted,
+        Queued,
+        Processing,
+        NotFound,
+        Found,
+        Cancelled,
+        Error
+    };
+
     public class KrakenClient
     {
-        private TcpClient Client = null;
-        private Stream Stream = null;
+        private TcpClient DataClient = null;
+        private Stream DataStream = null;
+        private TcpClient ControlClient = null;
+        private Stream ControlStream = null;
+        private object ControlStreamLock = new object();
 
-        public string Hostname = "";
+        private const int Port = 8866;
+        private const int ControlTimeout = 10000;
+        private const int DataTimeout = 15 * 60 * 1000;
+
+
+        /* public status values */
+        public int RequestId = -1;
         public int SearchDuration = 0;
-
-        private byte[] ReceiveBuffer = new byte[512];
-        private int ReceivePos = 0;
+        public string Hostname = "";
+        public KrakenJobStatus KrakenJobStatus = KrakenJobStatus.Unknown;
 
         private static Dictionary<string, string> ScanResults = new Dictionary<string, string>();
         private static string CacheFileName = "KrakenScanCache.txt";
@@ -127,13 +149,13 @@ namespace GSM_Analyzer
                     {
                         if ("----------------".Equals(pair.Value))
                         {
-                            Log.AddMessage("Kraken: Cached as failed (#" + pos + ")");
+                            Log.AddMessage("KrakenClient", "Cached as failed (#" + pos + ")");
                             storedResult = null;
                             return true;
                         }
                         else
                         {
-                            Log.AddMessage("Kraken: Cached as " + pair.Value + " (#" + pos + ")");
+                            Log.AddMessage("KrakenClient", "Cached as " + pair.Value + " (#" + pos + ")");
                             return ByteUtil.BytesFromString(pair.Value, ref storedResult);
                         }
                     }
@@ -152,7 +174,7 @@ namespace GSM_Analyzer
         {
             get
             {
-                return Stream != null;
+                return DataStream != null;
             }
         }
 
@@ -160,106 +182,222 @@ namespace GSM_Analyzer
         {
             get
             {
-                Write("status");
-                return Read();
+                lock (ControlStreamLock)
+                {
+                    Write("status");
+
+                    string ret = Read(ControlStream, ControlTimeout);
+
+                    if (ret == null)
+                    {
+                        ReconnectControl();
+                        return "(connection error)";
+                    }
+
+                    return ret;
+                }
             }
         }
 
         private string Read()
         {
-            IAsyncResult ar;
+            return Read(DataStream, -1);
+        }
 
-            while (ReceivePos < ReceiveBuffer.Length)
+        /// <summary>
+        /// Reads up to the \n of a line and returns the line without \r or \n.
+        /// Returns null on timeout or disconnect
+        /// </summary>
+        private string Read(Stream stream, int timeout)
+        {
+            int pos = 0;
+            byte[] buffer = new byte[512];
+
+            if (stream == null)
             {
+                return null;
+            }
+
+            while (pos < buffer.Length)
+            {
+                stream.ReadTimeout = timeout;
+
                 try
                 {
-                    /* todo: null reference exception */
-                    ar = Stream.BeginRead(ReceiveBuffer, ReceivePos, 1, null, null);
-                    if (!ar.AsyncWaitHandle.WaitOne())
-                    {
-                        /* beware - the answer to the next message will be corrupted. */
-                        return null;
-                    }
+                    int read = stream.ReadByte();
 
-                    int length = Stream.EndRead(ar);
-
-                    if (length == 1)
+                    if (read >= 0)
                     {
+                        buffer[pos] = (byte)read;
+
                         /* contained a newline? return */
-                        if (ReceiveBuffer[ReceivePos] == '\n')
+                        if (buffer[pos] == '\n')
                         {
                             /* remove \r also */
-                            if (ReceivePos > 0 && ReceiveBuffer[ReceivePos - 1] == '\r')
+                            if (pos > 0 && buffer[pos - 1] == '\r')
                             {
-                                ReceivePos--;
+                                pos--;
                             }
 
                             ASCIIEncoding enc = new ASCIIEncoding();
-                            string ret = enc.GetString(ReceiveBuffer, 0, ReceivePos);
+                            string ret = enc.GetString(buffer, 0, pos);
 
-                            ReceivePos = 0;
+                            Log.AddMessage("KrakenClient", "< " + ret);
 
                             return ret;
                         }
                         else
                         {
-                            ReceivePos++;
+                            pos++;
                         }
                     }
+                    else
+                    {
+                        /* socket closed */
+                        return null;
+                    }
+                }
+                catch (ThreadAbortException e)
+                {
+                    throw e;
                 }
                 catch (IOException e)
                 {
-                    Disconnect();
+                    /* timeout or connection error */
+                    return null;
+                }
+                catch (Exception e)
+                {
                     return null;
                 }
             }
 
             /* line exceeded buffer length */
-            ReceivePos = 0;
 
             return null;
         }
 
-        private void Write(string message)
+        private bool Write(string message)
         {
+            return Write(message, DataStream);
+        }
+
+        private bool Write(string message, Stream stream)
+        {
+            /* do nothing if not connected */
+            if (stream == null)
+            {
+                return false;
+            }
+
             try
             {
                 ASCIIEncoding enc = new ASCIIEncoding();
                 byte[] data = enc.GetBytes(message + "\r\n");
 
-                //Log.AddMessage("Kraken command: " + message);
-                Stream.Write(data, 0, data.Length);
+                Log.AddMessage("KrakenClient", "> " + message);
+
+                stream.Write(data, 0, data.Length);
+            }
+            catch (ThreadAbortException e)
+            {
+                throw e;
             }
             catch (Exception e)
             {
-                Disconnect();
+                return false;
             }
+
+            return true;
         }
 
+        public void ReconnectControl()
+        {
+            try
+            {
+                if (ControlClient != null)
+                {
+                    ControlClient.Close();
+                    ControlClient = null;
+                }
+            }
+            catch (ThreadAbortException e)
+            {
+                throw e;
+            }
+            catch (Exception ex)
+            {
+            }
+
+            Connect();
+        }
+
+        public void Reconnect()
+        {
+            lock (ControlStreamLock)
+            {
+                Disconnect();
+                Connect();
+            }
+        }
 
         public void Disconnect()
         {
             try
             {
-                Client.Close();
+                if (DataClient != null)
+                {
+                    DataClient.Close();
+                }
+                if (ControlClient != null)
+                {
+                    ControlClient.Close();
+                }
+            }
+            catch (ThreadAbortException e)
+            {
+                throw e;
             }
             catch { }
 
-            Client = null;
-            Stream = null;
+            DataClient = null;
+            DataStream = null;
+            ControlClient = null;
+            ControlStream = null;
         }
 
         public bool Connect()
         {
             try
             {
-                Client = new TcpClient();
-                Client.Connect(Hostname, 8866);
-                Stream = Client.GetStream();
-                Write("");
+                if (DataClient == null)
+                {
+                    DataClient = new TcpClient();
+                    DataClient.Connect(Hostname, Port);
+                    DataStream = DataClient.GetStream();
+                }
+
+                if (ControlClient == null)
+                {
+                    ControlClient = new TcpClient();
+                    ControlClient.Connect(Hostname, Port);
+                    ControlStream = ControlClient.GetStream();
+                }
+
+                if (!Write("", DataStream) || !Write("", ControlStream))
+                {
+                    Disconnect();
+                    return false;
+                }
+            }
+            catch (ThreadAbortException e)
+            {
+                throw e;
             }
             catch (Exception e)
             {
+                /* make sure the connection is closed */
+                Disconnect();
                 return false;
             }
 
@@ -271,122 +409,268 @@ namespace GSM_Analyzer
             string request = "crack " + ByteUtil.BitsToString(key1) + " " + count1 + " " + ByteUtil.BitsToString(key2) + " " + count2;
             byte[] result = new byte[8];
 
-            Log.AddMessage("Kraken: > '" + request.Substring(0, 35) + "...'");
+            RequestId = -1;
 
+            //Log.AddMessage("Kraken: > '" + request.Substring(0, 35) + "...'");
+
+            /* do we have data for this request already in cache? */
             if (CheckScanResult(request, ref result))
             {
                 return result;
             }
 
-            Write(request);
-            result = GetResult();
+            try
+            {
+                /* try a few times to get the key cracked */
+                for (int tries = 0; tries < 3; tries++)
+                {
+                    DataStream.Flush();
+                    Write(request);
+                    KrakenJobStatus = KrakenJobStatus.Submitted;
 
-            AddScanResult(request, result);
+                    result = GetResult();
 
+                    if (result != null)
+                    {
+                        /* found valid key, add result and jump out of loop */
+                        AddScanResult(request, result);
+                        break;
+                    }
+                    else if (KrakenJobStatus == KrakenJobStatus.NotFound)
+                    {
+                        /* found no valid key, add result and jump out of loop */
+                        AddScanResult(request, result);
+                        break;
+                    }
+                    else
+                    {
+                        /* there went something wrong */
+
+                        KrakenJobStatus = KrakenJobStatus.Unknown;
+
+                        Log.AddMessage("KrakenClient", "Failed to crack. Reconnecting");
+                        Reconnect();
+
+                        /* cancel old job with the new connection */
+                        if (RequestId != -1)
+                        {
+                            Log.AddMessage("KrakenClient", "   + cancel job " + RequestId);
+                            Write("cancel " + RequestId);
+                            RequestId = -1;
+                        }
+
+                    }
+                }
+            }
+            catch (ThreadAbortException ex)
+            {
+                /* try to cancel job with new connection */
+                if (RequestId != -1)
+                {
+                    Log.AddMessage("KrakenClient", "Aborting. Reconnecting to cancel job" + RequestId);
+                    Reconnect();
+                    Write("cancel " + RequestId);
+                    Disconnect();
+                    Log.AddMessage("KrakenClient", "Aborting finished");
+                    RequestId = -1;
+                }
+            }
+
+            RequestId = -1;
             return result;
+        }
+
+        public double GetJobProgress()
+        {
+            return GetJobProgress(RequestId);
+        }
+
+        public double GetJobProgress(int jobId)
+        {
+            /* just return -1 if not connected to a kraken server */
+            if (!Connected)
+            {
+                return -1.0f;
+            }
+
+            try
+            {
+                lock (ControlStreamLock)
+                {
+                    Write("progress " + jobId, ControlStream);
+
+                    string ret = Read(ControlStream, ControlTimeout);
+
+                    /* receive failed */
+                    if (ret == null)
+                    {
+                        Log.AddMessage("KrakenClient", "Control stream not responding anymore or we got disconnected. Reconnecting.");
+                        Reconnect();
+                        return -1.0f;
+                    }
+
+                    if (ret.StartsWith("221 "))
+                    {
+                        /* split into literals */
+                        string[] fields = ret.Split(' ');
+                        if (fields.Length < 2)
+                        {
+                            return -1.0f;
+                        }
+
+                        if (fields[fields.Length - 1] != "%")
+                        {
+                            return -1.0f;
+                        }
+
+                        double progress = -1.0f;
+
+                        double.TryParse(fields[fields.Length - 2], NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out progress);
+
+                        return progress;
+                    }
+                    else if (ret.StartsWith("400 "))
+                    {
+                        /* job not existing anymore, update state if this is our current job */
+                        if (RequestId == jobId)
+                        {
+                            KrakenJobStatus = KrakenJobStatus.Cancelled;
+                            RequestId = -1;
+                        }
+                        return -1.0f;
+                    }
+
+                    Log.AddMessage("KrakenClient", "Unexpected 'progress' answer: '" + ret + "'");
+
+                    /* unexpected response */
+                    return -1.0f;
+                }
+            }
+            catch (ThreadAbortException e)
+            {
+                throw e;
+            }
+            catch (Exception ex)
+            {
+                Log.AddMessage("KrakenClient", "Control stream error. Reconnecting.");
+                Reconnect();
+                return -1.0f;
+            }
         }
 
 
         private byte[] GetResult()
         {
-            int requestId = -1;
+            RequestId = -1;
+
+            if (!Connected)
+            {
+                KrakenJobStatus = KrakenJobStatus.Error;
+                return null;
+            }
 
             try
             {
                 while (true)
                 {
-                    string ret = Read();
-
-                    if (!Connected)
-                    {
-                        return null;
-                    }
+                    /* wait until data arrives */
+                    string ret = Read(DataStream, DataTimeout);
 
                     /* receive failed */
                     if (ret == null)
                     {
-                        Log.AddMessage("Kraken not responding anymore. Disconnecting.");
-                        Disconnect();
+                        KrakenJobStatus = KrakenJobStatus.Error;
+                        Log.AddMessage("KrakenClient", "Kraken not responding anymore or got disconnected.");
+                        return null;
+                    }
+
+                    /* valid result */
+                    if (ret.StartsWith("200 "))
+                    {
+                        /* split into literals */
+                        KrakenJobStatus = KrakenJobStatus.Found;
+
+                        string[] fields = ret.Split(' ');
+                        if (fields.Length < 3)
+                        {
+                            return null;
+                        }
+
+                        /* the 3rd literal is the found key */
+                        string keystring = fields[2];
+                        byte[] key = new byte[8];
+
+                        for (int pos = 0; pos < 8; pos++)
+                        {
+                            string byteStr = keystring.Substring(pos * 2, 2);
+
+                            if (!byte.TryParse(byteStr, System.Globalization.NumberStyles.HexNumber, null, out key[pos]))
+                            {
+                                key = null;
+                                break;
+                            }
+                        }
+
+                        ParseSearchDuration(ret);
+
+                        return key;
+                    }
+                    else if (ret.StartsWith("100 "))
+                    {
+                        /* request is getting queued */
+                        KrakenJobStatus = KrakenJobStatus.Accepted;
+                    }
+                    else if (ret.StartsWith("101 "))
+                    {
+                        /* request was queued, get the ID */
+                        KrakenJobStatus = KrakenJobStatus.Queued;
+
+                        /* split into literals */
+                        string[] fields = ret.Split(' ');
+                        if (fields.Length >= 2)
+                        {
+                            int.TryParse(fields[1], out RequestId);
+                        }
+                    }
+                    else if (ret.StartsWith("102 "))
+                    {
+                        /* request is being processed */
+                        KrakenJobStatus = KrakenJobStatus.Processing;
+                    }
+                    else if (ret.StartsWith("103 "))
+                    {
+                        /* match found, kraken is now calculating back */
+                    }
+                    else if (ret.StartsWith("404 "))
+                    {
+                        /* key not found */
+                        KrakenJobStatus = KrakenJobStatus.NotFound;
+                        ParseSearchDuration(ret);
+                        return null;
+                    }
+                    else if (ret.StartsWith("405 "))
+                    {
+                        /* job was cancelled */
+                        KrakenJobStatus = KrakenJobStatus.Cancelled;
                         return null;
                     }
                     else
                     {
-                        Log.AddMessage("Kraken: < '" + ret.Replace('\r', '|').Replace('\n', '|') + "'");
+                        /* unexpected response */
+                        KrakenJobStatus = KrakenJobStatus.Error;
+                        Log.AddMessage("KrakenClient", "Unexpected 'crack' answer: '" + ret + "'");
 
-                        if (ret != "")
-                        {
-                            /* valid result */
-                            if (ret.StartsWith("200 "))
-                            {
-                                /* split into literals */
-                                string[] fields = ret.Split(' ');
-                                if (fields.Length < 3)
-                                {
-                                    return null;
-                                }
-
-                                /* the 3rd literal is the found key */
-                                string keystring = fields[2];
-                                byte[] key = new byte[8];
-
-                                for (int pos = 0; pos < 8; pos++)
-                                {
-                                    string byteStr = keystring.Substring(pos * 2, 2);
-
-                                    if (!byte.TryParse(byteStr, System.Globalization.NumberStyles.HexNumber, null, out key[pos]))
-                                    {
-                                        key = null;
-                                        break;
-                                    }
-                                }
-
-                                ParseSearchDuration(ret);
-
-                                return key;
-                            }
-                            else if (ret.StartsWith("100 "))
-                            {
-                                /* request is getting queued */
-                            }
-                            else if (ret.StartsWith("101 "))
-                            {
-                                /* request was queued, get the ID */
-
-                                /* split into literals */
-                                string[] fields = ret.Split(' ');
-                                if (fields.Length >= 2)
-                                {
-                                    int.TryParse(fields[1], out requestId);
-                                }
-                            }
-                            else if (ret.StartsWith("102 "))
-                            {
-                                /* request is being processed */
-                            }
-                            else if (ret.StartsWith("103 "))
-                            {
-                                /* match found, kraken is now calculating back */
-                            }
-                            else if (ret.StartsWith("404 "))
-                            {
-                                ParseSearchDuration(ret);
-                                /* key not found */
-                                return null;
-                            }
-                        }
+                        return null;
                     }
                 }
             }
             catch (ThreadAbortException ex)
             {
                 /* try to cancel the crack request */
-                if (requestId != -1)
+                if (RequestId != -1)
                 {
-                    Write("cancel " + requestId);
-                }
-                else
-                {
-                    Write("cancel");
+                    KrakenJobStatus = KrakenJobStatus.Cancelled;
+                    Write("cancel " + RequestId);
                 }
                 throw ex;
             }

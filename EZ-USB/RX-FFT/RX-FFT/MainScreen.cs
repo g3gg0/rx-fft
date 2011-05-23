@@ -28,7 +28,6 @@ using LuaInterface;
 using LibRXFFT.Libraries.Demodulators;
 using LibRXFFT.Components.GDI;
 using LibRXFFT.Components.DeviceControls;
-using RX_FFT.DeviceControls;
 
 namespace RX_FFT
 {
@@ -1072,6 +1071,18 @@ namespace RX_FFT
                 Log.AddMessage("Exception in Transfer Thread: " + e.ToString());
             }
         }
+        
+        private void OpenUSRPDevice()
+        {
+            try
+            {
+                USRPDeviceControl dev = new USRPDeviceControl();
+            }
+            catch (Exception e)
+            {
+                DeviceOpened = false;
+            }
+        }
 
         private void OpenBO35Device(USBRXDevice.eCombinationType type)
         {
@@ -1454,6 +1465,36 @@ namespace RX_FFT
             }
         }
 
+        private void openUSRPMenu_Click(object sender, EventArgs e)
+        {
+            bool animateStatus = true;
+            new Thread(() =>
+            {
+                string dotString = "........";
+                int dots = 0;
+                int loops = 100;
+
+                while (animateStatus)
+                {
+                    StatusTextDock.Text = "Opening Device" + dotString.Substring(0, dots);
+                    Thread.Sleep(500);
+                    dots++;
+                    dots %= 4;
+                    loops--;
+                    if (loops == 0)
+                    {
+                        return;
+                    }
+                }
+                StatusTextDock.Hide();
+            }).Start();
+
+            OpenUSRPDevice();
+
+            animateStatus = false;
+            StatusTextDock.Hide();
+        }
+
         private void openBO35Menu_Click(object sender, EventArgs e)
         {
             bool animateStatus = true;
@@ -1709,5 +1750,6 @@ namespace RX_FFT
         {
             UnregisterScripts();
         }
+
     }
 }

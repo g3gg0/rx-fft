@@ -1,4 +1,4 @@
-﻿namespace RX_FFT.DeviceControls
+﻿namespace LibRXFFT.Components.DeviceControls
 {
     partial class FileSourceDeviceControl
     {

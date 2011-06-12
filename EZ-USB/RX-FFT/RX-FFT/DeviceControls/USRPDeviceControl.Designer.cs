@@ -1,6 +1,6 @@
 ﻿namespace LibRXFFT.Components.DeviceControls
 {
-    partial class USBRXDeviceControl
+    partial class USRPDeviceControl
     {
         /// <summary>
         /// Required designer variable.
@@ -39,13 +39,10 @@
             this.txtFilterWidth = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.frequencySelector1 = new LibRXFFT.Components.GDI.FrequencySelector();
-            this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.btnAtmel = new System.Windows.Forms.Button();
-            this.btnFiles = new System.Windows.Forms.Button();
-            this.FilterList = new LibRXFFT.Components.GDI.FilterList();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.groupBox5 = new System.Windows.Forms.GroupBox();
+            this.label4 = new System.Windows.Forms.Label();
+            this.txtChannel = new LibRXFFT.Components.GDI.TextBoxMouseScroll();
             this.txtMgcValue = new LibRXFFT.Components.GDI.TextBoxMouseScroll();
             this.radioAgcOff = new System.Windows.Forms.RadioButton();
             this.radioAgcManual = new System.Windows.Forms.RadioButton();
@@ -66,13 +63,8 @@
             this.radioAcqStream = new System.Windows.Forms.RadioButton();
             this.radioAcqBlock = new System.Windows.Forms.RadioButton();
             this.radioAcqOff = new System.Windows.Forms.RadioButton();
-            this.txtChannel = new LibRXFFT.Components.GDI.TextBoxMouseScroll();
-            this.label4 = new System.Windows.Forms.Label();
+            this.txtInfo = new System.Windows.Forms.TextBox();
             this.groupBox1.SuspendLayout();
-            this.groupBox2.SuspendLayout();
-            this.splitContainer1.Panel1.SuspendLayout();
-            this.splitContainer1.Panel2.SuspendLayout();
-            this.splitContainer1.SuspendLayout();
             this.splitContainer2.Panel1.SuspendLayout();
             this.splitContainer2.Panel2.SuspendLayout();
             this.splitContainer2.SuspendLayout();
@@ -153,72 +145,6 @@
             this.frequencySelector1.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.frequencySelector1.FrequencyChanged += new System.EventHandler(this.frequencySelector1_FrequencyChanged);
             // 
-            // groupBox2
-            // 
-            this.groupBox2.AutoSize = true;
-            this.groupBox2.Controls.Add(this.splitContainer1);
-            this.groupBox2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.groupBox2.Location = new System.Drawing.Point(0, 0);
-            this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Padding = new System.Windows.Forms.Padding(5);
-            this.groupBox2.Size = new System.Drawing.Size(565, 110);
-            this.groupBox2.TabIndex = 4;
-            this.groupBox2.TabStop = false;
-            this.groupBox2.Text = "Filters";
-            // 
-            // splitContainer1
-            // 
-            this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainer1.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
-            this.splitContainer1.IsSplitterFixed = true;
-            this.splitContainer1.Location = new System.Drawing.Point(5, 18);
-            this.splitContainer1.Margin = new System.Windows.Forms.Padding(0);
-            this.splitContainer1.Name = "splitContainer1";
-            // 
-            // splitContainer1.Panel1
-            // 
-            this.splitContainer1.Panel1.Controls.Add(this.btnAtmel);
-            this.splitContainer1.Panel1.Controls.Add(this.btnFiles);
-            // 
-            // splitContainer1.Panel2
-            // 
-            this.splitContainer1.Panel2.Controls.Add(this.FilterList);
-            this.splitContainer1.Size = new System.Drawing.Size(555, 87);
-            this.splitContainer1.SplitterDistance = 57;
-            this.splitContainer1.SplitterWidth = 1;
-            this.splitContainer1.TabIndex = 0;
-            // 
-            // btnAtmel
-            // 
-            this.btnAtmel.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.btnAtmel.Location = new System.Drawing.Point(8, 21);
-            this.btnAtmel.Name = "btnAtmel";
-            this.btnAtmel.Size = new System.Drawing.Size(48, 21);
-            this.btnAtmel.TabIndex = 6;
-            this.btnAtmel.Text = "Atmel";
-            this.btnAtmel.UseVisualStyleBackColor = true;
-            this.btnAtmel.Click += new System.EventHandler(this.btnAtmel_Click);
-            // 
-            // btnFiles
-            // 
-            this.btnFiles.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.btnFiles.Location = new System.Drawing.Point(8, 1);
-            this.btnFiles.Name = "btnFiles";
-            this.btnFiles.Size = new System.Drawing.Size(48, 21);
-            this.btnFiles.TabIndex = 5;
-            this.btnFiles.Text = "Files";
-            this.btnFiles.UseVisualStyleBackColor = true;
-            this.btnFiles.Click += new System.EventHandler(this.btnFiles_Click);
-            // 
-            // FilterList
-            // 
-            this.FilterList.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.FilterList.Location = new System.Drawing.Point(0, 0);
-            this.FilterList.Margin = new System.Windows.Forms.Padding(0);
-            this.FilterList.Name = "FilterList";
-            this.FilterList.Size = new System.Drawing.Size(497, 87);
-            this.FilterList.TabIndex = 3;
-            // 
             // splitContainer2
             // 
             this.splitContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -236,8 +162,8 @@
             // 
             // splitContainer2.Panel2
             // 
-            this.splitContainer2.Panel2.Controls.Add(this.groupBox2);
-            this.splitContainer2.Size = new System.Drawing.Size(565, 228);
+            this.splitContainer2.Panel2.Controls.Add(this.txtInfo);
+            this.splitContainer2.Size = new System.Drawing.Size(565, 414);
             this.splitContainer2.SplitterDistance = 114;
             this.splitContainer2.TabIndex = 5;
             // 
@@ -257,6 +183,26 @@
             this.groupBox5.TabIndex = 5;
             this.groupBox5.TabStop = false;
             this.groupBox5.Text = "AGC";
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(6, 87);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(88, 13);
+            this.label4.TabIndex = 18;
+            this.label4.Text = "AD6636 Channel";
+            // 
+            // txtChannel
+            // 
+            this.txtChannel.Location = new System.Drawing.Point(100, 84);
+            this.txtChannel.LowerLimit = ((long)(0));
+            this.txtChannel.Name = "txtChannel";
+            this.txtChannel.Size = new System.Drawing.Size(26, 20);
+            this.txtChannel.TabIndex = 17;
+            this.txtChannel.Text = "0";
+            this.txtChannel.UpperLimit = ((long)(5));
+            this.txtChannel.Value = ((long)(0));
             // 
             // txtMgcValue
             // 
@@ -504,43 +450,29 @@
             this.radioAcqOff.UseVisualStyleBackColor = true;
             this.radioAcqOff.CheckedChanged += new System.EventHandler(this.radioAcqOff_CheckedChanged);
             // 
-            // txtChannel
+            // txtInfo
             // 
-            this.txtChannel.Location = new System.Drawing.Point(100, 84);
-            this.txtChannel.LowerLimit = ((long)(0));
-            this.txtChannel.Name = "txtChannel";
-            this.txtChannel.Size = new System.Drawing.Size(26, 20);
-            this.txtChannel.TabIndex = 17;
-            this.txtChannel.UpperLimit = ((long)(5));
-            this.txtChannel.Value = ((long)(0));
+            this.txtInfo.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.txtInfo.Location = new System.Drawing.Point(0, 0);
+            this.txtInfo.Multiline = true;
+            this.txtInfo.Name = "txtInfo";
+            this.txtInfo.Size = new System.Drawing.Size(565, 296);
+            this.txtInfo.TabIndex = 0;
             // 
-            // label4
-            // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(6, 87);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(88, 13);
-            this.label4.TabIndex = 18;
-            this.label4.Text = "AD6636 Channel";
-            // 
-            // USBRXDeviceControl
+            // USRPDeviceControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(565, 228);
+            this.ClientSize = new System.Drawing.Size(565, 414);
             this.ControlBox = false;
             this.Controls.Add(this.splitContainer2);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
             this.MaximumSize = new System.Drawing.Size(1024, 1024);
             this.MinimumSize = new System.Drawing.Size(440, 227);
-            this.Name = "USBRXDeviceControl";
-            this.Text = "USBRXDeviceControl";
+            this.Name = "USRPDeviceControl";
+            this.Text = "USRP Device Control";
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
-            this.groupBox2.ResumeLayout(false);
-            this.splitContainer1.Panel1.ResumeLayout(false);
-            this.splitContainer1.Panel2.ResumeLayout(false);
-            this.splitContainer1.ResumeLayout(false);
             this.splitContainer2.Panel1.ResumeLayout(false);
             this.splitContainer2.Panel2.ResumeLayout(false);
             this.splitContainer2.Panel2.PerformLayout();
@@ -562,9 +494,6 @@
         private System.Windows.Forms.TextBox txtFilterRate;
         private System.Windows.Forms.TextBox txtFilterWidth;
         private System.Windows.Forms.Label label2;
-        private LibRXFFT.Components.GDI.FilterList FilterList;
-        private System.Windows.Forms.GroupBox groupBox2;
-        private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.SplitContainer splitContainer2;
         private System.Windows.Forms.GroupBox groupBox3;
         private System.Windows.Forms.RadioButton radioAcqStream;
@@ -585,12 +514,11 @@
         private System.Windows.Forms.RadioButton radioAgcMedium;
         private System.Windows.Forms.RadioButton radioAgcSlow;
         private LibRXFFT.Components.GDI.TextBoxMouseScroll txtMgcValue;
-        private System.Windows.Forms.Button btnAtmel;
-        private System.Windows.Forms.Button btnFiles;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label1;
         private LibRXFFT.Components.GDI.TextBoxMouseScroll txtAtt;
         private System.Windows.Forms.Label label4;
         private LibRXFFT.Components.GDI.TextBoxMouseScroll txtChannel;
+        private System.Windows.Forms.TextBox txtInfo;
     }
 }

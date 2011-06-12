@@ -3,7 +3,7 @@ using LibRXFFT.Libraries;
 using LibRXFFT.Libraries.SampleSources;
 using LibRXFFT.Libraries.USB_RX.Tuners;
 
-namespace RX_FFT.DeviceControls
+namespace LibRXFFT.Components.DeviceControls
 {
     public interface DeviceControl : DigitalTuner
     {
@@ -19,7 +19,7 @@ namespace RX_FFT.DeviceControls
         bool AllowsMultipleReaders { get; }
         int ShmemChannel { get; }
 
-        void Close();
+        void CloseControl();
         bool ReadBlock();
     }
 }

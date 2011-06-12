@@ -2,8 +2,9 @@ using System;
 using System.Windows.Forms;
 using LibRXFFT.Libraries;
 using LibRXFFT.Libraries.SampleSources;
+using LibRXFFT.Components.DeviceControls;
 
-namespace RX_FFT.DeviceControls
+namespace LibRXFFT.Components.DeviceControls
 {
     public partial class SharedMemDeviceControl : Form, DeviceControl
     {
@@ -88,6 +89,13 @@ namespace RX_FFT.DeviceControls
         public SampleSource SampleSource
         {
             get { return _SampleSource; }
+        }
+
+        public void CloseControl()
+        {
+            SampleSource.Close();
+            CloseTuner();
+            Close();
         }
 
         public bool ReadBlock()

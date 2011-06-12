@@ -2,8 +2,9 @@ using System;
 using System.Windows.Forms;
 using LibRXFFT.Libraries;
 using LibRXFFT.Libraries.SampleSources;
+using LibRXFFT.Components.DeviceControls;
 
-namespace RX_FFT.DeviceControls
+namespace LibRXFFT.Components.DeviceControls
 {
     public partial class RandomDataDeviceControl : Form, DeviceControl
     {
@@ -67,6 +68,12 @@ namespace RX_FFT.DeviceControls
             {
                 _BlocksPerSecond = value;
             }
+        }
+
+        public void CloseControl()
+        {
+            CloseTuner();
+            Close();
         }
 
         public bool ReadBlock()

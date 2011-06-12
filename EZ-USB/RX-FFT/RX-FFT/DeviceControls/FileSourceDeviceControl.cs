@@ -13,8 +13,9 @@ using LibRXFFT.Libraries.Timers;
 using LibRXFFT.Libraries.Misc;
 using LibRXFFT.Libraries.USB_RX.Tuners;
 using System.IO;
+using LibRXFFT.Components.DeviceControls;
 
-namespace RX_FFT.DeviceControls
+namespace LibRXFFT.Components.DeviceControls
 {
     public partial class FileSourceDeviceControl : Form, DeviceControl
     {
@@ -25,14 +26,19 @@ namespace RX_FFT.DeviceControls
         private object AccessLock = new object();
         private string FileName = "none";
         private AccurateTimer Timer;
+        private int InternalOversampling = 1;
 
         public double ReadFrameRate = 0.05f;
 
-        public FileSourceDeviceControl() : this(null) { }
+        public FileSourceDeviceControl() : this(null, 1) { }
+        public FileSourceDeviceControl(string fileName) : this(fileName, 1) { }
+        public FileSourceDeviceControl(int oversampling) : this(null, oversampling) { }
 
-        public FileSourceDeviceControl(string fileName)
+        public FileSourceDeviceControl(string fileName, int oversampling)
         {
             InitializeComponent();
+
+            InternalOversampling = oversampling;
 
             if (fileName == null)
             {
@@ -51,22 +57,21 @@ namespace RX_FFT.DeviceControls
             if (fileName != null)
             {
                 FileName = fileName;
-                Source = new FileSampleSource(FileName);
+                Source = new FileSampleSource(FileName, InternalOversampling);
                 Source.ForwardEnabled = true;
-                Source.SamplesPerBlock = (int)(ReadFrameRate * Source.OutputSamplingRate);
+                Source.SamplesPerBlock = (int)(ReadFrameRate * Source.InputSamplingRate);
 
                 trackBar.Maximum = (int)(Source.GetTotalTime() / 0.01f);
 
                 Timer.Interval = (uint)((double)(Source.OutputBlockSize * 1000.0f) / Source.OutputSamplingRate);
-            }
 
-            UpdateDisplay();
-            Timer.Start();
-            Show();
+                UpdateDisplay();
+                Timer.Start();
+                Show();
+            }
         }
 
-
-        internal void LoadFile(string fileName)
+        public void LoadFile(string fileName)
         {
             try
             {
@@ -91,7 +96,7 @@ namespace RX_FFT.DeviceControls
 
                     /* reconfigure timer */
                     Timer.Stop();
-                    Timer.Interval = (uint)((double)(Source.OutputBlockSize * 1000.0f) / Source.OutputSamplingRate);
+                    Timer.Interval = (uint)((double)(Source.OutputBlockSize * 1000.0f) / Source.InputSamplingRate);
                     Timer.Start();
                 }
                 UpdateDisplay();
@@ -184,15 +189,21 @@ namespace RX_FFT.DeviceControls
             }
             set
             {
-                switch (value)
+                try
                 {
-                    case eTransferMode.Stopped:
-                        BeginInvoke(new Action(() => { btnPlayPause.Text = "Play"; }));
-                        break;
-                    case eTransferMode.Stream:
-                    case eTransferMode.Block:
-                        BeginInvoke(new Action(() => { btnPlayPause.Text = "Pause"; }));
-                        break;
+                    switch (value)
+                    {
+                        case eTransferMode.Stopped:
+                            BeginInvoke(new Action(() => { btnPlayPause.Text = "Play"; }));
+                            break;
+                        case eTransferMode.Stream:
+                        case eTransferMode.Block:
+                            BeginInvoke(new Action(() => { btnPlayPause.Text = "Pause"; }));
+                            break;
+                    }
+                }
+                catch (Exception e)
+                {
                 }
 
                 CurrentTransferMode = value;
@@ -206,6 +217,12 @@ namespace RX_FFT.DeviceControls
         public SampleSource SampleSource
         {
             get { return Source; }
+        }
+
+        public void CloseControl()
+        {
+            CloseTuner();
+            Close();
         }
 
         public bool Connected
@@ -344,10 +361,14 @@ namespace RX_FFT.DeviceControls
 
         public void CloseTuner()
         {
-            Source.Close();
+            if (Source != null)
+            {
+                Source.Close();
+                Source = null;
+            }
+
             TransferMode = eTransferMode.Stopped;
             Timer.Stop();
-            Source = null;
         }
 
         public bool SetFrequency(long frequency)

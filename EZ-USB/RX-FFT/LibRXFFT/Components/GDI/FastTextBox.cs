@@ -25,6 +25,9 @@ namespace LibRXFFT.Components.GDI
         private bool Changed = true;
         private bool FastMode = false;
 
+        /* switch to fast mode when more than this amount of characters have to be displayed */
+        private int FastModeMargin = 100000;
+
         public FastTextBox()
         {
             InitializeComponent();
@@ -38,9 +41,9 @@ namespace LibRXFFT.Components.GDI
             UpdateTimer.Start();
         }
 
-        private void SetFastMode(bool p)
+        private void SetFastMode(bool enabled)
         {
-            FastMode = p;
+            FastMode = enabled;
 
             if (!FastMode)
             {
@@ -99,6 +102,7 @@ namespace LibRXFFT.Components.GDI
                 NextLineToAdd = 0;
                 CurrentLine = "";
                 Changed = true;
+                WholeText.Length = 0;
                 Invoke(new Action(() => { scrollBar.Value = 1000; TextLines.Clear(); }));
 
                 UpdateText();
@@ -275,7 +279,10 @@ namespace LibRXFFT.Components.GDI
                 else
                 {
                     ChangeTimeout = 0;
-                    SetFastMode(true);
+                    if (WholeText.Length > FastModeMargin)
+                    {
+                        SetFastMode(true);
+                    }
                 }
 
                 Changed = false;

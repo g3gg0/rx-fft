@@ -11,6 +11,9 @@ namespace LibRXFFT.Libraries.GSM.Layer1.PacketDump
 {
     public class GsmAnalyzerDumpReader : PacketDumpReader
     {
+        /* allow a maximum of e.g. 100 frames distance between <b...> data, then resync */
+        protected long DeltaFrameCount = 100;
+
         protected Stream DumpFile = null;
         protected TextReader DumpStream = null;
         protected GSMParameters Parameters = null;
@@ -260,7 +263,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.PacketDump
                         /* timeslot 7->0 wrap */
                         if (TN >= tn)
                         {
-                            /* then update FN */
+                            /* then update FN, but may get overwritten again if given by dump */
                             FN++;
                         }
                         /* assign read value */
@@ -275,7 +278,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.PacketDump
                         /* timeslot 7->0 wrap */
                         if (TN == 0)
                         {
-                            /* then update FN */
+                            /* then update FN, but may get overwritten again if given by dump */
                             FN++;
                         }
                     }
@@ -326,7 +329,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.PacketDump
                     long deltaSlots = (FN - Parameters.FN) * 8 + (TN - Parameters.TN);
 
                     /* does the analyzer want the next burst or are we too far away? (need synchronization) */
-                    if (deltaSlots <= 1 || deltaSlots > 10)
+                    if (deltaSlots <= 1 || deltaSlots > (DeltaFrameCount * 8))
                     {
                         /* give him the actual data */
                         Parameters.FN = FN;

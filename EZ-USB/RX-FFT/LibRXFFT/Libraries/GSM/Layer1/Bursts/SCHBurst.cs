@@ -77,6 +77,12 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
 
         public override eSuccessState ParseData(GSMParameters param, bool[] decodedBurst, int sequence)
         {
+            if (IsDummy(decodedBurst))
+            {
+                /* this may happen with dumps that do not contain SCH/BCCH anymore. simply accept it. */
+                return eSuccessState.Unknown;
+            }
+
             Array.Copy(decodedBurst, 3, SCHData, 0, 39);
             Array.Copy(decodedBurst, 106, SCHData, 39, 39);
 

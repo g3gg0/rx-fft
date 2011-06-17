@@ -71,8 +71,6 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
         public eBurstState State = eBurstState.Idle;
         public long TimeSlot = -1;
 
-        public static bool[] DummyBurstBits = new[] { true, true, true, true, true, false, true, true, false, true, true, true, false, true, true, false, false, false, false, false, true, false, true, false, false, true, false, false, true, true, true, false, false, false, false, false, true, false, false, true, false, false, false, true, false, false, false, false, false, false, false, true, true, true, true, true, false, false, false, true, true, true, false, false, false, true, false, true, true, true, false, false, false, true, false, true, true, true, false, false, false, true, false, true, false, true, true, true, false, true, false, false, true, false, true, false, false, false, true, true, false, false, true, true, false, false, true, true, true, false, false, true, true, true, true, false, true, false, false, true, true, true, true, true, false, false, false, true, false, false, true, false, true, true, true, true, true, false, true, false, true, false };
-
         internal bool[] FireCRCBuffer;
 
 
@@ -143,16 +141,6 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
             }
 
             FireCRCBuffer = new bool[CRC.PolynomialFIRE.Length - 1];
-        }
-
-
-        internal bool IsDummy(bool[] decodedBurst)
-        {
-            for (int pos = 0; pos < DummyBurstBits.Length; pos++)
-                if (DummyBurstBits[pos] != decodedBurst[3 + pos])
-                    return false;
-
-            return true;
         }
 
         internal void StoreBurstContext(GSMParameters param, bool[] decodedBurst, int sequence)

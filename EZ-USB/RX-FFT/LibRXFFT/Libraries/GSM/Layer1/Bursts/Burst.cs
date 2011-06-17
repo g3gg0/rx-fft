@@ -32,6 +32,8 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
         public string Name = "Unknown";
         public string ShortName = "Unk";
 
+        public static bool[] DummyBurstBits = new[] { true, true, true, true, true, false, true, true, false, true, true, true, false, true, true, false, false, false, false, false, true, false, true, false, false, true, false, false, true, true, true, false, false, false, false, false, true, false, false, true, false, false, false, true, false, false, false, false, false, false, false, true, true, true, true, true, false, false, false, true, true, true, false, false, false, true, false, true, true, true, false, false, false, true, false, true, true, true, false, false, false, true, false, true, false, true, true, true, false, true, false, false, true, false, true, false, false, false, true, true, false, false, true, true, false, false, true, true, true, false, false, true, true, true, true, false, true, false, false, true, true, true, true, true, false, false, false, true, false, false, true, false, true, true, true, true, true, false, true, false, true, false };
+
         private StringBuilder Builder = new StringBuilder();
 
 
@@ -40,6 +42,15 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
             Failed,
             Succeeded,
             Unknown
+        }
+
+        internal bool IsDummy(bool[] decodedBurst)
+        {
+            for (int pos = 0; pos < DummyBurstBits.Length; pos++)
+                if (DummyBurstBits[pos] != decodedBurst[3 + pos])
+                    return false;
+
+            return true;
         }
 
         protected string DumpBits(bool[] data)

@@ -70,6 +70,25 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
             return eSuccessState.Succeeded;
         }
 
+        /* define our own since we want to use private bool[] for c[] bits */
+        internal new eCorrectionResult Deconvolution()
+        {
+            int failures = ConvolutionalCoder.Decode(SCHData, ref SCHDataDecoded);
+
+            if (failures == 0)
+            {
+                return eCorrectionResult.Correct;
+            }
+            else if (failures < 10)
+            {
+                return eCorrectionResult.Fixed;
+            }
+            else
+            {
+                return eCorrectionResult.Failed;
+            }
+        }
+
         public override eSuccessState ParseData(GSMParameters param, bool[] decodedBurst)
         {
             return ParseData(param, decodedBurst, 0);
@@ -86,24 +105,23 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
             Array.Copy(decodedBurst, 3, SCHData, 0, 39);
             Array.Copy(decodedBurst, 106, SCHData, 39, 39);
 
-            bool[] data = ConvolutionalCoder.Decode(SCHData, SCHDataDecoded);
-            if (data == null)
+            if (Deconvolution() == eCorrectionResult.Failed)
             {
                 ErrorMessage = "(Error in ConvolutionalCoder)";
                 return eSuccessState.Failed;
             }
 
-            bool[] crc = CRC.Calc(data, 0, 35, CRC.PolynomialSCH);
+            bool[] crc = CRC.Calc(SCHDataDecoded, 0, 35, CRC.PolynomialSCH);
             if (!CRC.Matches(crc))
             {
                 ErrorMessage = "(Error in CRC)";
                 return eSuccessState.Failed;
             }
 
-            byte BSIC = (byte)ByteUtil.BitsToLongRev(data, 2, 6);
-            long T1 = ByteUtil.BitsToLongRev(data, new[] { new[] { 0, 2 }, new[] { 8, 8 }, new[] { 23, 1 } });
-            long T2 = ByteUtil.BitsToLongRev(data, 18, 5);
-            long T3M = ByteUtil.BitsToLongRev(data, new[] { new[] { 16, 2 }, new[] { 24, 1 } });
+            byte BSIC = (byte)ByteUtil.BitsToLongRev(SCHDataDecoded, 2, 6);
+            long T1 = ByteUtil.BitsToLongRev(SCHDataDecoded, new[] { new[] { 0, 2 }, new[] { 8, 8 }, new[] { 23, 1 } });
+            long T2 = ByteUtil.BitsToLongRev(SCHDataDecoded, 18, 5);
+            long T3M = ByteUtil.BitsToLongRev(SCHDataDecoded, new[] { new[] { 16, 2 }, new[] { 24, 1 } });
             long T3 = (10 * T3M) + 1;
 
             long FN;

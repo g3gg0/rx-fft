@@ -78,7 +78,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                 Deinterleave();
 
                 /* undo convolutional coding c[] to u[] */
-                if (!Deconvolution())
+                if (Deconvolution() == eCorrectionResult.Failed)
                 {
                     if (!ChannelEncrypted)
                     {
@@ -92,11 +92,11 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                 /* CRC check/fix */
                 switch (CRCCheck())
                 {
-                    case eCRCState.Fixed:
+                    case eCorrectionResult.Fixed:
                         StatusMessage = "(CRC Error recovered)";
                         break;
 
-                    case eCRCState.Failed:
+                    case eCorrectionResult.Failed:
                         State = eBurstState.Failed;
                         ErrorMessage = "(CRC Error)";
                         return eSuccessState.Failed;

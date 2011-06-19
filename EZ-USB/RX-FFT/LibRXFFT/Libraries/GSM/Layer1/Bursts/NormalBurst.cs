@@ -9,13 +9,6 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
 {
     public class NormalBurst : Burst
     {
-        internal enum eCRCState
-        {
-            Correct,
-            Fixed,
-            Failed
-        }
-
         public enum eBurstState
         {
             Idle,
@@ -51,6 +44,8 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                 return ret;
             }
         }
+
+        public const int MaxViterbiFailures = 20;
 
         public const double Data1Bits = 57;
         public const double HLBits = 1;
@@ -204,12 +199,25 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
             Deinterleave(BurstBufferI);
         }
 
-        internal bool Deconvolution()
+        internal eCorrectionResult Deconvolution()
         {
-            return ConvolutionalCoder.Decode(BurstBufferC, BurstBufferU) != null;
+            int failures = ConvolutionalCoder.Decode(BurstBufferC, ref BurstBufferU);
+
+            if(failures == 0)
+            {
+                return eCorrectionResult.Correct;
+            }
+            else if(failures < MaxViterbiFailures)
+            {
+                return eCorrectionResult.Fixed;
+            }
+            else
+            {
+                return eCorrectionResult.Failed;
+            }
         }
 
-        internal eCRCState CRCCheck()
+        internal eCorrectionResult CRCCheck()
         {
             CRC.Calc(BurstBufferU, 0, 224, CRC.PolynomialFIRE, FireCRCBuffer);
             if (!CRC.Matches(FireCRCBuffer))
@@ -218,13 +226,13 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
 
                 FireCode fc = new FireCode(40, 184);
                 if (!fc.FC_check_crc(BurstBufferU, DataRepaired))
-                    return eCRCState.Failed;
+                    return eCorrectionResult.Failed;
 
                 Array.Copy(DataRepaired, BurstBufferU, DataRepaired.Length);
 
-                return eCRCState.Fixed;
+                return eCorrectionResult.Fixed;
             }
-            return eCRCState.Correct;
+            return eCorrectionResult.Correct;
         }
 
         internal void PackBytes()
@@ -342,13 +350,27 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                 /* processed a full frame */
                 if (burst == 0)
                 {
+                    bool deconvFailed = false;
                     Deinterleave(burstBufferI);
 
                     /* undo convolutional coding c[] to u[] */
-                    if (Deconvolution())
+                    switch(Deconvolution())
+                    {
+                        case eCorrectionResult.Correct:
+                            break;
+
+                        case eCorrectionResult.Failed:
+                            deconvFailed = true;
+                            break;
+
+                        case eCorrectionResult.Fixed:
+                            break;
+                    }
+
+                    if (!deconvFailed)
                     {
                         /* CRC check/fix */
-                        if (CRCCheck() != eCRCState.Failed)
+                        if (CRCCheck() != eCorrectionResult.Failed)
                         {
                             PackBytes();
                             L2.Handle(param, this, L3, BurstBufferD);
@@ -681,7 +703,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
 
                     /* check if this was the correct key by trying to deconvolve */
                     Deinterleave(burstBufferI);
-                    if (Deconvolution())
+                    if (Deconvolution() != eCorrectionResult.Failed)
                     {
                         A5CipherKey = key;
 

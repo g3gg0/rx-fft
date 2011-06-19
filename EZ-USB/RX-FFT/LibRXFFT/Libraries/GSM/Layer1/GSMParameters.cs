@@ -27,6 +27,16 @@ namespace LibRXFFT.Libraries.GSM.Layer1
         BCCH_CCCH = 100 /* for this one just using any other value */
     }
 
+    public enum eChannelType
+    {
+        FCH,
+        SCH,
+        BCCH,
+        CCCH,
+        SDCCH,
+        SACCH,
+        TCH
+    }
     public struct sTimeSlotInfo
     {
         public eTimeSlotType Type;

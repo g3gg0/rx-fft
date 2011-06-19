@@ -1598,15 +1598,19 @@ namespace GSM_Analyzer
                 Parameters.State = eGSMState.Reset;
 
                 /* wait until reset done */
-                int waitForSearch = 100;
-                while (Parameters.State == eGSMState.Reset && --waitForSearch > 0)
+                int waitForSearch = 20;
+                while ((Parameters.State == eGSMState.Reset) && (--waitForSearch > 0))
                 {
                     Thread.Sleep(100);
                 }
 
+                /* make sure buffers are empty and wait 250ms */
+                Source.SampleSource.Flush();
+                Thread.Sleep(250);
+
                 /* wait for FCCH searching */
-                int waitForLock = 2;
-                while (Parameters.State == eGSMState.FCCHSearch && --waitForLock > 0)
+                int waitForLock = 20;
+                while ((Parameters.State == eGSMState.FCCHSearch) && (--waitForLock > 0))
                 {
                     Thread.Sleep(100);
                 }

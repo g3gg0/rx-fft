@@ -74,7 +74,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                 /* deinterleave the 4 bursts. the result is a 456 bit block. i[] to c[] */
                 Deinterleave();
 
-                if (!Deconvolution())
+                if (Deconvolution() == eCorrectionResult.Failed)
                 {
                     ErrorMessage = "(Error in ConvolutionalCoder)";
                     return eSuccessState.Failed;
@@ -83,11 +83,11 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                 /* CRC check/fix */
                 switch (CRCCheck())
                 {
-                    case eCRCState.Fixed:
+                    case eCorrectionResult.Fixed:
                         StatusMessage = "(CRC Error recovered)";
                         break;
 
-                    case eCRCState.Failed:
+                    case eCorrectionResult.Failed:
                         ErrorMessage = "(CRC Error)";
                         return eSuccessState.Failed;
                 }

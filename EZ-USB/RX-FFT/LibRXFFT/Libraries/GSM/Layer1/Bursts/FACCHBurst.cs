@@ -50,10 +50,29 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
             InitBuffers(4);
         }
 
+        /* define our own since we want to use private bool[] for c[] bits */
+        internal new eCorrectionResult Deconvolution(bool[] burstBufferC)
+        {
+            int failures = ConvolutionalCoder.Decode(burstBufferC, ref BurstBufferU);
+
+            if (failures == 0)
+            {
+                return eCorrectionResult.Correct;
+            }
+            else if (failures < 10)
+            {
+                return eCorrectionResult.Fixed;
+            }
+            else
+            {
+                return eCorrectionResult.Failed;
+            }
+        }
+
         public eSuccessState ParseFACCHData(GSMParameters param, bool[] burstBufferC)
         {
             /* decode */
-            if (ConvolutionalCoder.Decode(burstBufferC, BurstBufferU) == null)
+            if (Deconvolution(burstBufferC) == eCorrectionResult.Failed)
             {
                 ErrorMessage = "(FACCH: Error in ConvolutionalCoder, maybe encrypted)";
                 CryptedFrames++;
@@ -63,11 +82,11 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
             /* CRC check/fix */
             switch (CRCCheck())
             {
-                case eCRCState.Fixed:
+                case eCorrectionResult.Fixed:
                     StatusMessage = "(FACCH: CRC Error recovered)";
                     break;
 
-                case eCRCState.Failed:
+                case eCorrectionResult.Failed:
                     ErrorMessage = "(FACCH: CRC Error)";
                     return eSuccessState.Failed;
             }

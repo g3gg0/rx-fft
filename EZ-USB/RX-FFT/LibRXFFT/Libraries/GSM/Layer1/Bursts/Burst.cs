@@ -7,6 +7,12 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
 {
     public class Burst
     {
+        internal enum eCorrectionResult
+        {
+            Correct,
+            Fixed,
+            Failed
+        }
         public static bool DumpRawData = false;
 
         public readonly DateTime AllocationTime = DateTime.Now;

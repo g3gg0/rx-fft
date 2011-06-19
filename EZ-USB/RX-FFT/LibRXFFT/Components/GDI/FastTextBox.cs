@@ -109,19 +109,19 @@ namespace LibRXFFT.Components.GDI
             }
         }
 
-        public void AppendText(string p)
+        public void AppendText(string text)
         {
             lock (this)
             {
-                WholeText.Append(p);
+                WholeText.Append(text);
 
                 /* append to current line */
-                CurrentLine += p;
+                CurrentLine += text;
 
                 string[] lines = CurrentLine.Split('\n');
 
                 /* no full line yet? */
-                if (lines.Length < 1)
+                if (lines.Length < 2)
                 {
                     return;
                 }

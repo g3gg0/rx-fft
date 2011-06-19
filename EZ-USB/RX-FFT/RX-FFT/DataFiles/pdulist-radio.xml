@@ -494,7 +494,7 @@
 	</field>
   </pdudesc> 
   <pdudesc ref="10.5.3.5" name="Location updating type" type="1" fields="true">
-	<field name="LUT" type="stringIndex" strings="4" set="LocationUpdateType">
+	<field name="LUT" type="stringIndex" strings="4" set="LocationUpdateType"  trigger-post="LocationUpdateTypeSet">
 		<bits octet="1" start="1" count="2"/>
 		<string index="0" text="Normal location updating"/>
 		<string index="1" text="Periodic updating"/>

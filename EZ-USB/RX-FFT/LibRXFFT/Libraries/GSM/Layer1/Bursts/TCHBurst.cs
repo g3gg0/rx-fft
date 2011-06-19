@@ -229,7 +229,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                     Array.Copy(BurstBufferC, 378, GSMFrameBufferD, 182, 78);
 
                     /* use an own convolutional coder buffer for these 188 bits */
-                    if (ConvolutionalCoder.Decode(Class1DataConv, Class1Data) != null)
+                    if (ConvolutionalCoder.Decode(Class1DataConv, ref Class1Data) == 0)
                     {
                         bool[] parityBits = new bool[53];
 

@@ -12,9 +12,10 @@ namespace LibRXFFT.Libraries.GSM.Layer1.ChannelCoding
             return srcData[pos];
         }
 
-        public static bool[] Decode(bool[] srcData, bool[] dstData)
+        public static int Decode(bool[] srcData, ref bool[] dstData)
         {
-            bool errors = false;
+            bool failed = false;
+            int errors = 0;
 
             if (dstData == null)
                 dstData = new bool[srcData.Length / 2];
@@ -26,17 +27,24 @@ namespace LibRXFFT.Libraries.GSM.Layer1.ChannelCoding
 
                 /* decoding failed? use viterbi to decode */
                 if (bit1 != bit2)
-                    return DecodeViterbi(srcData, dstData);
+                    failed = true;
 
                 dstData[bitPos] = bit1;
             }
 
-            return dstData;
-        }
+            if (failed && (srcData.Length == 456))
+            {
+                errors = DecodeViterbi(srcData, ref dstData);
 
-        public static bool[] Decode(bool[] srcData)
-        {
-            return Decode(srcData, null);
+                failed = (errors > 10);
+            }
+
+            if (failed)
+            {
+                return int.MaxValue;
+            }
+
+            return errors;
         }
 
 
@@ -85,8 +93,8 @@ namespace LibRXFFT.Libraries.GSM.Layer1.ChannelCoding
          */
 
         private static int K = 5;
-        private static int CONV_INPUT_SIZE = 228;
-        private static int MAX_ERROR = (2 * CONV_INPUT_SIZE + 1);
+        private static uint CONV_INPUT_SIZE = 228;
+        private static uint MAX_ERROR = (2 * CONV_INPUT_SIZE + 1);
 
 
         /*
@@ -94,7 +102,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.ChannelCoding
          *
          * 	encode[current_state,input_bit]
          */
-        static int[,] encode = {
+        static uint[,] encode = {
 	        {0, 3}, {3, 0}, {3, 0}, {0, 3},
 	        {0, 3}, {3, 0}, {3, 0}, {0, 3},
 	        {1, 2}, {2, 1}, {2, 1}, {1, 2},
@@ -107,7 +115,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.ChannelCoding
          * 
          * 	next_state[current_state,input_bit]
          */
-        static int[,] next_state = {
+        static uint[,] next_state = {
 	        {0, 8}, {0, 8}, {1, 9}, {1, 9},
 	        {2, 10}, {2, 10}, {3, 11}, {3, 11},
 	        {4, 12}, {4, 12}, {5, 13}, {5, 13},
@@ -122,7 +130,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.ChannelCoding
          *
          * 	prev_next_state[previous_state,current_state]
          */
-        static int[,] prev_next_state = {
+        static uint[,] prev_next_state = {
                 { 0,  2,  2,  2,  2,  2,  2,  2,  1,  2,  2,  2,  2,  2,  2,  2},
                 { 0,  2,  2,  2,  2,  2,  2,  2,  1,  2,  2,  2,  2,  2,  2,  2},
                 { 2,  0,  2,  2,  2,  2,  2,  2,  2,  1,  2,  2,  2,  2,  2,  2},
@@ -141,32 +149,33 @@ namespace LibRXFFT.Libraries.GSM.Layer1.ChannelCoding
                 { 2,  2,  2,  2,  2,  2,  2,  0,  2,  2,  2,  2,  2,  2,  2,  1}
         };
 
-        static int HammingDistance(int w)
-        {
-            return (w & 1) + ((w & 2) >> 1);
-        }
+        static uint[] HammingDistance2 = { 0, 1, 1, 2 };
 
-        public static bool[] DecodeViterbi(bool[] srcData, bool[] dstData)
+
+        public static int DecodeViterbi(bool[] srcData, ref bool[] dstData)
         {
-            if (srcData.Length != 2 * CONV_INPUT_SIZE + 1)
+            if (srcData.Length != 2 * CONV_INPUT_SIZE)
             {
-                return null;
+                return -1;
             }
 
             if (dstData == null)
                 dstData = new bool[srcData.Length / 2];
 
             int i, t;
-            int rdata, state, nstate, b, o, distance, accumulated_error,
-               min_state, min_error, cur_state;
+            uint rdata, state, nstate, b, o, distance, accumulated_error, min_state, min_error, cur_state;
 
-            int[] ae = new int[1 << (K - 1)];
-            int[] nae = new int[1 << (K - 1)]; // next accumulated error
-            int[,] state_history = new int[1 << (K - 1), CONV_INPUT_SIZE + 1];
+            int steps = 1 << (K - 1);
+            uint[] ae = new uint[steps];
+            uint[] nae = new uint[steps]; // next accumulated error
+            uint[,] state_history = new uint[steps, CONV_INPUT_SIZE + 1];
 
             // initialize accumulated error, assume starting state is 0
-            for (i = 0; i < (1 << (K - 1)); i++)
-                ae[i] = nae[i] = MAX_ERROR;
+            for (i = 0; i < steps; i++)
+            {
+                ae[i] = MAX_ERROR;
+                nae[i] = MAX_ERROR;
+            }
             ae[0] = 0;
 
             // build trellis
@@ -180,7 +189,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.ChannelCoding
                     rdata |= 1;
 
                 // for each state
-                for (state = 0; state < (1 << (K - 1)); state++)
+                for (state = 0; state < steps; state++)
                 {
                     // make sure this state is possible
                     if (ae[state] >= MAX_ERROR)
@@ -196,7 +205,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.ChannelCoding
                         o = encode[state, b];
 
                         // calculate distance from received data
-                        distance = HammingDistance(rdata ^ o);
+                        distance = HammingDistance2[rdata ^ o];
 
                         // choose surviving path
                         accumulated_error = ae[state] + distance;
@@ -212,7 +221,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.ChannelCoding
                 }
 
                 // get accumulated error ready for next time slice
-                for (i = 0; i < (1 << (K - 1)); i++)
+                for (i = 0; i < steps; i++)
                 {
                     ae[i] = nae[i];
                     nae[i] = MAX_ERROR;
@@ -220,20 +229,20 @@ namespace LibRXFFT.Libraries.GSM.Layer1.ChannelCoding
             }
 
             // the final state is the state with the fewest errors
-            min_state = -1;
+            min_state = uint.MaxValue;
             min_error = MAX_ERROR;
-            for (i = 0; i < (1 << (K - 1)); i++)
+            for (i = 0; i < steps; i++)
             {
                 if (ae[i] < min_error)
                 {
-                    min_state = i;
+                    min_state = (uint)i;
                     min_error = ae[i];
                 }
             }
 
             // trace the path
             cur_state = min_state;
-            for (t = CONV_INPUT_SIZE; t >= 1; t--)
+            for (t = (int)CONV_INPUT_SIZE; t >= 1; t--)
             {
                 min_state = cur_state;
                 cur_state = state_history[cur_state, t]; // get previous
@@ -241,10 +250,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.ChannelCoding
             }
 
             // return the number of errors detected (hard-decision)
-            if (min_error == 0)
-                return dstData;
-
-            return null;
+            return (int)min_error;
         }
     }
 }

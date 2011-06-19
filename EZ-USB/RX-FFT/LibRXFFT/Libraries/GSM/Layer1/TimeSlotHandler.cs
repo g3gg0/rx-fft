@@ -57,7 +57,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             Parameters.UsedBursts.AddLast(CCCH);
 
             L3.PDUDataTriggers.Add("ServiceRequest", TriggerServiceRequest);
-            L3.PDUDataTriggers.Add("LocationUpdateType", TriggerLocationUpdateRequest);            
+            L3.PDUDataTriggers.Add("LocationUpdateTypeSet", TriggerLocationUpdateRequest);            
             L3.PDUDataTriggers.Add("CCCH-CONF", TriggerCCCHCONF);
             L3.PDUDataTriggers.Add("ChannelAssignment", TriggerChannelAssignment);
             L3.PDUDataTriggers.Add("CBCHUpdate", TriggerCBCHUpdate);
@@ -161,10 +161,60 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             }
         }
 
+        private int GetFrameNumForChannel(eTimeSlotType slotType, eChannelType type, int channelNum)
+        {
+            int[] framePosSDCCHinSDCCH8 = new[] { 0, 4, 8, 12, 16, 20, 24, 32 };
+
+            switch (slotType)
+            {
+                case eTimeSlotType.BCCH_CCCH:
+                    break;
+                case eTimeSlotType.BCCH_CCCH_SDCCH4:
+                    switch (type)
+                    {
+                        case eChannelType.SDCCH:
+                            if (channelNum >= 0 && channelNum <= 3)
+                            {
+                                int[] framePosSDCCHinBCCH = new[] { 22, 26, 32, 36 };
+                                return framePosSDCCHinBCCH[channelNum];
+                            }
+                            break;
+                        case eChannelType.SACCH:
+                            if (channelNum >= 0 && channelNum <= 3)
+                            {
+                                int[] framePosSACCHinBCCH = new[] { 42, 46, 42, 46 };
+                                return framePosSACCHinBCCH[channelNum];
+                            }
+                            break;
+                    }
+                    break;
+
+                case eTimeSlotType.SDCCH8:
+                    switch (type)
+                    {
+                        case eChannelType.SDCCH:
+                            if (channelNum >= 0 && channelNum <= 7)
+                            {
+                                return channelNum * 4;
+                            }
+                            break;
+                        case eChannelType.SACCH:
+                            if (channelNum >= 0 && channelNum <= 7)
+                            {
+                                return 32 + ((channelNum % 4) * 4);
+                            }
+                            break;
+                    }
+                    break;
+            }
+
+            throw new NotSupportedException("requested frame position, but not implemented yet");
+        }
 
 
         private void TriggerChannelAssignment(L3Handler L3Handler)
         {
+
             eTimeSlotType channelType;
             long subChannel;
             long timeSlot;
@@ -410,20 +460,22 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                                     Parameters.TimeSlotHandlers[timeSlot][(chan + 8) * 4 + 3] = new sTimeSlotParam(tmpSACCH, 3);
                                 }
 #else
+
+                                int sdcchFrame = GetFrameNumForChannel(channelType, eChannelType.SDCCH, (int)subChannel);
+                                int sacchFrame = GetFrameNumForChannel(channelType, eChannelType.SACCH, (int)subChannel);
+
                                 if (Parameters.TimeSlotHandlers[timeSlot] == null || Parameters.TimeSlotHandlers[timeSlot].Length != 51)
                                 {
                                     Parameters.TimeSlotHandlers[timeSlot] = new sTimeSlotParam[51];
                                 }
 
-                                if (Parameters.TimeSlotHandlers[timeSlot][subChannel * 4].Reference == reference)
+                                if (Parameters.TimeSlotHandlers[timeSlot][sdcchFrame].Reference == reference)
                                 {
                                     //AddMessage("   [L1] TimeSlot " + timeSlot + " already configured as SDCCH/8 (was " + Parameters.TimeSlotInfo[timeSlot].Type + ")" + Environment.NewLine);
                                 }
                                 else
                                 {
                                     AddMessage("  [__] TimeSlot " + timeSlot + " now configured as SDCCH/8 (was " + Parameters.TimeSlotInfo[timeSlot].Type + ")" + Environment.NewLine);
-                                    int sdcchFrame = (int)subChannel * 4;
-                                    int sacchFrame = (int)(subChannel / 2 + 8) * 4;
                                     int sacchChannel1 = (int)subChannel / 2;
                                     int sacchChannel2 = sacchChannel1 + 4;
 
@@ -444,6 +496,10 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                                     if (L3Handler.PDUDataFields.ContainsKey("EstablishmentCause"))
                                     {
                                         tmpSDCCH.EstablishmentCause = L3Handler.PDUDataFields["EstablishmentCause"];
+                                        tmpSDCCH.ServiceType = "(none)";
+
+                                        /* remove this info to prevent false detection for later causes */
+                                        L3Handler.PDUDataFields.Remove("EstablishmentCause");
                                     }
 
                                     int sequence = 0;
@@ -477,14 +533,30 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                             break;
 
                         case eTimeSlotType.BCCH_CCCH_SDCCH4:
-                            if (Parameters.TimeSlotHandlers[timeSlot] != null && (22 + 4 * subChannel) < Parameters.TimeSlotHandlers[timeSlot].Length)
+                            int framePos = GetFrameNumForChannel(channelType, eChannelType.SDCCH, (int)subChannel);
+
+                            if (Parameters.TimeSlotHandlers[timeSlot] != null && (framePos < Parameters.TimeSlotHandlers[timeSlot].Length))
                             {
                                 AddMessage("  [__] TimeSlot " + timeSlot + " SDCCH subchan " + subChannel + " assigned" + Environment.NewLine);
-                                NormalBurst assigned = (NormalBurst)Parameters.TimeSlotHandlers[timeSlot][22 + 4 * subChannel].Burst;
+
+                                Burst burst = Parameters.TimeSlotHandlers[timeSlot][framePos].Burst;
+
+                                /* safety measure */
+                                if (!(burst is NormalBurst))
+                                {
+                                    /* wait... what?! */
+                                    AddMessage("  [EE] TimeSlot " + timeSlot + " SDCCH subchan " + subChannel + " expected" + Environment.NewLine);
+                                    break;
+                                }
+                                NormalBurst assigned = (NormalBurst)burst;
 
                                 if (L3Handler.PDUDataFields.ContainsKey("EstablishmentCause"))
                                 {
                                     assigned.EstablishmentCause = L3Handler.PDUDataFields["EstablishmentCause"];
+                                    assigned.ServiceType = "(none)";
+
+                                    /* remove this info to prevent false detection for later causes */
+                                    L3Handler.PDUDataFields.Remove("EstablishmentCause");
                                 }
                             }
                             else
@@ -529,10 +601,16 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                 if (L3Handler.PDUDataFields.ContainsKey("Identity"))
                 {
                     ident = L3Handler.PDUDataFields["Identity"];
+
+                    /* remove this info to prevent false detection for later frames */
+                    L3Handler.PDUDataFields.Remove("Identity");
                 }
                 if (L3Handler.PDUDataFields.ContainsKey("ServiceType"))
                 {
                     type = L3Handler.PDUDataFields["ServiceType"];
+
+                    /* remove this info to prevent false detection for later frames */
+                    L3Handler.PDUDataFields.Remove("ServiceType");
                 }
             }
 
@@ -558,10 +636,16 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                 if (L3Handler.PDUDataFields.ContainsKey("Identity"))
                 {
                     ident = L3Handler.PDUDataFields["Identity"];
+
+                    /* remove this info to prevent false detection for later frames */
+                    L3Handler.PDUDataFields.Remove("Identity");
                 }
                 if (L3Handler.PDUDataFields.ContainsKey("LocationUpdateType"))
                 {
                     type = L3Handler.PDUDataFields["LocationUpdateType"];
+
+                    /* remove this info to prevent false detection for later frames */
+                    L3Handler.PDUDataFields.Remove("LocationUpdateType");
                 }
             }
 

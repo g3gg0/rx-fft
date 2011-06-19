@@ -43,7 +43,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                 Deinterleave();
                 DataBursts++;
 
-                if (!Deconvolution())
+                if (Deconvolution() == eCorrectionResult.Failed)
                 {
                     ErrorMessage = "(Error in ConvolutionalCoder)";
                     return eSuccessState.Failed;
@@ -52,11 +52,11 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                 /* CRC check/fix */
                 switch (CRCCheck())
                 {
-                    case eCRCState.Fixed:
+                    case eCorrectionResult.Fixed:
                         StatusMessage = "(CRC Error recovered)";
                         break;
 
-                    case eCRCState.Failed:
+                    case eCorrectionResult.Failed:
                         ErrorMessage = "(CRC Error)";
                         return eSuccessState.Failed;
                 }

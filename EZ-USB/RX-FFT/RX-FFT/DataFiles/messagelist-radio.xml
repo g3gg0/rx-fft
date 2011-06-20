@@ -385,7 +385,7 @@
       <pduslot ref="10.5.2.25" presence="M"/>
     </pduslot-list>
   </messagedesc>
-  <messagedesc ref="9.1.25" name="PAGING RESPONSE" significance="dual" direction="uplink">
+  <messagedesc ref="9.1.25" name="PAGING RESPONSE" significance="dual" direction="uplink" trigger-post="PagingResponseReceived">
     <pduslot-list>
       <pduslot ref="10.2" presence="M"/>
       <pduslot ref="10.3.1" presence="M"/>

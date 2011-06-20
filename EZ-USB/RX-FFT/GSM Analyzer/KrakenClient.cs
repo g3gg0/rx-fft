@@ -52,7 +52,7 @@ namespace GSM_Analyzer
         private Stream ControlStream = null;
         private object ControlStreamLock = new object();
 
-        private const int Port = 8866;
+        private int Port = 8866;
         private const int ControlTimeout = 10000;
         private const int DataTimeout = 15 * 60 * 1000;
 
@@ -167,7 +167,17 @@ namespace GSM_Analyzer
 
         public KrakenClient(string host)
         {
-            Hostname = host;
+            string[] splits = host.Split(':');
+
+            if (splits.Length == 2)
+            {
+                Hostname = splits[0];
+                int.TryParse(splits[1], out Port);
+            }
+            else
+            {
+                Hostname = host;
+            }
         }
 
         public bool Connected

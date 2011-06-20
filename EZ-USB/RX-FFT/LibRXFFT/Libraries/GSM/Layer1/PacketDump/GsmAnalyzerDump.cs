@@ -12,7 +12,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.PacketDump
     public class GsmAnalyzerDumpReader : PacketDumpReader
     {
         /* allow a maximum of e.g. 100 frames distance between <b...> data, then resync */
-        protected long DeltaFrameCount = 100;
+        protected long DeltaFrameCount = 10000;
 
         protected Stream DumpFile = null;
         protected TextReader DumpStream = null;
@@ -188,6 +188,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.PacketDump
 
                         /* split while allowing spaces in quotes */
                         int typeEnd = fieldString.IndexOf('=', fieldPos);
+
                         string type = fieldString.Substring(fieldPos, typeEnd - fieldPos).Trim();
                         int dataStart = fieldString.IndexOf('"', typeEnd + 1) + 1;
                         int dataEnd = fieldString.IndexOf('"', dataStart);

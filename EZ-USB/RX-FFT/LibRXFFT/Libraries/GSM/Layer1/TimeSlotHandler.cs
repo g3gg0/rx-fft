@@ -14,6 +14,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
     public class TimeSlotHandler
     {
         public static bool PreallocateTCHs = false;
+        public static bool PreallocateSDCCHs = false;
 
         private readonly double BT;
         public readonly double Oversampling;
@@ -105,6 +106,44 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                     }
                 }
             }
+
+            if (PreallocateSDCCHs)
+            {
+                for (int timeSlot = 1; timeSlot < 8; timeSlot++)
+                {
+
+                    /* try all subchannels for SDCCH, since it's not saved yet in .gad file */
+                    for (int subChannel = 0; subChannel < 8; subChannel++)
+                    {
+
+                        /* do all things with existing code */
+
+                        /* remove all old values, we do not want duplicates */
+                        L3.PDUDataRawFields.Remove("ChannelType");
+                        L3.PDUDataRawFields.Remove("SubChannel");
+                        L3.PDUDataRawFields.Remove("TimeSlot");
+                        L3.PDUDataRawFields.Remove("RefT1");
+                        L3.PDUDataRawFields.Remove("RefT2");
+                        L3.PDUDataRawFields.Remove("RefT3");
+
+                        L3.PDUDataRawFields.Add("ChannelType", (long)eTimeSlotType.SDCCH8);
+
+                        L3.PDUDataRawFields.Add("SubChannel", subChannel);
+
+                        /* this should be probably equal to t-attribut of .gad file */
+                        L3.PDUDataRawFields.Add("TimeSlot", timeSlot);
+
+                        /* this should be different to 0, so it will setup */
+                        L3.PDUDataRawFields.Add("RefT1", 1);
+                        L3.PDUDataRawFields.Add("RefT2", subChannel);
+                        L3.PDUDataRawFields.Add("RefT3", timeSlot);
+
+                        /* setup handler now */
+                        TriggerChannelAssignment(L3);
+                    }
+                }
+            }
+
         }
 
         private void UnregisterActiveBursts(sTimeSlotParam[] sTimeSlotParam)
@@ -1325,9 +1364,9 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             if (Burst.DumpRawData)
             {
                 if (handler != null)
-                    AddMessage("  [L1] Handler: " + handler.Name + "[" + sequence + "]  TN:" + Parameters.TN + "  Frame: " + frameNum + Environment.NewLine);
+                    AddMessage("  [L1] Handler: " + handler.Name + "[" + sequence + "]  TN:" + Parameters.TN + "  Frame: " + frameNum + "  FN: " + sequence + Environment.NewLine);
                 else
-                    AddMessage("  [L1] Handler: (none)  TN:" + Parameters.TN + "  Frame: " + frameNum + Environment.NewLine);
+                    AddMessage("  [L1] Handler: (none)  TN:" + Parameters.TN + "  Frame: " + frameNum + "  FN: " + sequence + Environment.NewLine);
             }
 
             Burst.eSuccessState dataHandlerState = Burst.eSuccessState.Unknown;

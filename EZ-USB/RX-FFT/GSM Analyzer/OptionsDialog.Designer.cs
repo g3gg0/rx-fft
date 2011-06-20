@@ -71,8 +71,10 @@
             this.radioOvsSinx = new System.Windows.Forms.RadioButton();
             this.label7 = new System.Windows.Forms.Label();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.radioL1PreallocateSDCCHs = new System.Windows.Forms.RadioButton();
+            this.radioL1PreallocateTCHs = new System.Windows.Forms.RadioButton();
+            this.radioL1PreallocateNone = new System.Windows.Forms.RadioButton();
             this.chkL1ShowFaulty = new System.Windows.Forms.CheckBox();
-            this.chkL1PreallocateTCH = new System.Windows.Forms.CheckBox();
             this.chkL1DumpEncrypted = new System.Windows.Forms.CheckBox();
             this.chkL1DumpFrames = new System.Windows.Forms.CheckBox();
             this.groupBox5 = new System.Windows.Forms.GroupBox();
@@ -90,6 +92,7 @@
             this.label17 = new System.Windows.Forms.Label();
             this.txtKrakenHost = new System.Windows.Forms.TextBox();
             this.txtSimAuthHost = new System.Windows.Forms.TextBox();
+            this.label14 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -214,7 +217,7 @@
             // btnOk
             // 
             this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOk.Location = new System.Drawing.Point(353, 462);
+            this.btnOk.Location = new System.Drawing.Point(80, 459);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(75, 23);
             this.btnOk.TabIndex = 99;
@@ -228,7 +231,7 @@
             this.groupBox2.Controls.Add(this.chkL3SniffIMSI);
             this.groupBox2.Controls.Add(this.chkL3ShowUnhandled);
             this.groupBox2.Controls.Add(this.chkL3DumpRaw);
-            this.groupBox2.Location = new System.Drawing.Point(224, 226);
+            this.groupBox2.Location = new System.Drawing.Point(224, 249);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Size = new System.Drawing.Size(206, 118);
             this.groupBox2.TabIndex = 16;
@@ -521,38 +524,66 @@
             // 
             // groupBox4
             // 
+            this.groupBox4.Controls.Add(this.label14);
+            this.groupBox4.Controls.Add(this.radioL1PreallocateSDCCHs);
+            this.groupBox4.Controls.Add(this.radioL1PreallocateTCHs);
+            this.groupBox4.Controls.Add(this.radioL1PreallocateNone);
             this.groupBox4.Controls.Add(this.chkL1ShowFaulty);
-            this.groupBox4.Controls.Add(this.chkL1PreallocateTCH);
             this.groupBox4.Controls.Add(this.chkL1DumpEncrypted);
             this.groupBox4.Controls.Add(this.chkL1DumpFrames);
             this.groupBox4.Location = new System.Drawing.Point(224, 12);
             this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(206, 114);
+            this.groupBox4.Size = new System.Drawing.Size(206, 137);
             this.groupBox4.TabIndex = 18;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "L1 Options";
             // 
+            // radioL1PreallocateSDCCHs
+            // 
+            this.radioL1PreallocateSDCCHs.AutoSize = true;
+            this.radioL1PreallocateSDCCHs.Location = new System.Drawing.Point(125, 106);
+            this.radioL1PreallocateSDCCHs.Name = "radioL1PreallocateSDCCHs";
+            this.radioL1PreallocateSDCCHs.Size = new System.Drawing.Size(67, 17);
+            this.radioL1PreallocateSDCCHs.TabIndex = 22;
+            this.radioL1PreallocateSDCCHs.TabStop = true;
+            this.radioL1PreallocateSDCCHs.Text = "SDCCHs";
+            this.radioL1PreallocateSDCCHs.UseVisualStyleBackColor = true;
+            this.radioL1PreallocateSDCCHs.CheckedChanged += new System.EventHandler(this.radioL1PreallocateSDCCHs_CheckedChanged);
+            // 
+            // radioL1PreallocateTCHs
+            // 
+            this.radioL1PreallocateTCHs.AutoSize = true;
+            this.radioL1PreallocateTCHs.Location = new System.Drawing.Point(66, 106);
+            this.radioL1PreallocateTCHs.Name = "radioL1PreallocateTCHs";
+            this.radioL1PreallocateTCHs.Size = new System.Drawing.Size(52, 17);
+            this.radioL1PreallocateTCHs.TabIndex = 21;
+            this.radioL1PreallocateTCHs.TabStop = true;
+            this.radioL1PreallocateTCHs.Text = "TCHs";
+            this.radioL1PreallocateTCHs.UseVisualStyleBackColor = true;
+            this.radioL1PreallocateTCHs.CheckedChanged += new System.EventHandler(this.radioL1PreallocateTCHs_CheckedChanged);
+            // 
+            // radioL1PreallocateNone
+            // 
+            this.radioL1PreallocateNone.AutoSize = true;
+            this.radioL1PreallocateNone.Location = new System.Drawing.Point(10, 106);
+            this.radioL1PreallocateNone.Name = "radioL1PreallocateNone";
+            this.radioL1PreallocateNone.Size = new System.Drawing.Size(49, 17);
+            this.radioL1PreallocateNone.TabIndex = 20;
+            this.radioL1PreallocateNone.TabStop = true;
+            this.radioL1PreallocateNone.Text = "none";
+            this.radioL1PreallocateNone.UseVisualStyleBackColor = true;
+            this.radioL1PreallocateNone.CheckedChanged += new System.EventHandler(this.radioL1PreallocateNone_CheckedChanged);
+            // 
             // chkL1ShowFaulty
             // 
             this.chkL1ShowFaulty.AutoSize = true;
-            this.chkL1ShowFaulty.Location = new System.Drawing.Point(10, 90);
+            this.chkL1ShowFaulty.Location = new System.Drawing.Point(10, 66);
             this.chkL1ShowFaulty.Name = "chkL1ShowFaulty";
             this.chkL1ShowFaulty.Size = new System.Drawing.Size(112, 17);
             this.chkL1ShowFaulty.TabIndex = 19;
             this.chkL1ShowFaulty.Text = "Show faulty bursts";
             this.chkL1ShowFaulty.UseVisualStyleBackColor = true;
             this.chkL1ShowFaulty.CheckedChanged += new System.EventHandler(this.chkL1ShowFaulty_CheckedChanged);
-            // 
-            // chkL1PreallocateTCH
-            // 
-            this.chkL1PreallocateTCH.AutoSize = true;
-            this.chkL1PreallocateTCH.Location = new System.Drawing.Point(10, 67);
-            this.chkL1PreallocateTCH.Name = "chkL1PreallocateTCH";
-            this.chkL1PreallocateTCH.Size = new System.Drawing.Size(109, 17);
-            this.chkL1PreallocateTCH.TabIndex = 18;
-            this.chkL1PreallocateTCH.Text = "Preallocate TCHs";
-            this.chkL1PreallocateTCH.UseVisualStyleBackColor = true;
-            this.chkL1PreallocateTCH.CheckedChanged += new System.EventHandler(this.chkL1PreallocateTCH_CheckedChanged);
             // 
             // chkL1DumpEncrypted
             // 
@@ -584,7 +615,7 @@
             this.groupBox5.Controls.Add(this.radioL2ShowAll);
             this.groupBox5.Controls.Add(this.chkL2DumpFaulty);
             this.groupBox5.Controls.Add(this.chkL2DumpRaw);
-            this.groupBox5.Location = new System.Drawing.Point(224, 132);
+            this.groupBox5.Location = new System.Drawing.Point(224, 155);
             this.groupBox5.Name = "groupBox5";
             this.groupBox5.Size = new System.Drawing.Size(206, 88);
             this.groupBox5.TabIndex = 19;
@@ -701,7 +732,7 @@
             this.groupBox7.Controls.Add(this.txtSimAuthHost);
             this.groupBox7.Controls.Add(this.txtA5Kc);
             this.groupBox7.Controls.Add(this.label16);
-            this.groupBox7.Location = new System.Drawing.Point(224, 350);
+            this.groupBox7.Location = new System.Drawing.Point(224, 373);
             this.groupBox7.Name = "groupBox7";
             this.groupBox7.Size = new System.Drawing.Size(206, 106);
             this.groupBox7.TabIndex = 103;
@@ -741,6 +772,15 @@
             this.txtSimAuthHost.Size = new System.Drawing.Size(100, 20);
             this.txtSimAuthHost.TabIndex = 103;
             this.txtSimAuthHost.TextChanged += new System.EventHandler(this.txtSimAuthHost_TextChanged);
+            // 
+            // label14
+            // 
+            this.label14.AutoSize = true;
+            this.label14.Location = new System.Drawing.Point(6, 90);
+            this.label14.Name = "label14";
+            this.label14.Size = new System.Drawing.Size(63, 13);
+            this.label14.TabIndex = 23;
+            this.label14.Text = "Preallocate:";
             // 
             // OptionsDialog
             // 
@@ -827,7 +867,6 @@
         private System.Windows.Forms.CheckBox chkPhaseAutoOffset;
         private System.Windows.Forms.Button btnBurstLengthB;
         private System.Windows.Forms.Button btnBurstLengthA;
-        private System.Windows.Forms.CheckBox chkL1PreallocateTCH;
         private System.Windows.Forms.GroupBox groupBox6;
         private System.Windows.Forms.CheckBox chkL2DumpFaulty;
         private System.Windows.Forms.Label label16;
@@ -842,5 +881,9 @@
         private System.Windows.Forms.RadioButton radioL2ShowCrypted;
         private System.Windows.Forms.RadioButton radioL2ShowAll;
         private System.Windows.Forms.CheckBox chkL1ShowFaulty;
+        private System.Windows.Forms.RadioButton radioL1PreallocateSDCCHs;
+        private System.Windows.Forms.RadioButton radioL1PreallocateTCHs;
+        private System.Windows.Forms.RadioButton radioL1PreallocateNone;
+        private System.Windows.Forms.Label label14;
     }
 }

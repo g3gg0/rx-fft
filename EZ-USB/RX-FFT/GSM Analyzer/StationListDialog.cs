@@ -25,9 +25,9 @@ namespace GSM_Analyzer
             BeginInvoke(new MethodInvoker(() => lstStations.Clear()));
         }
 
-        public void AddStation(long channel, string mccMnc, string lac, string cellIdent, string cbch)
+        public void AddStation(long channel, string bsic, string mccMnc, string lac, string cellIdent, string cbch, string strength)
         {
-            ListViewItem item = new ListViewItem(new[] {channel.ToString(), mccMnc, lac, cellIdent, cbch});
+            ListViewItem item = new ListViewItem(new[] {channel.ToString(), bsic, mccMnc, lac, cellIdent, cbch, strength});
             item.Tag = channel;
             BeginInvoke(new MethodInvoker(() => lstStations.Items.Add(item)));
         }

@@ -1205,18 +1205,21 @@ namespace GSM_Analyzer
                                             Parameters.State = eGSMState.SCHSearch;
                                             UpdateUIStatus(Parameters);
 
-                                            /* if the inverted FCCH findet found one, invert spectrum */
+                                            /* if the inverted FCCH finder found one, invert spectrum */
                                             if (invertedFound)
                                             {
                                                 AddMessage("[GSM] FCCH found (inverting spectrum)" + Environment.NewLine);
                                                 InvertedSpectrum ^= true;
 
+                                                Parameters.CurrentPower = invertedFinder.AveragePower;
                                                 /* save the position where the frame started */
                                                 frameStartPosition = invertedFinder.BurstStartPosition;
                                             }
                                             else
                                             {
                                                 AddMessage("[GSM] FCCH found" + Environment.NewLine);
+
+                                                Parameters.CurrentPower = invertedFinder.AveragePower;
                                                 /* save the position where the frame started */
                                                 frameStartPosition = normalFinder.BurstStartPosition;
                                             }
@@ -1443,6 +1446,7 @@ namespace GSM_Analyzer
             Parameters.State = eGSMState.Lock;
             Parameters.AverageIdlePower = 0;
             Parameters.AveragePower = 0;
+            Parameters.CurrentPower = 0;
 
             InitTimeSlotHandler();
             ResetStats();
@@ -1598,7 +1602,7 @@ namespace GSM_Analyzer
                 Parameters.State = eGSMState.Reset;
 
                 /* wait until reset done */
-                int waitForSearch = 20;
+                int waitForSearch = 10;
                 while ((Parameters.State == eGSMState.Reset) && (--waitForSearch > 0))
                 {
                     Thread.Sleep(100);
@@ -1609,7 +1613,7 @@ namespace GSM_Analyzer
                 Thread.Sleep(250);
 
                 /* wait for FCCH searching */
-                int waitForLock = 20;
+                int waitForLock = 10;
                 while ((Parameters.State == eGSMState.FCCHSearch) && (--waitForLock > 0))
                 {
                     Thread.Sleep(100);
@@ -1618,7 +1622,7 @@ namespace GSM_Analyzer
                 /* when FCCH found, wait until CBCH found */
                 if (Parameters.State != eGSMState.FCCHSearch)
                 {
-                    int waitForDetails = 30;
+                    int waitForDetails = 20;
                     bool detailsfound = false;
 
                     while (!detailsfound && --waitForDetails > 0)
@@ -1633,29 +1637,40 @@ namespace GSM_Analyzer
                         detailsfound &= Handler.L3.PDUDataFields.ContainsKey("CellIdent");
                     }
 
-                    string mccMncString = "Unknown";
-                    string lacString = "Unknown";
-                    string cellIdentString = "Unknown";
+                    /* check if any detail was found */
+                    detailsfound = false;
+                    detailsfound |= Parameters.CBCH != eTriState.Unknown;
+                    detailsfound |= Handler.L3.PDUDataFields.ContainsKey("MCC/MNC");
+                    detailsfound |= Handler.L3.PDUDataFields.ContainsKey("LAC");
+                    detailsfound |= Handler.L3.PDUDataFields.ContainsKey("CellIdent");
 
-                    if (Handler.L3.PDUDataFields.ContainsKey("MCC/MNC"))
-                        mccMncString = Handler.L3.PDUDataFields["MCC/MNC"];
+                    /* if so, channel is used */
+                    if (detailsfound)
+                    {
+                        string mccMncString = "?";
+                        string lacString = "?";
+                        string cellIdentString = "?";
 
-                    if (Handler.L3.PDUDataFields.ContainsKey("LAC"))
-                        lacString = Handler.L3.PDUDataFields["LAC"];
+                        if (Handler.L3.PDUDataFields.ContainsKey("MCC/MNC"))
+                            mccMncString = Handler.L3.PDUDataFields["MCC/MNC"];
 
-                    if (Handler.L3.PDUDataFields.ContainsKey("CellIdent"))
-                        cellIdentString = Handler.L3.PDUDataFields["CellIdent"];
+                        if (Handler.L3.PDUDataFields.ContainsKey("LAC"))
+                            lacString = Handler.L3.PDUDataFields["LAC"];
 
-                    StationDialog.AddStation(ChannelHandler.Channel, mccMncString, lacString, cellIdentString, Parameters.CBCH.ToString());
+                        if (Handler.L3.PDUDataFields.ContainsKey("CellIdent"))
+                            cellIdentString = Handler.L3.PDUDataFields["CellIdent"];
 
-                    Log.AddMessage("Channel " + ChannelHandler.Channel + " used.");
-                    Log.AddMessage("  MCC/MNC  : " + mccMncString);
-                    Log.AddMessage("  LAC      : " + lacString);
-                    Log.AddMessage("  CellIdent: " + cellIdentString);
-                    Log.AddMessage("  CBCH     : " + Parameters.CBCH);
-                    Log.AddMessage("  Power    : " + DBTools.SampleTodB(Parameters.AveragePower));
-                    Log.AddMessage("  Idle Pwr : " + DBTools.SampleTodB(Parameters.AverageIdlePower));
-                    Log.AddMessage("  SNR      : " + (DBTools.SampleTodB(Parameters.AveragePower) - DBTools.SampleTodB(Parameters.AverageIdlePower)));
+                        StationDialog.AddStation(ChannelHandler.Channel, "0x" + Parameters.BSIC.ToString("X2"), mccMncString, lacString, cellIdentString, Parameters.CBCH.ToString(), DBTools.SampleTodB(Parameters.AveragePower).ToString("0.00"));
+
+                        Log.AddMessage("Channel " + ChannelHandler.Channel + " used.");
+                        Log.AddMessage("  MCC/MNC  : " + mccMncString);
+                        Log.AddMessage("  LAC      : " + lacString);
+                        Log.AddMessage("  CellIdent: " + cellIdentString);
+                        Log.AddMessage("  CBCH     : " + Parameters.CBCH);
+                        Log.AddMessage("  Power    : " + DBTools.SampleTodB(Parameters.AveragePower));
+                        Log.AddMessage("  Idle Pwr : " + DBTools.SampleTodB(Parameters.AverageIdlePower));
+                        Log.AddMessage("  SNR      : " + (DBTools.SampleTodB(Parameters.AveragePower) - DBTools.SampleTodB(Parameters.AverageIdlePower)));
+                    }
                 }
 
                 if (ChannelHandler.Channel == ChannelHandler.HighestChannel)

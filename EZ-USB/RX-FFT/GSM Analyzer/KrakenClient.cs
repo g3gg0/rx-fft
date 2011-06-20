@@ -270,6 +270,8 @@ namespace GSM_Analyzer
                 {
                     return null;
                 }
+
+                //Thread.Sleep(50);
             }
 
             /* line exceeded buffer length */

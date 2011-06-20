@@ -26,8 +26,27 @@ namespace GSM_Analyzer
         {
             chkL1DumpFrames.Checked = Burst.DumpRawData;
             chkL1DumpEncrypted.Checked = NormalBurst.DumpEncryptedMessageBits;
-            chkL1PreallocateTCH.Checked = TimeSlotHandler.PreallocateTCHs;
+            //chkL1PreallocateTCH.Checked = TimeSlotHandler.PreallocateTCHs;
             chkL1ShowFaulty.Checked = Analyzer.Parameters.ReportL1Errors;
+
+            if (TimeSlotHandler.PreallocateSDCCHs)
+            {
+                radioL1PreallocateNone.Checked = false;
+                radioL1PreallocateTCHs.Checked = false;
+                radioL1PreallocateSDCCHs.Checked = true;
+            }
+            else if (TimeSlotHandler.PreallocateTCHs)
+            {
+                radioL1PreallocateNone.Checked = false;
+                radioL1PreallocateTCHs.Checked = true;
+                radioL1PreallocateSDCCHs.Checked = false;
+            }
+            else
+            {
+                radioL1PreallocateNone.Checked = true;
+                radioL1PreallocateTCHs.Checked = false;
+                radioL1PreallocateSDCCHs.Checked = false;
+            }
 
             if(L2Handler.ShowAllMessages)
             {
@@ -47,6 +66,7 @@ namespace GSM_Analyzer
                 radioL2ShowCrypted.Checked = false;
                 radioL2ShowAll.Checked = false;
             }
+            
 
             chkL2DumpRaw.Checked = L2Handler.DumpRawData;
 
@@ -336,11 +356,6 @@ namespace GSM_Analyzer
             RefreshOptions();
         }
 
-        private void chkL1PreallocateTCH_CheckedChanged(object sender, EventArgs e)
-        {
-            TimeSlotHandler.PreallocateTCHs = chkL1PreallocateTCH.Checked;
-        }
-
         private void chkL1ShowFaulty_CheckedChanged(object sender, EventArgs e)
         {
             Analyzer.Parameters.ReportL1Errors = chkL1ShowFaulty.Checked;
@@ -404,6 +419,26 @@ namespace GSM_Analyzer
         {
             L2Handler.ShowAllMessages = true;
             L2Handler.ShowCryptedMessages = false;
+        }
+
+        private void radioL1PreallocateNone_CheckedChanged(object sender, EventArgs e)
+        {
+            /* Attention: Radio buttons CheckedChanged work, 'cause .net framework first unchecks a button */
+            TimeSlotHandler.PreallocateTCHs = false;
+            TimeSlotHandler.PreallocateSDCCHs = false;
+        }
+
+        private void radioL1PreallocateTCHs_CheckedChanged(object sender, EventArgs e)
+        {
+            TimeSlotHandler.PreallocateTCHs = true;
+            TimeSlotHandler.PreallocateSDCCHs = false;
+        }
+
+        private void radioL1PreallocateSDCCHs_CheckedChanged(object sender, EventArgs e)
+        {
+            TimeSlotHandler.PreallocateTCHs = false;
+            TimeSlotHandler.PreallocateSDCCHs = true;
+
         }
 
 

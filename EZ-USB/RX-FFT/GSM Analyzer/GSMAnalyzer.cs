@@ -168,7 +168,7 @@ namespace GSM_Analyzer
                         /* dont flood */
                         if ((DateTime.Now - LastConnect).TotalSeconds > 10)
                         {
-                            Log.AddMessage("KrakenCracker", "Trying to reconnect to Kraken server...");
+                            Log.AddMessage("KrakenCracker", "Trying to reconnect to Kraken server (" + Analyzer.KrakenHostAddress + ") ...");
                             LastConnect = DateTime.Now;
                             Kraken.Connect();
 

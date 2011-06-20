@@ -58,7 +58,8 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             Parameters.UsedBursts.AddLast(CCCH);
 
             L3.PDUDataTriggers.Add("ServiceRequest", TriggerServiceRequest);
-            L3.PDUDataTriggers.Add("LocationUpdateTypeSet", TriggerLocationUpdateRequest);            
+            L3.PDUDataTriggers.Add("LocationUpdateTypeSet", TriggerLocationUpdateRequest);
+            L3.PDUDataTriggers.Add("PagingResponseReceived", TriggerPagingResponse);           
             L3.PDUDataTriggers.Add("CCCH-CONF", TriggerCCCHCONF);
             L3.PDUDataTriggers.Add("ChannelAssignment", TriggerChannelAssignment);
             L3.PDUDataTriggers.Add("CBCHUpdate", TriggerCBCHUpdate);
@@ -250,10 +251,43 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             throw new NotSupportedException("requested frame position, but not implemented yet");
         }
 
+        private void TriggerPagingResponse(L3Handler L3Handler)
+        {
+            string ident = null;
+            string type = null;
+
+            lock (L3Handler.PDUDataFields)
+            {
+                if (L3Handler.PDUDataFields.ContainsKey("Identity"))
+                {
+                    ident = L3Handler.PDUDataFields["Identity"];
+
+                    /* remove this info to prevent false detection for later frames */
+                    L3Handler.PDUDataFields.Remove("Identity");
+                }
+            }
+
+            if (ident != null)
+            {
+                AddMessage("  [__] " + ident + " replied to paging" + Environment.NewLine);
+            }
+
+            /* when received a paging response, check if it was already set */
+            if (Parameters.CurrentBurstHandler is NormalBurst)
+            {
+                NormalBurst burst = ((NormalBurst)Parameters.CurrentBurstHandler);
+
+                burst.PhoneIdentity = ident;
+                
+                if(burst.EstablishmentCause == "(not set)")
+                {
+                    burst.EstablishmentCause = "Answer to paging";
+                }
+            }
+        }
 
         private void TriggerChannelAssignment(L3Handler L3Handler)
         {
-
             eTimeSlotType channelType;
             long subChannel;
             long timeSlot;
@@ -535,7 +569,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                                     if (L3Handler.PDUDataFields.ContainsKey("EstablishmentCause"))
                                     {
                                         tmpSDCCH.EstablishmentCause = L3Handler.PDUDataFields["EstablishmentCause"];
-                                        tmpSDCCH.ServiceType = "(none)";
+                                        tmpSDCCH.ServiceType = "(not set)";
 
                                         /* remove this info to prevent false detection for later causes */
                                         L3Handler.PDUDataFields.Remove("EstablishmentCause");
@@ -592,7 +626,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                                 if (L3Handler.PDUDataFields.ContainsKey("EstablishmentCause"))
                                 {
                                     assigned.EstablishmentCause = L3Handler.PDUDataFields["EstablishmentCause"];
-                                    assigned.ServiceType = "(none)";
+                                    assigned.ServiceType = "(not set)";
 
                                     /* remove this info to prevent false detection for later causes */
                                     L3Handler.PDUDataFields.Remove("EstablishmentCause");
@@ -660,7 +694,10 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                 /* let the current burst "know" which service was requested */
                 if (Parameters.CurrentBurstHandler is NormalBurst)
                 {
-                    ((NormalBurst)Parameters.CurrentBurstHandler).ServiceType = type;
+                    NormalBurst burst = ((NormalBurst)Parameters.CurrentBurstHandler);
+
+                    burst.PhoneIdentity = ident;
+                    burst.ServiceType = type;
                 }
             }
         }

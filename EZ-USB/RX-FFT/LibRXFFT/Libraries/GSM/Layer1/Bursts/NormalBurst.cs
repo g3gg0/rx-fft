@@ -86,8 +86,11 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
         internal byte[] BurstBufferD;
 
 
+        /* track phone identity */
+        public string PhoneIdentity = "(not set)";
+
         /* data supplied by timeslothandler and its callbacks */
-        public string EstablishmentCause = "";
+        public string EstablishmentCause = "(not set)";
         /* 
          * Reason why the mobile got an assignment
          *
@@ -98,7 +101,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
          *     unknown type               maybe handover
          * 
          */
-        public string ServiceType = "";
+        public string ServiceType = "(not set)";
         /* 
          * Service requested by the mobile
          *
@@ -620,6 +623,10 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                 A5CipherKey = null;
                 A5Algorithm = null;
             }
+
+            PhoneIdentity = "(not set)";
+            EstablishmentCause = "(not set)";
+            ServiceType = "(not set)";
         }
 
         internal bool TryToCrack(bool[][] guessedKeyBits, uint[] counts, GSMParameters param, int burstNum, int burstCount)

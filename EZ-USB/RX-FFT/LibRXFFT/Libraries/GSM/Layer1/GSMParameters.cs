@@ -166,6 +166,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             }
         }
 
+        public double CurrentPower;
         public double AveragePower;
         public double AverageIdlePower;
 
@@ -215,6 +216,10 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             UsedBursts.Clear();
             TimeSlotInfo = new sTimeSlotInfo[8];
             TimeSlotHandlers = new sTimeSlotParam[8][];
+
+            AverageIdlePower = 0;
+            AveragePower = 0;
+            CurrentPower = 0;
         }
 
         /* 

@@ -34,12 +34,15 @@ namespace LibRXFFT.Libraries.GSM.Layer1.PacketDump
         private bool StartFound = false;
 
         private bool FileIsBeingUpdated = false;
+        private bool[] DummyBits = new bool[148];
         
 
         public GsmAnalyzerDumpReader(GSMParameters param, string fileName)
         {
             DumpFileName = fileName;
             Parameters = param;
+
+            ByteUtil.BitsFromBytes(GsmAnalyzerDumpWriter.DummyData, DummyBits, 8, 0, 148);
 
             try
             {
@@ -344,7 +347,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.PacketDump
                     else
                     {
                         /* fake some dummy bursts here. those were omitted in the dump. */
-                        ByteUtil.BitsFromBytes(GsmAnalyzerDumpWriter.DummyData, bits, 8, 0, 148);
+                        Array.Copy(DummyBits, bits, 148);
 
                         /* also update TN and such */
                         Parameters.TN++;

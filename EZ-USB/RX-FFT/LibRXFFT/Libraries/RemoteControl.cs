@@ -7,6 +7,7 @@ using System.Net.Sockets;
 using System.Threading;
 using LibRXFFT.Libraries.USB_RX.Tuners;
 using LibRXFFT.Libraries.SignalProcessing;
+using RX_FFT.Components.GDI;
 
 namespace LibRXFFT.Libraries
 {
@@ -24,6 +25,9 @@ namespace LibRXFFT.Libraries
         private byte[] ClientBuffer;
         private Socket Client;
 
+        private double AvgMin = 0;
+        private double AvgMax = 0;
+
         public event EventHandler FFTSizeChanged;
 
         public RemoteControl()
@@ -36,7 +40,7 @@ namespace LibRXFFT.Libraries
                 ListenSocket.Bind(ip);
                 ListenSocket.Listen(10);
 
-                Console.WriteLine("Waiting for a client...");
+//                Console.WriteLine("Waiting for a client...");
                 SocketAsyncEventArgs socketArgs = new SocketAsyncEventArgs();
                 socketArgs.Completed += new EventHandler<SocketAsyncEventArgs>(socketArgs_Completed);
                 ListenSocket.AcceptAsync(socketArgs);
@@ -114,6 +118,8 @@ namespace LibRXFFT.Libraries
 
         private void HandleClient(Socket s)
         {
+            Log.AddMessage("New client: " + s.RemoteEndPoint.ToString());
+
             Thread clientThread = new Thread(() =>
             {
                 long StartFreq = 0;
@@ -178,7 +184,7 @@ namespace LibRXFFT.Libraries
                 catch (Exception e)
                 {
                     Client = null;
-                    Console.WriteLine("Exception: " + e);
+                    Log.AddMessage("Exception in client: " + s.RemoteEndPoint.ToString());
                 }
 
                 lock (OpenSockets)
@@ -202,11 +208,26 @@ namespace LibRXFFT.Libraries
                 try
                 {
                     double scale = (double)FFTResult.Length / (double)ClientBuffer.Length;
+                    double min = double.MaxValue;
+                    double max = double.MinValue;
+
+                    for (int pos = 0; pos < FFTResult.Length; pos++)
+                    {
+                        double value = (FFTResult[pos]);
+
+                        min = Math.Min(min, value);
+                        max = Math.Max(max, value);                        
+                    }
+
+                    AvgMin = (AvgMin * 0.95) + (min * 0.05);
+                    AvgMax = (AvgMax * 0.95) + (max * 0.05);
 
                     for (int pos = 0; pos < ClientBuffer.Length; pos++)
                     {
                         int dataPos = Math.Min(FFTResult.Length - 1, (int)(pos * scale));
-                        ClientBuffer[pos] = (byte)(Math.Min(0xFF, Math.Max(0, DBTools.SquaredSampleTodB(FFTResult[dataPos]) * 2 + 255)));
+                        double pct = ((FFTResult[dataPos]) - AvgMin) / (AvgMax - AvgMin);
+
+                        ClientBuffer[pos] = (byte)(Math.Min(255,Math.Max(0,(pct * 255))));
                     }
 
                     Client.Send(ClientBuffer);

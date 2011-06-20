@@ -817,6 +817,7 @@ namespace GSM_Analyzer
             this.btnOpen.Name = "btnOpen";
             this.btnOpen.Size = new System.Drawing.Size(72, 36);
             this.btnOpen.Text = "Open";
+            this.btnOpen.MouseUp +=new System.Windows.Forms.MouseEventHandler(btnOpen_MouseUp);
             this.btnOpen.Click += new System.EventHandler(this.btnOpen_Click);
             // 
             // btnL3Filter

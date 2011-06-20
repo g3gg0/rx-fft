@@ -65,7 +65,7 @@ namespace LibRXFFT.Components.Generic
             }
             offset += stepsPerColor;
 
-            /* raise GB */
+            /* raise RB */
             for (int pos = 0; pos < stepsPerColor; pos++)
             {
                 double fract = (double)pos / stepsPerColor;

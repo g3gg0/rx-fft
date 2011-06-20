@@ -7,6 +7,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
     {
         private int ConsecutiveHighBits = 0;
         private double MaxSampleValue = 0;
+        private double AccumulatedPower = 0;
 
         /* 
          * relative to the highest sample value.
@@ -23,7 +24,12 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
         private double MinHighSampleValue
         {
-            get { return MaxSampleValue*SampleHighMark; }
+            get { return MaxSampleValue * SampleHighMark; }
+        }
+
+        public double AveragePower
+        {
+            get { return AccumulatedPower / OversampleBitCount; }
         }
 
         public FCCHFinder(double oversampling)
@@ -36,13 +42,14 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             CurrentPosition = 0;
             ConsecutiveHighBits = 0;
             BurstStartPosition = 0;
+            AccumulatedPower = 0;
         }
 
-        public bool ProcessData(double sampleValue, double strength)
+        public bool ProcessData(double sampleValueIn, double strength)
         {
             /* if !->strength<-! gets low, phase is varying due to noise. 
              * compensate this by multiplying sample value with the strength. */
-            sampleValue *= strength;
+            double sampleValue = sampleValueIn * strength;
 
             /* continuously decrease highest bit value */
             MaxSampleValue *= 0.99f;
@@ -54,10 +61,12 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
             if (sampleValue > MinHighSampleValue)
             {
+                AccumulatedPower += strength;
                 ConsecutiveHighBits++;
             }
             else
             {
+                AccumulatedPower = 0;
                 BurstStartPosition = CurrentPosition;
                 ConsecutiveHighBits = 0;
             }

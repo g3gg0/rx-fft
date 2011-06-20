@@ -46,6 +46,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                 Parameters.PhaseOffsetValue += phaseOffset;
 
             int ratio = 10;
+            Parameters.CurrentPower = avgPower;
             Parameters.AveragePower = ((ratio - 1) * Parameters.AveragePower + avgPower) / ratio;
             Parameters.AverageIdlePower = ((ratio - 1) * Parameters.AverageIdlePower + avgIdlePower) / ratio;
 

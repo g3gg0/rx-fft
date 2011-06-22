@@ -911,20 +911,37 @@ namespace GSM_Analyzer
                 {
                     foreach (string file in dlg.FileNames)
                     {
-                        BeginInvoke(new Action(() => { txtLog.Clear(); }));
+                        bool done = false;
+                        BeginInvoke(new Action(() => { txtLog.Clear(); done = true; }));
 
+                        while (!done)
+                        {
+                            Thread.Sleep(100);
+                        }
                         DumpReadFunc(file);
 
                         /* save messages */
                         try
                         {
-                            FileStream stream = File.Open(file + ".txt", FileMode.OpenOrCreate, FileAccess.Write);
-                            TextWriter writer = new StreamWriter(stream);
+                            done = false;
 
-                            string messages = "";
-                            BeginInvoke(new Action(() => { messages = txtLog.Text; }));
-                            writer.WriteLine(messages);
-                            writer.Close();
+                            BeginInvoke(new Action(() =>
+                            {
+                                FileStream stream = File.Open(file + ".txt", FileMode.OpenOrCreate, FileAccess.Write);
+                                TextWriter writer = new StreamWriter(stream);
+
+                                string messages = "";
+                                messages = txtLog.Text;
+                                writer.WriteLine(messages);
+                                writer.Close();
+
+                                done = true;
+                            }));
+
+                            while (!done)
+                            {
+                                Thread.Sleep(100);
+                            }
                         }
                         catch (Exception ex)
                         {

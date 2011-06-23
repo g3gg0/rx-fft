@@ -197,6 +197,11 @@ namespace LibRXFFT.Libraries.GSM.Layer1.PacketDump
                         int dataEnd = fieldString.IndexOf('"', dataStart);
                         string data = "";
 
+                        if (dataStart < 0 || dataEnd < 0)
+                        {
+                            goto restart;
+                        }
+
                         fieldPos = dataEnd + 1;
 
                         if (dataStart >= 0 && dataEnd >= 0 && dataStart <= dataEnd)

@@ -575,7 +575,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                             }
 
                             /* now try to crack */
-                            if (TryToCrack(guessedKeyBits, counts, param, burst * 4, guessedDataBits.Length * 4))
+                            if (TryToCrack(guessedKeyBits, counts, param, burst * 4, guessedData.Count * 4))
                             {
                                 string msg = "";
 
@@ -658,7 +658,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                     Log.AddMessage("Cracking burst: " + dstBurst + " (Block: " + block + " Offset: " + offset + ") Next: " + nextBurst);
 
                     /* make sure the UI does get all information */
-                    param.CipherCracker.SetJobInfo(burstNum + burst, burstCount);
+                    param.CipherCracker.SetJobInfo(burstNum + burst + 1, burstCount);
                     
                     byte[] key = param.CipherCracker.Crack(guessedKeyBits[dstBurst], counts[dstBurst], guessedKeyBits[nextBurst], counts[nextBurst]);
                     if (key != null)

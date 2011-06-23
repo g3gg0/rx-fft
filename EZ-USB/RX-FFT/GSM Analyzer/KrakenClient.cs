@@ -58,6 +58,7 @@ namespace GSM_Analyzer
 
 
         /* public status values */
+        public bool Logging = false;
         public int RequestId = -1;
         public int SearchDuration = 0;
         public string Hostname = "";
@@ -252,7 +253,10 @@ namespace GSM_Analyzer
                             ASCIIEncoding enc = new ASCIIEncoding();
                             string ret = enc.GetString(buffer, 0, pos);
 
-                            Log.AddMessage("KrakenClient", "< " + ret);
+                            if (Logging)
+                            {
+                                Log.AddMessage("KrakenClient", "< " + ret);
+                            }
 
                             return ret;
                         }
@@ -307,7 +311,10 @@ namespace GSM_Analyzer
                 ASCIIEncoding enc = new ASCIIEncoding();
                 byte[] data = enc.GetBytes(message + "\r\n");
 
-                Log.AddMessage("KrakenClient", "> " + message);
+                if (Logging)
+                {
+                    Log.AddMessage("KrakenClient", "> " + message);
+                }
 
                 stream.Write(data, 0, data.Length);
             }

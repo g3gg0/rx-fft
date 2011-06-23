@@ -804,6 +804,7 @@ namespace GSM_Analyzer
             }
 
             btnOpen.Text = "Open";
+            SetDataSource("");
         }
 
         private void btnOpen_LuaScript(object sender, EventArgs e)
@@ -846,7 +847,7 @@ namespace GSM_Analyzer
             ReadThread.Start();
 
             btnOpen.Text = "Close";
-            return;
+            SetDataSource("IQ-File");
         }
 
         public void btnOpen_NetworkSource(object sender, EventArgs e)
@@ -859,6 +860,7 @@ namespace GSM_Analyzer
             ReadThread.Start();
 
             btnOpen.Text = "Close";
+            SetDataSource("NetworkSource");
         }
 
         public void btnOpen_OsmoconBitstream(object sender, EventArgs e)
@@ -875,6 +877,19 @@ namespace GSM_Analyzer
             ReadThread.Start();
 
             btnOpen.Text = "Close";
+            SetDataSource("Shared Memory channel " + srcChan);
+        }
+
+        private void SetDataSource(string source)
+        {
+            if (source != null && source != "")
+            {
+                Text = "GSM Analyzer - [Input: " + source + "]";
+            }
+            else
+            {
+                Text = "GSM Analyzer";
+            }
         }
 
         private MenuItem btnOpen_SharedMemoryCreateMenuItem(string name, int srcChan)
@@ -900,6 +915,7 @@ namespace GSM_Analyzer
 
         private void btnOpen_DumpFileMulti(object sender, EventArgs e)
         {
+            int fileNum = 1;
             OpenFileDialog dlg = new OpenFileDialog();
             dlg.Filter = "GSM Analyzer Dump Files (*.gad)|*.gad|All files (*.*)|*.*";
             dlg.Multiselect = true;
@@ -912,7 +928,12 @@ namespace GSM_Analyzer
                     foreach (string file in dlg.FileNames)
                     {
                         bool done = false;
-                        BeginInvoke(new Action(() => { txtLog.Clear(); done = true; }));
+                        BeginInvoke(new Action(() =>
+                        {
+                            txtLog.Clear();
+                            SetDataSource("Dump File '" + file + "' (" + fileNum + "/" + dlg.FileNames .Length+ ")");
+                            done = true;
+                        }));
 
                         while (!done)
                         {
@@ -946,6 +967,8 @@ namespace GSM_Analyzer
                         catch (Exception ex)
                         {
                         }
+
+                        fileNum++;
                     }
 
                     BeginInvoke(new Action(() => { CloseSource(); }));
@@ -973,6 +996,7 @@ namespace GSM_Analyzer
                 ReadThread.Start();
 
                 btnOpen.Text = "Close";
+                SetDataSource("Dump File '" + dlg.FileName + "'");
             }
         }
 

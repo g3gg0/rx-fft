@@ -317,7 +317,17 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             }
             set
             {
-                EnsureARFCN(value);
+                /* all ARFCNs are set up using EnsureARFCN.
+                 * If we get assigned an ARFCN that is not set up, use this as default ARFCN.
+                 */
+                if (!ArfcnMap.ContainsKey(value))
+                {
+                    /* this is our default ARFCN now */
+                    ArfcnMap.Clear();
+                    ArfcnMapRev.Clear();
+                    ArfcnMap.Add(value, 0);
+                    ArfcnMapRev.Add(0, value);
+                }
                 _ARFCN = value;
             }
         }
@@ -578,15 +588,17 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                 ArfcnMapRev.Clear();
                 ArfcnMap.Add(arfcn, 0);
                 ArfcnMapRev.Add(0, arfcn);
+
+                _ARFCN = arfcn;
             }
 
             /* a new, unconfigured ARFCN? */
             if (!ArfcnMap.ContainsKey(arfcn))
             {
                 /* resize array */
-                int newIndex = (TimeSlotConfig.Length / 2) + 1;
+                int newIndex = (TimeSlotConfig.Length / 2);
 
-                sTimeSlotInfo[,][] tmp = new sTimeSlotInfo[TimeSlotConfig.Length / 2 + 1, 2][];
+                sTimeSlotInfo[,][] tmp = new sTimeSlotInfo[newIndex + 1, 2][];
                 Array.Copy(TimeSlotConfig, tmp, TimeSlotConfig.Length);
 
                 TimeSlotConfig = tmp;

@@ -288,14 +288,13 @@ namespace LibRXFFT.Libraries.GSM.Layer1.PacketDump
                         }
                     }
 
+                    /* make sure there are always dummy bursts in nonexistent bursts */
                     if (!hasDown)
                     {
-                        /* make sure there are always dummy bursts in nonexistent bursts */
                         Array.Copy(GsmAnalyzerDumpWriter.DummyData, DataDown, DataDown.Length);
                     }
                     if (!hasUp)
                     {
-                        /* make sure there are always dummy bursts in nonexistent bursts */
                         Array.Copy(GsmAnalyzerDumpWriter.DummyData, DataUp, DataUp.Length);
                     }
 

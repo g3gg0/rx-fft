@@ -908,7 +908,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
         {
             long ccchConf;
 
-            if (Parameters.CurrentTimeSlotConfig[0].Type != eTimeSlotType.Unconfigured)
+            if (Parameters.TimeSlotConfig[Parameters.ARFCNidx, (int)Parameters.Dir][0].Type != eTimeSlotType.Unconfigured)
                 return;
 
             lock (L3Handler.PDUDataFields)
@@ -1283,7 +1283,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                  * first network configuration information in SYSTEM INFORMATION TYPE 3. 
                  * with wrong network config we will miss a lot of SCHs which will cause drifting etc.
                  */
-                bool important = (handler is SCHBurst) || ((handler is BCCHBurst) && Parameters.CurrentTimeSlotConfig[0].Configures == 0);
+                bool important = (handler is SCHBurst) || ((handler is BCCHBurst) && Parameters.TimeSlotConfig[Parameters.ARFCNidx, (int)Parameters.Dir][0].Configures == 0);
 
                 if (dump && skip && !important)
                 {

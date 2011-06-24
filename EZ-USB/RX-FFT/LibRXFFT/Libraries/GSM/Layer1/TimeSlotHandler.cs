@@ -1481,13 +1481,13 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                     {
                         frameNum = Parameters.T2; // traffic frame number
                     }
-
                     handler = param[frameNum].Burst;
                     sequence = param[frameNum].Sequence;
                 }
 
                 Parameters.CurrentBurstHandler = handler;
             }
+
 
             if (Burst.DumpRawData)
             {

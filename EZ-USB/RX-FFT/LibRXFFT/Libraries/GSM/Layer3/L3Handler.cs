@@ -580,6 +580,31 @@ namespace LibRXFFT.Libraries.GSM.Layer3
                 builder.Append("HSN                 ").Append(hsn);
                 lines.Add(builder.ToString());
                 builder.Length = 0;
+
+                lock (PDUDataFields)
+                {
+                    /* text */
+                    if (PDUDataFields.ContainsKey("MAIO"))
+                        PDUDataFields["MAIO"] = maio.ToString();
+                    else
+                        PDUDataFields.Add("MAIO", maio.ToString());
+
+                    if (PDUDataFields.ContainsKey("HSN"))
+                        PDUDataFields["HSN"] = hsn.ToString();
+                    else
+                        PDUDataFields.Add("HSN", hsn.ToString());
+
+                    /* raw */
+                    if (PDUDataRawFields.ContainsKey("MAIO"))
+                        PDUDataRawFields["MAIO"] = maio;
+                    else
+                        PDUDataRawFields.Add("MAIO", maio);
+
+                    if (PDUDataRawFields.ContainsKey("HSN"))
+                        PDUDataRawFields["HSN"] = hsn;
+                    else
+                        PDUDataRawFields.Add("HSN", hsn);
+                }
             }
             else
             {
@@ -592,6 +617,20 @@ namespace LibRXFFT.Libraries.GSM.Layer3
                 builder.Append("ARFCN               ").Append(arfcn);
                 lines.Add(builder.ToString());
                 builder.Length = 0;
+
+                lock (PDUDataFields)
+                {
+                    if (PDUDataFields.ContainsKey("ARFCN"))
+                        PDUDataFields["ARFCN"] = arfcn.ToString();
+                    else
+                        PDUDataFields.Add("ARFCN", arfcn.ToString());
+
+                    if (PDUDataRawFields.ContainsKey("ARFCN"))
+                        PDUDataRawFields["ARFCN"] = arfcn;
+                    else
+                        PDUDataRawFields.Add("ARFCN", arfcn);
+                }
+
             }
 
             return (string[]) lines.ToArray(typeof(string));

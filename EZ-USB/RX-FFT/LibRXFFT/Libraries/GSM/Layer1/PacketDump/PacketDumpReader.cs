@@ -9,6 +9,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.PacketDump
     {
         bool HasData { get; }
         void Read(bool[] BurstBitsUndiffed);
+        void Read(bool[] BurstBitsUndiffedDown, bool[] BurstBitsUndiffedUp);
         void Close();
     }
 }

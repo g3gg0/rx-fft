@@ -37,12 +37,31 @@ namespace LibRXFFT.Libraries.GSM.Layer1
         SACCH,
         TCH
     }
+
+    public enum eLinkDirection
+    {
+        Downlink = 0,
+        Uplink = 1
+    }
+
+    /* 
+     * This is a per-slot-persistent structure to track setup and changes.
+     * Also contains the handler array
+     */
     public struct sTimeSlotInfo
     {
+        /* just to keep track where this TS setup belongs to */
+        public long ARFCN;
+        public eLinkDirection Direction;
+
+        /* channel setup and statistics */
         public eTimeSlotType Type;
         public int Configures;
         public int Assignments;
         public int[] SubChanAssignments;
+
+        /* and here all the handlers */
+        public sTimeSlotParam[] Handlers;
     }
 
     public struct sTimeslotReference
@@ -90,8 +109,78 @@ namespace LibRXFFT.Libraries.GSM.Layer1
         public LinkedList<NormalBurst> ActiveBursts = new LinkedList<NormalBurst>();
         public LinkedList<NormalBurst> UsedBursts = new LinkedList<NormalBurst>();
 
-        public sTimeSlotParam[][] TimeSlotHandlers;
-        public sTimeSlotInfo[] TimeSlotInfo;
+        /* 
+         * This array will contain all handlers in the format:
+         *
+         *  TimeSlotHandlerConfig[#ARFCN,direction][timeslot][framenum]
+         *  
+         *  #ARFCN    = 0-n, for the configured number of ARFCNs
+         *  direction = 0 or 1, with 0 = downlink, 1 = uplink
+         *  timeslot  = 0-7, timeslot number
+         *  framenum  = 0-51 or 0-26 
+         *         
+         */
+        public sTimeSlotInfo[,][] TimeSlotConfig = null;
+
+        /* return the config of the current configured ARFCN */
+        public sTimeSlotInfo[] CurrentTimeSlotConfig
+        {
+            get
+            {
+                if (!ArfcnMap.ContainsKey(ARFCN))
+                {
+                    /* default action - use default ARFCN entry */
+                    ArfcnMap.Add(ARFCN, 0);
+                    ArfcnMapRev.Add(0, ARFCN);
+                }
+                return TimeSlotConfig[(int)ArfcnMap[ARFCN], (int)Dir];
+            }
+        }
+
+        public class TimeSlotHandlerWrapper
+        {
+            private GSMParameters param;
+
+            public TimeSlotHandlerWrapper(GSMParameters p)
+            {
+                param = p;
+            }
+            public sTimeSlotParam[] this[int slot]
+            {
+                get
+                {
+                    return param.CurrentTimeSlotConfig[slot].Handlers;
+                }
+                set
+                {
+                    param.CurrentTimeSlotConfig[slot].Handlers = value;
+                }
+            }
+            public sTimeSlotParam[] this[long slot]
+            {
+                get
+                {
+                    return param.CurrentTimeSlotConfig[slot].Handlers;
+                }
+                set
+                {
+                    param.CurrentTimeSlotConfig[slot].Handlers = value;
+                }
+            }
+        }
+
+        //public TimeSlotHandlerWrapper CurrentTimeSlotHandlers;
+        
+        /*
+         * This dictionary contains all configured ARFCNs and their
+         * position in TimeSlotHandlerConfig
+         */
+        public Dictionary<long, long> ArfcnMap = new Dictionary<long, long>();
+        public Dictionary<long, long> ArfcnMapRev = new Dictionary<long, long>();
+
+        //public sTimeSlotParam[][] CurrentTimeSlotHandlers;
+        //public sTimeSlotInfo[] CurrentTimeSlotConfig;
+
         public DateTime TimeStamp = DateTime.Now;
 
         public eGSMState State = eGSMState.Idle;
@@ -214,8 +303,26 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
             ActiveBursts.Clear();
             UsedBursts.Clear();
-            TimeSlotInfo = new sTimeSlotInfo[8];
-            TimeSlotHandlers = new sTimeSlotParam[8][];
+
+            /* set up default arfcn map */
+            ArfcnMap.Clear();
+            ArfcnMapRev.Clear();
+            ArfcnMap.Add(-1, 0);
+            ArfcnMapRev.Add(0, -1);
+
+            /* and set up empty timeslot configs */
+            TimeSlotConfig = new sTimeSlotInfo[1, 2][];
+            for (int pos = 0; pos < TimeSlotConfig.Length; pos++)
+            {
+                TimeSlotConfig[pos / 2, pos % 2] = new sTimeSlotInfo[8];
+            }
+
+            /* default is downlink of first ARFCN */
+            ARFCN = -1;
+            Dir = eLinkDirection.Downlink;
+
+            //CurrentTimeSlotConfig = new sTimeSlotInfo[8];
+            //CurrentTimeSlotHandlers = new sTimeSlotParam[8][];
 
             AverageIdlePower = 0;
             AveragePower = 0;
@@ -244,7 +351,27 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             Type 20  Not fixed  Not fixed
          */
 
-        public long ARFCN;
+        public eLinkDirection Dir;
+        public long _ARFCN;
+        public int ARFCNidx
+        {
+            get
+            {
+                return GetARFCNIdx(ARFCN);
+            }
+        }
+        public long ARFCN
+        {
+            get
+            {
+                return _ARFCN;
+            }
+            set
+            {
+                EnsureARFCN(value);
+                _ARFCN = value;
+            }
+        }
         public long MNC;
         public long MCC;
         public long LAC;
@@ -325,56 +452,73 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
         public string GetTimeslotDetails()
         {
-            Hashtable handlers = new Hashtable();
             string retVal = "";
 
-            retVal += "  ------------------------------------------------------------------------------------ - -  -  -" + Environment.NewLine;
-            retVal += " | TS || Handlers (FC=FCCH, SC=SCH, BC=BCCH, CC=CCCH, SD=SDCCH, SA=SACCH, TC=TCH" + Environment.NewLine;
-            retVal += " |----||------------------------------------------------------------------------------ - -  -  -" + Environment.NewLine;
-            
-            lock (TimeSlotHandlers)
+            for (int pos = 0; pos < TimeSlotConfig.Length; pos++)
             {
-                for (int slot = 0; slot < 8; slot++)
+                lock (TimeSlotConfig)
                 {
-                    retVal += " |  " + slot + " || ";
-                    if (TimeSlotHandlers[slot] == null)
+                    Hashtable handlers = new Hashtable();
+
+                    retVal += "  ------------------------------------------------------------------------------------ - -  -  -" + Environment.NewLine;
+                    retVal += " | ARFCN: " + ArfcnMapRev[pos / 2];
+                    switch ((eLinkDirection)(pos % 2))
                     {
-                        retVal += "(Unused)";
+                        case eLinkDirection.Downlink:
+                            retVal += " Dir: Downlink" + Environment.NewLine;
+                            break;
+                        case eLinkDirection.Uplink:
+                            retVal += " Dir: Uplink" + Environment.NewLine;
+                            break;
                     }
-                    else
+                    retVal += " | TS || Handlers (FC=FCCH, SC=SCH, BC=BCCH, CC=CCCH, SD=SDCCH, SA=SACCH, TC=TCH" + Environment.NewLine;
+                    retVal += " |----||------------------------------------------------------------------------------ - -  -  -" + Environment.NewLine;
+
+
+                    sTimeSlotInfo[] info = TimeSlotConfig[pos / 2, pos % 2];
+
+                    for (int slot = 0; slot < 8; slot++)
                     {
-                        for (int frame = 0; frame < TimeSlotHandlers[slot].Length; frame++)
+                        retVal += " |  " + slot + " || ";
+                        if (info[slot].Handlers == null)
                         {
-                            Burst handler = TimeSlotHandlers[slot][frame].Burst;
-                            int seq = TimeSlotHandlers[slot][frame].Sequence;
-
-                            if (seq == 0)
-                            {
-                                if (frame != 0)
-                                    retVal += "|";
-                            }
-                            else
-                                retVal += " ";
-
-                            if (handler != null)
-                                retVal += handler.ShortName;
-                            else
-                                retVal += "-- ";
+                            retVal += "(Unused)";
                         }
-                    }
-                    retVal += " |" + Environment.NewLine;
-                }
-            }
+                        else
+                        {
+                            for (int frame = 0; frame < info[slot].Handlers.Length; frame++)
+                            {
+                                Burst handler = info[slot].Handlers[frame].Burst;
+                                int seq = info[slot].Handlers[frame].Sequence;
 
-            retVal += "  ------------------------------------------------------------------------------------ - -  -  -" + Environment.NewLine;
+                                if (seq == 0)
+                                {
+                                    if (frame != 0)
+                                        retVal += "|";
+                                }
+                                else
+                                    retVal += " ";
+
+                                if (handler != null)
+                                    retVal += handler.ShortName;
+                                else
+                                    retVal += "-- ";
+                            }
+                        }                        
+                        retVal += " |" + Environment.NewLine;
+                    }
+
+                    retVal += "  ------------------------------------------------------------------------------------ - -  -  -" + Environment.NewLine;
+
+                    ArrayList lines = new ArrayList();
+                }
+            } 
+            
             retVal += Environment.NewLine;
             retVal += "Handler details:" + Environment.NewLine;
-
-            ArrayList lines = new ArrayList();
-
             foreach (NormalBurst burst in UsedBursts)
             {
-                retVal += string.Format("  {0,12}:  [Data: {1,6}]  [Crypt: {2,6}]  [Dummy: {3,6}]   [{4}] - [{5}]" + Environment.NewLine, burst.Name, burst.DataBursts, burst.CryptedFrames, burst.DummyBursts, burst.AllocationTime, burst.Released?burst.ReleaseTime.ToString():"now");
+                retVal += string.Format("  {0,12}:  [Data: {1,6}]  [Crypt: {2,6}]  [Dummy: {3,6}]   [{4}] - [{5}]" + Environment.NewLine, burst.Name, burst.DataBursts, burst.CryptedFrames, burst.DummyBursts, burst.AllocationTime, (burst.Released ? burst.ReleaseTime.ToString() : "now"));
             }
 
             retVal += Environment.NewLine;
@@ -386,84 +530,127 @@ namespace LibRXFFT.Libraries.GSM.Layer1
         {
             string retVal = "";
 
-            retVal += "  ---------------------------------------------    -------------------------------------------------------" + Environment.NewLine;
-            retVal += " | TS || Type                |  Cfgs  |  Uses  |  |                  SubChannel Uses                      |" + Environment.NewLine;
-            retVal += " |----||---------------------|--------|--------|  |-------------------------------------------------------|" + Environment.NewLine;
-
-
-            for (int pos = 0; pos < 8; pos++)
+            for (int pos = 0; pos < TimeSlotConfig.Length; pos++)
             {
-                string type = "";
-                string configs = "";
-                string assignments = "";
-                string subchanAssignments = "";
-
-                switch (TimeSlotInfo[pos].Type)
+                retVal += "  ---------------------------------------------" + Environment.NewLine;
+                retVal += " | ARFCN: " + ArfcnMapRev[pos / 2];
+                switch ((eLinkDirection)(pos % 2))
                 {
-                    case eTimeSlotType.Unconfigured:
-                        type = "(Unused)";
-                        subchanAssignments = "";
-                        for (int subChan = 0; subChan < 8; subChan++)
-                            subchanAssignments += " |     ";
-                        subchanAssignments += " |";
+                    case eLinkDirection.Downlink:
+                        retVal += " Dir: Downlink" + Environment.NewLine;
                         break;
-                    case eTimeSlotType.BCCH_CCCH:
-                        type = "BCCH+CCCH";
-                        subchanAssignments = "";
-                        for (int subChan = 0; subChan < 8; subChan++)
-                            subchanAssignments += " |     ";
-                        subchanAssignments += " |";
-                        break;
-                    case eTimeSlotType.TCHF:
-                        type = "TCH/F";
-                        subchanAssignments = "";
-                        for (int subChan = 0; subChan < 8; subChan++)
-                            subchanAssignments += " |     ";
-                        subchanAssignments += " |";
-                        break;
-                    case eTimeSlotType.TCHH:
-                        type = "TCH/H";
-                        subchanAssignments = "";
-                        for (int subChan = 0; subChan < 2; subChan++)
-                            subchanAssignments += " | " + String.Format("{0,4}", TimeSlotInfo[pos].SubChanAssignments[subChan]);
-                        for (int subChan = 2; subChan < 8; subChan++)
-                            subchanAssignments += " |     ";
-                        subchanAssignments += " |";
-                        break;
-                    case eTimeSlotType.BCCH_CCCH_SDCCH4:
-                        type = "BCCH+CCCH+SDCCH/4";
-                        subchanAssignments = "";
-                        for (int subChan = 0; subChan < 4; subChan++)
-                            subchanAssignments += " | " + String.Format("{0,4}", TimeSlotInfo[pos].SubChanAssignments[subChan]);
-                        for (int subChan = 4; subChan < 8; subChan++)
-                            subchanAssignments += " |     ";
-                        subchanAssignments += " |";
-                        break;
-                    case eTimeSlotType.SDCCH8:
-                        type = "SDCCH/8";
-                        for (int subChan = 0; subChan < 8; subChan++)
-                            subchanAssignments += " | " + String.Format("{0,4}", TimeSlotInfo[pos].SubChanAssignments[subChan]);
-                        subchanAssignments += " |";
-                        break;
-                    default:
-                        type = "(Unknown)";
+                    case eLinkDirection.Uplink:
+                        retVal += " Dir: Uplink" + Environment.NewLine;
                         break;
                 }
+                retVal += "  ---------------------------------------------    -------------------------------------------------------" + Environment.NewLine;
+                retVal += " | TS || Type                |  Cfgs  |  Uses  |  |                  SubChannel Uses                      |" + Environment.NewLine;
+                retVal += " |----||---------------------|--------|--------|  |-------------------------------------------------------|" + Environment.NewLine;
 
-                configs = string.Format("{0}", TimeSlotInfo[pos].Configures);
-                assignments = string.Format("{0}", TimeSlotInfo[pos].Assignments);
 
-                retVal += " |  " + pos + " || " + String.Format("{0,-19}", type) + " | " + String.Format("{0,6}", configs) + " | " + String.Format("{0,6}", assignments) + " | " + subchanAssignments + Environment.NewLine;
+                sTimeSlotInfo[] info = TimeSlotConfig[pos / 2, pos % 2];
+                for (int slot = 0; slot < 8; slot++)
+                {
+                    string type = "";
+                    string configs = "";
+                    string assignments = "";
+                    string subchanAssignments = "";
+
+                    switch (info[slot].Type)
+                    {
+                        case eTimeSlotType.Unconfigured:
+                            type = "(Unused)";
+                            subchanAssignments = "";
+                            for (int subChan = 0; subChan < 8; subChan++)
+                                subchanAssignments += " |     ";
+                            subchanAssignments += " |";
+                            break;
+                        case eTimeSlotType.BCCH_CCCH:
+                            type = "BCCH+CCCH";
+                            subchanAssignments = "";
+                            for (int subChan = 0; subChan < 8; subChan++)
+                                subchanAssignments += " |     ";
+                            subchanAssignments += " |";
+                            break;
+                        case eTimeSlotType.TCHF:
+                            type = "TCH/F";
+                            subchanAssignments = "";
+                            for (int subChan = 0; subChan < 8; subChan++)
+                                subchanAssignments += " |     ";
+                            subchanAssignments += " |";
+                            break;
+                        case eTimeSlotType.TCHH:
+                            type = "TCH/H";
+                            subchanAssignments = "";
+                            for (int subChan = 0; subChan < 2; subChan++)
+                                subchanAssignments += " | " + String.Format("{0,4}", info[slot].SubChanAssignments[subChan]);
+                            for (int subChan = 2; subChan < 8; subChan++)
+                                subchanAssignments += " |     ";
+                            subchanAssignments += " |";
+                            break;
+                        case eTimeSlotType.BCCH_CCCH_SDCCH4:
+                            type = "BCCH+CCCH+SDCCH/4";
+                            subchanAssignments = "";
+                            for (int subChan = 0; subChan < 4; subChan++)
+                                subchanAssignments += " | " + String.Format("{0,4}", info[slot].SubChanAssignments[subChan]);
+                            for (int subChan = 4; subChan < 8; subChan++)
+                                subchanAssignments += " |     ";
+                            subchanAssignments += " |";
+                            break;
+                        case eTimeSlotType.SDCCH8:
+                            type = "SDCCH/8";
+                            for (int subChan = 0; subChan < 8; subChan++)
+                                subchanAssignments += " | " + String.Format("{0,4}", info[slot].SubChanAssignments[subChan]);
+                            subchanAssignments += " |";
+                            break;
+                        default:
+                            type = "(Unknown)";
+                            break;
+                    }
+
+                    configs = string.Format("{0}", info[slot].Configures);
+                    assignments = string.Format("{0}", info[slot].Assignments);
+
+                    retVal += " |  " + slot + " || " + String.Format("{0,-19}", type) + " | " + String.Format("{0,6}", configs) + " | " + String.Format("{0,6}", assignments) + " | " + subchanAssignments + Environment.NewLine;
+                }
+
+                retVal += "  ---------------------------------------------    -------------------------------------------------------" + Environment.NewLine;
             }
-
-            retVal += "  ---------------------------------------------    -------------------------------------------------------" + Environment.NewLine;
-
             return retVal;
         }
+        
+        internal void EnsureARFCN(long arfcn)
+        {
+            /* the first time an ARFCN was assigned? */
+            if (ARFCN == -1)
+            {
+                /* this is our default ARFCN now */
+                ArfcnMap.Clear();
+                ArfcnMapRev.Clear();
+                ArfcnMap.Add(arfcn, 0);
+                ArfcnMapRev.Add(0, arfcn);
+            }
 
+            /* a new, unconfigured ARFCN? */
+            if (!ArfcnMap.ContainsKey(arfcn))
+            {
+                /* resize array */
+                int newIndex = (TimeSlotConfig.Length / 2) + 1;
 
+                sTimeSlotInfo[,][] tmp = new sTimeSlotInfo[TimeSlotConfig.Length / 2 + 1, 2][];
+                Array.Copy(TimeSlotConfig, tmp, TimeSlotConfig.Length);
 
+                TimeSlotConfig = tmp;
 
+                /* and put reference */
+                ArfcnMap.Add(arfcn, newIndex);
+                ArfcnMapRev.Add(newIndex, arfcn);
+            }
+        }
 
+        internal int GetARFCNIdx(long arfcn)
+        {
+            return (int)ArfcnMap[arfcn];
+        }
     }
 }

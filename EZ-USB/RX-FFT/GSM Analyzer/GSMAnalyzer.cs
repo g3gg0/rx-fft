@@ -1477,7 +1477,8 @@ namespace GSM_Analyzer
 
         void DumpReadFunc(string fileName)
         {
-            bool[] burstBits = new bool[148];
+            bool[] burstBitsDown = new bool[148];
+            bool[] burstBitsUp = new bool[148];
             GsmAnalyzerDumpReader reader = new GsmAnalyzerDumpReader(Parameters, fileName);
 
             L3Handler.ReloadFiles();
@@ -1498,13 +1499,17 @@ namespace GSM_Analyzer
                 while (reader.HasData)
                 {
                     /* get the next burst from the reader */
-                    reader.Read(burstBits);
+                    reader.Read(burstBitsDown, burstBitsUp);
 
                     /* let timeslot handler process the burst bits. 
                      * passing the burst number to handler so its able to display the burst number.
                      * used to track e.g. faulty bursts in source file 
                      */
-                    Handler.Handle(burstBits, reader.BurstNumber);
+                    Parameters.Dir = eLinkDirection.Downlink;
+                    Handler.Handle(burstBitsDown, reader.BurstNumber);
+                    Parameters.Dir = eLinkDirection.Uplink;
+                    Handler.Handle(burstBitsUp, reader.BurstNumber);
+
 
                     /* update UI if necessary */
                     if (SingleStep || (DateTime.Now - LastUiUpdate).TotalMilliseconds > UiUpdateTime)

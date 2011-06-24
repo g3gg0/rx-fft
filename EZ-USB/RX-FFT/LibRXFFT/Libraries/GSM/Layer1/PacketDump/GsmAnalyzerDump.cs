@@ -25,7 +25,8 @@ namespace LibRXFFT.Libraries.GSM.Layer1.PacketDump
         private long TN = -1;
         private long ARFCN = -1;
 
-        private byte[] Data = new byte[19];
+        private byte[] DataDown = new byte[19];
+        private byte[] DataUp = new byte[19];
 
         public ulong BurstNumber = 0;
 
@@ -184,6 +185,8 @@ namespace LibRXFFT.Libraries.GSM.Layer1.PacketDump
                 {
                     string fieldString = line.Replace("<b ", "").Replace("/>", "").Trim();
                     int fieldPos = 0;
+                    bool hasUp = false;
+                    bool hasDown = false;
 
                     while (fieldPos < fieldString.Length)
                     {
@@ -240,7 +243,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.PacketDump
                             case "d":
                                 if ("".Equals(data))
                                 {
-                                    Array.Copy(GsmAnalyzerDumpWriter.DummyData, Data, GsmAnalyzerDumpWriter.DummyData.Length);
+                                    Array.Copy(GsmAnalyzerDumpWriter.DummyData, DataDown, GsmAnalyzerDumpWriter.DummyData.Length);
                                     fail = false;
                                 }
                                 else if ((data.Length % 2) == 0)
@@ -248,9 +251,30 @@ namespace LibRXFFT.Libraries.GSM.Layer1.PacketDump
                                     for (int pos = 0; pos < data.Length / 2; pos++)
                                     {
                                         string byteString = data.Substring(pos * 2, 2);
-                                        if (byte.TryParse(byteString, System.Globalization.NumberStyles.HexNumber, null, out Data[pos]))
+                                        if (byte.TryParse(byteString, System.Globalization.NumberStyles.HexNumber, null, out DataDown[pos]))
                                         {
                                             fail = false;
+                                            hasDown = true;
+                                        }
+                                    }
+                                }
+                                break;
+
+                            case "u":
+                                if ("".Equals(data))
+                                {
+                                    Array.Copy(GsmAnalyzerDumpWriter.DummyData, DataUp, GsmAnalyzerDumpWriter.DummyData.Length);
+                                    fail = false;
+                                }
+                                else if ((data.Length % 2) == 0)
+                                {
+                                    for (int pos = 0; pos < data.Length / 2; pos++)
+                                    {
+                                        string byteString = data.Substring(pos * 2, 2);
+                                        if (byte.TryParse(byteString, System.Globalization.NumberStyles.HexNumber, null, out DataUp[pos]))
+                                        {
+                                            fail = false;
+                                            hasUp = true;
                                         }
                                     }
                                 }
@@ -262,6 +286,17 @@ namespace LibRXFFT.Libraries.GSM.Layer1.PacketDump
                         {
                             goto restart;
                         }
+                    }
+
+                    if (!hasDown)
+                    {
+                        /* make sure there are always dummy bursts in nonexistent bursts */
+                        Array.Copy(GsmAnalyzerDumpWriter.DummyData, DataDown, DataDown.Length);
+                    }
+                    if (!hasUp)
+                    {
+                        /* make sure there are always dummy bursts in nonexistent bursts */
+                        Array.Copy(GsmAnalyzerDumpWriter.DummyData, DataUp, DataUp.Length);
                     }
 
                     BurstNumber++;
@@ -331,6 +366,11 @@ namespace LibRXFFT.Libraries.GSM.Layer1.PacketDump
 
         public void Read(bool[] bits)
         {
+            Read(bits, null);
+        }
+
+        public void Read(bool[] bitsDownlink, bool[] bitsUplink)
+        {
             lock (this)
             {
                 if (DumpStream != null)
@@ -345,14 +385,19 @@ namespace LibRXFFT.Libraries.GSM.Layer1.PacketDump
                         Parameters.TN = TN;
                         Parameters.ARFCN = ARFCN;
 
-                        ByteUtil.BitsFromBytes(Data, bits, 8, 0, 148);
+                        ByteUtil.BitsFromBytes(DataDown, bitsDownlink, 8, 0, 148);
+                        if (bitsUplink != null)
+                        {
+                            ByteUtil.BitsFromBytes(DataUp, bitsUplink, 8, 0, 148);
+                        }
 
                         ReadNextRecord();
                     }
                     else
                     {
                         /* fake some dummy bursts here. those were omitted in the dump. */
-                        Array.Copy(DummyBits, bits, 148);
+                        Array.Copy(DummyBits, bitsDownlink, 148);
+                        Array.Copy(DummyBits, bitsUplink, 148);
 
                         /* also update TN and such */
                         Parameters.TN++;

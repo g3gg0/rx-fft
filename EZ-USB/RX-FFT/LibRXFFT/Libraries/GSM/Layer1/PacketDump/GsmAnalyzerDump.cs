@@ -382,7 +382,12 @@ namespace LibRXFFT.Libraries.GSM.Layer1.PacketDump
                         /* give him the actual data */
                         Parameters.FN = FN;
                         Parameters.TN = TN;
-                        Parameters.ARFCN = ARFCN;
+
+                        /* do not set ARFCN if we are not sure about its value */
+                        if (ARFCN != -1)
+                        {
+                            Parameters.ARFCN = ARFCN;
+                        }
 
                         ByteUtil.BitsFromBytes(DataDown, bitsDownlink, 8, 0, 148);
                         if (bitsUplink != null)

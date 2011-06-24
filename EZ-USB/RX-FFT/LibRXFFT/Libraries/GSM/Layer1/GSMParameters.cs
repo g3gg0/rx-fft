@@ -122,64 +122,13 @@ namespace LibRXFFT.Libraries.GSM.Layer1
          */
         public sTimeSlotInfo[,][] TimeSlotConfig = null;
 
-        /* return the config of the current configured ARFCN */
-        public sTimeSlotInfo[] CurrentTimeSlotConfig
-        {
-            get
-            {
-                if (!ArfcnMap.ContainsKey(ARFCN))
-                {
-                    /* default action - use default ARFCN entry */
-                    ArfcnMap.Add(ARFCN, 0);
-                    ArfcnMapRev.Add(0, ARFCN);
-                }
-                return TimeSlotConfig[(int)ArfcnMap[ARFCN], (int)Dir];
-            }
-        }
-
-        public class TimeSlotHandlerWrapper
-        {
-            private GSMParameters param;
-
-            public TimeSlotHandlerWrapper(GSMParameters p)
-            {
-                param = p;
-            }
-            public sTimeSlotParam[] this[int slot]
-            {
-                get
-                {
-                    return param.CurrentTimeSlotConfig[slot].Handlers;
-                }
-                set
-                {
-                    param.CurrentTimeSlotConfig[slot].Handlers = value;
-                }
-            }
-            public sTimeSlotParam[] this[long slot]
-            {
-                get
-                {
-                    return param.CurrentTimeSlotConfig[slot].Handlers;
-                }
-                set
-                {
-                    param.CurrentTimeSlotConfig[slot].Handlers = value;
-                }
-            }
-        }
-
-        //public TimeSlotHandlerWrapper CurrentTimeSlotHandlers;
-        
         /*
          * This dictionary contains all configured ARFCNs and their
-         * position in TimeSlotHandlerConfig
+         * position in TimeSlotHandlerConfig.
+         * Keep a reverse lookup version for dumping ARFCN infos.
          */
         public Dictionary<long, long> ArfcnMap = new Dictionary<long, long>();
         public Dictionary<long, long> ArfcnMapRev = new Dictionary<long, long>();
-
-        //public sTimeSlotParam[][] CurrentTimeSlotHandlers;
-        //public sTimeSlotInfo[] CurrentTimeSlotConfig;
 
         public DateTime TimeStamp = DateTime.Now;
 

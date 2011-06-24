@@ -424,10 +424,10 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                     switch ((eLinkDirection)(pos % 2))
                     {
                         case eLinkDirection.Downlink:
-                            retVal += " Dir: Downlink" + Environment.NewLine;
+                            retVal += " Downlink" + Environment.NewLine;
                             break;
                         case eLinkDirection.Uplink:
-                            retVal += " Dir: Uplink" + Environment.NewLine;
+                            retVal += " Uplink" + Environment.NewLine;
                             break;
                     }
                     retVal += " | TS || Handlers (FC=FCCH, SC=SCH, BC=BCCH, CC=CCCH, SD=SDCCH, SA=SACCH, TC=TCH" + Environment.NewLine;
@@ -439,7 +439,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                     for (int slot = 0; slot < 8; slot++)
                     {
                         retVal += " |  " + slot + " || ";
-                        if (info[slot].Handlers == null)
+                        if (info == null || info[slot].Handlers == null)
                         {
                             retVal += "(Unused)";
                         }
@@ -496,10 +496,10 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                 switch ((eLinkDirection)(pos % 2))
                 {
                     case eLinkDirection.Downlink:
-                        retVal += " Dir: Downlink" + Environment.NewLine;
+                        retVal += " Downlink" + Environment.NewLine;
                         break;
                     case eLinkDirection.Uplink:
-                        retVal += " Dir: Uplink" + Environment.NewLine;
+                        retVal += " Uplink" + Environment.NewLine;
                         break;
                 }
                 retVal += "  ---------------------------------------------    -------------------------------------------------------" + Environment.NewLine;
@@ -515,63 +515,67 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                     string assignments = "";
                     string subchanAssignments = "";
 
-                    switch (info[slot].Type)
+                    if (info != null)
                     {
-                        case eTimeSlotType.Unconfigured:
-                            type = "(Unused)";
-                            subchanAssignments = "";
-                            for (int subChan = 0; subChan < 8; subChan++)
-                                subchanAssignments += " |     ";
-                            subchanAssignments += " |";
-                            break;
-                        case eTimeSlotType.BCCH_CCCH:
-                            type = "BCCH+CCCH";
-                            subchanAssignments = "";
-                            for (int subChan = 0; subChan < 8; subChan++)
-                                subchanAssignments += " |     ";
-                            subchanAssignments += " |";
-                            break;
-                        case eTimeSlotType.TCHF:
-                            type = "TCH/F";
-                            subchanAssignments = "";
-                            for (int subChan = 0; subChan < 8; subChan++)
-                                subchanAssignments += " |     ";
-                            subchanAssignments += " |";
-                            break;
-                        case eTimeSlotType.TCHH:
-                            type = "TCH/H";
-                            subchanAssignments = "";
-                            for (int subChan = 0; subChan < 2; subChan++)
-                                subchanAssignments += " | " + String.Format("{0,4}", info[slot].SubChanAssignments[subChan]);
-                            for (int subChan = 2; subChan < 8; subChan++)
-                                subchanAssignments += " |     ";
-                            subchanAssignments += " |";
-                            break;
-                        case eTimeSlotType.BCCH_CCCH_SDCCH4:
-                            type = "BCCH+CCCH+SDCCH/4";
-                            subchanAssignments = "";
-                            for (int subChan = 0; subChan < 4; subChan++)
-                                subchanAssignments += " | " + String.Format("{0,4}", info[slot].SubChanAssignments[subChan]);
-                            for (int subChan = 4; subChan < 8; subChan++)
-                                subchanAssignments += " |     ";
-                            subchanAssignments += " |";
-                            break;
-                        case eTimeSlotType.SDCCH8:
-                            type = "SDCCH/8";
-                            for (int subChan = 0; subChan < 8; subChan++)
-                                subchanAssignments += " | " + String.Format("{0,4}", info[slot].SubChanAssignments[subChan]);
-                            subchanAssignments += " |";
-                            break;
-                        default:
-                            type = "(Unknown)";
-                            break;
-                    }
+                        switch (info[slot].Type)
+                        {
+                            case eTimeSlotType.Unconfigured:
+                                type = "(Unused)";
+                                subchanAssignments = "";
+                                for (int subChan = 0; subChan < 8; subChan++)
+                                    subchanAssignments += " |     ";
+                                subchanAssignments += " |";
+                                break;
+                            case eTimeSlotType.BCCH_CCCH:
+                                type = "BCCH+CCCH";
+                                subchanAssignments = "";
+                                for (int subChan = 0; subChan < 8; subChan++)
+                                    subchanAssignments += " |     ";
+                                subchanAssignments += " |";
+                                break;
+                            case eTimeSlotType.TCHF:
+                                type = "TCH/F";
+                                subchanAssignments = "";
+                                for (int subChan = 0; subChan < 8; subChan++)
+                                    subchanAssignments += " |     ";
+                                subchanAssignments += " |";
+                                break;
+                            case eTimeSlotType.TCHH:
+                                type = "TCH/H";
+                                subchanAssignments = "";
+                                for (int subChan = 0; subChan < 2; subChan++)
+                                    subchanAssignments += " | " + String.Format("{0,4}", info[slot].SubChanAssignments[subChan]);
+                                for (int subChan = 2; subChan < 8; subChan++)
+                                    subchanAssignments += " |     ";
+                                subchanAssignments += " |";
+                                break;
+                            case eTimeSlotType.BCCH_CCCH_SDCCH4:
+                                type = "BCCH+CCCH+SDCCH/4";
+                                subchanAssignments = "";
+                                for (int subChan = 0; subChan < 4; subChan++)
+                                    subchanAssignments += " | " + String.Format("{0,4}", info[slot].SubChanAssignments[subChan]);
+                                for (int subChan = 4; subChan < 8; subChan++)
+                                    subchanAssignments += " |     ";
+                                subchanAssignments += " |";
+                                break;
+                            case eTimeSlotType.SDCCH8:
+                                type = "SDCCH/8";
+                                for (int subChan = 0; subChan < 8; subChan++)
+                                    subchanAssignments += " | " + String.Format("{0,4}", info[slot].SubChanAssignments[subChan]);
+                                subchanAssignments += " |";
+                                break;
+                            default:
+                                type = "(Unknown)";
+                                break;
+                        }
+                        configs = string.Format("{0}", info[slot].Configures);
+                        assignments = string.Format("{0}", info[slot].Assignments);
 
-                    configs = string.Format("{0}", info[slot].Configures);
-                    assignments = string.Format("{0}", info[slot].Assignments);
+                    }
 
                     retVal += " |  " + slot + " || " + String.Format("{0,-19}", type) + " | " + String.Format("{0,6}", configs) + " | " + String.Format("{0,6}", assignments) + " | " + subchanAssignments + Environment.NewLine;
                 }
+
 
                 retVal += "  ---------------------------------------------    -------------------------------------------------------" + Environment.NewLine;
             }

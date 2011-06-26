@@ -358,15 +358,15 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                             {
                                 if (Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers == null)
                                 {
-                                    Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers = new sTimeSlotParam[26];
                                     Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Uplink][timeSlot].Handlers = new sTimeSlotParam[26];
+                                    Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers = new sTimeSlotParam[26];
                                 }
 
                                 /* release the old bursts first */
                                 for (int frame = 0; frame < Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers.Length; frame++)
                                 {
-                                    Burst burst = Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers[frame].Burst;
-                                    ReleaseBurst(burst);
+                                    ReleaseBurst(Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Uplink][timeSlot].Handlers[frame].Burst);
+                                    ReleaseBurst(Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers[frame].Burst);
                                 }
 
                                 AddMessage("  [__] TimeSlot " + timeSlot + " of ARFCN " + targetARFCN + " now configured as TCH/F (was " + Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Type + ")" + Environment.NewLine);
@@ -383,10 +383,20 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                                     tchDown.ChannelMode = channelMode;
                                 }
 
+                                tchUp.ARFCN = targetARFCN;
+                                tchDown.ARFCN = targetARFCN;
+                                sacchUp.ARFCN = targetARFCN;
+                                sacchDown.ARFCN = targetARFCN;
+
                                 tchUp.TimeSlot = timeSlot;
                                 tchDown.TimeSlot = timeSlot;
                                 sacchUp.TimeSlot = timeSlot;
                                 sacchDown.TimeSlot = timeSlot;
+
+                                tchUp.Direction = eLinkDirection.Uplink;
+                                tchDown.Direction = eLinkDirection.Downlink;
+                                sacchUp.Direction = eLinkDirection.Uplink;
+                                sacchDown.Direction = eLinkDirection.Downlink;
 
                                 RegisterActiveBurst(tchUp);
                                 RegisterActiveBurst(tchDown);
@@ -468,7 +478,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                                 }
 
                                 /* make sure the old bursts get released */
-                                ReleaseTimeSlotBursts(timeSlot);
+                                ReleaseTimeSlotBursts(targetARFCNidx, timeSlot);
 
                                 /* if length did not fit, reallocate */
                                 if (Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers.Length != 26)
@@ -491,10 +501,20 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                                     tch2.ChannelMode = channelMode;
                                 }
 
+                                tch1.ARFCN = targetARFCN;
+                                tch2.ARFCN = targetARFCN;
+                                sacch1.ARFCN = targetARFCN;
+                                sacch2.ARFCN = targetARFCN;
+
                                 tch1.TimeSlot = timeSlot;
                                 tch2.TimeSlot = timeSlot;
                                 sacch1.TimeSlot = timeSlot;
                                 sacch2.TimeSlot = timeSlot;
+
+                                tch1.Direction = eLinkDirection.Downlink;
+                                tch1.Direction = eLinkDirection.Downlink;
+                                sacch1.Direction = eLinkDirection.Downlink;
+                                sacch1.Direction = eLinkDirection.Downlink;
 
                                 RegisterActiveBurst(tch1);
                                 RegisterActiveBurst(tch2);
@@ -610,19 +630,24 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                                     int sacchChannel2 = sacchChannel1 + 4;
 
                                     /* release the old burst first */
-                                    Burst burst = Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers[sdcchFrame].Burst;
-                                    ReleaseBurst(burst);
+                                    ReleaseBurst(Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Uplink][timeSlot].Handlers[sdcchFrame].Burst);
+                                    ReleaseBurst(Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers[sdcchFrame].Burst);
 
                                     /* we are releasing a SACCH even if it may be still used by the other SDCCH using it */
-                                    burst = Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers[sacchFrame].Burst;
-                                    ReleaseBurst(burst);
+                                    ReleaseBurst(Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Uplink][timeSlot].Handlers[sacchFrame].Burst);
+                                    ReleaseBurst(Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers[sacchFrame].Burst);
 
                                     /* allocate a new SDCCH */
                                     SDCCHBurst tmpSDCCHUp = new SDCCHBurst(L3, (int)subChannel);
                                     SDCCHBurst tmpSDCCHDown = new SDCCHBurst(L3, (int)subChannel);
 
+                                    tmpSDCCHUp.ARFCN = targetARFCN;
+                                    tmpSDCCHDown.ARFCN = targetARFCN;
                                     tmpSDCCHUp.TimeSlot = timeSlot;
                                     tmpSDCCHDown.TimeSlot = timeSlot;
+                                    tmpSDCCHUp.Direction = eLinkDirection.Uplink;
+                                    tmpSDCCHDown.Direction = eLinkDirection.Downlink;
+
                                     RegisterActiveBurst(tmpSDCCHUp);
                                     RegisterActiveBurst(tmpSDCCHDown);
 
@@ -650,8 +675,13 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                                     SACCHBurst tmpSACCHUp = new SACCHBurst(L3, "SACCH " + sacchChannel1 + "/" + sacchChannel2, (int)sacchChannel1);
                                     SACCHBurst tmpSACCHDown = new SACCHBurst(L3, "SACCH " + sacchChannel1 + "/" + sacchChannel2, (int)sacchChannel1);
 
+                                    tmpSACCHUp.ARFCN = targetARFCN;
+                                    tmpSACCHDown.ARFCN = targetARFCN;
                                     tmpSACCHUp.TimeSlot = timeSlot;
                                     tmpSACCHDown.TimeSlot = timeSlot;
+                                    tmpSACCHUp.Direction = eLinkDirection.Uplink;
+                                    tmpSACCHDown.Direction = eLinkDirection.Downlink;
+
                                     RegisterActiveBurst(tmpSACCHUp);
                                     RegisterActiveBurst(tmpSACCHDown);
 
@@ -732,12 +762,12 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             }
         }
 
-        private void ReleaseTimeSlotBursts(long timeSlot)
+        private void ReleaseTimeSlotBursts(int targetARFCNidx, long timeSlot)
         {
-            for (int frame = 0; frame < Parameters.TimeSlotConfig[Parameters.ARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers.Length; frame++)
+            for (int frame = 0; frame < Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers.Length; frame++)
             {
-                Burst burst = Parameters.TimeSlotConfig[Parameters.ARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers[frame].Burst;
-                ReleaseBurst(burst);
+                ReleaseBurst(Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Uplink][timeSlot].Handlers[frame].Burst);
+                ReleaseBurst(Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers[frame].Burst);
             }
         }
 
@@ -895,14 +925,14 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             {
                 if (Parameters.TimeSlotConfig[Parameters.ARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers == null)
                 {
-                    Parameters.TimeSlotConfig[Parameters.ARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers = new sTimeSlotParam[51];
                     Parameters.TimeSlotConfig[Parameters.ARFCNidx, (int)eLinkDirection.Uplink][timeSlot].Handlers = new sTimeSlotParam[51];
+                    Parameters.TimeSlotConfig[Parameters.ARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers = new sTimeSlotParam[51];
                 }
 
                 for (long pos = frame; pos < frame + 4; pos++)
                 {
-                    Burst burst = Parameters.TimeSlotConfig[Parameters.ARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers[pos].Burst;
-                    ReleaseBurst(burst);
+                    ReleaseBurst(Parameters.TimeSlotConfig[Parameters.ARFCNidx, (int)eLinkDirection.Uplink][timeSlot].Handlers[pos].Burst);
+                    ReleaseBurst(Parameters.TimeSlotConfig[Parameters.ARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers[pos].Burst);
                 }
                 Parameters.TimeSlotConfig[Parameters.ARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers[frame + 0] = new sTimeSlotParam(Burst, 0);
                 Parameters.TimeSlotConfig[Parameters.ARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers[frame + 1] = new sTimeSlotParam(Burst, 1);
@@ -957,6 +987,8 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
                         infoDown[0].Type = eTimeSlotType.BCCH_CCCH_SDCCH4;
                         infoDown[0].Configures++;
+                        infoUp[0].Type = eTimeSlotType.BCCH_CCCH_SDCCH4;
+                        infoUp[0].Configures++;
 
                         /* setup the first block */
                         for (int block = 1; block < 2; block++)
@@ -976,43 +1008,97 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                         /* then two SDCCH blocks */
                         for (int block = 2; block < 4; block++)
                         {
+                            /* FCH/SCH too */
                             infoDown[0].Handlers[block * 10 + 0] = new sTimeSlotParam(FCH, 0);
                             infoDown[0].Handlers[block * 10 + 1] = new sTimeSlotParam(SCH, 0);
 
-                            SDCCHBurst tmpSDCCH1 = new SDCCHBurst(L3, (block - 2) * 2);
-                            RegisterActiveBurst(tmpSDCCH1);
-                            infoDown[0].Handlers[block * 10 + 2] = new sTimeSlotParam(tmpSDCCH1, 0);
-                            infoDown[0].Handlers[block * 10 + 3] = new sTimeSlotParam(tmpSDCCH1, 1);
-                            infoDown[0].Handlers[block * 10 + 4] = new sTimeSlotParam(tmpSDCCH1, 2);
-                            infoDown[0].Handlers[block * 10 + 5] = new sTimeSlotParam(tmpSDCCH1, 3);
+                            SDCCHBurst tmpSDCCH1Down = new SDCCHBurst(L3, (block - 2) * 2);
+                            SDCCHBurst tmpSDCCH2Down = new SDCCHBurst(L3, (block - 2) * 2 + 1);
+                            SDCCHBurst tmpSDCCH1Up = new SDCCHBurst(L3, (block - 2) * 2);
+                            SDCCHBurst tmpSDCCH2Up = new SDCCHBurst(L3, (block - 2) * 2 + 1);
 
-                            SDCCHBurst tmpSDCCH2 = new SDCCHBurst(L3, (block - 2) * 2 + 1);
-                            RegisterActiveBurst(tmpSDCCH2);
-                            infoDown[0].Handlers[block * 10 + 6] = new sTimeSlotParam(tmpSDCCH2, 0);
-                            infoDown[0].Handlers[block * 10 + 7] = new sTimeSlotParam(tmpSDCCH2, 1);
-                            infoDown[0].Handlers[block * 10 + 8] = new sTimeSlotParam(tmpSDCCH2, 2);
-                            infoDown[0].Handlers[block * 10 + 9] = new sTimeSlotParam(tmpSDCCH2, 3);
+                            tmpSDCCH1Down.TimeSlot = 0;
+                            tmpSDCCH2Down.TimeSlot = 0;
+                            tmpSDCCH1Up.TimeSlot = 0;
+                            tmpSDCCH2Up.TimeSlot = 0;
+
+                            tmpSDCCH1Down.Direction = eLinkDirection.Downlink;
+                            tmpSDCCH2Down.Direction = eLinkDirection.Downlink;
+                            tmpSDCCH1Up.Direction = eLinkDirection.Uplink;
+                            tmpSDCCH2Up.Direction = eLinkDirection.Uplink;
+
+                            RegisterActiveBurst(tmpSDCCH1Down);
+                            RegisterActiveBurst(tmpSDCCH2Down);
+                            RegisterActiveBurst(tmpSDCCH1Up);
+                            RegisterActiveBurst(tmpSDCCH2Up);
+
+                            infoDown[0].Handlers[block * 10 + 2] = new sTimeSlotParam(tmpSDCCH1Down, 0);
+                            infoDown[0].Handlers[block * 10 + 3] = new sTimeSlotParam(tmpSDCCH1Down, 1);
+                            infoDown[0].Handlers[block * 10 + 4] = new sTimeSlotParam(tmpSDCCH1Down, 2);
+                            infoDown[0].Handlers[block * 10 + 5] = new sTimeSlotParam(tmpSDCCH1Down, 3);
+
+                            infoDown[0].Handlers[block * 10 + 6] = new sTimeSlotParam(tmpSDCCH2Down, 0);
+                            infoDown[0].Handlers[block * 10 + 7] = new sTimeSlotParam(tmpSDCCH2Down, 1);
+                            infoDown[0].Handlers[block * 10 + 8] = new sTimeSlotParam(tmpSDCCH2Down, 2);
+                            infoDown[0].Handlers[block * 10 + 9] = new sTimeSlotParam(tmpSDCCH2Down, 3);
+
+                            infoUp[0].Handlers[block * 10 + 2] = new sTimeSlotParam(tmpSDCCH1Up, 0);
+                            infoUp[0].Handlers[block * 10 + 3] = new sTimeSlotParam(tmpSDCCH1Up, 1);
+                            infoUp[0].Handlers[block * 10 + 4] = new sTimeSlotParam(tmpSDCCH1Up, 2);
+                            infoUp[0].Handlers[block * 10 + 5] = new sTimeSlotParam(tmpSDCCH1Up, 3);
+
+                            infoUp[0].Handlers[block * 10 + 6] = new sTimeSlotParam(tmpSDCCH2Up, 0);
+                            infoUp[0].Handlers[block * 10 + 7] = new sTimeSlotParam(tmpSDCCH2Up, 1);
+                            infoUp[0].Handlers[block * 10 + 8] = new sTimeSlotParam(tmpSDCCH2Up, 2);
+                            infoUp[0].Handlers[block * 10 + 9] = new sTimeSlotParam(tmpSDCCH2Up, 3);
                         }
 
                         /* finally one SACCH block */
                         for (int block = 4; block < 5; block++)
                         {
+                            /* FCH/SCH too */
                             infoDown[0].Handlers[block * 10 + 0] = new sTimeSlotParam(FCH, 0);
                             infoDown[0].Handlers[block * 10 + 1] = new sTimeSlotParam(SCH, 0);
 
-                            SACCHBurst tmpSACCH1 = new SACCHBurst(L3, "SACCH 0/2", 0);
-                            RegisterActiveBurst(tmpSACCH1);
-                            infoDown[0].Handlers[block * 10 + 2] = new sTimeSlotParam(tmpSACCH1, 0);
-                            infoDown[0].Handlers[block * 10 + 3] = new sTimeSlotParam(tmpSACCH1, 1);
-                            infoDown[0].Handlers[block * 10 + 4] = new sTimeSlotParam(tmpSACCH1, 2);
-                            infoDown[0].Handlers[block * 10 + 5] = new sTimeSlotParam(tmpSACCH1, 3);
+                            SACCHBurst tmpSACCH1Down = new SACCHBurst(L3, "SACCH 0/2", 0);
+                            SACCHBurst tmpSACCH2Down = new SACCHBurst(L3, "SACCH 1/3", 1);
+                            SACCHBurst tmpSACCH1Up = new SACCHBurst(L3, "SACCH 0/2", 0);
+                            SACCHBurst tmpSACCH2Up = new SACCHBurst(L3, "SACCH 1/3", 1);
 
-                            SACCHBurst tmpSACCH2 = new SACCHBurst(L3, "SACCH 1/3", 1);
-                            RegisterActiveBurst(tmpSACCH2);
-                            infoDown[0].Handlers[block * 10 + 6] = new sTimeSlotParam(tmpSACCH2, 0);
-                            infoDown[0].Handlers[block * 10 + 7] = new sTimeSlotParam(tmpSACCH2, 1);
-                            infoDown[0].Handlers[block * 10 + 8] = new sTimeSlotParam(tmpSACCH2, 2);
-                            infoDown[0].Handlers[block * 10 + 9] = new sTimeSlotParam(tmpSACCH2, 3);
+                            tmpSACCH1Down.TimeSlot = 0;
+                            tmpSACCH2Down.TimeSlot = 0;
+                            tmpSACCH1Up.TimeSlot = 0;
+                            tmpSACCH2Up.TimeSlot = 0;
+
+                            tmpSACCH1Down.Direction = eLinkDirection.Downlink;
+                            tmpSACCH2Down.Direction = eLinkDirection.Downlink;
+                            tmpSACCH1Up.Direction = eLinkDirection.Uplink;
+                            tmpSACCH2Up.Direction = eLinkDirection.Uplink;
+
+                            RegisterActiveBurst(tmpSACCH1Down);
+                            RegisterActiveBurst(tmpSACCH2Down);
+                            RegisterActiveBurst(tmpSACCH1Up);
+                            RegisterActiveBurst(tmpSACCH2Up);
+
+                            infoDown[0].Handlers[block * 10 + 2] = new sTimeSlotParam(tmpSACCH1Down, 0);
+                            infoDown[0].Handlers[block * 10 + 3] = new sTimeSlotParam(tmpSACCH1Down, 1);
+                            infoDown[0].Handlers[block * 10 + 4] = new sTimeSlotParam(tmpSACCH1Down, 2);
+                            infoDown[0].Handlers[block * 10 + 5] = new sTimeSlotParam(tmpSACCH1Down, 3);
+
+                            infoDown[0].Handlers[block * 10 + 6] = new sTimeSlotParam(tmpSACCH2Down, 0);
+                            infoDown[0].Handlers[block * 10 + 7] = new sTimeSlotParam(tmpSACCH2Down, 1);
+                            infoDown[0].Handlers[block * 10 + 8] = new sTimeSlotParam(tmpSACCH2Down, 2);
+                            infoDown[0].Handlers[block * 10 + 9] = new sTimeSlotParam(tmpSACCH2Down, 3);
+
+                            infoUp[0].Handlers[block * 10 + 2] = new sTimeSlotParam(tmpSACCH1Up, 0);
+                            infoUp[0].Handlers[block * 10 + 3] = new sTimeSlotParam(tmpSACCH1Up, 1);
+                            infoUp[0].Handlers[block * 10 + 4] = new sTimeSlotParam(tmpSACCH1Up, 2);
+                            infoUp[0].Handlers[block * 10 + 5] = new sTimeSlotParam(tmpSACCH1Up, 3);
+
+                            infoUp[0].Handlers[block * 10 + 6] = new sTimeSlotParam(tmpSACCH2Up, 0);
+                            infoUp[0].Handlers[block * 10 + 7] = new sTimeSlotParam(tmpSACCH2Up, 1);
+                            infoUp[0].Handlers[block * 10 + 8] = new sTimeSlotParam(tmpSACCH2Up, 2);
+                            infoUp[0].Handlers[block * 10 + 9] = new sTimeSlotParam(tmpSACCH2Up, 3);
                         }
                         break;
 
@@ -1104,7 +1190,6 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
                     /* 4 basic physical channels used for CCCH, not combined with SDCCHs */
                     case 4:
-
                         infoDown[0].Type = eTimeSlotType.BCCH_CCCH;
                         infoDown[1].Type = eTimeSlotType.BCCH_CCCH;
                         infoDown[2].Type = eTimeSlotType.BCCH_CCCH;

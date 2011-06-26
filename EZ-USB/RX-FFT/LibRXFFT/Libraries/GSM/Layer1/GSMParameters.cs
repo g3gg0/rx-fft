@@ -144,6 +144,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                 return ActiveBursts.Contains(burst);
             }
         }
+
         /* 
          * This array will contain all handlers in the format:
          *
@@ -503,7 +504,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                                 if (handler != null)
                                     retVal += handler.ShortName;
                                 else
-                                    retVal += "-- ";
+                                    retVal += " - ";
                             }
                         }
                         retVal += " |" + Environment.NewLine;

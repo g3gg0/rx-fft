@@ -29,47 +29,50 @@ namespace GSM_Analyzer
 
             foreach (NormalBurst burst in bursts)
             {
-                StatusLamp lamp = GetLamp(burst);
-                string status = "---";
-
-                switch (burst.State)
+                if (burst.Direction == LibRXFFT.Libraries.GSM.Layer1.eLinkDirection.Downlink)
                 {
-                    case NormalBurst.eBurstState.Idle:
-                        status = "Idle";
-                        lamp.State = eLampState.Grayed;
-                        break;
+                    StatusLamp lamp = GetLamp(burst);
+                    string status = "---";
 
-                    case NormalBurst.eBurstState.PlainTraffic:
-                        status = "not encrypted";
-                        lamp.State = eLampState.Green;
-                        break;
-
-                    case NormalBurst.eBurstState.CryptedTraffic:
-                        status = "encrypted";
-                        lamp.State = eLampState.Red;
-                        break;
-
-                    case NormalBurst.eBurstState.DecryptedTraffic:
-                        status = "encrypted (Kc: " + ByteUtil.BytesToString(burst.A5CipherKey) + ")";
-                        lamp.State = eLampState.Yellow;
-                        break;
-                }
-
-                lock (BurstLampMap)
-                {
-                    BurstStatusMap[burst] = status;
-                }
-
-                lock (lblDetails)
-                {
-                    if (CurrentHoveredBurst == burst)
+                    switch (burst.State)
                     {
-                        string msg = "[" + burst.Name + "], TS: " + burst.TimeSlot + ", " + BurstStatusMap[burst];
+                        case NormalBurst.eBurstState.Idle:
+                            status = "Idle";
+                            lamp.State = eLampState.Grayed;
+                            break;
 
-                        BeginInvoke(new Action(() =>
+                        case NormalBurst.eBurstState.PlainTraffic:
+                            status = "not encrypted";
+                            lamp.State = eLampState.Green;
+                            break;
+
+                        case NormalBurst.eBurstState.CryptedTraffic:
+                            status = "encrypted";
+                            lamp.State = eLampState.Red;
+                            break;
+
+                        case NormalBurst.eBurstState.DecryptedTraffic:
+                            status = "encrypted (Kc: " + ByteUtil.BytesToString(burst.A5CipherKey) + ")";
+                            lamp.State = eLampState.Yellow;
+                            break;
+                    }
+
+                    lock (BurstLampMap)
+                    {
+                        BurstStatusMap[burst] = status;
+                    }
+
+                    lock (lblDetails)
+                    {
+                        if (CurrentHoveredBurst == burst)
                         {
-                            lblDetails.Text = msg;
-                        }));
+                            string msg = "[" + burst.Name + "], TS: " + burst.TimeSlot + ", " + BurstStatusMap[burst];
+
+                            BeginInvoke(new Action(() =>
+                            {
+                                lblDetails.Text = msg;
+                            }));
+                        }
                     }
                 }
             }
@@ -135,7 +138,7 @@ namespace GSM_Analyzer
                 lock (lblDetails)
                 {
                     CurrentHoveredBurst = burst;
-                    lblDetails.Text = "[" + burst.Name + "], TS: " + burst.TimeSlot + ", " + BurstStatusMap[burst];
+                    lblDetails.Text = "[" + burst.Name + "], ARFCN: " + burst.ARFCN + " TS: " + burst.TimeSlot + ", " + BurstStatusMap[burst];
                 }
             };
 
@@ -159,56 +162,63 @@ namespace GSM_Analyzer
             return lamp;
         }
 
+        private DateTime LastUpdate = DateTime.Now;
+
         private void RebuildLamps()
         {
-            BeginInvoke(new Action(() =>
+            if ((DateTime.Now - LastUpdate).TotalMilliseconds > 250)
             {
-                try
+                LastUpdate = DateTime.Now;
+                BeginInvoke(new Action(() =>
                 {
-                    SortedList<string, StatusLamp> lampsSDCCH = new SortedList<string, StatusLamp>();
-                    SortedList<string, StatusLamp> lampsTCH = new SortedList<string, StatusLamp>();
-
-                    lock (BurstLampMap)
+                    try
                     {
-                        foreach (KeyValuePair<NormalBurst, StatusLamp> pair in BurstLampMap)
+                        SortedList<string, StatusLamp> lampsSDCCH = new SortedList<string, StatusLamp>();
+                        SortedList<string, StatusLamp> lampsTCH = new SortedList<string, StatusLamp>();
+
+                        lock (BurstLampMap)
                         {
-                            string sortOrder = pair.Key.TimeSlot + pair.Key.Name;
-
-                            if (pair.Key is TCHBurst)
+                            foreach (KeyValuePair<NormalBurst, StatusLamp> pair in BurstLampMap)
                             {
-                                lampsTCH.Add(sortOrder, pair.Value);
-                            }
+                                string sortOrder = pair.Key.ARFCN + pair.Key.TimeSlot + pair.Key.Name + pair.Key.Direction;
 
-                            if (pair.Key is SDCCHBurst)
-                            {
-                                lampsSDCCH.Add(sortOrder, pair.Value);
+                                if (pair.Key is TCHBurst)
+                                {
+                                    lampsTCH.Add(sortOrder, pair.Value);
+                                }
+
+                                if (pair.Key is SDCCHBurst)
+                                {
+                                    lampsSDCCH.Add(sortOrder, pair.Value);
+                                }
                             }
                         }
+                    
+
+                        panelSDCCH.SuspendLayout();
+                        panelTCH.SuspendLayout();
+
+                        panelSDCCH.Controls.Clear();
+                        panelTCH.Controls.Clear();
+
+                        foreach (KeyValuePair<string, StatusLamp> pair in lampsSDCCH)
+                        {
+                            panelSDCCH.Controls.Add(pair.Value);
+                        }
+                        foreach (KeyValuePair<string, StatusLamp> pair in lampsTCH)
+                        {
+                            panelTCH.Controls.Add(pair.Value);
+                        }
+
+                        panelSDCCH.ResumeLayout();
+                        panelTCH.ResumeLayout();
                     }
-
-                    panelSDCCH.SuspendLayout();
-                    panelTCH.SuspendLayout();
-
-                    panelSDCCH.Controls.Clear();
-                    panelTCH.Controls.Clear();
-
-                    foreach (KeyValuePair<string, StatusLamp> pair in lampsSDCCH)
+                    catch (Exception e)
                     {
-                        panelSDCCH.Controls.Add(pair.Value);
-                    }
-                    foreach (KeyValuePair<string, StatusLamp> pair in lampsTCH)
-                    {
-                        panelTCH.Controls.Add(pair.Value);
                     }
 
-                    panelSDCCH.ResumeLayout();
-                    panelTCH.ResumeLayout();
-                }
-                catch (Exception e)
-                {
-                }
-
-            }));
+                }));
+            }
         }
     }
 }

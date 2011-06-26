@@ -54,8 +54,11 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             BCCH = new BCCHBurst(L3);
             CCCH = new CCCHBurst(L3);
 
-            Parameters.UsedBursts.AddLast(BCCH);
-            Parameters.UsedBursts.AddLast(CCCH);
+            lock (Parameters.UsedBursts)
+            {
+                Parameters.UsedBursts.AddLast(BCCH);
+                Parameters.UsedBursts.AddLast(CCCH);
+            }
 
             L3.PDUDataTriggers.Add("ServiceRequest", TriggerServiceRequest);
             L3.PDUDataTriggers.Add("LocationUpdateTypeSet", TriggerLocationUpdateRequest);
@@ -98,10 +101,13 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                     TCHBurst tch = new TCHBurst(L3, "TCH" + timeSlot + "/F", (int)timeSlot);
                     SACCHBurst sacch = new SACCHBurst(L3, "SACCH/TCH" + timeSlot, (int)timeSlot, true);
 
-                    tch.AssociatedSACCH = sacch;
-                    sacch.AssociatedTCH = tch;
-                    Parameters.UsedBursts.AddLast(tch);
-                    Parameters.UsedBursts.AddLast(sacch);
+                    lock (Parameters.UsedBursts)
+                    {
+                        tch.AssociatedSACCH = sacch;
+                        sacch.AssociatedTCH = tch;
+                        Parameters.UsedBursts.AddLast(tch);
+                        Parameters.UsedBursts.AddLast(sacch);
+                    }
 
                     for (int frame = 0; frame < 25; frame++)
                     {
@@ -176,8 +182,11 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                     LuaHelpers.CallFunction(Parameters.LuaVm, "RegisterActiveBurst", true, burst, Parameters);
                 }
 
-                Parameters.ActiveBursts.AddLast(burst);
-                Parameters.UsedBursts.AddLast(burst);
+                lock (Parameters.UsedBursts)
+                {
+                    Parameters.ActiveBursts.AddLast(burst);
+                    Parameters.UsedBursts.AddLast(burst);
+                }
             }
         }
 
@@ -337,10 +346,12 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                 reference.T3 = L3Handler.PDUDataRawFields["RefT3"];
             }
 
+            bool reconfigure = Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers == null || Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Type != channelType;
+            
             /* was: assigned time slot type does not match? */
             /* now: make sure thats no hopping channel. no chance yet to decode */
 
-            if (!hopping /*|| Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers == null || Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers.Type != channelType*/)
+            if (!hopping)
             {
                 lock (Parameters.TimeSlotConfig)
                 {
@@ -710,10 +721,13 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                             break;
                     }
 
-                    Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Type = channelType;
-                    Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Configures++;
-                    Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Uplink][timeSlot].Type = channelType;
-                    Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Uplink][timeSlot].Configures++;
+                    if (reconfigure)
+                    {
+                        Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Type = channelType;
+                        Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Configures++;
+                        Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Uplink][timeSlot].Type = channelType;
+                        Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Uplink][timeSlot].Configures++;
+                    }
                 }
             }
 
@@ -872,7 +886,11 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
             long frame = 0;
             CBCHBurst Burst = new CBCHBurst(L3, (int)subChannel);
-            Parameters.UsedBursts.AddLast(Burst);
+
+            lock (Parameters.UsedBursts)
+            {
+                Parameters.UsedBursts.AddLast(Burst);
+            }
 
             /* type 4 is in timeslot 0 and shared with BCCH, CCCH and SDCCH */
             if (channelType == 4)

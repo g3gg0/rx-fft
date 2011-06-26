@@ -250,8 +250,11 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             LAC = -1;
             CellIdent = -1;
 
-            ActiveBursts.Clear();
-            UsedBursts.Clear();
+            lock (UsedBursts)
+            {
+                ActiveBursts.Clear();
+                UsedBursts.Clear();
+            }
 
             /* set up default arfcn map */
             ArfcnMap.Clear();
@@ -413,9 +416,9 @@ namespace LibRXFFT.Libraries.GSM.Layer1
         {
             string retVal = "";
 
-            for (int pos = 0; pos < TimeSlotConfig.Length; pos++)
+            lock (TimeSlotConfig)
             {
-                lock (TimeSlotConfig)
+                for (int pos = 0; pos < TimeSlotConfig.Length; pos++)
                 {
                     Hashtable handlers = new Hashtable();
 
@@ -463,21 +466,29 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                                 else
                                     retVal += "-- ";
                             }
-                        }                        
+                        }
                         retVal += " |" + Environment.NewLine;
                     }
 
                     retVal += "  ------------------------------------------------------------------------------------ - -  -  -" + Environment.NewLine;
 
                     ArrayList lines = new ArrayList();
+
                 }
-            } 
-            
-            retVal += Environment.NewLine;
-            retVal += "Handler details:" + Environment.NewLine;
-            foreach (NormalBurst burst in UsedBursts)
-            {
-                retVal += string.Format("  {0,12}:  [Data: {1,6}]  [Crypt: {2,6}]  [Dummy: {3,6}]   [{4}] - [{5}]" + Environment.NewLine, burst.Name, burst.DataBursts, burst.CryptedFrames, burst.DummyBursts, burst.AllocationTime, (burst.Released ? burst.ReleaseTime.ToString() : "now"));
+
+                if (false)
+                {
+                    retVal += Environment.NewLine;
+                    retVal += "Handler details:" + Environment.NewLine;
+
+                    lock (UsedBursts)
+                    {
+                        foreach (NormalBurst burst in UsedBursts)
+                        {
+                            retVal += string.Format("  {0,12}:  [Data: {1,6}]  [Crypt: {2,6}]  [Dummy: {3,6}]   [{4}] - [{5}]" + Environment.NewLine, burst.Name, burst.DataBursts, burst.CryptedFrames, burst.DummyBursts, burst.AllocationTime, (burst.Released ? burst.ReleaseTime.ToString() : "now"));
+                        }
+                    }
+                }
             }
 
             retVal += Environment.NewLine;
@@ -605,9 +616,15 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                 sTimeSlotInfo[,][] tmp = new sTimeSlotInfo[newIndex + 1, 2][];
                 Array.Copy(TimeSlotConfig, tmp, TimeSlotConfig.Length);
 
+                /* and set up new ARFCN timeslots */
+                for (int pos = 0; pos < 2; pos++)
+                {
+                    tmp[newIndex, pos] = new sTimeSlotInfo[8];
+                }
+
                 TimeSlotConfig = tmp;
 
-                /* and put reference */
+                /* put reference */
                 ArfcnMap.Add(arfcn, newIndex);
                 ArfcnMapRev.Add(newIndex, arfcn);
             }

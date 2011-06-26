@@ -53,13 +53,10 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             SCH = new SCHBurst(param);
             BCCH = new BCCHBurst(L3);
             CCCH = new CCCHBurst(L3);
-
-            lock (Parameters.UsedBursts)
-            {
-                Parameters.UsedBursts.AddLast(BCCH);
-                Parameters.UsedBursts.AddLast(CCCH);
-            }
-
+            
+            Parameters.AddUsedBurst(BCCH);
+            Parameters.AddUsedBurst(CCCH);
+            
             L3.PDUDataTriggers.Add("ServiceRequest", TriggerServiceRequest);
             L3.PDUDataTriggers.Add("LocationUpdateTypeSet", TriggerLocationUpdateRequest);
             L3.PDUDataTriggers.Add("PagingResponseReceived", TriggerPagingResponse);
@@ -100,15 +97,12 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
                     TCHBurst tch = new TCHBurst(L3, "TCH" + timeSlot + "/F", (int)timeSlot);
                     SACCHBurst sacch = new SACCHBurst(L3, "SACCH/TCH" + timeSlot, (int)timeSlot, true);
-
-                    lock (Parameters.UsedBursts)
-                    {
-                        tch.AssociatedSACCH = sacch;
-                        sacch.AssociatedTCH = tch;
-                        Parameters.UsedBursts.AddLast(tch);
-                        Parameters.UsedBursts.AddLast(sacch);
-                    }
-
+                    
+                    tch.AssociatedSACCH = sacch;
+                    sacch.AssociatedTCH = tch;
+                    Parameters.AddUsedBurst(tch);
+                    Parameters.AddUsedBurst(sacch);
+                    
                     for (int frame = 0; frame < 25; frame++)
                     {
                         if (frame == 12)
@@ -174,7 +168,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
         private void RegisterActiveBurst(NormalBurst burst)
         {
-            if (burst != null && !Parameters.ActiveBursts.Contains(burst))
+            if (burst != null && !Parameters.ContainsActiveBursts(burst))
             {
                 /* call LUA script */
                 if (Parameters.LuaVm != null)
@@ -182,17 +176,15 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                     LuaHelpers.CallFunction(Parameters.LuaVm, "RegisterActiveBurst", true, burst, Parameters);
                 }
 
-                lock (Parameters.UsedBursts)
-                {
-                    Parameters.ActiveBursts.AddLast(burst);
-                    Parameters.UsedBursts.AddLast(burst);
-                }
+                Parameters.AddActiveBurst(burst);
+                Parameters.AddUsedBurst(burst);
             }
         }
+        
 
         private void UnregisterActiveBurst(NormalBurst burst)
         {
-            if (burst != null && Parameters.ActiveBursts.Contains(burst))
+            if (burst != null && Parameters.ContainsActiveBursts(burst))
             {
                 /* call LUA script */
                 if (Parameters.LuaVm != null)
@@ -200,7 +192,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                     LuaHelpers.CallFunction(Parameters.LuaVm, "UnregisterActiveBurst", true, burst, Parameters);
                 }
 
-                Parameters.ActiveBursts.Remove(burst);
+                Parameters.RemoveActiveBurst(burst);
             }
         }
 
@@ -886,11 +878,8 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
             long frame = 0;
             CBCHBurst Burst = new CBCHBurst(L3, (int)subChannel);
-
-            lock (Parameters.UsedBursts)
-            {
-                Parameters.UsedBursts.AddLast(Burst);
-            }
+            
+            Parameters.AddUsedBurst(Burst);
 
             /* type 4 is in timeslot 0 and shared with BCCH, CCCH and SDCCH */
             if (channelType == 4)

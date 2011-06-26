@@ -320,6 +320,7 @@
     <Compile Include="Libraries\Filters\FilterThread.cs" />
     <Compile Include="Libraries\Filters\IIRCoefficients.cs" />
     <Compile Include="Libraries\Filters\IIRFilter.cs" />
+    <Compile Include="Libraries\GSM\Layer1\ChannelCoding\ViterbiR2O4.cs" />
     <Compile Include="Libraries\GSM\Layer1\CryptA5.cs" />
     <Compile Include="Libraries\GSM\Layer1\PacketDump\GsmAnalyzerDump.cs" />
     <Compile Include="Libraries\GSM\Layer1\PacketDump\GsmTapWriter.cs" />
@@ -532,6 +533,9 @@
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Service References\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram1.cd" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

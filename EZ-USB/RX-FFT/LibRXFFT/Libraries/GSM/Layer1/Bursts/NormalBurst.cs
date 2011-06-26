@@ -204,6 +204,20 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
             Deinterleave(BurstBufferI);
         }
 
+        internal void Interleave(bool[] sourceBufferC)
+        {
+            bool[][] BufC = new bool[1][];
+            BufC[0] = sourceBufferC;
+
+            InterleaveCoder.Interleave(BufC, BurstBufferI );
+
+        }
+
+        internal void Interleave()
+        {
+            Interleave(BurstBufferC);
+        }
+
         internal eCorrectionResult Deconvolution()
         {
             int failures = ConvolutionalCoder.Decode(BurstBufferC, ref BurstBufferU);
@@ -220,6 +234,11 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
             {
                 return eCorrectionResult.Failed;
             }
+        }
+
+        internal void Convolution()
+        {
+            ConvolutionalCoder.Encode(BurstBufferU, BurstBufferC);
         }
 
         internal eCorrectionResult CRCCheck()
@@ -243,6 +262,11 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
         internal void PackBytes()
         {
             ByteUtil.BitsToBytesRev(BurstBufferU, BurstBufferD, 0, 184);
+        }
+
+        internal void UnpackBytes()
+        {
+            ByteUtil.BytesToBitsRev(BurstBufferD, ref BurstBufferU);
         }
 
         internal bool IsHL(bool[] decodedBurst)
@@ -832,5 +856,31 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
 
             return true;
         }
+
+        public void L2DataAdd(byte[] l2data)
+        {
+            Array.Copy(l2data, BurstBufferD, l2data.Length);
+        }
+
+        public void L2ToL1Convert()
+        {
+            UnpackBytes();
+
+            CRC.Calc(BurstBufferU, 0, 224, CRC.PolynomialFIRE, FireCRCBuffer);
+            ByteUtil.InvertBits(FireCRCBuffer);
+            Array.Copy(FireCRCBuffer, 0, BurstBufferU, 184, FireCRCBuffer.Length);
+
+            Convolution();
+            Interleave();
+
+
+        }
+
+        public void L1BurstGet(ref bool[][] bursts)
+        {
+            for (int i = 0; i < BurstBufferI.Length; i++)
+                Array.Copy(BurstBufferI[i], bursts[i], BurstBufferI[i].Length);
+        }
+
     }
 }

@@ -64,6 +64,8 @@ namespace GSM_Analyzer
         private SpectrumVisualizer SpectrumWindow;
         private OptionsDialog OptionsWindow;
         private StationListDialog StationDialog;
+        private FrameEncoderDialog FrameEncoderDialog;
+        private KrakenTestDialog KrakenTestDialog;
 
         private Object BurstWindowLock = new Object();
         private Object SpectrumWindowLock = new Object();
@@ -1942,6 +1944,35 @@ namespace GSM_Analyzer
             string text = txtLog.Text;
 
             Clipboard.SetDataObject(text, true);
+        }
+
+        private void btnFrameEncode_Click(object sender, EventArgs e)
+        {
+            if (FrameEncoderDialog == null || !FrameEncoderDialog.Visible)
+            {
+                FrameEncoderDialog = new FrameEncoderDialog();
+                FrameEncoderDialog.Show();
+            }
+            else
+            {
+                FrameEncoderDialog.Close();
+                FrameEncoderDialog = null;
+            }
+        }
+
+        private void krakenTestToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (KrakenTestDialog == null || !KrakenTestDialog.Visible)
+            {
+                KrakenTestDialog = new KrakenTestDialog(this);
+                KrakenTestDialog.Show();
+            }
+            else
+            {
+                KrakenTestDialog.Close();
+                KrakenTestDialog = null;
+            }
+
         }
     }
 }

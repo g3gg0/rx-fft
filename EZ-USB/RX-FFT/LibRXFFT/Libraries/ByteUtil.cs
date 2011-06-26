@@ -290,6 +290,28 @@ namespace LibRXFFT.Libraries
             return dstData;
         }
 
+        public static bool[] BytesToBitsRev(byte[] srcData, ref bool[] dstData)
+        {
+            if (dstData == null)
+                dstData = new bool[srcData.Length * 8];
+
+            for (int bytePos = 0; bytePos < srcData.Length; bytePos++)
+            {
+                byte inByte = srcData[bytePos];
+
+                for (int bitPos = 0; bitPos < 8; bitPos++)
+                {
+                    byte bitValue = (byte)(1 << bitPos);
+                    bool bitSet = ((inByte & bitValue) == bitValue);
+
+                    dstData[bytePos * 8 + bitPos] = bitSet;
+                }
+            }
+
+            return dstData;
+
+        }
+
 
         /*
         * Converts two Little Endian bytes to a double and back.
@@ -611,9 +633,15 @@ namespace LibRXFFT.Libraries
 
         public static bool BytesFromString(string inData, ref byte[] outData)
         {
-            for (int pos = 0; pos < 8; pos++)
+            int charsPerByte = 2;
+
+            /* white space detection */
+            if (inData.Length >= 3 && inData[2] == ' ')
+                charsPerByte = 3;
+
+            for (int pos = 0; pos < (inData.Length+1)/charsPerByte; pos++)
             {
-                string byteStr = inData.Substring(pos * 2, 2);
+                string byteStr = inData.Substring(pos * charsPerByte, 2);
 
                 if (!byte.TryParse(byteStr, System.Globalization.NumberStyles.HexNumber, null, out outData[pos]))
                 {
@@ -622,6 +650,17 @@ namespace LibRXFFT.Libraries
             }
 
             return true;
+        }
+
+        public static bool[] InvertBits(bool[] data)
+        {
+            if (data == null)
+                return null;
+
+            for (int i = 0; i < data.Length; i++)
+                data[i] ^= true;
+
+            return data;
         }
     }
 }

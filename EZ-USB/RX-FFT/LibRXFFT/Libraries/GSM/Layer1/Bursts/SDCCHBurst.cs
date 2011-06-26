@@ -7,6 +7,15 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
     {
         private int SubChannel;
         
+        /* needed for L2->L1 */
+        public SDCCHBurst ()
+        {
+            L3 = null;
+            Name = "SDCCH";
+            ShortName = "SD ";
+
+            InitBuffers(4);
+        }
 
         public SDCCHBurst(L3Handler l3)
         {

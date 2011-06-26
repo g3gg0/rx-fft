@@ -660,6 +660,11 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                 for (int pos = 0; pos < 2; pos++)
                 {
                     tmp[newIndex, pos] = new sTimeSlotInfo[8];
+                    for (int timeSlot = 0; timeSlot < 8; timeSlot++)
+                    {
+                        tmp[newIndex, pos][timeSlot].Type = eTimeSlotType.Unconfigured;
+                        tmp[newIndex, pos][timeSlot].SubChanAssignments = new int[8];
+                    }
                 }
 
                 TimeSlotConfig = tmp;

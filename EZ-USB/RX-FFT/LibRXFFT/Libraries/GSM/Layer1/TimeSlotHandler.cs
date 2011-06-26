@@ -339,7 +339,8 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             }
 
             bool reconfigure = Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers == null || Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Type != channelType;
-            
+            bool assignment = false;
+
             /* was: assigned time slot type does not match? */
             /* now: make sure thats no hopping channel. no chance yet to decode */
 
@@ -356,6 +357,9 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                             }
                             else
                             {
+                                /* this is a new assignment */
+                                assignment = true;
+
                                 if (Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers == null)
                                 {
                                     Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Uplink][timeSlot].Handlers = new sTimeSlotParam[26];
@@ -469,6 +473,9 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                             }
                             else
                             {
+                                /* this is a new assignment */
+                                assignment = true;
+
                                 UnregisterActiveBursts(Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers);
 
                                 if (Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers == null)
@@ -581,7 +588,6 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                             break;
 
                         case eTimeSlotType.SDCCH8:
-                            if (timeSlot != 0)
                             {
 #if false
                                 AddMessage("   [L1] TimeSlot " + timeSlot + " of ARFCN " + targetARFCN + " now configured as SDCCH/8 (was " + Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers.Type + ")" + Environment.NewLine);
@@ -625,6 +631,9 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                                 }
                                 else
                                 {
+                                    /* this is a new assignment */
+                                    assignment = true;
+
                                     AddMessage("  [__] TimeSlot " + timeSlot + " of ARFCN " + targetARFCN + " now configured as SDCCH/8 (was " + Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Type + ")" + Environment.NewLine);
                                     int sacchChannel1 = (int)subChannel / 2;
                                     int sacchChannel2 = sacchChannel1 + 4;
@@ -699,42 +708,125 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                                 }
 #endif
                             }
-                            else
-                            {
-                                AddMessage("  [__] TimeSlot " + timeSlot + " of ARFCN " + targetARFCN + " NOT configured for SDCCH/8 as requested. Stays " + Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Type + Environment.NewLine);
-                            }
                             break;
 
                         case eTimeSlotType.BCCH_CCCH_SDCCH4:
-                            int framePos = GetFrameNumForChannel(channelType, eChannelType.SDCCH, (int)subChannel);
-
-                            if (Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers != null && (framePos < Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers.Length))
                             {
-                                AddMessage("  [__] TimeSlot " + timeSlot + " of ARFCN " + targetARFCN + " SDCCH subchan " + subChannel + " assigned" + Environment.NewLine);
+                                int sdcchFrame = GetFrameNumForChannel(channelType, eChannelType.SDCCH, (int)subChannel);
+                                int sacchFrame = GetFrameNumForChannel(channelType, eChannelType.SACCH, (int)subChannel);
 
-                                Burst burst = Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers[framePos].Burst;
-
-                                /* safety measure */
-                                if (!(burst is NormalBurst))
+                                if (Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers != null && (sdcchFrame < Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers.Length))
                                 {
-                                    /* wait... what?! */
-                                    AddMessage("  [EE] TimeSlot " + timeSlot + " of ARFCN " + targetARFCN + " SDCCH subchan " + subChannel + " expected" + Environment.NewLine);
-                                    break;
-                                }
-                                NormalBurst assigned = (NormalBurst)burst;
+                                    if (Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers[sdcchFrame].Reference == reference)
+                                    {
+                                        //AddMessage("   [L1] TimeSlot " + timeSlot + " already configured as BCCH_CCCH_SDCCH4 (was " + Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers.Type + ")" + Environment.NewLine);
+                                    }
+                                    else
+                                    {
+#if false
+                                    AddMessage("  [__] TimeSlot " + timeSlot + " of ARFCN " + targetARFCN + " SDCCH subchan " + subChannel + " assigned" + Environment.NewLine);
 
-                                if (L3Handler.PDUDataFields.ContainsKey("EstablishmentCause"))
+                                    Burst burst = Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers[framePos].Burst;
+
+                                    /* safety measure */
+                                    if (!(burst is NormalBurst))
+                                    {
+                                        /* wait... what?! */
+                                        AddMessage("  [EE] TimeSlot " + timeSlot + " of ARFCN " + targetARFCN + " SDCCH subchan " + subChannel + " expected" + Environment.NewLine);
+                                        break;
+                                    }
+                                    NormalBurst assigned = (NormalBurst)burst;
+
+                                    if (L3Handler.PDUDataFields.ContainsKey("EstablishmentCause"))
+                                    {
+                                        assigned.EstablishmentCause = L3Handler.PDUDataFields["EstablishmentCause"];
+                                        assigned.ServiceType = "(not set)";
+
+                                        /* remove this info to prevent false detection for later causes */
+                                        L3Handler.PDUDataFields.Remove("EstablishmentCause");
+                                    }
+#endif
+
+                                        /* this is a new assignment */
+                                        assignment = true;
+
+                                        AddMessage("  [__] TimeSlot " + timeSlot + " of ARFCN " + targetARFCN + " now configured as SDCCH/8 (was " + Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Type + ")" + Environment.NewLine);
+                                        int sacchChannel1 = (int)subChannel / 2;
+                                        int sacchChannel2 = sacchChannel1 + 4;
+
+                                        /* release the old burst first */
+                                        ReleaseBurst(Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Uplink][timeSlot].Handlers[sdcchFrame].Burst);
+                                        ReleaseBurst(Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers[sdcchFrame].Burst);
+
+                                        /* we are releasing a SACCH even if it may be still used by the other SDCCH using it */
+                                        ReleaseBurst(Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Uplink][timeSlot].Handlers[sacchFrame].Burst);
+                                        ReleaseBurst(Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers[sacchFrame].Burst);
+
+                                        /* allocate a new SDCCH */
+                                        SDCCHBurst tmpSDCCHUp = new SDCCHBurst(L3, (int)subChannel);
+                                        SDCCHBurst tmpSDCCHDown = new SDCCHBurst(L3, (int)subChannel);
+
+                                        tmpSDCCHUp.ARFCN = targetARFCN;
+                                        tmpSDCCHDown.ARFCN = targetARFCN;
+                                        tmpSDCCHUp.TimeSlot = timeSlot;
+                                        tmpSDCCHDown.TimeSlot = timeSlot;
+                                        tmpSDCCHUp.Direction = eLinkDirection.Uplink;
+                                        tmpSDCCHDown.Direction = eLinkDirection.Downlink;
+
+                                        RegisterActiveBurst(tmpSDCCHUp);
+                                        RegisterActiveBurst(tmpSDCCHDown);
+
+                                        if (L3Handler.PDUDataFields.ContainsKey("EstablishmentCause"))
+                                        {
+                                            tmpSDCCHUp.EstablishmentCause = L3Handler.PDUDataFields["EstablishmentCause"];
+                                            tmpSDCCHUp.ServiceType = "(not set)";
+                                            tmpSDCCHDown.EstablishmentCause = L3Handler.PDUDataFields["EstablishmentCause"];
+                                            tmpSDCCHDown.ServiceType = "(not set)";
+
+                                            /* remove this info to prevent false detection for later causes */
+                                            L3Handler.PDUDataFields.Remove("EstablishmentCause");
+                                        }
+
+                                        int sequence = 0;
+                                        for (int pos = sdcchFrame; pos < sdcchFrame + 4; pos++)
+                                        {
+                                            Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers[pos] = new sTimeSlotParam(tmpSDCCHUp, sequence);
+                                            Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers[pos].Reference = reference;
+                                            Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Uplink][timeSlot].Handlers[pos] = new sTimeSlotParam(tmpSDCCHDown, sequence++);
+                                            Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Uplink][timeSlot].Handlers[pos].Reference = reference;
+                                        }
+
+                                        /* we are allocating a new SACCH even if it may be used by the other SDCCH using it */
+                                        SACCHBurst tmpSACCHUp = new SACCHBurst(L3, "SACCH " + sacchChannel1 + "/" + sacchChannel2, (int)sacchChannel1);
+                                        SACCHBurst tmpSACCHDown = new SACCHBurst(L3, "SACCH " + sacchChannel1 + "/" + sacchChannel2, (int)sacchChannel1);
+
+                                        tmpSACCHUp.ARFCN = targetARFCN;
+                                        tmpSACCHDown.ARFCN = targetARFCN;
+                                        tmpSACCHUp.TimeSlot = timeSlot;
+                                        tmpSACCHDown.TimeSlot = timeSlot;
+                                        tmpSACCHUp.Direction = eLinkDirection.Uplink;
+                                        tmpSACCHDown.Direction = eLinkDirection.Downlink;
+
+                                        RegisterActiveBurst(tmpSACCHUp);
+                                        RegisterActiveBurst(tmpSACCHDown);
+
+                                        sequence = 0;
+                                        for (int pos = sacchFrame; pos < sacchFrame + 4; pos++)
+                                        {
+                                            Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers[pos] = new sTimeSlotParam(tmpSACCHUp, sequence);
+                                            Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers[pos].Reference = reference;
+                                            Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Uplink][timeSlot].Handlers[pos] = new sTimeSlotParam(tmpSACCHDown, sequence++);
+                                            Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Uplink][timeSlot].Handlers[pos].Reference = reference;
+                                        }
+
+                                        tmpSDCCHUp.AssociatedSACCH = tmpSACCHUp;
+                                        tmpSDCCHDown.AssociatedSACCH = tmpSACCHDown;
+                                    }
+                                }
+                                else
                                 {
-                                    assigned.EstablishmentCause = L3Handler.PDUDataFields["EstablishmentCause"];
-                                    assigned.ServiceType = "(not set)";
-
-                                    /* remove this info to prevent false detection for later causes */
-                                    L3Handler.PDUDataFields.Remove("EstablishmentCause");
+                                    AddMessage("  [__] TimeSlot " + timeSlot + " of ARFCN " + targetARFCN + " cannot get configured. Type: " + channelType + Environment.NewLine);
                                 }
-                            }
-                            else
-                            {
-                                AddMessage("  [__] TimeSlot " + timeSlot + " of ARFCN " + targetARFCN + " cannot get configured. Type: " + channelType + Environment.NewLine);
                             }
                             break;
 
@@ -1005,13 +1097,14 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                             infoDown[0].Handlers[block * 10 + 9] = new sTimeSlotParam(CCCH, 3);
                         }
 
-                        /* then two SDCCH blocks */
+                        /* then two SDCCH blocks. they will get configured on assignment */
                         for (int block = 2; block < 4; block++)
                         {
                             /* FCH/SCH too */
                             infoDown[0].Handlers[block * 10 + 0] = new sTimeSlotParam(FCH, 0);
                             infoDown[0].Handlers[block * 10 + 1] = new sTimeSlotParam(SCH, 0);
-
+                            
+#if false
                             SDCCHBurst tmpSDCCH1Down = new SDCCHBurst(L3, (block - 2) * 2);
                             SDCCHBurst tmpSDCCH2Down = new SDCCHBurst(L3, (block - 2) * 2 + 1);
                             SDCCHBurst tmpSDCCH1Up = new SDCCHBurst(L3, (block - 2) * 2);
@@ -1051,6 +1144,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                             infoUp[0].Handlers[block * 10 + 7] = new sTimeSlotParam(tmpSDCCH2Up, 1);
                             infoUp[0].Handlers[block * 10 + 8] = new sTimeSlotParam(tmpSDCCH2Up, 2);
                             infoUp[0].Handlers[block * 10 + 9] = new sTimeSlotParam(tmpSDCCH2Up, 3);
+#endif
                         }
 
                         /* finally one SACCH block */
@@ -1059,7 +1153,8 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                             /* FCH/SCH too */
                             infoDown[0].Handlers[block * 10 + 0] = new sTimeSlotParam(FCH, 0);
                             infoDown[0].Handlers[block * 10 + 1] = new sTimeSlotParam(SCH, 0);
-
+                            
+#if false
                             SACCHBurst tmpSACCH1Down = new SACCHBurst(L3, "SACCH 0/2", 0);
                             SACCHBurst tmpSACCH2Down = new SACCHBurst(L3, "SACCH 1/3", 1);
                             SACCHBurst tmpSACCH1Up = new SACCHBurst(L3, "SACCH 0/2", 0);
@@ -1099,6 +1194,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                             infoUp[0].Handlers[block * 10 + 7] = new sTimeSlotParam(tmpSACCH2Up, 1);
                             infoUp[0].Handlers[block * 10 + 8] = new sTimeSlotParam(tmpSACCH2Up, 2);
                             infoUp[0].Handlers[block * 10 + 9] = new sTimeSlotParam(tmpSACCH2Up, 3);
+#endif
                         }
                         break;
 

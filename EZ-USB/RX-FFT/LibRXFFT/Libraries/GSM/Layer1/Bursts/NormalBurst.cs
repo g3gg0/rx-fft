@@ -65,6 +65,8 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
 
         public eBurstState State = eBurstState.Idle;
         public long TimeSlot = -1;
+        public long ARFCN = -1;
+        public eLinkDirection Direction = eLinkDirection.Downlink;
 
         internal bool[] FireCRCBuffer;
 

@@ -106,9 +106,44 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
     public class GSMParameters
     {
+        public bool LogBursts = false;
         public LinkedList<NormalBurst> ActiveBursts = new LinkedList<NormalBurst>();
         public LinkedList<NormalBurst> UsedBursts = new LinkedList<NormalBurst>();
 
+        public void AddUsedBurst(NormalBurst burst)
+        {
+            if (LogBursts)
+            {
+                lock (UsedBursts)
+                {
+                    UsedBursts.AddLast(burst);
+                }
+            }
+        }
+
+        public void AddActiveBurst(NormalBurst burst)
+        {
+            lock (ActiveBursts)
+            {
+                ActiveBursts.AddLast(burst);
+            }
+        }
+
+        public void RemoveActiveBurst(NormalBurst burst)
+        {
+            lock (ActiveBursts)
+            {
+                ActiveBursts.Remove(burst);
+            }
+        }
+
+        public bool ContainsActiveBursts(NormalBurst burst)
+        {
+            lock (ActiveBursts)
+            {
+                return ActiveBursts.Contains(burst);
+            }
+        }
         /* 
          * This array will contain all handlers in the format:
          *
@@ -250,9 +285,13 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             LAC = -1;
             CellIdent = -1;
 
-            lock (UsedBursts)
+            lock (ActiveBursts)
             {
                 ActiveBursts.Clear();
+            }
+
+            lock (UsedBursts)
+            {
                 UsedBursts.Clear();
             }
 
@@ -475,8 +514,8 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                     ArrayList lines = new ArrayList();
 
                 }
-
-                if (false)
+                
+                if (LogBursts)
                 {
                     retVal += Environment.NewLine;
                     retVal += "Handler details:" + Environment.NewLine;
@@ -634,5 +673,6 @@ namespace LibRXFFT.Libraries.GSM.Layer1
         {
             return (int)ArfcnMap[arfcn];
         }
+
     }
 }

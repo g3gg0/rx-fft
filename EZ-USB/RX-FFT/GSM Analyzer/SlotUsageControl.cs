@@ -17,6 +17,8 @@ namespace GSM_Analyzer
         private Dictionary<NormalBurst, StatusLamp> BurstLampMap = new Dictionary<NormalBurst, StatusLamp>();
         private Dictionary<NormalBurst, string> BurstStatusMap = new Dictionary<NormalBurst, string>();
         private NormalBurst CurrentHoveredBurst = null;
+        private DateTime LastUpdate = DateTime.Now;
+        private Timer UpdateTimer = null;
 
         public SlotUsageControl()
         {
@@ -162,63 +164,88 @@ namespace GSM_Analyzer
             return lamp;
         }
 
-        private DateTime LastUpdate = DateTime.Now;
 
         private void RebuildLamps()
         {
-            if ((DateTime.Now - LastUpdate).TotalMilliseconds > 250)
+            /*  */
+            if ((DateTime.Now - LastUpdate).TotalMilliseconds > 100)
             {
-                LastUpdate = DateTime.Now;
-                BeginInvoke(new Action(() =>
+                if (UpdateTimer != null && UpdateTimer.Enabled)
                 {
-                    try
-                    {
-                        SortedList<string, StatusLamp> lampsSDCCH = new SortedList<string, StatusLamp>();
-                        SortedList<string, StatusLamp> lampsTCH = new SortedList<string, StatusLamp>();
+                    UpdateTimer.Stop();
+                }
 
-                        lock (BurstLampMap)
-                        {
-                            foreach (KeyValuePair<NormalBurst, StatusLamp> pair in BurstLampMap)
-                            {
-                                string sortOrder = pair.Key.ARFCN + pair.Key.TimeSlot + pair.Key.Name + pair.Key.Direction;
-
-                                if (pair.Key is TCHBurst)
-                                {
-                                    lampsTCH.Add(sortOrder, pair.Value);
-                                }
-
-                                if (pair.Key is SDCCHBurst)
-                                {
-                                    lampsSDCCH.Add(sortOrder, pair.Value);
-                                }
-                            }
-                        }
-                    
-
-                        panelSDCCH.SuspendLayout();
-                        panelTCH.SuspendLayout();
-
-                        panelSDCCH.Controls.Clear();
-                        panelTCH.Controls.Clear();
-
-                        foreach (KeyValuePair<string, StatusLamp> pair in lampsSDCCH)
-                        {
-                            panelSDCCH.Controls.Add(pair.Value);
-                        }
-                        foreach (KeyValuePair<string, StatusLamp> pair in lampsTCH)
-                        {
-                            panelTCH.Controls.Add(pair.Value);
-                        }
-
-                        panelSDCCH.ResumeLayout();
-                        panelTCH.ResumeLayout();
-                    }
-                    catch (Exception e)
-                    {
-                    }
-
-                }));
+                LastUpdate = DateTime.Now;
+                BeginInvoke(new Action(() => { RebuildLampsInternal(); }));
             }
+            else
+            {
+                if(UpdateTimer == null)
+                {
+                    UpdateTimer = new Timer();
+                    UpdateTimer.Tick += new EventHandler((object o, EventArgs e) => 
+                    {
+                        UpdateTimer.Stop();
+                        RebuildLampsInternal(); 
+                    });
+                    UpdateTimer.Interval = 500;
+                }
+
+                if (!UpdateTimer.Enabled)
+                {
+                    UpdateTimer.Start();
+                }
+            }
+        }
+
+        private void RebuildLampsInternal()
+        {
+            try
+            {
+                SortedList<string, StatusLamp> lampsSDCCH = new SortedList<string, StatusLamp>();
+                SortedList<string, StatusLamp> lampsTCH = new SortedList<string, StatusLamp>();
+
+                lock (BurstLampMap)
+                {
+                    foreach (KeyValuePair<NormalBurst, StatusLamp> pair in BurstLampMap)
+                    {
+                        string sortOrder = pair.Key.ARFCN + pair.Key.TimeSlot + pair.Key.Name + pair.Key.Direction;
+
+                        if (pair.Key is TCHBurst && !lampsTCH.ContainsKey(sortOrder))
+                        {
+                            lampsTCH.Add(sortOrder, pair.Value);
+                        }
+
+                        if (pair.Key is SDCCHBurst && !lampsSDCCH.ContainsKey(sortOrder))
+                        {
+                            lampsSDCCH.Add(sortOrder, pair.Value);
+                        }
+                    }
+                }
+
+
+                panelSDCCH.SuspendLayout();
+                panelTCH.SuspendLayout();
+
+                panelSDCCH.Controls.Clear();
+                panelTCH.Controls.Clear();
+
+                foreach (KeyValuePair<string, StatusLamp> pair in lampsSDCCH)
+                {
+                    panelSDCCH.Controls.Add(pair.Value);
+                }
+                foreach (KeyValuePair<string, StatusLamp> pair in lampsTCH)
+                {
+                    panelTCH.Controls.Add(pair.Value);
+                }
+
+                panelSDCCH.ResumeLayout();
+                panelTCH.ResumeLayout();
+            }
+            catch (Exception e)
+            {
+            }
+
         }
     }
 }

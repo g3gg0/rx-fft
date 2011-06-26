@@ -87,6 +87,9 @@ namespace GSM_Analyzer
         private AuthService AuthHost = null;
 
         public string KrakenHostAddress = "";
+        public string DataSourceText = "";
+        public double DataSourceProgress = -1;
+        private string OldTitle = "";
 
         public class KrakenCracker : CipherCracker
         {
@@ -132,8 +135,9 @@ namespace GSM_Analyzer
                     if (Kraken == null)
                     {
                         /* first time and host configured */
-                        if (Analyzer.KrakenHostAddress != null && Analyzer.KrakenHostAddress.Length > 0)
+                        if (false || Analyzer.KrakenHostAddress != null && Analyzer.KrakenHostAddress.Length > 0)
                         {
+                            //Kraken = new KrakenNet();
                             Kraken = new KrakenClient(Analyzer.KrakenHostAddress);
                             Kraken.Connect();
                         }
@@ -146,7 +150,7 @@ namespace GSM_Analyzer
                     else
                     {
                         /* no host configured anymore */
-                        if (Analyzer.KrakenHostAddress == null || Analyzer.KrakenHostAddress.Length == 0)
+                        if (true && (Analyzer.KrakenHostAddress == null || Analyzer.KrakenHostAddress.Length == 0))
                         {
                             Kraken.Disconnect();
                             Kraken = null;
@@ -294,6 +298,10 @@ namespace GSM_Analyzer
                 Parameters = new GSMParameters();
                 Parameters.CipherCracker = new KrakenCracker(this);
                 krakenStatusBox1.SetCracker((KrakenCracker)Parameters.CipherCracker);
+
+                if (Parameters.CipherCracker.Available)
+                {
+                }
 
                 InitLua();
 
@@ -805,6 +813,7 @@ namespace GSM_Analyzer
 
             btnOpen.Text = "Open";
             SetDataSource("");
+            SetDataSourceProgress(-1);
         }
 
         private void btnOpen_LuaScript(object sender, EventArgs e)
@@ -882,13 +891,41 @@ namespace GSM_Analyzer
 
         private void SetDataSource(string source)
         {
-            if (source != null && source != "")
+            DataSourceText = source;
+            UpdateTitleBar();
+        }
+
+        private void SetDataSourceProgress(double progress)
+        {
+            DataSourceProgress = progress;
+            UpdateTitleBar();
+        }
+
+        private void UpdateTitleBar()
+        {
+            string text = "";
+
+            if (DataSourceText != null && DataSourceText != "")
             {
-                Text = "GSM Analyzer - [Input: " + source + "]";
+                text = "GSM Analyzer - [Input: " + DataSourceText;
+                if (DataSourceProgress >= 0)
+                {
+                    text += " Progress: " + (DataSourceProgress * 100.0f).ToString("0.0") + "%";
+                }
+                text += "]";
             }
             else
             {
-                Text = "GSM Analyzer";
+                text = "GSM Analyzer";
+            }
+
+            if (OldTitle != text)
+            {
+                OldTitle = text;
+                this.BeginInvoke(new Action(() =>
+                {
+                    Text = text;
+                }));
             }
         }
 
@@ -1500,6 +1537,8 @@ namespace GSM_Analyzer
                 {
                     /* get the next burst from the reader */
                     reader.Read(burstBitsDown, burstBitsUp);
+
+                    SetDataSourceProgress(reader.Progress);
 
                     /* let timeslot handler process the burst bits. 
                      * passing the burst number to handler so its able to display the burst number.

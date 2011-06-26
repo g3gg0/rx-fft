@@ -47,6 +47,19 @@ namespace LibRXFFT.Libraries.GSM.Layer1.ChannelCoding
             return errors;
         }
 
+        public static void Encode(bool[] srcData, bool[] dstData)
+        {
+            /* both methods are working - ViterbiR2O4 is kept if different settings are needed */
+            /* method 1 */
+            EncodeViterbi(srcData, dstData);
+
+            /* method 2 */
+            /*
+            ViterbiR204.init();
+            ViterbiR204.encode(srcData, dstData);
+            */
+        }
+
 
 
         /*
@@ -252,5 +265,27 @@ namespace LibRXFFT.Libraries.GSM.Layer1.ChannelCoding
             // return the number of errors detected (hard-decision)
             return (int)min_error;
         }
+
+        public static void EncodeViterbi(bool[] srcData, bool[] dstData )
+        {
+	
+	        uint state = 0, o;
+            int input_size = srcData.Length, i;
+	
+	        for(i = 0; i < input_size; i++)
+            {
+                o = encode[state, (srcData[i] == true) ? 1 : 0];
+                state = next_state[state, (srcData[i] == true) ? 1 : 0];
+
+                /*
+                *output++ = !!(o & 2);
+                *output++ = o & 1;*/
+
+                dstData[i * 2] = (o & 2) == 2 ? true : false;
+                dstData[i * 2 + 1] = (o & 1) == 1 ? true : false;
+	        }
+	    }
+
+
     }
 }

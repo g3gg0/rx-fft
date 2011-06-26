@@ -132,12 +132,15 @@ namespace GSM_Analyzer
             this.btnToggleSpectrum = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripSeparator();
             this.btnDump = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
+            this.btnFrameEncode = new System.Windows.Forms.ToolStripMenuItem();
+            this.krakenTestToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.btnCopy = new System.Windows.Forms.ToolStripButton();
             this.btnClear = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.btnQuit = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.asdToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.btnCopy = new System.Windows.Forms.ToolStripButton();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -817,7 +820,7 @@ namespace GSM_Analyzer
             this.btnOpen.Name = "btnOpen";
             this.btnOpen.Size = new System.Drawing.Size(72, 36);
             this.btnOpen.Text = "Open";
-            this.btnOpen.MouseUp +=new System.Windows.Forms.MouseEventHandler(btnOpen_MouseUp);
+            this.btnOpen.MouseUp += new System.Windows.Forms.MouseEventHandler(this.btnOpen_MouseUp);
             this.btnOpen.Click += new System.EventHandler(this.btnOpen_Click);
             // 
             // btnL3Filter
@@ -851,7 +854,10 @@ namespace GSM_Analyzer
             this.btnToggleBurst,
             this.btnToggleSpectrum,
             this.toolStripMenuItem2,
-            this.btnDump});
+            this.btnDump,
+            this.toolStripSeparator4,
+            this.btnFrameEncode,
+            this.krakenTestToolStripMenuItem});
             this.btnAdvanced.Image = ((System.Drawing.Image)(resources.GetObject("btnAdvanced.Image")));
             this.btnAdvanced.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnAdvanced.Name = "btnAdvanced";
@@ -896,6 +902,34 @@ namespace GSM_Analyzer
             this.btnDump.Text = "File dumping";
             this.btnDump.Click += new System.EventHandler(this.btnDump_Click);
             // 
+            // toolStripSeparator4
+            // 
+            this.toolStripSeparator4.Name = "toolStripSeparator4";
+            this.toolStripSeparator4.Size = new System.Drawing.Size(206, 6);
+            // 
+            // btnFrameEncode
+            // 
+            this.btnFrameEncode.Name = "btnFrameEncode";
+            this.btnFrameEncode.Size = new System.Drawing.Size(209, 22);
+            this.btnFrameEncode.Text = "Frame encoder";
+            this.btnFrameEncode.Click += new System.EventHandler(this.btnFrameEncode_Click);
+            // 
+            // krakenTestToolStripMenuItem
+            // 
+            this.krakenTestToolStripMenuItem.Name = "krakenTestToolStripMenuItem";
+            this.krakenTestToolStripMenuItem.Size = new System.Drawing.Size(209, 22);
+            this.krakenTestToolStripMenuItem.Text = "Kraken coverage test";
+            this.krakenTestToolStripMenuItem.Click += new System.EventHandler(this.krakenTestToolStripMenuItem_Click);
+            // 
+            // btnCopy
+            // 
+            this.btnCopy.Image = ((System.Drawing.Image)(resources.GetObject("btnCopy.Image")));
+            this.btnCopy.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnCopy.Name = "btnCopy";
+            this.btnCopy.Size = new System.Drawing.Size(71, 36);
+            this.btnCopy.Text = "Copy";
+            this.btnCopy.Click += new System.EventHandler(this.btnCopy_Click);
+            // 
             // btnClear
             // 
             this.btnClear.Image = ((System.Drawing.Image)(resources.GetObject("btnClear.Image")));
@@ -929,15 +963,6 @@ namespace GSM_Analyzer
             this.asdToolStripMenuItem.Name = "asdToolStripMenuItem";
             this.asdToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.asdToolStripMenuItem.Text = "asd";
-            // 
-            // btnCopy
-            // 
-            this.btnCopy.Image = ((System.Drawing.Image)(resources.GetObject("btnCopy.Image")));
-            this.btnCopy.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.btnCopy.Name = "btnCopy";
-            this.btnCopy.Size = new System.Drawing.Size(71, 36);
-            this.btnCopy.Text = "Copy";
-            this.btnCopy.Click += new System.EventHandler(this.btnCopy_Click);
             // 
             // GSMAnalyzer
             // 
@@ -1053,6 +1078,9 @@ namespace GSM_Analyzer
         private KrakenStatusBox krakenStatusBox1;
         private System.Windows.Forms.GroupBox grpKraken;
         private System.Windows.Forms.ToolStripButton btnCopy;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
+        private System.Windows.Forms.ToolStripMenuItem btnFrameEncode;
+        private System.Windows.Forms.ToolStripMenuItem krakenTestToolStripMenuItem;
     }
 }
 

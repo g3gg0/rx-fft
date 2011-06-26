@@ -619,16 +619,18 @@ namespace LibRXFFT.Libraries.GSM.Layer3
                     FileStream stream = File.Open("sms.txt", FileMode.Append, FileAccess.Write);
                     TextWriter writer = new StreamWriter(stream);
                     string key = "(failed)";
+                    string ident = "(failed)";
 
                     try
                     {
                         key = ByteUtil.BytesToString(((LibRXFFT.Libraries.GSM.Layer1.Bursts.NormalBurst)LibRXFFT.Libraries.GSM.Layer1.TimeSlotHandler._HACK_Parameters.CurrentBurstHandler).A5CipherKey);
+                        ident = ((LibRXFFT.Libraries.GSM.Layer1.Bursts.NormalBurst)LibRXFFT.Libraries.GSM.Layer1.TimeSlotHandler._HACK_Parameters.CurrentBurstHandler).PhoneIdentity.Trim().Replace("  ", " ");
                     }
                     catch (Exception)
                     {
                     }
 
-                    writer.WriteLine(originating.PadRight(16) + " | " + key + " | " + timestamp + " | " + message);
+                    writer.WriteLine(originating.PadRight(16) + " | " + ident + " | " + key + " | " + timestamp + " | " + message);
                     writer.Close();
                 }
                 catch (Exception)

@@ -11,5 +11,6 @@ namespace LibRXFFT.Libraries.GSM.Layer1.PacketDump
         void Read(bool[] BurstBitsUndiffed);
         void Read(bool[] BurstBitsUndiffedDown, bool[] BurstBitsUndiffedUp);
         void Close();
+        double Progress { get; }
     }
 }

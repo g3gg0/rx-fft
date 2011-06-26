@@ -427,7 +427,19 @@ namespace LibRXFFT.Libraries.GSM.Layer1.PacketDump
             }
         }
 
+        public double Progress
+        {
+            get 
+            {
+                double ret = ((double)DumpFile.Position) / DumpFile.Length;
+
+                return ret;
+            }
+        }
+
         #endregion
+
+
     }
 
     public class GsmAnalyzerDumpWriter : PacketDumpWriter

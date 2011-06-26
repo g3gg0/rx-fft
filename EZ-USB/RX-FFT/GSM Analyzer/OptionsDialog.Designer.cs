@@ -71,6 +71,7 @@
             this.radioOvsSinx = new System.Windows.Forms.RadioButton();
             this.label7 = new System.Windows.Forms.Label();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.label14 = new System.Windows.Forms.Label();
             this.radioL1PreallocateSDCCHs = new System.Windows.Forms.RadioButton();
             this.radioL1PreallocateTCHs = new System.Windows.Forms.RadioButton();
             this.radioL1PreallocateNone = new System.Windows.Forms.RadioButton();
@@ -90,9 +91,8 @@
             this.groupBox7 = new System.Windows.Forms.GroupBox();
             this.label18 = new System.Windows.Forms.Label();
             this.label17 = new System.Windows.Forms.Label();
-            this.txtKrakenHost = new System.Windows.Forms.TextBox();
             this.txtSimAuthHost = new System.Windows.Forms.TextBox();
-            this.label14 = new System.Windows.Forms.Label();
+            this.txtKrakenHost = new System.Windows.Forms.ComboBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -538,6 +538,15 @@
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "L1 Options";
             // 
+            // label14
+            // 
+            this.label14.AutoSize = true;
+            this.label14.Location = new System.Drawing.Point(6, 90);
+            this.label14.Name = "label14";
+            this.label14.Size = new System.Drawing.Size(63, 13);
+            this.label14.TabIndex = 23;
+            this.label14.Text = "Preallocate:";
+            // 
             // radioL1PreallocateSDCCHs
             // 
             this.radioL1PreallocateSDCCHs.AutoSize = true;
@@ -726,9 +735,9 @@
             // 
             // groupBox7
             // 
+            this.groupBox7.Controls.Add(this.txtKrakenHost);
             this.groupBox7.Controls.Add(this.label18);
             this.groupBox7.Controls.Add(this.label17);
-            this.groupBox7.Controls.Add(this.txtKrakenHost);
             this.groupBox7.Controls.Add(this.txtSimAuthHost);
             this.groupBox7.Controls.Add(this.txtA5Kc);
             this.groupBox7.Controls.Add(this.label16);
@@ -757,30 +766,23 @@
             this.label17.TabIndex = 104;
             this.label17.Text = "SIM Auth Host:";
             // 
-            // txtKrakenHost
-            // 
-            this.txtKrakenHost.Location = new System.Drawing.Point(100, 72);
-            this.txtKrakenHost.Name = "txtKrakenHost";
-            this.txtKrakenHost.Size = new System.Drawing.Size(100, 20);
-            this.txtKrakenHost.TabIndex = 103;
-            this.txtKrakenHost.TextChanged += new System.EventHandler(this.txtKrakenHost_TextChanged);
-            // 
             // txtSimAuthHost
             // 
-            this.txtSimAuthHost.Location = new System.Drawing.Point(100, 46);
+            this.txtSimAuthHost.Location = new System.Drawing.Point(96, 46);
             this.txtSimAuthHost.Name = "txtSimAuthHost";
-            this.txtSimAuthHost.Size = new System.Drawing.Size(100, 20);
+            this.txtSimAuthHost.Size = new System.Drawing.Size(104, 20);
             this.txtSimAuthHost.TabIndex = 103;
             this.txtSimAuthHost.TextChanged += new System.EventHandler(this.txtSimAuthHost_TextChanged);
             // 
-            // label14
+            // txtKrakenHost
             // 
-            this.label14.AutoSize = true;
-            this.label14.Location = new System.Drawing.Point(6, 90);
-            this.label14.Name = "label14";
-            this.label14.Size = new System.Drawing.Size(63, 13);
-            this.label14.TabIndex = 23;
-            this.label14.Text = "Preallocate:";
+            this.txtKrakenHost.FormattingEnabled = true;
+            this.txtKrakenHost.Items.AddRange(new object[] {
+            "localhost"});
+            this.txtKrakenHost.Location = new System.Drawing.Point(96, 72);
+            this.txtKrakenHost.Name = "txtKrakenHost";
+            this.txtKrakenHost.Size = new System.Drawing.Size(104, 21);
+            this.txtKrakenHost.TabIndex = 105;
             // 
             // OptionsDialog
             // 
@@ -875,7 +877,6 @@
         private System.Windows.Forms.Label label17;
         private System.Windows.Forms.TextBox txtSimAuthHost;
         private System.Windows.Forms.Label label18;
-        private System.Windows.Forms.TextBox txtKrakenHost;
         private System.Windows.Forms.Label label19;
         private System.Windows.Forms.RadioButton radioL2ShowAuto;
         private System.Windows.Forms.RadioButton radioL2ShowCrypted;
@@ -885,5 +886,6 @@
         private System.Windows.Forms.RadioButton radioL1PreallocateTCHs;
         private System.Windows.Forms.RadioButton radioL1PreallocateNone;
         private System.Windows.Forms.Label label14;
+        private System.Windows.Forms.ComboBox txtKrakenHost;
     }
 }

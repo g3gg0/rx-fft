@@ -441,6 +441,11 @@ namespace GSM_Analyzer
 
         }
 
+        private void txtKrakenHost_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+
 
     }
 }

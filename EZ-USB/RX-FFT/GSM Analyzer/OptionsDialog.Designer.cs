@@ -783,6 +783,7 @@
             this.txtKrakenHost.Name = "txtKrakenHost";
             this.txtKrakenHost.Size = new System.Drawing.Size(104, 21);
             this.txtKrakenHost.TabIndex = 105;
+            this.txtKrakenHost.TextChanged +=new System.EventHandler(txtKrakenHost_TextChanged);
             // 
             // OptionsDialog
             // 

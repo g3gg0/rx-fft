@@ -845,12 +845,16 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                 }
             }
 
-            Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Assignments++;
-            Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Uplink][timeSlot].Assignments++;
-            if (subChannel >= 0)
+            /* only update if this was a "new" assignment with other reference code */
+            if (assignment)
             {
-                Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].SubChanAssignments[subChannel]++;
-                Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Uplink][timeSlot].SubChanAssignments[subChannel]++;
+                Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Assignments++;
+                Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Uplink][timeSlot].Assignments++;
+                if (subChannel >= 0)
+                {
+                    Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].SubChanAssignments[subChannel]++;
+                    Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Uplink][timeSlot].SubChanAssignments[subChannel]++;
+                }
             }
         }
 

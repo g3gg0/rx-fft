@@ -90,6 +90,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
 
         /* track phone identity */
         public string PhoneIdentity = "(not set)";
+        public string PhoneIdentityPrev = "";
 
         /* data supplied by timeslothandler and its callbacks */
         public string EstablishmentCause = "(not set)";

@@ -620,17 +620,30 @@ namespace LibRXFFT.Libraries.GSM.Layer3
                     TextWriter writer = new StreamWriter(stream);
                     string key = "(failed)";
                     string ident = "(failed)";
+                    string prevIdent = "";
 
                     try
                     {
                         key = ByteUtil.BytesToString(((LibRXFFT.Libraries.GSM.Layer1.Bursts.NormalBurst)LibRXFFT.Libraries.GSM.Layer1.TimeSlotHandler._HACK_Parameters.CurrentBurstHandler).A5CipherKey);
-                        ident = ((LibRXFFT.Libraries.GSM.Layer1.Bursts.NormalBurst)LibRXFFT.Libraries.GSM.Layer1.TimeSlotHandler._HACK_Parameters.CurrentBurstHandler).PhoneIdentity.Trim().Replace("  ", " ");
+                        ident = ((LibRXFFT.Libraries.GSM.Layer1.Bursts.NormalBurst)LibRXFFT.Libraries.GSM.Layer1.TimeSlotHandler._HACK_Parameters.CurrentBurstHandler).PhoneIdentity.Trim().Replace("TMSI/P-TMSI ", "").Replace("IMSI ", "").Replace("  ", " ").PadRight(14);
+                        prevIdent = ((LibRXFFT.Libraries.GSM.Layer1.Bursts.NormalBurst)LibRXFFT.Libraries.GSM.Layer1.TimeSlotHandler._HACK_Parameters.CurrentBurstHandler).PhoneIdentityPrev.Trim().Replace("TMSI/P-TMSI ", "").Replace("IMSI ", "").Replace("  ", " ").PadRight(14);
                     }
                     catch (Exception)
                     {
                     }
 
-                    writer.WriteLine(originating.PadRight(16) + " | " + ident + " | " + key + " | " + timestamp + " | " + message);
+                    string identStr = "";
+
+                    if (prevIdent != "")
+                    {
+                        identStr = prevIdent + " -> " + ident;
+                    }
+                    else
+                    {
+                        identStr = ident + "    " + "".PadRight(14);
+                    }
+
+                    writer.WriteLine(originating.PadRight(16) + " | " + identStr + " | " + key + " | " + timestamp + " | " + message);
                     writer.Close();
                 }
                 catch (Exception)

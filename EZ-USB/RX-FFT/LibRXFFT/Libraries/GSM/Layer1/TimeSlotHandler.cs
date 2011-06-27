@@ -65,6 +65,8 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             L3.PDUDataTriggers.Add("CBCHUpdate", TriggerCBCHUpdate);
             L3.PDUDataTriggers.Add("CBCHReset", TriggerCBCHReset);
             L3.PDUDataTriggers.Add("CipherCommand", TriggerCipherCommand);
+            L3.PDUDataTriggers.Add("TmsiReallocPost", TriggerTmsiReallocPost);
+            L3.PDUDataTriggers.Add("TmsiReallocPre", TriggerTmsiReallocPre);
 
             for (int timeSlot = 0; timeSlot < 8; timeSlot++)
             {
@@ -1341,6 +1343,40 @@ namespace LibRXFFT.Libraries.GSM.Layer1
             }
         }
 
+
+        private void TriggerTmsiReallocPost(L3Handler L3Handler)
+        {
+            string ident = "";
+
+            if (Parameters.CurrentBurstHandler is NormalBurst)
+            {
+                lock (L3Handler.PDUDataFields)
+                {
+                    if (L3Handler.PDUDataFields.ContainsKey("Identity"))
+                    {
+                        ident = L3Handler.PDUDataFields["Identity"];
+
+                        /* remove this info to prevent false detection for later frames */
+                        L3Handler.PDUDataFields.Remove("Identity");
+                    }
+                }
+
+                NormalBurst burst = ((NormalBurst)Parameters.CurrentBurstHandler);
+                burst.PhoneIdentity = ident;
+            }
+        }
+
+        private void TriggerTmsiReallocPre(L3Handler L3Handler)
+        {
+            if (Parameters.CurrentBurstHandler is NormalBurst)
+            {
+                NormalBurst burst = ((NormalBurst)Parameters.CurrentBurstHandler);
+                if (burst.PhoneIdentityPrev == "")
+                {
+                    burst.PhoneIdentityPrev = burst.PhoneIdentity;
+                }
+            }
+        }
 
         private void TriggerCipherCommand(L3Handler L3Handler)
         {

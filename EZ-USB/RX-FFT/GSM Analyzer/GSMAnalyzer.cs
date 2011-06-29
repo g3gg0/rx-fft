@@ -75,8 +75,6 @@ namespace GSM_Analyzer
         private Timer TextBoxCommitTimer = new Timer();
 
         private bool ShowSlotUsage = false;
-        private DateTime LastUiUpdate = DateTime.Now;
-        private int UiUpdateTime = 250; /* ms */
         public bool Subsampling = false;
         public int InternalOversampling = 1;
         public double SubSampleOffset = 0;
@@ -93,6 +91,12 @@ namespace GSM_Analyzer
         public double DataSourceProgress = -1;
         private DateTime DataSourceStartTime = DateTime.MinValue;
         private DateTime LastTitleUpdate = DateTime.Now;
+        private Timer TitleUpdateTimer = new Timer();
+
+        private Timer ReaderUiUpdateTimer = new Timer();
+        private bool ReaderUiUpdate = false;
+        private int UiUpdateTime = 250; /* ms */
+
         private double DataSourceTotalTime = 0;
         private string OldTitle = "";
 
@@ -337,6 +341,14 @@ namespace GSM_Analyzer
                 TextBoxCommitTimer.Tick += new EventHandler(TextBoxCommitTimer_Tick);
                 TextBoxCommitTimer.Interval = 100;
 
+                TitleUpdateTimer.Tick += new EventHandler(TitleUpdateTimer_Tick);
+                TitleUpdateTimer.Interval = 500;
+                TitleUpdateTimer.Start();
+
+                ReaderUiUpdateTimer.Tick += new EventHandler(ReaderUiUpdateTimer_Tick);
+                ReaderUiUpdateTimer.Interval = UiUpdateTime;
+                ReaderUiUpdateTimer.Start();
+
                 slotUsageControl.Visible = ShowSlotUsage;
 
                 CryptA5.SelfCheck();
@@ -345,6 +357,11 @@ namespace GSM_Analyzer
             {
                 MessageBox.Show("Failed to initialize: " + e.GetType().ToString());
             }
+        }
+
+        void ReaderUiUpdateTimer_Tick(object sender, EventArgs e)
+        {
+            ReaderUiUpdate = true;
         }
 
         private void InitLua()
@@ -897,86 +914,88 @@ namespace GSM_Analyzer
         private void SetDataSource(string source)
         {
             DataSourceText = source;
-            UpdateTitleBar();
         }
 
         private void SetDataSourceProgress(double progress)
         {
             DataSourceProgress = progress;
+        }
+
+        void TitleUpdateTimer_Tick(object sender, EventArgs e)
+        {
             UpdateTitleBar();
         }
 
         private void UpdateTitleBar()
         {
-            string text = "";
-            string eta = "?";
-
-
-            if (DataSourceText != null && DataSourceText != "")
+            lock (this)
             {
-                /* first time that there is some data source? */
-                if (DataSourceStartTime == DateTime.MinValue)
+                string text = "";
+                string eta = "?";
+
+                if (DataSourceText != null && DataSourceText != "")
                 {
-                    DataSourceStartTime = DateTime.Now;
-                    DataSourceTotalTime = 0;
+                    /* first time that there is some data source? */
+                    if (DataSourceStartTime == DateTime.MinValue)
+                    {
+                        DataSourceStartTime = DateTime.Now;
+                        DataSourceTotalTime = 0;
+                    }
+                    else
+                    {
+                        double secs = ((DateTime.Now - DataSourceStartTime).TotalMilliseconds / 1000);
+
+                        if (DataSourceProgress > 0.001)
+                        {
+                            double total = (secs / DataSourceProgress);
+
+                            /* averaging except the first time */
+                            if (DataSourceTotalTime != 0)
+                            {
+                                DataSourceTotalTime = (total * 0.1 + DataSourceTotalTime * 0.9);
+                            }
+                            else
+                            {
+                                DataSourceTotalTime = total;
+                            }
+
+                            long seconds = (long)(DataSourceTotalTime - secs) % 60;
+                            long minutes = (long)((DataSourceTotalTime - secs) / 60) % 60;
+                            long hours = (long)((DataSourceTotalTime - secs) / 3600);
+
+                            eta = "";
+
+                            if (hours > 0)
+                            {
+                                eta += hours + "h ";
+                            }
+                            if (hours > 0 || minutes > 0)
+                            {
+                                eta += minutes + "m ";
+                            }
+
+                            eta += seconds + "s";
+                        }
+                    }
+
+                    text = "GSM Analyzer - [Input: " + DataSourceText;
+                    if (DataSourceProgress >= 0)
+                    {
+                        text += " Progress: " + (DataSourceProgress * 100.0f).ToString("0.0") + "% ETA: " + eta;
+                    }
+                    text += "]";
                 }
                 else
                 {
-                    double secs = ((DateTime.Now - DataSourceStartTime).TotalMilliseconds / 1000);
-
-                    if (DataSourceProgress > 0.001)
-                    {
-                        double total = (secs / DataSourceProgress);
-
-                        /* averaging except the first time */
-                        if (DataSourceTotalTime != 0)
-                        {
-                            DataSourceTotalTime = (total * 0.000005 + DataSourceTotalTime * 0.999995);
-                        }
-                        else
-                        {
-                            DataSourceTotalTime = total;
-                        }
-
-                        long seconds = (long)(DataSourceTotalTime - secs) % 60;
-                        long minutes = (long)((DataSourceTotalTime - secs) / 60) % 60;
-                        long hours = (long)((DataSourceTotalTime - secs) / 3600);
-
-                        eta = "";
-
-                        if (hours > 0)
-                        {
-                            eta += hours + "h ";
-                        }
-                        if (hours > 0 || minutes > 0)
-                        {
-                            eta += minutes + "m ";
-                        }
-
-                        eta += seconds + "s";
-                    }
+                    text = "GSM Analyzer";
                 }
 
-                text = "GSM Analyzer - [Input: " + DataSourceText;
-                if (DataSourceProgress >= 0)
+                if (OldTitle != text && (DateTime.Now - LastTitleUpdate).TotalMilliseconds > 100)
                 {
-                    text += " Progress: " + (DataSourceProgress * 100.0f).ToString("0.0") + "% ETA: " + eta;
-                }
-                text += "]";
-            }
-            else
-            {
-                text = "GSM Analyzer";
-            }
-
-            if (OldTitle != text && (DateTime.Now - LastTitleUpdate).TotalMilliseconds > 100)
-            {
-                OldTitle = text;
-                LastTitleUpdate = DateTime.Now;
-                this.BeginInvoke(new Action(() =>
-                {
+                    OldTitle = text;
+                    LastTitleUpdate = DateTime.Now;
                     Text = text;
-                }));
+                }
             }
         }
 
@@ -1521,9 +1540,9 @@ namespace GSM_Analyzer
                                         Parameters.SubSampleOffset = 0;
 
                                         /* update UI if necessary */
-                                        if (SingleStep || (DateTime.Now - LastUiUpdate).TotalMilliseconds > UiUpdateTime)
+                                        if (SingleStep || ReaderUiUpdate)
                                         {
-                                            LastUiUpdate = DateTime.Now;
+                                            ReaderUiUpdate = false;
 
                                             UpdateUIStatus(Parameters);
                                             UpdateStats(Parameters);
@@ -1563,6 +1582,8 @@ namespace GSM_Analyzer
             UpdateUIStatus(Parameters);
         }
 
+
+
         void DumpReadFunc(string fileName)
         {
             bool[] burstBitsDown = new bool[148];
@@ -1589,7 +1610,6 @@ namespace GSM_Analyzer
                     /* get the next burst from the reader */
                     reader.Read(burstBitsDown, burstBitsUp);
 
-                    SetDataSourceProgress(reader.Progress);
 
                     /* let timeslot handler process the burst bits. 
                      * passing the burst number to handler so its able to display the burst number.
@@ -1602,12 +1622,13 @@ namespace GSM_Analyzer
 
 
                     /* update UI if necessary */
-                    if (SingleStep || (DateTime.Now - LastUiUpdate).TotalMilliseconds > UiUpdateTime)
+                    if (SingleStep || ReaderUiUpdate)
                     {
-                        LastUiUpdate = DateTime.Now;
+                        ReaderUiUpdate = false;
 
                         UpdateUIStatus(Parameters);
                         UpdateStats(Parameters);
+                        SetDataSourceProgress(reader.Progress);
                     }
 
                     if (SingleStep)

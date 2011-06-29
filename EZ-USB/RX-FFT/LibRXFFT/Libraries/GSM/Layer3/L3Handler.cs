@@ -64,10 +64,13 @@ namespace LibRXFFT.Libraries.GSM.Layer3
 
         private bool ShowMessage = false;
         public string StatusMessage = null;
+        private static bool DataLoaded = false;
 
         private readonly Dictionary<string, handlePDUDelegate> PDUParser = new Dictionary<string, handlePDUDelegate>();
         public static bool DumpRawData = false;
         public static bool DumpUnhandled = false;
+        public static bool DumpUnhandledOctets = false;
+        
 
         private delegate string[] handlePDUDelegate(byte[] pduData);
 
@@ -103,14 +106,17 @@ namespace LibRXFFT.Libraries.GSM.Layer3
 
         public L3Handler()
         {
-            try
+            if (!DataLoaded)
             {
-                ReloadFiles();
-            }
-            catch (FileNotFoundException e)
-            {
-                StatusMessage = "Error! Could not load needed XML files." + Environment.NewLine + Environment.NewLine + e;
-                return;
+                try
+                {
+                    ReloadFiles();
+                }
+                catch (FileNotFoundException e)
+                {
+                    StatusMessage = "Error! Could not load needed XML files." + Environment.NewLine + Environment.NewLine + e;
+                    return;
+                }
             }
 
 
@@ -186,6 +192,8 @@ namespace LibRXFFT.Libraries.GSM.Layer3
 
                 MCCTable = new MCCTable(DataFilePath + "mccentries.xml");
                 MNCTable = new MNCTable(DataFilePath + "mncentries.xml");
+
+                DataLoaded = true;
             }
             catch (Exception e)
             {
@@ -750,15 +758,16 @@ namespace LibRXFFT.Libraries.GSM.Layer3
             return msg;
         }
 
+        private StringBuilder StrBuilder = new StringBuilder();
+        private StringBuilder PduFieldData = new StringBuilder();
         private string[] HandleGenericPDU(ArrayList fields, byte[] pduData)
         {
             int pos = 0;
             string[] msg = new string[fields.Count];
-            StringBuilder builder = new StringBuilder();
 
             foreach (L3PDUField field in fields)
             {
-                builder.Length = 0;
+                StrBuilder.Length = 0;
 
                 /* trigger as requested */
                 if (!string.IsNullOrEmpty(field.TriggerPre))
@@ -767,8 +776,10 @@ namespace LibRXFFT.Libraries.GSM.Layer3
                         PDUDataTriggers[field.TriggerPre](this);
                 }
 
-                builder.AppendFormat("{0,-20}", field.Name);
-                long value = 0;
+                StrBuilder.AppendFormat("{0,-20}", field.Name);
+                long value = 0; 
+                PduFieldData.Length = 0;
+
 
                 foreach (Bits bits in field.Bits)
                 {
@@ -781,19 +792,17 @@ namespace LibRXFFT.Libraries.GSM.Layer3
                     }
                     else
                     {
-                        builder.Append("FAILED - PDU too short (" + (pduData.Length - bits.Octet) + " byte)");
+                        StrBuilder.Append("FAILED - PDU too short (" + (pduData.Length - bits.Octet) + " byte)");
                     }
                 }
-
-                StringBuilder pduFieldData = new StringBuilder();
-
+                
                 switch (field.Type)
                 {
                     case "hide":
                         break;
 
                     case "integer":
-                        pduFieldData.Append(field.Offset + field.Factor * value);
+                        PduFieldData.Append(((long)field.Offset + field.Factor * value));
                         break;
 
                     case "varbcd":
@@ -808,11 +817,11 @@ namespace LibRXFFT.Libraries.GSM.Layer3
 
                             if (bcd < 10)
                             {
-                                pduFieldData.Append(bcd);
+                                PduFieldData.Append(bcd);
                             }
                             else
                             {
-                                pduFieldData.Append(" ");
+                                PduFieldData.Append(" ");
                             }
                         }
                         break;
@@ -823,36 +832,36 @@ namespace LibRXFFT.Libraries.GSM.Layer3
                             long bcd = (value >> (4 * (field.Length - 1 - digit))) & 0x0F;
                             if (bcd < 10)
                             {
-                                pduFieldData.Append(bcd);
+                                PduFieldData.Append(bcd);
                             }
                             else
                             {
-                                pduFieldData.Append(" ");
+                                PduFieldData.Append(" ");
                             }
                         }
                         break;
 
                     case "hexnumber":
-                        pduFieldData.AppendFormat("{0:X}", value);
+                        PduFieldData.AppendFormat("{0:X}", value);
                         break;
 
                     case "stringIndex":
                         if (value < field.Strings.Length && !string.IsNullOrEmpty(field.Strings[value]))
                         {
-                            pduFieldData.Append(field.Strings[value]);
+                            PduFieldData.Append(field.Strings[value]);
                         }
                         else
                         {
-                            pduFieldData.Append("Unknown entry: ").Append(value);
+                            PduFieldData.Append("Unknown entry: ").Append(value);
                         }
                         break;
                 }
 
-                builder.Append(pduFieldData);
+                StrBuilder.Append(PduFieldData);
 
                 if (!string.IsNullOrEmpty(field.Parser) && PDUFieldParsers.ContainsKey(field.Parser))
                 {
-                    builder.Append(" (").Append(PDUFieldParsers[field.Parser](this, value)).Append(")");
+                    StrBuilder.Append(" (").Append(PDUFieldParsers[field.Parser](this, value)).Append(")");
                 }
 
                 /* update the fields in the field list */
@@ -861,9 +870,9 @@ namespace LibRXFFT.Libraries.GSM.Layer3
                     lock (PDUDataFields)
                     {
                         if (PDUDataFields.ContainsKey(field.SetField))
-                            PDUDataFields[field.SetField] = pduFieldData.ToString();
+                            PDUDataFields[field.SetField] = PduFieldData.ToString();
                         else
-                            PDUDataFields.Add(field.SetField, pduFieldData.ToString());
+                            PDUDataFields.Add(field.SetField, PduFieldData.ToString());
 
                         if (PDUDataRawFields.ContainsKey(field.SetField))
                             PDUDataRawFields[field.SetField] = value;
@@ -879,18 +888,19 @@ namespace LibRXFFT.Libraries.GSM.Layer3
                         PDUDataTriggers[field.TriggerPost](this);
                 }
 
-                msg[pos] = builder.ToString();
+                msg[pos] = StrBuilder.ToString();
                 pos++;
             }
 
             return msg;
         }
 
+        private StringBuilder DecodePacketBuilder = new StringBuilder();
         private string DecodePacket(L3Messages l3Messages, L3PDUList l3Pdus, byte[] l3Data, int start, string reference)
         {
             /* half-octet based indexing */
             int currentPos = start * 2;
-            StringBuilder builder = new StringBuilder();
+            DecodePacketBuilder.Length = 0;
 
             L3MessageInfo l3Message = l3Messages.Get(reference);
             if (l3Message == null)
@@ -898,9 +908,9 @@ namespace LibRXFFT.Libraries.GSM.Layer3
                 byte[] pduData = new byte[l3Data.Length - start];
                 Array.Copy(l3Data, start, pduData, 0, pduData.Length);
 
-                builder.Append("  Unspecified Message Type: ").Append(reference).Append(Environment.NewLine);
-                builder.Append("    ").Append(DumpBytes(pduData)).Append(Environment.NewLine);
-                return builder.ToString();
+                DecodePacketBuilder.Append("  Unspecified Message Type: ").Append(reference).Append(Environment.NewLine);
+                DecodePacketBuilder.Append("    ").Append(DumpBytes(pduData)).Append(Environment.NewLine);
+                return DecodePacketBuilder.ToString();
             }
 
             /* trigger as requested */
@@ -919,7 +929,7 @@ namespace LibRXFFT.Libraries.GSM.Layer3
                     /* just inform about PDUs that are not skipped (pseudo-L3 headers) */
                     if (!DecodeSkipPDUs.Contains(slotInfo.Reference))
                     {
-                        builder.Append("          Unknown PDU ").Append(slotInfo.Reference).Append(Environment.NewLine);
+                        DecodePacketBuilder.Append("          Unknown PDU ").Append(slotInfo.Reference).Append(Environment.NewLine);
                     }
                 }
                 else
@@ -1010,8 +1020,8 @@ namespace LibRXFFT.Libraries.GSM.Layer3
 
                         if ((currentPos + pduLength) / 2 > l3Data.Length)
                         {
-                            builder.Append("  PDU too short: ").Append(slotInfo.Reference).Append(Environment.NewLine);
-                            return builder.ToString();
+                            DecodePacketBuilder.Append("  PDU too short: ").Append(slotInfo.Reference).Append(Environment.NewLine);
+                            return DecodePacketBuilder.ToString();
                         }
 
                         /* thats the PDU that should be there, dump it */
@@ -1044,34 +1054,41 @@ namespace LibRXFFT.Libraries.GSM.Layer3
 
                         if (PDUParser.ContainsKey(l3PduInfo.Reference))
                         {
-                            builder.Append("  ").Append(l3PduInfo.Name).Append(" (").Append(l3PduInfo.Reference + "):").Append(Environment.NewLine);
+                            DecodePacketBuilder.Append("  ").Append(l3PduInfo.Name).Append(" (").Append(l3PduInfo.Reference + "):").Append(Environment.NewLine);
                             string[] info = PDUParser[l3PduInfo.Reference](pduData);
                             foreach (string s in info)
                             {
                                 if (!string.IsNullOrEmpty(s))
                                 {
-                                    builder.Append("    ").Append(s).Append(Environment.NewLine);
+                                    DecodePacketBuilder.Append("    ").Append(s).Append(Environment.NewLine);
                                 }
                             }
                         }
                         else if (l3PduInfo.Fields.Count > 0)
                         {
-                            builder.Append("  ").Append(l3PduInfo.Name).Append(" (").Append(l3PduInfo.Reference + "):").Append(Environment.NewLine);
+                            DecodePacketBuilder.Append("  ").Append(l3PduInfo.Name).Append(" (").Append(l3PduInfo.Reference + "):").Append(Environment.NewLine);
                             string[] info = HandleGenericPDU(l3PduInfo.Fields, pduData);
                             foreach (string s in info)
                             {
                                 if (!string.IsNullOrEmpty(s))
                                 {
-                                    builder.Append("    ").Append(s).Append(Environment.NewLine);
+                                    DecodePacketBuilder.Append("    ").Append(s).Append(Environment.NewLine);
                                 }
                             }
                         }
                         else
                         {
-                            builder.Append("  ").Append(l3PduInfo.Name).Append(" (").Append(l3PduInfo.Reference + "):").Append(Environment.NewLine);
-                            if (pduData.Length > 0)
+                            DecodePacketBuilder.Append("  ").Append(l3PduInfo.Name).Append(" (").Append(l3PduInfo.Reference + "):").Append(Environment.NewLine);
+                            if (DumpUnhandledOctets)
                             {
-                                builder.Append("    ").Append(DumpBytes(pduData)).Append(Environment.NewLine);
+                                if (pduData.Length > 0)
+                                {
+                                    DecodePacketBuilder.Append("    ").Append(DumpBytes(pduData)).Append(Environment.NewLine);
+                                }
+                            }
+                            else
+                            {
+                                DecodePacketBuilder.Append("    (not dumped)").Append(Environment.NewLine);
                             }
                         }
 
@@ -1107,8 +1124,15 @@ namespace LibRXFFT.Libraries.GSM.Layer3
 
                 if (hasData)
                 {
-                    builder.Append("  ").Append("Unhandled Rest Octets").Append(Environment.NewLine);
-                    builder.Append("    ").Append(DumpBytes(pduData)).Append(Environment.NewLine);
+                    DecodePacketBuilder.Append("  ").Append("Unhandled Rest Octets").Append(Environment.NewLine);
+                    if (DumpUnhandledOctets)
+                    {
+                        DecodePacketBuilder.Append("    ").Append(DumpBytes(pduData)).Append(Environment.NewLine);
+                    }
+                    else
+                    {
+                        DecodePacketBuilder.Append("    (not dumped)").Append(Environment.NewLine);
+                    }
                 }
             }
 
@@ -1118,7 +1142,7 @@ namespace LibRXFFT.Libraries.GSM.Layer3
                 if (PDUDataTriggers.ContainsKey(l3Message.TriggerPost))
                     PDUDataTriggers[l3Message.TriggerPost](this);
             }
-            return builder.ToString();
+            return DecodePacketBuilder.ToString();
         }
 
 
@@ -1518,14 +1542,15 @@ namespace LibRXFFT.Libraries.GSM.Layer3
             }
         }
 
+        private static StringBuilder TempBuilder = new StringBuilder();
         private static string DumpBytes(byte[] data)
         {
-            StringBuilder builder = new StringBuilder();
+                TempBuilder.Length = 0;
 
-            foreach (byte value in data)
-                builder.AppendFormat("{0:X02} ", value);
+                foreach (byte value in data)
+                    TempBuilder.AppendFormat("{0:X02} ", value);
 
-            return builder.ToString();
+                return TempBuilder.ToString();
         }
     }
 }

@@ -91,6 +91,9 @@ namespace GSM_Analyzer
         public string KrakenHostAddress = "";
         public string DataSourceText = "";
         public double DataSourceProgress = -1;
+        private DateTime DataSourceStartTime = DateTime.MinValue;
+        private DateTime LastTitleUpdate = DateTime.Now;
+        private long DataSourceTotalTime = 0;
         private string OldTitle = "";
 
         public class KrakenCracker : CipherCracker
@@ -906,13 +909,57 @@ namespace GSM_Analyzer
         private void UpdateTitleBar()
         {
             string text = "";
+            string eta = "?";
+
 
             if (DataSourceText != null && DataSourceText != "")
             {
+                /* first time that there is some data source? */
+                if (DataSourceStartTime == DateTime.MinValue)
+                {
+                    DataSourceStartTime = DateTime.Now;
+                    DataSourceTotalTime = 0;
+                }
+                else
+                {
+                    double secs = (DateTime.Now - DataSourceStartTime).TotalSeconds;
+                    if (DataSourceProgress > 0.001)
+                    {
+                        long total = (long)(secs / DataSourceProgress);
+
+                        /* averaging except the first time */
+                        if (DataSourceTotalTime != 0)
+                        {
+                            DataSourceTotalTime = (long)(total * 0.05 + DataSourceTotalTime * 0.95);
+                        }
+                        else
+                        {
+                            DataSourceTotalTime = total;
+                        }
+
+                        long seconds = DataSourceTotalTime % 60;
+                        long minutes = (DataSourceTotalTime / 60) % 60;
+                        long hours = (DataSourceTotalTime / 3600);
+
+                        eta = "";
+
+                        if (hours > 0)
+                        {
+                            eta += hours + "h ";
+                        }
+                        if (hours > 0 || minutes > 0)
+                        {
+                            eta += minutes + "m ";
+                        }
+
+                        eta += seconds + "s";
+                    }
+                }
+
                 text = "GSM Analyzer - [Input: " + DataSourceText;
                 if (DataSourceProgress >= 0)
                 {
-                    text += " Progress: " + (DataSourceProgress * 100.0f).ToString("0.0") + "%";
+                    text += " Progress: " + (DataSourceProgress * 100.0f).ToString("0.0") + "% ETA: " + eta;
                 }
                 text += "]";
             }
@@ -921,9 +968,10 @@ namespace GSM_Analyzer
                 text = "GSM Analyzer";
             }
 
-            if (OldTitle != text)
+            if (OldTitle != text && (DateTime.Now - LastTitleUpdate).TotalMilliseconds > 100)
             {
                 OldTitle = text;
+                LastTitleUpdate = DateTime.Now;
                 this.BeginInvoke(new Action(() =>
                 {
                     Text = text;

@@ -258,10 +258,23 @@ namespace LibRXFFT.Components.GDI
 
         private void UpdateText()
         {
+            /* when one line or less is visible, display nothing */
+            if (VisibleLines <= 1)
+            {
+                return;
+            }
+
             lock (this)
             {
                 if (!Changed)
                 {
+                    /* we are already in normal mode, no need to check */
+                    if (!FastMode)
+                    {
+                        return;
+                    }
+
+                    /* check for "fast mode" timeout */
                     if (ChangeTimeout <= 50)
                     {
                         ChangeTimeout++;

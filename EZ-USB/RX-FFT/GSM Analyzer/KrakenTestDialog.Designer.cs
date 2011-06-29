@@ -60,21 +60,21 @@
             this.textBursts.Location = new System.Drawing.Point(93, 33);
             this.textBursts.Name = "textBursts";
             this.textBursts.Size = new System.Drawing.Size(100, 20);
-            this.textBursts.TabIndex = 2;
+            this.textBursts.TabIndex = 1;
             // 
             // textTestCount
             // 
             this.textTestCount.Location = new System.Drawing.Point(93, 10);
             this.textTestCount.Name = "textTestCount";
             this.textTestCount.Size = new System.Drawing.Size(100, 20);
-            this.textTestCount.TabIndex = 3;
+            this.textTestCount.TabIndex = 0;
             // 
             // btnRunTest
             // 
             this.btnRunTest.Location = new System.Drawing.Point(117, 60);
             this.btnRunTest.Name = "btnRunTest";
             this.btnRunTest.Size = new System.Drawing.Size(75, 23);
-            this.btnRunTest.TabIndex = 4;
+            this.btnRunTest.TabIndex = 2;
             this.btnRunTest.Text = "Run tests";
             this.btnRunTest.UseVisualStyleBackColor = true;
             this.btnRunTest.Click += new System.EventHandler(this.btnRunTest_Click);

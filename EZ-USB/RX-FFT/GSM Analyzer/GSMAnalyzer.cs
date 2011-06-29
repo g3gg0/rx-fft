@@ -93,7 +93,7 @@ namespace GSM_Analyzer
         public double DataSourceProgress = -1;
         private DateTime DataSourceStartTime = DateTime.MinValue;
         private DateTime LastTitleUpdate = DateTime.Now;
-        private long DataSourceTotalTime = 0;
+        private double DataSourceTotalTime = 0;
         private string OldTitle = "";
 
         public class KrakenCracker : CipherCracker
@@ -922,24 +922,25 @@ namespace GSM_Analyzer
                 }
                 else
                 {
-                    double secs = (DateTime.Now - DataSourceStartTime).TotalSeconds;
+                    double secs = ((DateTime.Now - DataSourceStartTime).TotalMilliseconds / 1000);
+
                     if (DataSourceProgress > 0.001)
                     {
-                        long total = (long)(secs / DataSourceProgress);
+                        double total = (secs / DataSourceProgress);
 
                         /* averaging except the first time */
                         if (DataSourceTotalTime != 0)
                         {
-                            DataSourceTotalTime = (long)(total * 0.05 + DataSourceTotalTime * 0.95);
+                            DataSourceTotalTime = (total * 0.000005 + DataSourceTotalTime * 0.999995);
                         }
                         else
                         {
                             DataSourceTotalTime = total;
                         }
 
-                        long seconds = DataSourceTotalTime % 60;
-                        long minutes = (DataSourceTotalTime / 60) % 60;
-                        long hours = (DataSourceTotalTime / 3600);
+                        long seconds = (long)(DataSourceTotalTime - secs) % 60;
+                        long minutes = (long)((DataSourceTotalTime - secs) / 60) % 60;
+                        long hours = (long)((DataSourceTotalTime - secs) / 3600);
 
                         eta = "";
 

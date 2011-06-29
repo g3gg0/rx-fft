@@ -131,8 +131,10 @@ namespace LibRXFFT.Libraries.GSM.Layer1.PacketDump
                     }
                 }
 
+                line = line.Trim();
+
                 /* check for metadata */
-                if (line.Trim().StartsWith("<meta "))
+                if (line.StartsWith("<meta "))
                 {
                     string[] fields = line.Replace("<meta ", "").Replace("/>", "").Trim().Split(' ');
 
@@ -181,7 +183,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.PacketDump
                     /* read next line */
                     goto restart;
                 }
-                else if (line.Trim().StartsWith("<b "))
+                else if (line.StartsWith("<b "))
                 {
                     string fieldString = line.Replace("<b ", "").Replace("/>", "").Trim();
                     int fieldPos = 0;

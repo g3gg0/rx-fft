@@ -64,7 +64,7 @@ namespace GSM_Analyzer
             uint count1, count2;
 
             uint testCount, burstPerTest;
-            uint success = 0, bursts = 0;
+            uint success = 0, bursts = 0, kc_diff = 0;
 
             testCount = uint.Parse ( textTestCount.Text );
             burstPerTest = uint.Parse ( textBursts.Text );
@@ -110,22 +110,31 @@ namespace GSM_Analyzer
                         for (int k = 0; k < kc.Length; k++)
                         {
                             if (kc[k] != kc_calculated[k])
+                            {
+                                kc_diff++;
                                 break;
+                            }
 
                             if (k == 7)
+                            {
                                 success++;
+                            }
 
                         }
 
                     }
                     bursts++;
                     krakenWorker.ReportProgress(((int)i * (int)burstPerTest + (int)j + 1) * 100 / ((int)burstPerTest * (int)testCount));
-
                 }
+
+                krakenWorker.ReportProgress(((int)(i+1) * (int)burstPerTest ) * 100 / ((int)burstPerTest * (int)testCount));
             }
 
-            MessageBox.Show("Tried to crack " + bursts + " bursts.\nSuccessfully cracked " + success + " sessions.\nCoverage is " + (success * 100 / testCount ) + "%.");
-
+            MessageBox.Show("Cracking stats\n" +
+                "\tburst crack tries: " + bursts + "\n" +
+                "\tKc recovered: " + success + "/" + testCount + "\n" +
+                "\tCoverage: " + (success * 100 / testCount) + "%\n" +
+                "\tAvg. bursts needed to crack: " + ((float)(bursts - (testCount - success) * burstPerTest) / success));
 
         }
 

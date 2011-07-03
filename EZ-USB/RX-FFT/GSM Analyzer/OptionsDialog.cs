@@ -7,6 +7,7 @@ using LibRXFFT.Libraries.GSM.Layer2;
 using LibRXFFT.Libraries.GSM.Layer3;
 using LibRXFFT.Libraries.SampleSources;
 using LibRXFFT.Libraries.SignalProcessing;
+using System.Text;
 
 namespace GSM_Analyzer
 {
@@ -446,6 +447,17 @@ namespace GSM_Analyzer
 
         }
 
+        private void btnCachedKi_Click(object sender, EventArgs e)
+        {
+            string[] keys = KrakenClient.GetCachedKis();
+            StringBuilder text = new StringBuilder();
 
+            foreach (string key in keys)
+            {
+                text.Append(key).Append(" ");
+            }
+
+            txtA5Kc.Text = text.ToString();
+        }
     }
 }

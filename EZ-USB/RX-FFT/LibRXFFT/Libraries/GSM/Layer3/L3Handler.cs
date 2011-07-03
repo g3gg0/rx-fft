@@ -895,12 +895,12 @@ namespace LibRXFFT.Libraries.GSM.Layer3
             return msg;
         }
 
-        private StringBuilder DecodePacketBuilder = new StringBuilder();
         private string DecodePacket(L3Messages l3Messages, L3PDUList l3Pdus, byte[] l3Data, int start, string reference)
         {
             /* half-octet based indexing */
             int currentPos = start * 2;
-            DecodePacketBuilder.Length = 0;
+            /* must stay function-local since this function is reentrant */
+            StringBuilder DecodePacketBuilder = new StringBuilder();
 
             L3MessageInfo l3Message = l3Messages.Get(reference);
             if (l3Message == null)

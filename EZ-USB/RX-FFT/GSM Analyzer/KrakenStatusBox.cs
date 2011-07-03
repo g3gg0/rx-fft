@@ -88,10 +88,10 @@ namespace GSM_Analyzer
                 if (Kraken != null && Kraken.Kraken != null)
                 {
                     connected = Kraken.Available;
-                    status = Kraken.Kraken.KrakenJobStatus;
 
                     if (connected)
                     {
+                        status = Kraken.Kraken.KrakenJobStatus;
                         jobId = Kraken.Kraken.RequestId;
 
                         if (jobId != -1)

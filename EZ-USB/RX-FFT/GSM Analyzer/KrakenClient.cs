@@ -8,6 +8,7 @@ using LibRXFFT.Libraries;
 using RX_FFT.Components.GDI;
 using System.Threading;
 using System.Globalization;
+using System.Collections;
 
 /* 
  * Kraken Status codes:
@@ -66,6 +67,7 @@ namespace GSM_Analyzer
 
         private static Dictionary<string, string> ScanResults = new Dictionary<string, string>();
         private static string CacheFileName = "KrakenScanCache.txt";
+        private static string NotFoundString = "----------------";
 
         static KrakenClient()
         {
@@ -91,6 +93,24 @@ namespace GSM_Analyzer
             catch (Exception e)
             {
             }
+        }
+
+        public static string[] GetCachedKis()
+        {
+            ArrayList keys = new ArrayList();
+
+            lock (ScanResults)
+            {
+                foreach(KeyValuePair<string,string> pair in ScanResults)
+                {
+                    if (!NotFoundString.Equals(pair.Value))
+                    {
+                        keys.Add(pair.Value);
+                    }
+                }
+            }
+
+            return (string[])keys.ToArray(typeof(string));
         }
 
         private static void LoadCache()
@@ -130,7 +150,7 @@ namespace GSM_Analyzer
                 }
                 else
                 {
-                    ScanResults.Add(request, "----------------");
+                    ScanResults.Add(request, NotFoundString);
                 }
                 SaveCache();
             }
@@ -148,7 +168,7 @@ namespace GSM_Analyzer
 
                     if (request.Equals(pair.Key))
                     {
-                        if ("----------------".Equals(pair.Value))
+                        if (NotFoundString.Equals(pair.Value))
                         {
                             Log.AddMessage("KrakenClient", "Cached as failed (#" + pos + ")");
                             storedResult = null;
@@ -166,6 +186,10 @@ namespace GSM_Analyzer
             return false;
         }
 
+        public KrakenClient()
+        {
+        }
+
         public KrakenClient(string host)
         {
             string[] splits = host.Split(':');
@@ -181,7 +205,7 @@ namespace GSM_Analyzer
             }
         }
 
-        public bool Connected
+        public virtual bool Connected
         {
             get
             {
@@ -189,7 +213,7 @@ namespace GSM_Analyzer
             }
         }
 
-        public string Status
+        public virtual string Status
         {
             get
             {
@@ -351,7 +375,7 @@ namespace GSM_Analyzer
             Connect();
         }
 
-        public void Reconnect()
+        public virtual void Reconnect()
         {
             lock (ControlStreamLock)
             {
@@ -360,7 +384,7 @@ namespace GSM_Analyzer
             }
         }
 
-        public void Disconnect()
+        public virtual void Disconnect()
         {
             try
             {
@@ -385,7 +409,7 @@ namespace GSM_Analyzer
             ControlStream = null;
         }
 
-        public bool Connect()
+        public virtual bool Connect()
         {
             try
             {
@@ -423,7 +447,7 @@ namespace GSM_Analyzer
             return true;
         }
 
-        public byte[] RequestResult(bool[] key1, uint count1, bool[] key2, uint count2)
+        public virtual byte[] RequestResult(bool[] key1, uint count1, bool[] key2, uint count2)
         {
             string request = "crack " + ByteUtil.BitsToString(key1) + " " + count1 + " " + ByteUtil.BitsToString(key2) + " " + count2;
             byte[] result = new byte[8];
@@ -499,12 +523,12 @@ namespace GSM_Analyzer
             return result;
         }
 
-        public double GetJobProgress()
+        public virtual double GetJobProgress()
         {
             return GetJobProgress(RequestId);
         }
 
-        public double GetJobProgress(int jobId)
+        public virtual double GetJobProgress(int jobId)
         {
             /* just return -1 if not connected to a kraken server */
             if (!Connected)

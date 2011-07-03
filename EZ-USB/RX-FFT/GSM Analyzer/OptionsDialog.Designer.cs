@@ -89,10 +89,11 @@
             this.label16 = new System.Windows.Forms.Label();
             this.txtA5Kc = new System.Windows.Forms.TextBox();
             this.groupBox7 = new System.Windows.Forms.GroupBox();
+            this.txtKrakenHost = new System.Windows.Forms.ComboBox();
             this.label18 = new System.Windows.Forms.Label();
             this.label17 = new System.Windows.Forms.Label();
             this.txtSimAuthHost = new System.Windows.Forms.TextBox();
-            this.txtKrakenHost = new System.Windows.Forms.ComboBox();
+            this.btnCachedKi = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -726,15 +727,16 @@
             // txtA5Kc
             // 
             this.txtA5Kc.CharacterCasing = System.Windows.Forms.CharacterCasing.Upper;
-            this.txtA5Kc.Location = new System.Drawing.Point(37, 19);
+            this.txtA5Kc.Location = new System.Drawing.Point(96, 19);
             this.txtA5Kc.Name = "txtA5Kc";
-            this.txtA5Kc.Size = new System.Drawing.Size(163, 20);
+            this.txtA5Kc.Size = new System.Drawing.Size(104, 20);
             this.txtA5Kc.TabIndex = 102;
             this.txtA5Kc.WordWrap = false;
             this.txtA5Kc.TextChanged += new System.EventHandler(this.txtA5Kc_TextChanged);
             // 
             // groupBox7
             // 
+            this.groupBox7.Controls.Add(this.btnCachedKi);
             this.groupBox7.Controls.Add(this.txtKrakenHost);
             this.groupBox7.Controls.Add(this.label18);
             this.groupBox7.Controls.Add(this.label17);
@@ -747,6 +749,17 @@
             this.groupBox7.TabIndex = 103;
             this.groupBox7.TabStop = false;
             this.groupBox7.Text = "A5 Decryption";
+            // 
+            // txtKrakenHost
+            // 
+            this.txtKrakenHost.FormattingEnabled = true;
+            this.txtKrakenHost.Items.AddRange(new object[] {
+            "localhost"});
+            this.txtKrakenHost.Location = new System.Drawing.Point(96, 72);
+            this.txtKrakenHost.Name = "txtKrakenHost";
+            this.txtKrakenHost.Size = new System.Drawing.Size(104, 21);
+            this.txtKrakenHost.TabIndex = 105;
+            this.txtKrakenHost.TextChanged += new System.EventHandler(this.txtKrakenHost_TextChanged);
             // 
             // label18
             // 
@@ -774,16 +787,20 @@
             this.txtSimAuthHost.TabIndex = 103;
             this.txtSimAuthHost.TextChanged += new System.EventHandler(this.txtSimAuthHost_TextChanged);
             // 
-            // txtKrakenHost
+            // btnCachedKi
             // 
-            this.txtKrakenHost.FormattingEnabled = true;
-            this.txtKrakenHost.Items.AddRange(new object[] {
-            "localhost"});
-            this.txtKrakenHost.Location = new System.Drawing.Point(96, 72);
-            this.txtKrakenHost.Name = "txtKrakenHost";
-            this.txtKrakenHost.Size = new System.Drawing.Size(104, 21);
-            this.txtKrakenHost.TabIndex = 105;
-            this.txtKrakenHost.TextChanged +=new System.EventHandler(txtKrakenHost_TextChanged);
+            this.btnCachedKi.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
+            this.btnCachedKi.FlatAppearance.BorderSize = 0;
+            this.btnCachedKi.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Silver;
+            this.btnCachedKi.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
+            this.btnCachedKi.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnCachedKi.Location = new System.Drawing.Point(38, 18);
+            this.btnCachedKi.Name = "btnCachedKi";
+            this.btnCachedKi.Size = new System.Drawing.Size(51, 20);
+            this.btnCachedKi.TabIndex = 106;
+            this.btnCachedKi.Text = "cached";
+            this.btnCachedKi.UseVisualStyleBackColor = true;
+            this.btnCachedKi.Click += new System.EventHandler(this.btnCachedKi_Click);
             // 
             // OptionsDialog
             // 
@@ -888,5 +905,6 @@
         private System.Windows.Forms.RadioButton radioL1PreallocateNone;
         private System.Windows.Forms.Label label14;
         private System.Windows.Forms.ComboBox txtKrakenHost;
+        private System.Windows.Forms.Button btnCachedKi;
     }
 }

@@ -57,7 +57,7 @@ namespace GSM_Analyzer
         private bool SingleStep;
 
         internal TimeSlotHandler Handler;
-        internal GSMParameters Parameters;
+        public GSMParameters Parameters;
         internal GMSKDemodulator[] Demodulator;
         private FilterDialog FilterWindow;
         private BurstVisualizer BurstWindow;
@@ -144,10 +144,16 @@ namespace GSM_Analyzer
                     if (Kraken == null)
                     {
                         /* first time and host configured */
-                        if (false || Analyzer.KrakenHostAddress != null && Analyzer.KrakenHostAddress.Length > 0)
+                        if (Analyzer.KrakenHostAddress != null && Analyzer.KrakenHostAddress.Length > 0)
                         {
-                            //Kraken = new KrakenNet();
-                            Kraken = new KrakenClient(Analyzer.KrakenHostAddress);
+                            if (Analyzer.KrakenHostAddress.StartsWith("XMPP"))
+                            {
+                                Kraken = new KrakenNet(Analyzer.KrakenHostAddress);
+                            }
+                            else
+                            {
+                                Kraken = new KrakenClient(Analyzer.KrakenHostAddress);
+                            }
                             Kraken.Connect();
                         }
                         else
@@ -159,7 +165,7 @@ namespace GSM_Analyzer
                     else
                     {
                         /* no host configured anymore */
-                        if (true && (Analyzer.KrakenHostAddress == null || Analyzer.KrakenHostAddress.Length == 0))
+                        if (Analyzer.KrakenHostAddress == null || Analyzer.KrakenHostAddress.Length == 0)
                         {
                             Kraken.Disconnect();
                             Kraken = null;
@@ -170,7 +176,14 @@ namespace GSM_Analyzer
                         if (Analyzer.KrakenHostAddress != Kraken.Hostname)
                         {
                             Kraken.Disconnect();
-                            Kraken = new KrakenClient(Analyzer.KrakenHostAddress);
+                            if (Analyzer.KrakenHostAddress.StartsWith("XMPP"))
+                            {
+                                Kraken = new KrakenNet(Analyzer.KrakenHostAddress);
+                            }
+                            else
+                            {
+                                Kraken = new KrakenClient(Analyzer.KrakenHostAddress);
+                            }
                             Kraken.Connect();
                         }
                     }
@@ -308,11 +321,11 @@ namespace GSM_Analyzer
                 Parameters.CipherCracker = new KrakenCracker(this);
                 krakenStatusBox1.SetCracker((KrakenCracker)Parameters.CipherCracker);
 
+                InitLua();
+
                 if (Parameters.CipherCracker.Available)
                 {
                 }
-
-                InitLua();
 
                 Demodulator = new GMSKDemodulator[Splitter.Config.Channels.Length];
                 for (int chan = 0; chan < Demodulator.Length; chan++)
@@ -364,6 +377,7 @@ namespace GSM_Analyzer
             ReaderUiUpdate = true;
         }
 
+
         private void InitLua()
         {
             try
@@ -371,6 +385,7 @@ namespace GSM_Analyzer
                 Parameters.LuaVm = new Lua();
 
                 LuaHelpers.RegisterLuaFunctions(Parameters.LuaVm, new LuaHelpers());
+                LuaHelpers.RegisterLuaFunctions(Parameters.LuaVm, this);
                 Parameters.LuaVm.DoFile("GSM Analyzer.lua");
                 try
                 {
@@ -831,6 +846,13 @@ namespace GSM_Analyzer
             if (Parameters.CipherCracker != null)
             {
                 Parameters.CipherCracker.Close();
+            }
+
+            /* make sure dump file was closed */
+            if (DumpReaderFile != null)
+            {
+                DumpReaderFile.Close();
+                DumpReaderFile = null;
             }
 
             btnOpen.Text = "Open";
@@ -1584,11 +1606,14 @@ namespace GSM_Analyzer
 
 
 
+        private GsmAnalyzerDumpReader DumpReaderFile = null;
+
         void DumpReadFunc(string fileName)
         {
             bool[] burstBitsDown = new bool[148];
             bool[] burstBitsUp = new bool[148];
-            GsmAnalyzerDumpReader reader = new GsmAnalyzerDumpReader(Parameters, fileName);
+
+            DumpReaderFile = new GsmAnalyzerDumpReader(Parameters, fileName);
 
             L3Handler.ReloadFiles();
 
@@ -1605,10 +1630,10 @@ namespace GSM_Analyzer
 
             try
             {
-                while (reader.HasData)
+                while (DumpReaderFile.HasData)
                 {
                     /* get the next burst from the reader */
-                    reader.Read(burstBitsDown, burstBitsUp);
+                    DumpReaderFile.Read(burstBitsDown, burstBitsUp);
 
 
                     /* let timeslot handler process the burst bits. 
@@ -1616,9 +1641,9 @@ namespace GSM_Analyzer
                      * used to track e.g. faulty bursts in source file 
                      */
                     Parameters.Dir = eLinkDirection.Downlink;
-                    Handler.Handle(burstBitsDown, reader.BurstNumber);
+                    Handler.Handle(burstBitsDown, DumpReaderFile.BurstNumber);
                     Parameters.Dir = eLinkDirection.Uplink;
-                    Handler.Handle(burstBitsUp, reader.BurstNumber);
+                    Handler.Handle(burstBitsUp, DumpReaderFile.BurstNumber);
 
 
                     /* update UI if necessary */
@@ -1628,7 +1653,7 @@ namespace GSM_Analyzer
 
                         UpdateUIStatus(Parameters);
                         UpdateStats(Parameters);
-                        SetDataSourceProgress(reader.Progress);
+                        SetDataSourceProgress(DumpReaderFile.Progress);
                     }
 
                     if (SingleStep)
@@ -1653,7 +1678,8 @@ namespace GSM_Analyzer
 
             Parameters.State = eGSMState.Idle;
 
-            reader.Close();
+            DumpReaderFile.Close();
+            DumpReaderFile = null;
 
             /* show statistics/information */
             DumpStatistics();

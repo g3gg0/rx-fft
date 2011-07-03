@@ -144,6 +144,7 @@
       <DependentUpon>GSMAnalyzer.cs</DependentUpon>
     </Compile>
     <Compile Include="KrakenClient.cs" />
+    <Compile Include="KrakenNet\KrakenNet.cs" />
     <Compile Include="KrakenStatusBox.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -252,6 +253,21 @@
     <Compile Include="StatisticsDialog.Designer.cs">
       <DependentUpon>StatisticsDialog.cs</DependentUpon>
     </Compile>
+    <Compile Include="KrakenNet\Errors.cs" />
+    <Compile Include="KrakenNet\JabberClient.cs" />
+    <Compile Include="KrakenNet\MessageListener.cs" />
+    <Compile Include="KrakenNet\network\ServerConnection.cs" />
+    <Compile Include="KrakenNet\roster\Errors.cs" />
+    <Compile Include="KrakenNet\roster\JabberContact.cs" />
+    <Compile Include="KrakenNet\roster\JabberGroup.cs" />
+    <Compile Include="KrakenNet\roster\JabberGroupList.cs" />
+    <Compile Include="KrakenNet\roster\JabberRoster.cs" />
+    <Compile Include="KrakenNet\xmpp\Core.cs" />
+    <Compile Include="KrakenNet\xmpp\Errors.cs" />
+    <Compile Include="KrakenNet\xmpp\IM.cs" />
+    <Compile Include="KrakenNet\xmpp\JabberProtocol.cs" />
+    <Compile Include="KrakenNet\xmpp\JEP0078.cs" />
+    <Compile Include="KrakenNet\xmpp\Stanzas.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\LibRXFFT\LibRXFFT.csproj">

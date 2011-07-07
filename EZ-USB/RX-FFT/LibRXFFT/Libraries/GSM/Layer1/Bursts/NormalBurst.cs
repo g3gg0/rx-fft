@@ -467,6 +467,13 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
 
                 StatusMessage = "[Encrypted frames: " + CryptedFrames + "] ";
 
+                /*if (param.Dir == eLinkDirection.Uplink)
+                {
+                    StatusMessage += "Skipping cracking 'cause of uplink.";
+                    StatusMessage += Environment.NewLine;
+                    return;
+                }*/
+
                 /* check if we should crack this connection */
                 if (param.LuaVm != null)
                 {

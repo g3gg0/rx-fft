@@ -43,7 +43,7 @@ namespace GSM_Analyzer
             SDCCHBurst sdcch = new SDCCHBurst();
             sdcch.L2DataAdd ( l2data );
             sdcch.L2ToL1Convert();
-            sdcch.L1BurstGet( ref l1bursts);
+            sdcch.L1BurstIGet( ref l1bursts);
 
             textL1burst0.Text = ByteUtil.BitsToString(l1bursts[0]);
             textL1burst1.Text = ByteUtil.BitsToString(l1bursts[1]);
@@ -94,7 +94,7 @@ namespace GSM_Analyzer
             SDCCHBurst sdcch = new SDCCHBurst();
             sdcch.L2DataAdd(l2data);
             sdcch.L2ToL1Convert();
-            sdcch.L1BurstGet(ref l1bursts);
+            sdcch.L1BurstIGet(ref l1bursts);
 
             /* crypt it */
             byte[] kc = new byte[8];
@@ -104,15 +104,83 @@ namespace GSM_Analyzer
             param.FN = uint.Parse(textFN.Text);
 
             CryptA5 A5Algo = new CryptA5(kc);
-            A5Algo.CryptDownlink(l1bursts[0], param.Count);
-            A5Algo.CryptDownlink(l1bursts[1], param.Count);
-            A5Algo.CryptDownlink(l1bursts[2], param.Count);
-            A5Algo.CryptDownlink(l1bursts[3], param.Count);
+
+            if (radioSameFN.Checked)
+            {
+                A5Algo.CryptDownlink(l1bursts[0], param.Count);
+                A5Algo.CryptDownlink(l1bursts[1], param.Count);
+                A5Algo.CryptDownlink(l1bursts[2], param.Count);
+                A5Algo.CryptDownlink(l1bursts[3], param.Count);
+            }
+            else
+            {
+                A5Algo.CryptDownlink(l1bursts[0], param.Count);
+                param.FN++;
+                A5Algo.CryptDownlink(l1bursts[1], param.Count);
+                param.FN++;
+                A5Algo.CryptDownlink(l1bursts[2], param.Count);
+                param.FN++;
+                A5Algo.CryptDownlink(l1bursts[3], param.Count);
+            }
 
             textL1crypt0.Text = ByteUtil.BitsToString(l1bursts[0]);
             textL1crypt1.Text = ByteUtil.BitsToString(l1bursts[1]);
             textL1crypt2.Text = ByteUtil.BitsToString(l1bursts[2]);
             textL1crypt3.Text = ByteUtil.BitsToString(l1bursts[3]);
+        }
+
+        private void btnBoolGadConvert_Click(object sender, EventArgs e)
+        {
+            bool inputError = false;
+            bool dirBoolToGad = radioBoolToGad.Checked;
+
+            if (dirBoolToGad)
+            {
+                if (textBool0.Text.Length != 114 || textBool1.Text.Length != 114
+                    || textBool2.Text.Length != 114 || textBool3.Text.Length != 114 )
+                    inputError = true;
+                MessageBox.Show("not supported yet!");
+                return;
+            }
+            else
+            {
+                byte[] byteBuf = new byte[19];
+
+                GSMParameters param = new GSMParameters();
+                SDCCHBurst sdcch = new SDCCHBurst();
+
+                ByteUtil.BytesFromString(textGad0.Text, ref byteBuf);
+                sdcch.ParseData(param, ByteUtil.BitsFromBytes(byteBuf), 0 );
+
+                ByteUtil.BytesFromString(textGad1.Text, ref byteBuf);
+                sdcch.ParseData(param, ByteUtil.BitsFromBytes(byteBuf), 1);
+
+                ByteUtil.BytesFromString(textGad2.Text, ref byteBuf);
+                sdcch.ParseData(param, ByteUtil.BitsFromBytes(byteBuf), 2);
+
+                ByteUtil.BytesFromString(textGad3.Text, ref byteBuf);
+                sdcch.ParseData(param, ByteUtil.BitsFromBytes(byteBuf), 3);
+
+                bool[][] boolBuf = new bool[4][];
+                for ( int i = 0; i < boolBuf.Length; i++ )
+                    boolBuf[i] = new bool[114];
+
+                sdcch.L1BurstEGet(ref boolBuf);
+
+                if (boolBuf == null)
+                {
+                    MessageBox.Show("error reading bits");
+                    return;
+                }
+
+                textBool0.Text = ByteUtil.BitsToString(boolBuf[0]);
+                textBool1.Text = ByteUtil.BitsToString(boolBuf[1]);
+                textBool2.Text = ByteUtil.BitsToString(boolBuf[2]);
+                textBool3.Text = ByteUtil.BitsToString(boolBuf[3]);
+
+
+            }
+
         }
     }
 }

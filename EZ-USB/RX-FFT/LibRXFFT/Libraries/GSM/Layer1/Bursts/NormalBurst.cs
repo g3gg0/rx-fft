@@ -294,6 +294,8 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
         internal CryptA5 A5Algorithm = null;
         public SACCHBurst AssociatedSACCH = null;
 
+        public NormalBurst AssociatedDirectionViceVersa = null;
+
         internal bool AutoCrackBursts = true;
         internal int BurstsToLog = 4 * 300;
         internal int BurstsToCrack = 4 * 3;
@@ -732,7 +734,10 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
 
                         /* update COUNT and let it decrypt our burst */
                         A5Algorithm.Key = key;
-                        A5Algorithm.CryptDownlink(burstBufferI[dstBurst], BurstBlock[dstBurst].Count);
+                        if (param.Dir == eLinkDirection.Downlink)
+                            A5Algorithm.CryptDownlink(burstBufferI[dstBurst], BurstBlock[dstBurst].Count);
+                        else
+                            A5Algorithm.CryptUplink(burstBufferI[dstBurst], BurstBlock[dstBurst].Count);
                     }
 
                     /* check if this was the correct key by trying to deconvolve */
@@ -794,7 +799,10 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                     for (int dstBurst = 0; dstBurst < BurstBlock.Length; dstBurst++)
                     {
                         /* update COUNT and let it decrypt our burst */
-                        A5Algorithm.CryptDownlink(BurstBlock[dstBurst].BurstBufferI, BurstBlock[dstBurst].Count);
+                        if ( param.Dir == eLinkDirection.Downlink )
+                            A5Algorithm.CryptDownlink(BurstBlock[dstBurst].BurstBufferI, BurstBlock[dstBurst].Count);
+                        else
+                            A5Algorithm.CryptUplink(BurstBlock[dstBurst].BurstBufferI, BurstBlock[dstBurst].Count);
 
                         if (DumpEncryptedMessageBits)
                         {
@@ -877,10 +885,22 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
 
         }
 
-        public void L1BurstGet(ref bool[][] bursts)
+        public void L1BurstIGet(ref bool[][] bursts)
         {
             for (int i = 0; i < BurstBufferI.Length; i++)
                 Array.Copy(BurstBufferI[i], bursts[i], BurstBufferI[i].Length);
+        }
+
+        public void L1BurstEGet(ref bool[][] bursts)
+        {
+            if ( BurstBlock.Length > bursts.Length )
+            {
+                bursts = null;
+                return;
+            }
+
+            for (int i = 0; i < BurstBlock.Length; i++)
+                Array.Copy (BurstBlock[i].BurstBufferE, bursts[i],BurstBlock[i].BurstBufferE.Length );
         }
 
     }

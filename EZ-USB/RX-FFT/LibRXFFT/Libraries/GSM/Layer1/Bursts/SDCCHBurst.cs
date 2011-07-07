@@ -81,8 +81,8 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
             {
                 ClearBurstContext();
 
-                /* try to decrypt buffer if this is enabled, detect key on downlink only */
-                if (!HandleEncryption(param, (param.Dir == eLinkDirection.Downlink) ))
+                /* try to decrypt buffer if this is enabled */
+                if (!HandleEncryption(param))
                 {
                     State = eBurstState.CryptedTraffic;
 

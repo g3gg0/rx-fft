@@ -344,6 +344,18 @@ namespace LibRXFFT.Libraries.GSM.Layer1
          */
 
         public eLinkDirection Dir;
+
+        public int DirLua
+        {
+            get
+            {
+                if (Dir == eLinkDirection.Downlink)
+                    return 0;
+                else
+                    return 1;
+            }
+        }
+
         public long _ARFCN;
         public int ARFCNidx
         {

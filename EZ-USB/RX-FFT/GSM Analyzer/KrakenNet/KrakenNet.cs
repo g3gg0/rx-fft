@@ -145,11 +145,27 @@ public class KrakenNet : KrakenClient
                 foreach (string s in message.Body.Values)
                 {
                     Log.AddMessage("Jabber", "From: <" + message.From + "> " + s);
-
-                    Client.SendMessage(message.From, "Question", "Who are you?");
                 }
             }
         }
+    }
+
+    private NodeStatus GetBestNode()
+    {
+        NodeStatus best = null;
+
+        lock (KrakenNodes)
+        {
+            foreach (NodeStatus node in KrakenNodes.Values)
+            {
+                if (best == null || node.Load < best.Load)
+                {
+                    best = node;
+                }
+            }
+        }
+
+        return best;
     }
 
     private void ValidateNodes()
@@ -327,10 +343,6 @@ public class KrakenNet : KrakenClient
             {
                 Log.AddMessage("Jabber", " [i] Disconnected");
                 InKrakenNet = false;
-
-                //Thread.Sleep(5000);
-                //Log.AddMessage("Jabber", "Reconnecting...");
-                //Connect();
             }
             else
             {
@@ -338,8 +350,8 @@ public class KrakenNet : KrakenClient
             }
         }
         catch
-        { }
-
+        { 
+        }
     }
 
     public override double GetJobProgress()
@@ -354,6 +366,11 @@ public class KrakenNet : KrakenClient
 
     public override byte[] RequestResult(bool[] key1, uint count1, bool[] key2, uint count2)
     {
+        NodeStatus node = GetBestNode();
+
+        Log.AddMessage("KrakenNet", "Would choose " + node.Name);
+
+        Client.SendMessage(node.Name, null, "auth banane");
         return null;
     }
 

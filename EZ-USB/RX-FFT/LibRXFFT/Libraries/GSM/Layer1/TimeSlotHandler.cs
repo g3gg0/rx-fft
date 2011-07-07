@@ -120,7 +120,8 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                 for (int timeSlot = 1; timeSlot < 8; timeSlot++)
                 {
                     /* try all subchannels for SDCCH, since it's not saved yet in .gad file */
-                    for (int subChannel = 0; subChannel < 8; subChannel++)
+                    /* only until subchannel 3 instead of 7, since SACCH will be overwritten then */
+                    for (int subChannel = 0; subChannel < 4; subChannel++)
                     {
                         /* do all things with existing code */
 
@@ -621,6 +622,9 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                                 int sdcchFrame = GetFrameNumForChannel(channelType, eChannelType.SDCCH, (int)subChannel);
                                 int sacchFrame = GetFrameNumForChannel(channelType, eChannelType.SACCH, (int)subChannel);
 
+                                int sdcchFrameUplink = (sdcchFrame + 12 + 3) % 51;
+                                int sacchFrameUplink = (sacchFrame + 12 + 3) % 51;
+
                                 if (Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers == null || Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers.Length != 51)
                                 {
                                     Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers = new sTimeSlotParam[51];
@@ -637,15 +641,15 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                                     assignment = true;
 
                                     AddMessage("  [__] TimeSlot " + timeSlot + " of ARFCN " + targetARFCN + " now configured as SDCCH/8 (was " + Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Type + ")" + Environment.NewLine);
-                                    int sacchChannel1 = (int)subChannel / 2;
-                                    int sacchChannel2 = sacchChannel1 + 4;
+                                    int sacchChannel1 = (int)subChannel % 4; // / 2;
+                                    int sacchChannel2 = sacchChannel1 + 4; // +4;
 
                                     /* release the old burst first */
-                                    ReleaseBurst(Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Uplink][timeSlot].Handlers[sdcchFrame].Burst);
+                                    ReleaseBurst(Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Uplink][timeSlot].Handlers[sdcchFrameUplink].Burst);
                                     ReleaseBurst(Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers[sdcchFrame].Burst);
 
                                     /* we are releasing a SACCH even if it may be still used by the other SDCCH using it */
-                                    ReleaseBurst(Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Uplink][timeSlot].Handlers[sacchFrame].Burst);
+                                    ReleaseBurst(Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Uplink][timeSlot].Handlers[sacchFrameUplink].Burst);
                                     ReleaseBurst(Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers[sacchFrame].Burst);
 
                                     /* allocate a new SDCCH */
@@ -658,6 +662,9 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                                     tmpSDCCHDown.TimeSlot = timeSlot;
                                     tmpSDCCHUp.Direction = eLinkDirection.Uplink;
                                     tmpSDCCHDown.Direction = eLinkDirection.Downlink;
+
+                                    tmpSDCCHDown.AssociatedDirectionViceVersa = tmpSDCCHUp;
+                                    tmpSDCCHUp.AssociatedDirectionViceVersa = tmpSDCCHDown;
 
                                     RegisterActiveBurst(tmpSDCCHUp);
                                     RegisterActiveBurst(tmpSDCCHDown);
@@ -676,8 +683,13 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                                     int sequence = 0;
                                     for (int pos = sdcchFrame; pos < sdcchFrame + 4; pos++)
                                     {
-                                        Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers[pos] = new sTimeSlotParam(tmpSDCCHUp, sequence);
+                                        Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers[pos] = new sTimeSlotParam(tmpSDCCHUp, sequence++);
                                         Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers[pos].Reference = reference;
+                                    }
+
+                                    sequence = 0;
+                                    for (int pos = sdcchFrameUplink; pos < sdcchFrameUplink + 4; pos++)
+                                    {
                                         Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Uplink][timeSlot].Handlers[pos] = new sTimeSlotParam(tmpSDCCHDown, sequence++);
                                         Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Uplink][timeSlot].Handlers[pos].Reference = reference;
                                     }
@@ -693,14 +705,23 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                                     tmpSACCHUp.Direction = eLinkDirection.Uplink;
                                     tmpSACCHDown.Direction = eLinkDirection.Downlink;
 
+                                    tmpSACCHDown.AssociatedDirectionViceVersa = tmpSACCHUp;
+                                    tmpSACCHUp.AssociatedDirectionViceVersa = tmpSACCHDown;
+
                                     RegisterActiveBurst(tmpSACCHUp);
                                     RegisterActiveBurst(tmpSACCHDown);
 
                                     sequence = 0;
                                     for (int pos = sacchFrame; pos < sacchFrame + 4; pos++)
                                     {
-                                        Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers[pos] = new sTimeSlotParam(tmpSACCHUp, sequence);
+                                        Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers[pos] = new sTimeSlotParam(tmpSACCHUp, sequence++);
                                         Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Downlink][timeSlot].Handlers[pos].Reference = reference;
+                                        
+                                    }
+
+                                    sequence = 0;
+                                    for (int pos = sacchFrameUplink; pos < sacchFrameUplink + 4; pos++)
+                                    {
                                         Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Uplink][timeSlot].Handlers[pos] = new sTimeSlotParam(tmpSACCHDown, sequence++);
                                         Parameters.TimeSlotConfig[targetARFCNidx, (int)eLinkDirection.Uplink][timeSlot].Handlers[pos].Reference = reference;
                                     }
@@ -1402,10 +1423,27 @@ namespace LibRXFFT.Libraries.GSM.Layer1
                 channel.ChannelEncrypted = (state != 0);
                 channel.EncryptionType = type;
 
+                /* uplink */
+                if (channel.AssociatedDirectionViceVersa != null)
+                {
+                    channel.AssociatedDirectionViceVersa.ChannelEncrypted = channel.ChannelEncrypted;
+                    channel.AssociatedDirectionViceVersa.EncryptionType = type;
+                }
+
                 if (channel.AssociatedSACCH != null)
                 {
                     channel.AssociatedSACCH.ChannelEncrypted = true;
+
+                    /* uplink */
+                    if (channel.AssociatedSACCH.AssociatedDirectionViceVersa != null)
+                    {
+                        channel.AssociatedSACCH.AssociatedDirectionViceVersa.ChannelEncrypted = true;
+                    }
                 }
+
+                
+
+
             }
             else
             {

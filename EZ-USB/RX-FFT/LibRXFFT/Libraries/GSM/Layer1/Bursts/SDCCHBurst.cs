@@ -53,6 +53,11 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
 
         public override eSuccessState ParseData(GSMParameters param, bool[] decodedBurst, int sequence)
         {
+
+            /* ignore uplink to check if kraken still working */
+            //if (param.Dir == eLinkDirection.Uplink)
+              //  return eSuccessState.Succeeded;
+
             if (IsDummy(decodedBurst))
             {
                 State = eBurstState.Idle;
@@ -67,6 +72,8 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                 return eSuccessState.Succeeded;
             }
 
+            
+
             StoreBurstContext(param, decodedBurst, sequence);
 
             /* if FNs are consecutive */
@@ -74,10 +81,16 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
             {
                 ClearBurstContext();
 
-                /* try to decrypt buffer if this is enabled */
-                if (!HandleEncryption(param))
+                /* try to decrypt buffer if this is enabled, detect key on downlink only */
+                if (!HandleEncryption(param, (param.Dir == eLinkDirection.Downlink) ))
                 {
                     State = eBurstState.CryptedTraffic;
+
+                    if (param.Dir == eLinkDirection.Uplink)
+                    {
+                        StatusMessage = "(Error: could not decrypt Uplink)";
+                        return eSuccessState.Succeeded;
+                    }
 
                     /* encrypted but no decryptor available, silently return */
                     return eSuccessState.Unknown;
@@ -91,7 +104,11 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                 {
                     if (!ChannelEncrypted)
                     {
-                        StatusMessage = "(Error in ConvolutionalCoder)";
+                        StatusMessage = "(Error in ConvolutionalCoder - not encrypted)";
+                    }
+                    else
+                    {
+                        StatusMessage = "(Error in ConvolutionalCoder - encrypted, wrong keystream?)";
                     }
 
                     State = eBurstState.Failed;

@@ -17,6 +17,7 @@ namespace JabberNET.Network
         TcpClient tcp;
         NetworkStream ns;
         StreamWriter log;
+        bool Logging = true;
         
         string previousMsg = null;
 
@@ -75,7 +76,10 @@ namespace JabberNET.Network
                 writer.Flush();
                 if (log != null)
                     log.WriteLine(Msg);
-                //Log.AddMessage("SENT: " + Msg);
+                if (Logging)
+                {
+                    Log.AddMessage("XMPP sent: " + Msg);
+                }
             }
         }
 
@@ -283,6 +287,10 @@ namespace JabberNET.Network
             
             if (response != null)
             {
+                if (Logging)
+                {
+                    Log.AddMessage("XMPP received: " + response);
+                }
                 //Log.AddMessage("RECEIVED: " + response + " " + response.Length + "-" + position);
             }
             

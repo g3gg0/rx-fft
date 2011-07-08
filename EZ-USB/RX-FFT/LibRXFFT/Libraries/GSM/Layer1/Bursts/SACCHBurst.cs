@@ -111,6 +111,11 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                 {
                     State = eBurstState.CryptedTraffic;
 
+                    if (param.ReportL1EncryptionErrors)
+                    {
+                        StatusMessage = "(Error in decryption)";
+                    }
+
                     /* encrypted but no decryptor available, silently return */
                     return eSuccessState.Unknown;
                 }

@@ -352,5 +352,10 @@ namespace LibRXFFT.Components.GDI
 
             textBox1.Size = new Size(width, height);
         }
+
+        private void copyAllToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Clipboard.SetText(this.Text);
+        }
     }
 }

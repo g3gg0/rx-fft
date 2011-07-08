@@ -29,6 +29,7 @@ namespace GSM_Analyzer
             chkL1DumpEncrypted.Checked = NormalBurst.DumpEncryptedMessageBits;
             //chkL1PreallocateTCH.Checked = TimeSlotHandler.PreallocateTCHs;
             chkL1ShowFaulty.Checked = Analyzer.Parameters.ReportL1Errors;
+            checkL1ShowErrornousDecryption.Checked = Analyzer.Parameters.ReportL1EncryptionErrors;
 
             if (TimeSlotHandler.PreallocateSDCCHs)
             {
@@ -458,6 +459,11 @@ namespace GSM_Analyzer
             }
 
             txtA5Kc.Text = text.ToString();
+        }
+
+        private void checkL1ShowErrornousDecryption_CheckedChanged(object sender, EventArgs e)
+        {
+            Analyzer.Parameters.ReportL1EncryptionErrors = checkL1ShowErrornousDecryption.Checked;
         }
     }
 }

@@ -173,6 +173,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
         public bool SkipL2Parsing = false;
         public bool ReportL1Errors = true;
+        public bool ReportL1EncryptionErrors = false;
         public PacketDumpWriter PacketDumper = null;
         public Burst CurrentBurstHandler = null;
 

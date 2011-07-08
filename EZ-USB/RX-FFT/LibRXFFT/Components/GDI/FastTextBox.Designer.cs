@@ -28,10 +28,14 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.scrollBar = new System.Windows.Forms.VScrollBar();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.textBox1 = new System.Windows.Forms.TextBox();
+            this.ContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.copyAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tableLayoutPanel1.SuspendLayout();
+            this.ContextMenu.SuspendLayout();
             this.SuspendLayout();
             // 
             // scrollBar
@@ -64,6 +68,7 @@
             // 
             // textBox1
             // 
+            this.textBox1.ContextMenuStrip = this.ContextMenu;
             this.textBox1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.textBox1.Location = new System.Drawing.Point(0, 0);
             this.textBox1.Margin = new System.Windows.Forms.Padding(0);
@@ -73,6 +78,20 @@
             this.textBox1.Size = new System.Drawing.Size(297, 97);
             this.textBox1.TabIndex = 1;
             this.textBox1.WordWrap = false;
+            // 
+            // ContextMenu
+            // 
+            this.ContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.copyAllToolStripMenuItem});
+            this.ContextMenu.Name = "ContextMenu";
+            this.ContextMenu.Size = new System.Drawing.Size(153, 48);
+            // 
+            // copyAllToolStripMenuItem
+            // 
+            this.copyAllToolStripMenuItem.Name = "copyAllToolStripMenuItem";
+            this.copyAllToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.copyAllToolStripMenuItem.Text = "Copy";
+            this.copyAllToolStripMenuItem.Click += new System.EventHandler(this.copyAllToolStripMenuItem_Click);
             // 
             // FastTextBox
             // 
@@ -85,6 +104,7 @@
             this.SizeChanged += new System.EventHandler(this.FastTextBox_SizeChanged);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
+            this.ContextMenu.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -94,5 +114,7 @@
         private System.Windows.Forms.VScrollBar scrollBar;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.ContextMenuStrip ContextMenu;
+        private System.Windows.Forms.ToolStripMenuItem copyAllToolStripMenuItem;
     }
 }

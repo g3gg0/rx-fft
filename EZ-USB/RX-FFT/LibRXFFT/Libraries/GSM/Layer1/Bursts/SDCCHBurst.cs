@@ -86,10 +86,9 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                 {
                     State = eBurstState.CryptedTraffic;
 
-                    if (param.Dir == eLinkDirection.Uplink)
+                    if (param.ReportL1EncryptionErrors)
                     {
-                        StatusMessage = "(Error: could not decrypt Uplink)";
-                        return eSuccessState.Succeeded;
+                        StatusMessage = "(Error in decryption)";
                     }
 
                     /* encrypted but no decryptor available, silently return */

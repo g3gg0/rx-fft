@@ -314,7 +314,7 @@ namespace GSM_Analyzer
                     Splitter.Config.Channels = new ChannelSplitter.ChannelConfig[1];
                     Splitter.Config.Channels[0] = new ChannelSplitter.ChannelConfig();
                 }
-                Splitter.UpdateConfig();
+                //Splitter.UpdateConfig();
 
 
                 Parameters = new GSMParameters();

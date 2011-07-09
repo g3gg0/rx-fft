@@ -53,10 +53,9 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
 
         public override eSuccessState ParseData(GSMParameters param, bool[] decodedBurst, int sequence)
         {
-
             /* ignore uplink to check if kraken still working */
-            //if (param.Dir == eLinkDirection.Uplink)
-              //  return eSuccessState.Succeeded;
+            if (param.Dir == eLinkDirection.Uplink)
+                return eSuccessState.Succeeded;
 
             if (IsDummy(decodedBurst))
             {
@@ -101,13 +100,16 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                 /* undo convolutional coding c[] to u[] */
                 if (Deconvolution() == eCorrectionResult.Failed)
                 {
-                    if (!ChannelEncrypted)
+                    if (param.ReportL1EncryptionErrors)
                     {
-                        StatusMessage = "(Error in ConvolutionalCoder - not encrypted)";
-                    }
-                    else
-                    {
-                        StatusMessage = "(Error in ConvolutionalCoder - encrypted, wrong keystream?)";
+                        if (!ChannelEncrypted)
+                        {
+                            StatusMessage = "(Error in ConvolutionalCoder - not encrypted)";
+                        }
+                        else
+                        {
+                            StatusMessage = "(Error in ConvolutionalCoder - encrypted, wrong keystream?)";
+                        }
                     }
 
                     State = eBurstState.Failed;

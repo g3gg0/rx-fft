@@ -125,13 +125,16 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
 
                 if (Deconvolution() == eCorrectionResult.Failed)
                 {
-                    if (!ChannelEncrypted)
+                    if (param.ReportL1EncryptionErrors)
                     {
-                        StatusMessage = "(Error in ConvolutionalCoder - not encrypted)";
-                    }
-                    else
-                    {
-                        StatusMessage = "(Error in ConvolutionalCoder - encrypted, wrong keystream?)";
+                        if (!ChannelEncrypted)
+                        {
+                            StatusMessage = "(Error in ConvolutionalCoder - not encrypted)";
+                        }
+                        else
+                        {
+                            StatusMessage = "(Error in ConvolutionalCoder - encrypted, wrong keystream?)";
+                        }
                     }
 
                     State = eBurstState.Failed;

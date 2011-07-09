@@ -374,7 +374,7 @@ namespace GSM_Analyzer
         {
             Processing = false;
 
-            CancelRequests();
+            CancelRequest();
 
             if (ProcessingThread != null)
             {
@@ -392,7 +392,7 @@ namespace GSM_Analyzer
             }
         }
 
-        internal void CancelRequests()
+        internal void CancelRequest()
         {
             /* try to cancel active request */
             if (RequestId >= 0)

@@ -36,6 +36,9 @@ namespace LibRXFFT.Libraries.GSM.Layer1.PacketDump
 
         private bool FileIsBeingUpdated = false;
         private bool[] DummyBits = new bool[148];
+
+        public bool ContainsUplink = false;
+        public bool ContainsDownlink = true;
         
 
         public GsmAnalyzerDumpReader(GSMParameters param, string fileName)
@@ -168,6 +171,38 @@ namespace LibRXFFT.Libraries.GSM.Layer1.PacketDump
                                         {
                                             Parameters.AddA5Key(key);
                                         }
+                                    }
+                                    break;
+
+                                case "uplink":
+                                    switch (data)
+                                    {
+                                        case "true":
+                                            ContainsUplink = true;
+                                            fail = false;
+                                            break;
+                                        case "false":
+                                            ContainsUplink = true;
+                                            fail = false;
+                                            break;
+                                        default:
+                                            break;
+                                    }
+                                    break;
+
+                                case "downlink":
+                                    switch (data)
+                                    {
+                                        case "true":
+                                            ContainsDownlink = true;
+                                            fail = false;
+                                            break;
+                                        case "false":
+                                            ContainsDownlink = true;
+                                            fail = false;
+                                            break;
+                                        default:
+                                            break;
                                     }
                                     break;
                             }

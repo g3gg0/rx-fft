@@ -175,7 +175,7 @@ public class KrakenNet : KrakenClient
     {
         get
         {
-            int found = 2;
+            int found = 0;
 
             lock (KrakenNodes)
             {

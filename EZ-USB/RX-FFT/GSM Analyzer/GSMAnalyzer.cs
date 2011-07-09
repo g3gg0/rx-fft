@@ -239,6 +239,18 @@ namespace GSM_Analyzer
                 Kraken.Disconnect();
             }
 
+            public int ParallelRequests
+            {
+                get
+                {
+                    if (Kraken == null)
+                    {
+                        return 0;
+                    } 
+                    return Kraken.ParallelRequests;
+                }
+            }
+
             #endregion
         }
 
@@ -888,32 +900,62 @@ namespace GSM_Analyzer
 
         private void btnOpen_IQFile(object sender, EventArgs e)
         {
-            Source = new FileSourceDeviceControl(InternalOversampling);
-
-            if (!Source.Connected)
+            try
             {
-                return;
-            }
-            txtLog.Clear();
-            ThreadActive = true;
-            ReadThread = new Thread(SampleReadFunc);
-            ReadThread.Start();
+                Source = new FileSourceDeviceControl(InternalOversampling);
 
-            btnOpen.Text = "Close";
-            SetDataSource("IQ-File");
+                if (!Source.Connected)
+                {
+                    return;
+                }
+                txtLog.Clear();
+                ThreadActive = true;
+                ReadThread = new Thread(SampleReadFunc);
+                ReadThread.Start();
+
+                btnOpen.Text = "Close";
+                SetDataSource("IQ-File");
+            }
+            catch (DllNotFoundException ex)
+            {
+                MessageBox.Show("There is no shmemchain.dll in your working directory.", "Error while setting up shmem");
+            }
+            catch (BadImageFormatException ex)
+            {
+                MessageBox.Show("There is a wrong shmemchain.dll in your working directory.", "Error while setting up shmem");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Exception occured while trying to set up shmem: " + ex.GetType(), "Error while setting up shmem");
+            }
         }
 
         public void btnOpen_NetworkSource(object sender, EventArgs e)
         {
-            Source = new NetworkDeviceControl();
+            try
+            {
+                Source = new NetworkDeviceControl();
 
-            txtLog.Clear();
-            ThreadActive = true;
-            ReadThread = new Thread(SampleReadFunc);
-            ReadThread.Start();
+                txtLog.Clear();
+                ThreadActive = true;
+                ReadThread = new Thread(SampleReadFunc);
+                ReadThread.Start();
 
-            btnOpen.Text = "Close";
-            SetDataSource("NetworkSource");
+                btnOpen.Text = "Close";
+                SetDataSource("NetworkSource");
+            }
+            catch (DllNotFoundException ex)
+            {
+                MessageBox.Show("There is no shmemchain.dll in your working directory.", "Error while setting up shmem");
+            }
+            catch (BadImageFormatException ex)
+            {
+                MessageBox.Show("There is a wrong shmemchain.dll in your working directory.", "Error while setting up shmem");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Exception occured while trying to set up shmem: " + ex.GetType(), "Error while setting up shmem");
+            }
         }
 
         public void btnOpen_OsmoconBitstream(object sender, EventArgs e)
@@ -1131,23 +1173,38 @@ namespace GSM_Analyzer
 
         private void btnOpen_SharedMemory(object sender, EventArgs e)
         {
-            ContextMenu menu = new ContextMenu();
-            NodeInfo[] infos = SharedMem.GetNodeInfos();
-
-            foreach (NodeInfo info in infos)
+            try
             {
-                MenuItem item = btnOpen_SharedMemoryCreateMenuItem(info.name, info.dstChan);
-                menu.MenuItems.Add(item);
-            }
+                ContextMenu menu = new ContextMenu();
+                NodeInfo[] infos = SharedMem.GetNodeInfos();
 
-            if (infos.Length == 0)
+                foreach (NodeInfo info in infos)
+                {
+                    MenuItem item = btnOpen_SharedMemoryCreateMenuItem(info.name, info.dstChan);
+                    menu.MenuItems.Add(item);
+                }
+
+                if (infos.Length == 0)
+                {
+                    MenuItem item = new MenuItem("(No nodes found)");
+                    item.Enabled = false;
+                    menu.MenuItems.Add(item);
+                }
+
+                menu.Show(this, new Point(10, 10));
+            }
+            catch (DllNotFoundException ex)
             {
-                MenuItem item = new MenuItem("(No nodes found)");
-                item.Enabled = false;
-                menu.MenuItems.Add(item);
+                MessageBox.Show("There is no shmemchain.dll in your working directory.", "Error while setting up shmem");
             }
-
-            menu.Show(this, new Point(10, 10));
+            catch (BadImageFormatException ex)
+            {
+                MessageBox.Show("There is a wrong shmemchain.dll in your working directory.", "Error while setting up shmem");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Exception occured while trying to set up shmem: " + ex.GetType(), "Error while setting up shmem");
+            }
         }
 
         void SampleReadFunc()

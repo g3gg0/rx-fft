@@ -17,7 +17,7 @@ namespace JabberNET.Network
         TcpClient tcp;
         NetworkStream ns;
         StreamWriter log;
-        bool Logging = true;
+        bool Logging = false;
         
         string previousMsg = null;
 

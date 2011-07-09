@@ -39,6 +39,8 @@ namespace LibRXFFT.Components.GDI
             UpdateTimer.Interval = 100;
             UpdateTimer.Tick += new EventHandler(UpdateTimer_Tick);
             UpdateTimer.Start();
+
+            SetFastMode(false);
         }
 
         private void SetFastMode(bool enabled)
@@ -57,7 +59,6 @@ namespace LibRXFFT.Components.GDI
                 UpdateTextBoxSize();
                 textBox1.ScrollBars = ScrollBars.None;
             }
-
         }
 
         public override string Text

@@ -42,16 +42,21 @@ namespace LibRXFFT.Components.GDI
 
                 foreach (FileInfo fi in files)
                 {
-                    AD6636FilterFile filter = new AD6636FilterFile(fi.FullName);
-                    if (filter.Valid && filter.InputFrequency == NCOFreq)
+                    try
                     {
-                        FilterFiles.Add(filter);
+                        AD6636FilterFile filter = new AD6636FilterFile(fi.FullName);
+                        if (filter.Valid && filter.InputFrequency == NCOFreq)
+                        {
+                            FilterFiles.Add(filter);
+                        }
+                    }
+                    catch (Exception e)
+                    {
                     }
                 }
             }
             catch (Exception e)
             {
-                //return;
             }
 
             RebuildFilterFileButtons();

@@ -4,6 +4,7 @@ using LibRXFFT.Libraries.GSM.Layer2;
 using RX_FFT.Components.GDI;
 using System.Collections.Generic;
 using System.Collections;
+using System.Threading;
 
 namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
 {
@@ -611,7 +612,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                             }
 
                             /* now try to crack */
-                            if (TryToCrack(guessedKeyBits, counts, param, burst * 4, guessedData.Count * 4))
+                            if (TryToCrack(guessedKeyBits, counts, param, burst * 4, guessedData.Count * 4) && A5CipherKey != null)
                             {
                                 string msg = "";
 
@@ -665,8 +666,18 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
             ServiceType = "(not set)";
         }
 
+        struct sCrackRequest
+        {
+            public bool[] key1;
+            public uint count1;
+            public bool[] key2;
+            public uint count2;
+        }
+
         internal bool TryToCrack(bool[][] guessedKeyBits, uint[] counts, GSMParameters param, int burstNum, int burstCount)
         {
+            Queue<sCrackRequest> CrackQueue = new Queue<sCrackRequest>();
+
             /* sanity checks */
             if (guessedKeyBits.Length < 4 || (guessedKeyBits.Length % 4) != 0)
             {
@@ -685,36 +696,128 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
                 int offset = dstBurst % 4;
                 int nextBurst = (block * 4) + ((offset + 1) % 4);
 
-                if (param.CipherCracker == null || !param.CipherCracker.Available)
-                {
-                    //StatusMessage += "crack " + DumpBits(guessedKeyBits[dstBurst], false) + " " + counts[dstBurst] + " " + DumpBits(guessedKeyBits[nextBurst], false) + " " + counts[nextBurst] + Environment.NewLine;
-                }
-                else
-                {
-                    Log.AddMessage("Cracking burst: " + dstBurst + " (Block: " + block + " Offset: " + offset + ") Next: " + nextBurst);
+                //Log.AddMessage("Cracking burst: " + dstBurst + " (Block: " + block + " Offset: " + offset + ") Next: " + nextBurst);
 
-                    /* make sure the UI does get all information */
-                    param.CipherCracker.SetJobInfo(burstNum + burst + 1, burstCount);
-                    
-                    byte[] key = param.CipherCracker.Crack(guessedKeyBits[dstBurst], counts[dstBurst], guessedKeyBits[nextBurst], counts[nextBurst]);
-                    if (key != null)
-                    {
-                        param.AddA5Key(key);
-                        A5CipherKey = key;
+                sCrackRequest request;
 
-                        /* also set encryption info in associated SACCH */
-                        if (AssociatedSACCH != null)
-                        {
-                            AssociatedSACCH.A5CipherKey = A5CipherKey;
-                            AssociatedSACCH.A5Algorithm = A5Algorithm;
-                        }
-                        return true;
-                    }
-                }
+                request.key1 = guessedKeyBits[dstBurst];
+                request.count1 = counts[dstBurst];
+                request.key2 = guessedKeyBits[nextBurst];
+                request.count2 = counts[nextBurst];
+
+                CrackQueue.Enqueue(request);
+
                 burst++;
             }
 
-            return false;
+            bool keyFound = false;
+            int threads = param.CipherCracker.ParallelRequests;
+            int runningThreads = 0;
+            object signalObject = new object();
+            Thread[] CrackThreads = new Thread[threads];
+
+            try
+            {
+                for (int pos = 0; pos < threads; pos++)
+                {
+                    CrackThreads[pos] = new Thread(() =>
+                    {
+                        lock (signalObject)
+                        {
+                            runningThreads++;
+                        }
+
+                        while (true)
+                        {
+                            sCrackRequest req;
+
+                            lock (CrackQueue)
+                            {
+                                if (CrackQueue.Count > 0)
+                                {
+                                    req = CrackQueue.Dequeue();
+                                }
+                                else
+                                {
+                                    Log.AddMessage("Crack thread " + pos + " has nothing to do anymore");
+                                    lock (signalObject)
+                                    {
+                                        runningThreads--;
+                                        if (runningThreads == 0)
+                                        {
+                                            Log.AddMessage("Crack thread " + pos + " was the last one running. signal!");
+                                            Monitor.PulseAll(signalObject);
+                                        }
+                                    }
+                                    return;
+                                }
+                            }
+
+
+                            /* make sure the UI does get all information */
+                            //param.CipherCracker.SetJobInfo(burstNum + burst + 1, burstCount);
+                            //byte[] key = param.CipherCracker.Crack(guessedKeyBits[dstBurst], counts[dstBurst], guessedKeyBits[nextBurst], counts[nextBurst]);
+
+                            Log.AddMessage("Crack thread " + pos + " tries to crack...");
+                            byte[] key = param.CipherCracker.Crack(req.key1, req.count1, req.key2, req.count2);
+
+                            /* make sure this is executed only once */
+                            lock (signalObject)
+                            {
+                                if (key != null)
+                                {
+                                    Log.AddMessage("Crack thread " + pos + " cracked the key");
+
+                                    if (!keyFound)
+                                    {
+                                        param.AddA5Key(key);
+                                        A5CipherKey = key;
+
+                                        /* also set encryption info in associated SACCH */
+                                        if (AssociatedSACCH != null)
+                                        {
+                                            AssociatedSACCH.A5CipherKey = A5CipherKey;
+                                            AssociatedSACCH.A5Algorithm = A5Algorithm;
+                                        }
+
+                                        Log.AddMessage("Crack thread " + pos + " signals found key. signal!");
+                                        keyFound = true;
+                                        Monitor.PulseAll(signalObject);
+                                    }
+                                }
+                                else
+                                {
+                                    Log.AddMessage("Crack thread " + pos + " did not find key");
+                                }
+                            }
+                        }
+                    });
+                    CrackThreads[pos].Name = "Crack thread " + pos;
+                    CrackThreads[pos].Start();
+                }
+
+                lock (signalObject)
+                {
+                    Monitor.Wait(signalObject);
+                }
+
+                /* clean up */
+                for (int pos = 0; pos < threads; pos++)
+                {
+                    CrackThreads[pos].Abort();
+                }
+            }
+            catch (ThreadAbortException ex)
+            {
+                /* clean up */
+                for (int pos = 0; pos < threads; pos++)
+                {
+                    CrackThreads[pos].Abort();
+                }
+                throw ex;
+            }
+
+            return keyFound;
         }
 
         /* try to find the correct key for this connection from keystore */

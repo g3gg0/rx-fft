@@ -145,6 +145,7 @@
     </Compile>
     <Compile Include="KrakenClient.cs" />
     <Compile Include="KrakenNet\KrakenNet.cs" />
+    <Compile Include="KrakenNet\KrakenNetConnection.cs" />
     <Compile Include="KrakenStatusBox.cs">
       <SubType>UserControl</SubType>
     </Compile>

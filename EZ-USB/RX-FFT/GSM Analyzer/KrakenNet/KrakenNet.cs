@@ -413,7 +413,7 @@ public class KrakenNet : KrakenClient
         string request = "crack " + ByteUtil.BitsToString(key1) + " " + count1 + " " + ByteUtil.BitsToString(key2) + " " + count2;
         byte[] result = new byte[8];
 
-        if (false && CheckScanResult(request, ref result))
+        if (CheckScanResult(request, ref result))
         {
             return result;
         }
@@ -468,16 +468,21 @@ public class KrakenNet : KrakenClient
                 /* repeat until working node found or no more nodes */
                 return RequestResult(key1, count1, key2, count2);
             }
+
+            /* increase internal sotred node load to decrease node priority */
+            node.Load += node.Increment;
         }
 
         try
         {
-            node.Load += node.Increment;
-            return Connections[node.Name].RequestResult(key1, count1, key2, count2);
+            result = Connections[node.Name].RequestResult(key1, count1, key2, count2);
+            AddScanResult(request, result);
+
+            return result;
         }
         catch (ThreadAbortException e)
         {
-            Connections[node.Name].CancelRequests();
+            Connections[node.Name].CancelRequest();
             throw e;
         }
     }

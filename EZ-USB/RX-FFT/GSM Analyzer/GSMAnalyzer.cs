@@ -1692,16 +1692,21 @@ namespace GSM_Analyzer
                     /* get the next burst from the reader */
                     DumpReaderFile.Read(burstBitsDown, burstBitsUp);
 
-
                     /* let timeslot handler process the burst bits. 
                      * passing the burst number to handler so its able to display the burst number.
                      * used to track e.g. faulty bursts in source file 
                      */
-                    Parameters.Dir = eLinkDirection.Downlink;
-                    Handler.Handle(burstBitsDown, DumpReaderFile.BurstNumber);
-                    Parameters.Dir = eLinkDirection.Uplink;
-                    Handler.Handle(burstBitsUp, DumpReaderFile.BurstNumber);
-
+                    if (DumpReaderFile.ContainsDownlink)
+                    {
+                        Parameters.Dir = eLinkDirection.Downlink;
+                        Handler.Handle(burstBitsDown, DumpReaderFile.BurstNumber);
+                    }
+                    
+                    if (DumpReaderFile.ContainsUplink)
+                    {
+                        Parameters.Dir = eLinkDirection.Uplink;
+                        Handler.Handle(burstBitsUp, DumpReaderFile.BurstNumber);
+                    }
 
                     /* update UI if necessary */
                     if (SingleStep || ReaderUiUpdate)

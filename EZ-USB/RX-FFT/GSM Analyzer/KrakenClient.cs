@@ -74,7 +74,13 @@ namespace GSM_Analyzer
             LoadCache();
         }
 
-        private static void SaveCache()
+        public virtual int ParallelRequests
+        {
+            get { return 1; }
+        }
+
+
+        protected static void SaveCache()
         {
             try
             {
@@ -113,7 +119,7 @@ namespace GSM_Analyzer
             return (string[])keys.ToArray(typeof(string));
         }
 
-        private static void LoadCache()
+        protected static void LoadCache()
         {
             try
             {
@@ -140,7 +146,7 @@ namespace GSM_Analyzer
             }
         }
 
-        private static void AddScanResult(string request, byte[] result)
+        protected static void AddScanResult(string request, byte[] result)
         {
             lock (ScanResults)
             {
@@ -156,7 +162,7 @@ namespace GSM_Analyzer
             }
         }
 
-        private static bool CheckScanResult(string request, ref byte[] storedResult)
+        protected static bool CheckScanResult(string request, ref byte[] storedResult)
         {
             lock (ScanResults)
             {

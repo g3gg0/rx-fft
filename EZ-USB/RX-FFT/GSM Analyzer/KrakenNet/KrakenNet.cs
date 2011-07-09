@@ -8,6 +8,7 @@ using System.Threading;
 using System;
 using JabberNET.XMPP;
 using System.Collections.Generic;
+using LibRXFFT.Libraries;
 
 
 public class KrakenNet : KrakenClient
@@ -22,7 +23,8 @@ public class KrakenNet : KrakenClient
         public DateTime LastSeen;
         public DateTime FirstSeen;
 
-        public bool Valid;
+        public bool Broadcasting;
+        public bool Unusable;
     }
 
     private Dictionary<string, NodeStatus> KrakenNodes = new Dictionary<string, NodeStatus>();
@@ -47,10 +49,14 @@ public class KrakenNet : KrakenClient
 
     private bool InKrakenNet = false;
 
+    private Dictionary<string, KrakenNetConnection> Connections = new Dictionary<string, KrakenNetConnection>();
+
 
     public KrakenNet(string jid, string pass, string server, string conference, string nick)
         : this()
     {
+        LoadCache();
+
         Jid = jid;
         Password = pass;
         Conference = conference;
@@ -105,6 +111,11 @@ public class KrakenNet : KrakenClient
         DiscoverThread.Start();
     }
 
+    public override int ParallelRequests
+    {
+        get { return NodesFound; }
+    }
+
     private void Discover()
     {
         while (true)
@@ -125,28 +136,59 @@ public class KrakenNet : KrakenClient
     {
         if (message.Body != null)
         {
-            if (message.Type == "groupchat")
+            switch (message.Type)
             {
-                foreach (String s in message.Body.Values)
-                {
-                    if (s.StartsWith("##"))
+                case "groupchat":
+                    foreach (String s in message.Body.Values)
                     {
-                        ParseKrakenDiscovery(message.FromResource, s);
+                        if (s.StartsWith("##"))
+                        {
+                            ParseKrakenDiscovery(message.FromResource, s);
+                        }
+                        if ("#discover".Equals(s))
+                        {
+                            /* there was a discovery, cache its date */
+                            LastDiscovery = DateTime.Now;
+                        }
                     }
-                    if ("#discover".Equals(s))
+                    break;
+
+                case "normal":
+                case "chat":
+                    foreach (string s in message.Body.Values)
                     {
-                        /* there was a discovery, cache its date */
-                        LastDiscovery = DateTime.Now;
+                        //Log.AddMessage("Jabber", "From: <" + message.FromResource + "> " + s);
+                        lock (Connections)
+                        {
+                            if (Connections.ContainsKey(message.FromResource))
+                            {
+                                Connections[message.FromResource].HandleMessage(s);
+                            }
+                        }
+                    }
+                    break;
+            }
+        }
+    }
+
+    public int NodesFound
+    {
+        get
+        {
+            int found = 2;
+
+            lock (KrakenNodes)
+            {
+                foreach (NodeStatus node in KrakenNodes.Values)
+                {
+                    if (!node.Unusable && node.Broadcasting)
+                    {
+                        found++;
                     }
                 }
             }
-            else if (message.Type == "chat")
-            {
-                foreach (string s in message.Body.Values)
-                {
-                    Log.AddMessage("Jabber", "From: <" + message.From + "> " + s);
-                }
-            }
+
+            return found;
         }
     }
 
@@ -158,7 +200,7 @@ public class KrakenNet : KrakenClient
         {
             foreach (NodeStatus node in KrakenNodes.Values)
             {
-                if (best == null || node.Load < best.Load)
+                if (node.Broadcasting && !node.Unusable && (best == null || (node.Load + node.Increment) < (best.Load + best.Increment)))
                 {
                     best = node;
                 }
@@ -176,11 +218,11 @@ public class KrakenNet : KrakenClient
             {
                 if ((DateTime.Now - node.LastSeen).TotalSeconds > 600)
                 {
-                    node.Valid = false;
+                    node.Broadcasting = false;
                 }
                 else
                 {
-                    node.Valid = true;
+                    node.Broadcasting = true;
                 }
             }
         }
@@ -194,7 +236,8 @@ public class KrakenNet : KrakenClient
         node.FirstSeen = DateTime.Now;
         node.LastSeen = DateTime.Now;
         node.Name = from;
-        node.Valid = false;
+        node.Broadcasting = true;
+        node.Unusable = false;
 
         foreach (string rawField in fields)
         {
@@ -366,12 +409,77 @@ public class KrakenNet : KrakenClient
 
     public override byte[] RequestResult(bool[] key1, uint count1, bool[] key2, uint count2)
     {
+        /* do we have data for this request already in cache? */
+        string request = "crack " + ByteUtil.BitsToString(key1) + " " + count1 + " " + ByteUtil.BitsToString(key2) + " " + count2;
+        byte[] result = new byte[8];
+
+        if (false && CheckScanResult(request, ref result))
+        {
+            return result;
+        }
+
+        /* no key cached, try to find a node that cracks the key */
         NodeStatus node = GetBestNode();
+        if (node == null)
+        {
+            Log.AddMessage("KrakenNet", "No usable node found");
+            return null;
+        }
 
-        Log.AddMessage("KrakenNet", "Would choose " + node.Name);
+        Log.AddMessage("KrakenNet", "Will choose " + node.Name + " for cracking");
 
-        Client.SendMessage(node.Name, null, "auth banane");
-        return null;
+        /* make sure we enter this only once */
+        lock (this)
+        {
+            KrakenNetConnection conn = null;
+
+            lock (Connections)
+            {
+                /* already connected? */
+                if (!Connections.ContainsKey(node.Name))
+                {
+                    conn = new KrakenNetConnection(Client, node.Name);
+                    Connections.Add(node.Name, conn);
+                }
+            }
+
+            /* newly added? */
+            if (conn != null)
+            {
+                /* failed to communicate with node? */
+                if (!conn.Available)
+                {
+                    /* mark as unusable, remove and recurse */
+                    node.Unusable = true;
+                    conn.CloseConnection();
+                    Connections.Remove(node.Name);
+
+                    /* repeat until working node found or no more nodes */
+                    return RequestResult(key1, count1, key2, count2);
+                }
+            }
+
+            /* is this connection already closed */
+            if (Connections[node.Name].State != KrakenNetConnection.eConnState.Ready)
+            {
+                node.Unusable = true;
+                Connections.Remove(node.Name);
+
+                /* repeat until working node found or no more nodes */
+                return RequestResult(key1, count1, key2, count2);
+            }
+        }
+
+        try
+        {
+            node.Load += node.Increment;
+            return Connections[node.Name].RequestResult(key1, count1, key2, count2);
+        }
+        catch (ThreadAbortException e)
+        {
+            Connections[node.Name].CancelRequests();
+            throw e;
+        }
     }
 
     public override bool Connected

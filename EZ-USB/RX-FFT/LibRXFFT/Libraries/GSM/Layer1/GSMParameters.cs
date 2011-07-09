@@ -99,6 +99,7 @@ namespace LibRXFFT.Libraries.GSM.Layer1
     {
         byte[] Crack(bool[] key1, uint count1, bool[] key2, uint count2);
         bool Available { get; }
+        int ParallelRequests { get; }
         int SearchDuration { get; }
         void SetJobInfo(int jobNumber, int jobCount);
         void Close();

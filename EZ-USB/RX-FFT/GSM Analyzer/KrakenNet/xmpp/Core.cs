@@ -81,7 +81,6 @@ namespace JabberNET.XMPP
 
         public static XmlDocument Message(string Type, string Lang, string JID, string MyJID, Hashtable Subject, Hashtable Body, string Thread)
         {
-
             if (Type == null)
                 Type = "normal";
 
@@ -114,7 +113,7 @@ namespace JabberNET.XMPP
                 message.AppendChild(thread);
                 thread.InnerText = Thread;
             }
-            Console.WriteLine("----------" + xml.InnerXml);
+            //Console.WriteLine("----------" + xml.InnerXml);
 
             return xml;
         }

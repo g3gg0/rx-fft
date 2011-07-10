@@ -418,6 +418,27 @@ public class KrakenNet : KrakenClient
             return result;
         }
 
+        if (!InKrakenNet)
+        {
+            if (Jid != "")
+            {
+                Log.AddMessage("KrakenNet", "Configured, but not connected. Waiting until reconnected.");
+                while (!InKrakenNet)
+                {
+                    Thread.Sleep(100);
+                }
+                Log.AddMessage("KrakenNet", "Connected - waiting for Kraken hosts to appear.");
+                while (!KrakenNodes.Count == 0)
+                {
+                    Thread.Sleep(100);
+                }
+            }
+            else
+            {
+                return null;
+            }
+        }
+
         /* no key cached, try to find a node that cracks the key */
         NodeStatus node = GetBestNode();
         if (node == null)
@@ -428,7 +449,7 @@ public class KrakenNet : KrakenClient
 
         Log.AddMessage("KrakenNet", "Will choose " + node.Name + " for cracking");
 
-        /* make sure we enter this only once */
+        /* make sure we enter this only once and lock from changes done in "Disconnect" */
         lock (this)
         {
             KrakenNetConnection conn = null;
@@ -485,6 +506,10 @@ public class KrakenNet : KrakenClient
             Connections[node.Name].CancelRequest();
             throw e;
         }
+        catch (Exception e)
+        {
+            return null;
+        }
     }
 
     public override bool Connected
@@ -497,27 +522,40 @@ public class KrakenNet : KrakenClient
 
     public override void Disconnect()
     {
-        if (DiscoverThread != null)
+        /* 'this' is locked here and in RequestResult */
+        lock (this)
         {
-            DiscoverThread.Abort();
-            DiscoverThread = null;
-        }
+            if (DiscoverThread != null)
+            {
+                DiscoverThread.Abort();
+                DiscoverThread = null;
+            }
 
-        try
-        {
-            if (Client != null)
-                Client.Logout();
-        }
-        catch { }
+            try
+            {
+                if (Client != null)
+                    Client.Logout();
+            }
+            catch { }
 
-        Client = null;
+            Client = null;
 
-        if (ConnectionThread != null)
-        {
-            ConnectionThread.Abort();
-            ConnectionThread = null;
+            if (ConnectionThread != null)
+            {
+                ConnectionThread.Abort();
+                ConnectionThread = null;
+            }
+            InKrakenNet = false;
+
+            /* close all open connection */
+            foreach (KrakenNetConnection conn in Connections)
+            {
+                conn.CloseConnection();
+            }
+            Connections.Clear();
+
+            KrakenNodes.Clear();
         }
-        InKrakenNet = false;
     }
 
     public override bool Connect()

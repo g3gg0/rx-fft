@@ -39,7 +39,7 @@ namespace GSM_Analyzer
         private bool Processing = true;
 
         public KrakenJobStatus KrakenJobStatus = KrakenJobStatus.Unknown;
-        public int RequestId = -1;
+        public int CurrentRequestId = -1;
         public eConnState State = eConnState.Unknown;
 
         private DateTime LastResponse = DateTime.MinValue;
@@ -88,7 +88,14 @@ namespace GSM_Analyzer
                                     }
 
                                     /* everything okay, send another idle command */
-                                    Send("idle");
+                                    if (CurrentRequestId >= 0)
+                                    {
+                                        Send("progess " + CurrentRequestId);
+                                    }
+                                    else
+                                    {
+                                        Send("idle");
+                                    }
                                 }
                                 else
                                 {
@@ -156,43 +163,75 @@ namespace GSM_Analyzer
             }
             LastResponse = DateTime.Now;
 
-            if (msg.StartsWith("100 "))
-            {
-                /* request is getting queued */
-                KrakenJobStatus = KrakenJobStatus.Accepted;
-            }
-            else if (msg.StartsWith("101 "))
-            {
-                /* request was queued, get the ID */
-                KrakenJobStatus = KrakenJobStatus.Queued;
+            bool handled = true;
 
-                /* split into literals */
-                string[] fields = msg.Split(' ');
-                if (fields.Length >= 2)
-                {
-                    int.TryParse(fields[1], out RequestId);
-                }
-            }
-            else if (msg.StartsWith("102 "))
+            int code = -1;
+            int id = -1;
+            string message = "";
+
+            ParseResponseString(msg, out code, out id, out message);
+
+            /* asynchronously handle different responses here */
+            switch (code)
             {
-                /* request is being processed */
-                KrakenJobStatus = KrakenJobStatus.Processing;
+                case 100:
+                    /* request is getting queued */
+                    KrakenJobStatus = KrakenJobStatus.Accepted;
+                    break;
+
+                case 101:
+                    /* request was queued, get the ID */
+                    KrakenJobStatus = KrakenJobStatus.Queued;
+                    CurrentRequestId = id;
+                    break;
+
+                case 102:
+                    /* request is being processed */
+                    if (CurrentRequestId == id)
+                    {
+                        KrakenJobStatus = KrakenJobStatus.Processing;
+                    }
+                    break;
+
+                case 103:
+                    /* match found, kraken is now calculating back */
+                    break;
+
+                case 211:
+                    /* response to idle command */
+                    break;
+
+                case 401: 
+                    if (State == eConnState.Ready)
+                    {
+                        /* not authorized. happens when kraken was restarted. how to retry? */
+                        Log.AddMessage(Remote, "Kraken access denied while being already authorized. Was kraken restarted?");
+                        CloseConnection();
+                    }
+                    break;
+
+                case 200:
+                case 404:
+                case 405:
+                    /* check if these are from an earlier request that is still being processed */
+                    if (CurrentRequestId == id)
+                    {
+                        /* thats from our current request. do not ignore this message. */
+                        handled = false;
+                    }
+                    else
+                    {
+                        Log.AddMessage(Remote, "Received answer for an old request. Ignoring.");
+                    }
+                    break;
+
+                default:
+                    handled = false;
+                    break;
             }
-            else if (msg.StartsWith("103 "))
-            {
-                /* match found, kraken is now calculating back */
-            }
-            else if (msg.StartsWith("211 "))
-            {
-                /* response to idle command */
-            }
-            else if (State == eConnState.Ready && msg.StartsWith("401 "))
-            {
-                /* not authorized. happens when kraken was restarted. how to retry? */
-                Log.AddMessage(Remote, "Kraken access denied while being already authorized. Was kraken restarted?");
-                CloseConnection();
-            }
-            else
+
+            /* if not already handled, let forward to current processing thread */
+            if (!handled)
             {
                 lock (ProcessAnswerSignal)
                 {
@@ -290,7 +329,7 @@ namespace GSM_Analyzer
             StringBuilder result = new StringBuilder();
 
             KrakenJobStatus = KrakenJobStatus.Submitted;
-            QueueCommand(request, signal, result, 5 * 60 * 1000);
+            QueueCommand(request, signal, result, int.MaxValue);
 
             lock (signal)
             {
@@ -298,56 +337,109 @@ namespace GSM_Analyzer
                 {
                     string ret = result.ToString();
 
-                    if (ret.StartsWith("200 "))
+                    int code = -1;
+                    int id = -1;
+                    string msg = "";
+
+                    ParseResponseString(ret, out code, out id, out msg);
+
+                    switch (code)
                     {
-                        RequestId = -1;
-                        KrakenJobStatus = KrakenJobStatus.Found;
+                        case 200:
+                                CurrentRequestId = -1;
+                                KrakenJobStatus = KrakenJobStatus.Found;
 
-                        /* split into literals */
-                        string[] fields = ret.Split(' ');
-                        if (fields.Length < 3)
-                        {
-                            return null;
-                        }
+                                /* split into literals */
+                                string[] fields = ret.Split(' ');
+                                if (fields.Length < 3)
+                                {
+                                    return null;
+                                }
 
-                        /* the 3rd literal is the found key */
-                        string keystring = fields[2];
-                        byte[] key = new byte[8];
+                                /* the 3rd literal is the found key */
+                                string keystring = fields[2];
+                                byte[] key = new byte[8];
 
-                        for (int pos = 0; pos < 8; pos++)
-                        {
-                            string byteStr = keystring.Substring(pos * 2, 2);
+                                for (int pos = 0; pos < 8; pos++)
+                                {
+                                    string byteStr = keystring.Substring(pos * 2, 2);
 
-                            if (!byte.TryParse(byteStr, System.Globalization.NumberStyles.HexNumber, null, out key[pos]))
-                            {
-                                key = null;
+                                    if (!byte.TryParse(byteStr, System.Globalization.NumberStyles.HexNumber, null, out key[pos]))
+                                    {
+                                        key = null;
+                                        break;
+                                    }
+                                }
+
+                                ParseSearchDuration(ret);
+
+                                return key;
+
+                        case 404:
+                                /* key not found */
+                                CurrentRequestId = -1;
+                                KrakenJobStatus = KrakenJobStatus.NotFound;
+                                ParseSearchDuration(ret);
+                                return null;
+
+                        case 405:
+                                /* job was cancelled */
+                                CurrentRequestId = -1;
+                                KrakenJobStatus = KrakenJobStatus.Cancelled;
+                                return null;
+
+                        default:
+                                Log.AddMessage(Remote, "Last message unhandled");
                                 break;
-                            }
-                        }
-
-                        ParseSearchDuration(ret);
-
-                        return key;
-                    }
-                    else if (ret.StartsWith("404 "))
-                    {
-                        /* key not found */
-                        RequestId = -1;
-                        KrakenJobStatus = KrakenJobStatus.NotFound;
-                        ParseSearchDuration(ret);
-                        return null;
-                    }
-                    else if (ret.StartsWith("405 "))
-                    {
-                        /* job was cancelled */
-                        RequestId = -1;
-                        KrakenJobStatus = KrakenJobStatus.Cancelled;
-                        return null;
                     }
                 }
             }
 
             return null;
+        }
+
+        private bool PopFrontValue(string msg, out int value, out string remaining)
+        {
+            value = -1;
+            remaining = msg;
+
+            string[] fields = remaining.Split(' ');
+
+            if (fields.Length > 1 && int.TryParse(fields[0], out value))
+            {
+                remaining = remaining.Substring(remaining.IndexOf(' ')).Trim();
+            }
+            return true;
+        }
+
+        private bool ParseResponseString(string msg, out int code, out int id, out string remaining)
+        {
+            code = -1;
+            id = -1;
+            remaining = "";
+
+            if (PopFrontValue(msg, out code, out remaining))
+            {
+                switch (code)
+                {
+                    /* these codes have a request id as next value */
+                    case 101:
+                    case 102:
+                    case 103:
+                    case 200:
+                    case 404:
+                    case 405:
+                        if (PopFrontValue(remaining, out id, out remaining))
+                        {
+                            return true;
+                        }
+                        break;
+                    
+                    default:
+                        return true;
+                }
+            }
+            return false;
         }
 
 
@@ -395,10 +487,10 @@ namespace GSM_Analyzer
         internal void CancelRequest()
         {
             /* try to cancel active request */
-            if (RequestId >= 0)
+            if (CurrentRequestId >= 0)
             {
-                Log.AddMessage(Remote, "Cancel request " + RequestId);
-                Client.SendMessage(Remote, null, "cancel " + RequestId);
+                Log.AddMessage(Remote, "Cancel request " + CurrentRequestId);
+                Client.SendMessage(Remote, null, "cancel " + CurrentRequestId);
             }
             else
             {

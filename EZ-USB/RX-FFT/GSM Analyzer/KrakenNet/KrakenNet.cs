@@ -9,6 +9,7 @@ using System;
 using JabberNET.XMPP;
 using System.Collections.Generic;
 using LibRXFFT.Libraries;
+using System.Xml;
 
 
 public class KrakenNet : KrakenClient
@@ -134,7 +135,10 @@ public class KrakenNet : KrakenClient
 
     public void JabberMessageHandler(MessageStanza message)
     {
-        if (message.Body != null)
+        XmlNodeList delayedNode = message.XmlDoc.GetElementsByTagName("delay");
+        bool delayed = (delayedNode != null) && (delayedNode.Count != 0);
+
+        if (message.Body != null && !delayed)
         {
             switch (message.Type)
             {
@@ -409,6 +413,17 @@ public class KrakenNet : KrakenClient
 
     public override byte[] RequestResult(bool[] key1, uint count1, bool[] key2, uint count2)
     {
+        int tries = 0;
+
+        /* using a goto label to restart instead of recurse */
+    restart:
+        tries++;
+        if (tries >= 10)
+        {
+            Log.AddMessage("KrakenNet", "RequestResult(): Tried to request crack " + tries + " times now... Abort!");
+            return null;
+        }
+
         /* do we have data for this request already in cache? */
         string request = "crack " + ByteUtil.BitsToString(key1) + " " + count1 + " " + ByteUtil.BitsToString(key2) + " " + count2;
         byte[] result = new byte[8];
@@ -418,23 +433,21 @@ public class KrakenNet : KrakenClient
             return result;
         }
 
+        /* wait until we have a connection */
         if (!InKrakenNet)
         {
             if (Jid != "")
             {
-                Log.AddMessage("KrakenNet", "Configured, but not connected. Waiting until reconnected.");
+                Log.AddMessage("KrakenNet", "RequestResult(): Not connected. Waiting until reconnected.");
+
                 while (!InKrakenNet)
-                {
-                    Thread.Sleep(100);
-                }
-                Log.AddMessage("KrakenNet", "Connected - waiting for Kraken hosts to appear.");
-                while (!KrakenNodes.Count == 0)
                 {
                     Thread.Sleep(100);
                 }
             }
             else
             {
+                Log.AddMessage("KrakenNet", "RequestResult(): Not Configured. Quitting.");
                 return null;
             }
         }
@@ -443,11 +456,28 @@ public class KrakenNet : KrakenClient
         NodeStatus node = GetBestNode();
         if (node == null)
         {
-            Log.AddMessage("KrakenNet", "No usable node found");
+            Log.AddMessage("KrakenNet", "RequestResult(): Waiting for (usable) Kraken hosts to appear... " + KrakenNodes.Count + " found, but none in a usable state.");
+            while (node == null)
+            {
+                node = GetBestNode();
+                Thread.Sleep(100);
+
+                /* restart if there are network problems */
+                if (!InKrakenNet)
+                {
+                    goto restart;
+                }
+            }
+        }
+
+        /* that should not be entered */
+        if (node == null)
+        {
+            Log.AddMessage("KrakenNet", "RequestResult(): No usable node found");
             return null;
         }
 
-        Log.AddMessage("KrakenNet", "Will choose " + node.Name + " for cracking");
+        Log.AddMessage("KrakenNet", "RequestResult(): Will choose " + node.Name + " for cracking.");
 
         /* make sure we enter this only once and lock from changes done in "Disconnect" */
         lock (this)
@@ -476,7 +506,7 @@ public class KrakenNet : KrakenClient
                     Connections.Remove(node.Name);
 
                     /* repeat until working node found or no more nodes */
-                    return RequestResult(key1, count1, key2, count2);
+                    goto restart;
                 }
             }
 
@@ -487,7 +517,7 @@ public class KrakenNet : KrakenClient
                 Connections.Remove(node.Name);
 
                 /* repeat until working node found or no more nodes */
-                return RequestResult(key1, count1, key2, count2);
+                goto restart;
             }
 
             /* increase internal sotred node load to decrease node priority */
@@ -508,7 +538,8 @@ public class KrakenNet : KrakenClient
         }
         catch (Exception e)
         {
-            return null;
+            Log.AddMessage("KrakenNet", "RequestResult(): Caught '" + e.GetType().ToString() + "'. Retry.");
+            goto restart;
         }
     }
 
@@ -516,7 +547,7 @@ public class KrakenNet : KrakenClient
     {
         get
         {
-            return true;
+            return (ConnectionThread != null);
         }
     }
 
@@ -525,50 +556,68 @@ public class KrakenNet : KrakenClient
         /* 'this' is locked here and in RequestResult */
         lock (this)
         {
+            /* shut down discover thread */
             if (DiscoverThread != null)
             {
                 DiscoverThread.Abort();
-                DiscoverThread = null;
             }
 
-            try
-            {
-                if (Client != null)
-                    Client.Logout();
-            }
-            catch { }
-
-            Client = null;
-
+            /* close connection thread */
             if (ConnectionThread != null)
             {
                 ConnectionThread.Abort();
-                ConnectionThread = null;
             }
             InKrakenNet = false;
 
             /* close all open connection */
-            foreach (KrakenNetConnection conn in Connections)
+            foreach (KrakenNetConnection conn in Connections.Values)
             {
                 conn.CloseConnection();
             }
             Connections.Clear();
 
+            /* clear all found kraken hosts */
             KrakenNodes.Clear();
+
+            /* close XMPP connection */
+            try
+            {
+                if (Client != null)
+                {
+                    Client.Logout();
+                }
+            }
+            catch { }
+
+            /* null these as last step */
+            Client = null;
+            DiscoverThread = null;
+            ConnectionThread = null;
         }
     }
 
     public override bool Connect()
     {
+        if (Connected)
+        {
+            return true;
+        }
+
         ConnectionThread = new Thread(() =>
         {
-            try
+            if (Connected)
             {
-                if (Client != null)
-                    Client.Logout();
-            }
-            catch (Exception ex)
-            {
+                try
+                {
+                    if (Client != null)
+                    {
+                        Log.AddMessage("Jabber", " [W] Closing unclosed XMPP connection. Should not happen");
+                        Client.Logout();
+                    }
+                }
+                catch (Exception ex)
+                {
+                }
             }
 
             try
@@ -582,6 +631,8 @@ public class KrakenNet : KrakenClient
                 if (!Client.Login(Jid, Password, Resource))
                 {
                     Log.AddMessage("Jabber", " [E] Failed to log in. Wrong username/password?");
+                    Disconnect();
+                    return;
                 }
             }
             catch (Exception ex)

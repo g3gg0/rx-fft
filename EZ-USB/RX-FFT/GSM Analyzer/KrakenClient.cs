@@ -57,6 +57,8 @@ namespace GSM_Analyzer
         private const int ControlTimeout = 10000;
         private const int DataTimeout = 15 * 60 * 1000;
 
+        public static bool UseCache = false;
+
 
         /* public status values */
         public bool Logging = false;
@@ -82,6 +84,10 @@ namespace GSM_Analyzer
 
         protected static void SaveCache()
         {
+            if (!UseCache)
+            {
+                return;
+            }
             try
             {
                 StreamWriter writer = new StreamWriter(CacheFileName);
@@ -103,11 +109,16 @@ namespace GSM_Analyzer
 
         public static string[] GetCachedKis()
         {
+            if (!UseCache)
+            {
+                return new string[] { };
+            }
+
             ArrayList keys = new ArrayList();
 
             lock (ScanResults)
             {
-                foreach(KeyValuePair<string,string> pair in ScanResults)
+                foreach (KeyValuePair<string, string> pair in ScanResults)
                 {
                     if (!NotFoundString.Equals(pair.Value))
                     {
@@ -121,6 +132,10 @@ namespace GSM_Analyzer
 
         protected static void LoadCache()
         {
+            if (!UseCache)
+            {
+                return;
+            }
             try
             {
                 StreamReader reader = new StreamReader(CacheFileName);
@@ -148,6 +163,10 @@ namespace GSM_Analyzer
 
         protected static void AddScanResult(string request, byte[] result)
         {
+            if (!UseCache)
+            {
+                return;
+            }
             lock (ScanResults)
             {
                 if (result != null)
@@ -164,6 +183,10 @@ namespace GSM_Analyzer
 
         protected static bool CheckScanResult(string request, ref byte[] storedResult)
         {
+            if (!UseCache)
+            {
+                return false;
+            }
             lock (ScanResults)
             {
                 int pos = 0;

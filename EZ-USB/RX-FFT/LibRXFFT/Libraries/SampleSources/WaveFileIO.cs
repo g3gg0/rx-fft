@@ -152,12 +152,12 @@ namespace LibRXFFT.Libraries.SampleSources
 
                     // Write out the header
                     WavHeader.Write(Writer);
-                    DataFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPoint;
+                    DataFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPointLE;
                     break;
 
                 case eFileType.RawIQ:
                     Writer = new BinaryWriter(stream);
-                    DataFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPoint;
+                    DataFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPointLE;
                     break;
 
                 case eFileType.CFile:

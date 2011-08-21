@@ -210,7 +210,7 @@ namespace DemodulatorCollection
             //SampleSource = new ShmemSampleSource("GSM Analyzer", srcChan, 1, 0);
             SampleSource = new SharedMemDeviceControl(srcChan);
 
-            SampleSource.SampleSource.DataFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPoint;
+            SampleSource.SampleSource.DataFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPointLE;
             SampleSource.SamplingRateChanged += new EventHandler(SampleSource_SamplingRateChanged);
 
             Processing = true;

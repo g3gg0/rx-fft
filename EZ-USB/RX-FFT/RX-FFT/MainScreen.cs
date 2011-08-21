@@ -271,6 +271,8 @@ namespace RX_FFT
             LuaHelpers.RegisterNamespace("DemodulatorCollection.Demodulators");
             LuaHelpers.RegisterNamespace("DemodulatorCollection.BitClockSinks");
             RegisterScript("startup.lua", true);
+
+
         }
 
         void AreaSelectionUpdate()
@@ -1239,6 +1241,52 @@ namespace RX_FFT
             DeviceOpened = true;
         }
 
+        private void OpenNetworkDevice()
+        {
+            NetworkDeviceControl dev = new NetworkDeviceControl();
+
+            if (!dev.Connected)
+            {
+                MessageBox.Show("Failed to open the device. Reason: " + dev.ErrorMessage);
+                return;
+            }
+
+            Device = dev;
+            Remote.Tuner = dev;
+
+            dev.FrequencyChanged += new EventHandler(Device_FrequencyChanged);
+            dev.SamplingRateChanged += new EventHandler(Device_RateChanged);
+            dev.FilterWidthChanged += new EventHandler(Device_FilterWidthChanged);
+            dev.DeviceClosed += new EventHandler(Device_DeviceClosed);
+
+            StartThreads();
+
+            DeviceOpened = true;
+        }
+
+        private void OpenHiQSDR()
+        {
+            HiQSDRDeviceControl dev = new HiQSDRDeviceControl();
+
+            if (!dev.Connected)
+            {
+                MessageBox.Show("Failed to open the device. Reason: " + dev.ErrorMessage);
+                return;
+            }
+
+            Device = dev;
+            Remote.Tuner = dev;
+
+            dev.FrequencyChanged += new EventHandler(Device_FrequencyChanged);
+            dev.SamplingRateChanged += new EventHandler(Device_RateChanged);
+            dev.FilterWidthChanged += new EventHandler(Device_FilterWidthChanged);
+            dev.DeviceClosed += new EventHandler(Device_DeviceClosed);
+
+            StartThreads();
+
+            DeviceOpened = true;
+        }
+
         private void StartThreads()
         {
             /* create an extra shmem channel for audio decoding */
@@ -1580,6 +1628,16 @@ namespace RX_FFT
             OpenRandomDevice();
         }
 
+        private void openNetworkDeviceMenu_Click(object sender, EventArgs e)
+        {
+            OpenNetworkDevice();
+        }
+
+        private void openHiQSDRMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenHiQSDR();
+        }
+
         private void markersToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (MarkerDialog == null || MarkerDialog.IsDisposed)
@@ -1750,6 +1808,7 @@ namespace RX_FFT
         {
             UnregisterScripts();
         }
+
 
     }
 }

@@ -81,13 +81,13 @@
             this.label4 = new System.Windows.Forms.Label();
             this.tabSoundOut = new System.Windows.Forms.TabControl();
             this.tabGeneral = new System.Windows.Forms.TabPage();
+            this.btnShmem = new System.Windows.Forms.Button();
             this.btnMp3File = new System.Windows.Forms.Button();
             this.btnMp3 = new System.Windows.Forms.Button();
             this.btnWav = new System.Windows.Forms.Button();
             this.btnSound = new System.Windows.Forms.Button();
             this.frequencySelector = new LibRXFFT.Components.GDI.FrequencySelector();
             this.cmbSourceFrequency = new System.Windows.Forms.ComboBox();
-            this.btnShmem = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -340,9 +340,9 @@
             this.groupBox3.Controls.Add(this.label8);
             this.groupBox3.Controls.Add(this.txtSamplingRate);
             this.groupBox3.Controls.Add(this.label1);
-            this.groupBox3.Location = new System.Drawing.Point(12, 210);
+            this.groupBox3.Location = new System.Drawing.Point(5, 254);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(161, 105);
+            this.groupBox3.Size = new System.Drawing.Size(299, 105);
             this.groupBox3.TabIndex = 3;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Information";
@@ -361,7 +361,7 @@
             this.txtStatus.Location = new System.Drawing.Point(82, 20);
             this.txtStatus.Name = "txtStatus";
             this.txtStatus.ReadOnly = true;
-            this.txtStatus.Size = new System.Drawing.Size(68, 20);
+            this.txtStatus.Size = new System.Drawing.Size(211, 20);
             this.txtStatus.TabIndex = 1;
             // 
             // txtDemodRate
@@ -369,7 +369,7 @@
             this.txtDemodRate.Location = new System.Drawing.Point(82, 45);
             this.txtDemodRate.Name = "txtDemodRate";
             this.txtDemodRate.ReadOnly = true;
-            this.txtDemodRate.Size = new System.Drawing.Size(68, 20);
+            this.txtDemodRate.Size = new System.Drawing.Size(116, 20);
             this.txtDemodRate.TabIndex = 1;
             // 
             // label8
@@ -386,7 +386,7 @@
             this.txtSamplingRate.Location = new System.Drawing.Point(82, 70);
             this.txtSamplingRate.Name = "txtSamplingRate";
             this.txtSamplingRate.ReadOnly = true;
-            this.txtSamplingRate.Size = new System.Drawing.Size(68, 20);
+            this.txtSamplingRate.Size = new System.Drawing.Size(116, 20);
             this.txtSamplingRate.TabIndex = 1;
             // 
             // label1
@@ -542,9 +542,9 @@
             this.label7.AutoSize = true;
             this.label7.Location = new System.Drawing.Point(117, 44);
             this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(15, 13);
+            this.label7.Size = new System.Drawing.Size(20, 13);
             this.label7.TabIndex = 5;
-            this.label7.Text = "%";
+            this.label7.Text = "dB";
             // 
             // chkNative
             // 
@@ -571,14 +571,14 @@
             // txtAmplify
             // 
             this.txtAmplify.Location = new System.Drawing.Point(70, 41);
-            this.txtAmplify.LowerLimit = ((long)(0));
+            this.txtAmplify.LowerLimit = ((long)(-100));
             this.txtAmplify.Name = "txtAmplify";
             this.txtAmplify.Size = new System.Drawing.Size(46, 20);
             this.txtAmplify.TabIndex = 2;
-            this.txtAmplify.Text = "100";
+            this.txtAmplify.Text = "0";
             this.txtAmplify.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.txtAmplify.UpperLimit = ((long)(10000));
-            this.txtAmplify.Value = ((long)(100));
+            this.txtAmplify.UpperLimit = ((long)(200));
+            this.txtAmplify.Value = ((long)(0));
             this.txtAmplify.TextChanged += new System.EventHandler(this.txtAmplify_TextChanged);
             // 
             // btnDemodFft
@@ -702,7 +702,7 @@
             this.tabSoundOut.Multiline = true;
             this.tabSoundOut.Name = "tabSoundOut";
             this.tabSoundOut.SelectedIndex = 0;
-            this.tabSoundOut.Size = new System.Drawing.Size(255, 299);
+            this.tabSoundOut.Size = new System.Drawing.Size(255, 360);
             this.tabSoundOut.TabIndex = 10;
             // 
             // tabGeneral
@@ -716,9 +716,19 @@
             this.tabGeneral.Location = new System.Drawing.Point(23, 4);
             this.tabGeneral.Name = "tabGeneral";
             this.tabGeneral.Padding = new System.Windows.Forms.Padding(3);
-            this.tabGeneral.Size = new System.Drawing.Size(228, 291);
+            this.tabGeneral.Size = new System.Drawing.Size(228, 352);
             this.tabGeneral.TabIndex = 0;
             this.tabGeneral.Text = "General";
+            // 
+            // btnShmem
+            // 
+            this.btnShmem.Location = new System.Drawing.Point(33, 128);
+            this.btnShmem.Name = "btnShmem";
+            this.btnShmem.Size = new System.Drawing.Size(104, 23);
+            this.btnShmem.TabIndex = 6;
+            this.btnShmem.Text = "Add Shmem Node";
+            this.btnShmem.UseVisualStyleBackColor = true;
+            this.btnShmem.Click += new System.EventHandler(this.btnShmem_Click);
             // 
             // btnMp3File
             // 
@@ -786,21 +796,11 @@
             this.cmbSourceFrequency.TabIndex = 11;
             this.cmbSourceFrequency.SelectedIndexChanged += new System.EventHandler(this.cmbSourceFrequency_SelectedIndexChanged);
             // 
-            // btnShmem
-            // 
-            this.btnShmem.Location = new System.Drawing.Point(33, 128);
-            this.btnShmem.Name = "btnShmem";
-            this.btnShmem.Size = new System.Drawing.Size(104, 23);
-            this.btnShmem.TabIndex = 6;
-            this.btnShmem.Text = "Add Shmem Node";
-            this.btnShmem.UseVisualStyleBackColor = true;
-            this.btnShmem.Click += new System.EventHandler(this.btnShmem_Click);
-            // 
             // DemodulationDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(878, 330);
+            this.ClientSize = new System.Drawing.Size(878, 391);
             this.Controls.Add(this.cmbSourceFrequency);
             this.Controls.Add(this.tabSoundOut);
             this.Controls.Add(this.groupBox3);

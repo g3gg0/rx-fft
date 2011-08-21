@@ -242,7 +242,7 @@ namespace RX_Radio
                                                 {
                                                     AudioOutBinary = new byte[AudioSampleBufferDecim.Length * 4];
                                                 }
-                                                ByteUtil.SamplesToBinary(AudioOutBinary, AudioSampleBufferDecim, AudioSampleBufferDecim, ByteUtil.eSampleFormat.Direct16BitIQFixedPoint, false);
+                                                ByteUtil.SamplesToBinary(AudioOutBinary, AudioSampleBufferDecim, AudioSampleBufferDecim, ByteUtil.eSampleFormat.Direct16BitIQFixedPointLE, false);
                                             }
                                             else
                                             {
@@ -260,7 +260,7 @@ namespace RX_Radio
                                                 {
                                                     AudioOutBinary = new byte[AudioSampleBuffer.Length * 4];
                                                 }
-                                                ByteUtil.SamplesToBinary(AudioOutBinary, AudioSampleBuffer, AudioSampleBuffer, ByteUtil.eSampleFormat.Direct16BitIQFixedPoint, false);
+                                                ByteUtil.SamplesToBinary(AudioOutBinary, AudioSampleBuffer, AudioSampleBuffer, ByteUtil.eSampleFormat.Direct16BitIQFixedPointLE, false);
                                             }
 
                                             AudioOutShmem.Rate = (long)(DemodOptions.InputRate / lastAudioDecim);

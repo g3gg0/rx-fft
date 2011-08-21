@@ -156,7 +156,7 @@ namespace RX_Oscilloscope
         {
             SampleSource = new ShmemSampleSource("RX-Oscilloscope", srcChan, 1, 0);
 
-            SampleSource.DataFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPoint;
+            SampleSource.DataFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPointLE;
             SampleSource.SamplingRateChanged += new EventHandler(SampleSource_SamplingRateChanged);
 
             Processing = true;

@@ -52,7 +52,9 @@ namespace RX_FFT
             this.openBO35PlainMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.openFileMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.openShMemMenu = new System.Windows.Forms.ToolStripMenuItem();
+            this.openNetworkDeviceMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.openRandomDataMenu = new System.Windows.Forms.ToolStripMenuItem();
+            this.openUSRPMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.pauseMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.saveMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.closeMenu = new System.Windows.Forms.ToolStripMenuItem();
@@ -106,7 +108,7 @@ namespace RX_FFT
             this.deviceInformationMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripContainer1 = new System.Windows.Forms.ToolStripContainer();
             this.FFTDisplay = new LibRXFFT.Components.DirectX.DirectXWaterfallFFTDisplay();
-            this.openUSRPMenu = new System.Windows.Forms.ToolStripMenuItem();
+            this.hiQSDRToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip1.SuspendLayout();
             this.mainMenu.SuspendLayout();
             this.toolStripContainer1.ContentPanel.SuspendLayout();
@@ -244,8 +246,10 @@ namespace RX_FFT
             this.openBO35PlainMenu,
             this.openFileMenu,
             this.openShMemMenu,
+            this.openNetworkDeviceMenu,
             this.openRandomDataMenu,
-            this.openUSRPMenu});
+            this.openUSRPMenu,
+            this.hiQSDRToolStripMenuItem});
             this.openMenu.Name = "openMenu";
             this.openMenu.Size = new System.Drawing.Size(191, 22);
             this.openMenu.Text = "Open";
@@ -278,12 +282,26 @@ namespace RX_FFT
             this.openShMemMenu.Text = "Shared Memory";
             this.openShMemMenu.Click += new System.EventHandler(this.openShMemMenu_Click);
             // 
+            // openNetworkDeviceMenu
+            // 
+            this.openNetworkDeviceMenu.Name = "openNetworkDeviceMenu";
+            this.openNetworkDeviceMenu.Size = new System.Drawing.Size(250, 22);
+            this.openNetworkDeviceMenu.Text = "Network Device";
+            this.openNetworkDeviceMenu.Click += new System.EventHandler(this.openNetworkDeviceMenu_Click);
+            // 
             // openRandomDataMenu
             // 
             this.openRandomDataMenu.Name = "openRandomDataMenu";
             this.openRandomDataMenu.Size = new System.Drawing.Size(250, 22);
             this.openRandomDataMenu.Text = "Random Data";
             this.openRandomDataMenu.Click += new System.EventHandler(this.openRandomDataMenu_Click);
+            // 
+            // openUSRPMenu
+            // 
+            this.openUSRPMenu.Name = "openUSRPMenu";
+            this.openUSRPMenu.Size = new System.Drawing.Size(250, 22);
+            this.openUSRPMenu.Text = "USRP Device";
+            this.openUSRPMenu.Click += new System.EventHandler(this.openUSRPMenu_Click);
             // 
             // pauseMenu
             // 
@@ -697,12 +715,12 @@ namespace RX_FFT
             this.FFTDisplay.VerticalSmooth = 1;
             this.FFTDisplay.WindowingFunction = LibRXFFT.Libraries.FFTW.FFTTransformer.eWindowingFunction.BlackmanHarris;
             // 
-            // openUSRPMenu
+            // hiQSDRToolStripMenuItem
             // 
-            this.openUSRPMenu.Name = "openUSRPMenu";
-            this.openUSRPMenu.Size = new System.Drawing.Size(250, 22);
-            this.openUSRPMenu.Text = "USRP Device";
-            this.openUSRPMenu.Click += new System.EventHandler(this.openUSRPMenu_Click);
+            this.hiQSDRToolStripMenuItem.Name = "hiQSDRToolStripMenuItem";
+            this.hiQSDRToolStripMenuItem.Size = new System.Drawing.Size(250, 22);
+            this.hiQSDRToolStripMenuItem.Text = "HiQ-SDR";
+            this.hiQSDRToolStripMenuItem.Click += new System.EventHandler(this.openHiQSDRMenuItem_Click);
             // 
             // MainScreen
             // 
@@ -774,6 +792,7 @@ namespace RX_FFT
         private System.Windows.Forms.ToolStripMenuItem advancedMenu;
         private System.Windows.Forms.ToolStripMenuItem gsmAnalyzerMenu;
         private System.Windows.Forms.ToolStripMenuItem openRandomDataMenu;
+        private System.Windows.Forms.ToolStripMenuItem openNetworkDeviceMenu;
         private System.Windows.Forms.ToolStripMenuItem markersMenu;
         private System.Windows.Forms.ToolStripContainer toolStripContainer1;
         private System.Windows.Forms.ToolStripMenuItem dynamicWaterfallMenu;
@@ -805,6 +824,7 @@ namespace RX_FFT
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator8;
         private System.Windows.Forms.ToolStripMenuItem scanBandMenu;
         private System.Windows.Forms.ToolStripMenuItem openUSRPMenu;
+        private System.Windows.Forms.ToolStripMenuItem hiQSDRToolStripMenuItem;
     }
 }
 

@@ -20,7 +20,7 @@ namespace LibRXFFT.Components.GDI
         private char DecimalSeparatorChar;
         private string FixedLengthFormat = "";
 
-        public Color ForeColorValid = Color.Black;
+        public Color ForeColorValid = Color.Cyan;
         public Color ForeColorInvalid = Color.Red;
 
         public FrequencySelector()

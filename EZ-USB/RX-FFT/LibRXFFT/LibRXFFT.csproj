@@ -108,6 +108,12 @@
     <Compile Include="Components\DeviceControls\FileSourceDeviceControl.Designer.cs">
       <DependentUpon>FileSourceDeviceControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="Components\DeviceControls\HiQSDRDeviceControl.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Components\DeviceControls\HiQSDRDeviceControl.Designer.cs">
+      <DependentUpon>HiQSDRDeviceControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="Components\DeviceControls\USRPDeviceControl.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -327,6 +333,7 @@
     <Compile Include="Libraries\GSM\Layer1\PacketDump\PacketDumpReader.cs" />
     <Compile Include="Libraries\GSM\Layer1\PacketDump\PacketDumpWriter.cs" />
     <Compile Include="Libraries\GSM\Layer3\SMSDecoder.cs" />
+    <Compile Include="Libraries\HiQ-SDR\HiQSDRControl.cs" />
     <Compile Include="Libraries\LuaHelpers.cs" />
     <Compile Include="Libraries\Misc\TraceMutex.cs" />
     <Compile Include="Libraries\GSM\Layer1\PacketDump\PcapPacket.cs" />
@@ -432,6 +439,10 @@
   <ItemGroup>
     <EmbeddedResource Include="Components\DeviceControls\FileSourceDeviceControl.resx">
       <DependentUpon>FileSourceDeviceControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Components\DeviceControls\HiQSDRDeviceControl.resx">
+      <DependentUpon>HiQSDRDeviceControl.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Components\DeviceControls\USRPDeviceControl.resx">

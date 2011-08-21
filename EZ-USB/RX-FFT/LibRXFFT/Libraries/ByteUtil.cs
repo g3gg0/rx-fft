@@ -377,7 +377,13 @@ namespace LibRXFFT.Libraries
 
         public static double getDoubleFromBytes(byte[] readBuffer, int pos)
         {
-            return (double)getIntFromBytes(readBuffer, pos) / 0x7FFF;
+            return getDoubleFromBytes(readBuffer, pos, 2, true);
+        }
+
+        public static double getDoubleFromBytes(byte[] readBuffer, int pos, int numBytes, bool isLittle)
+        {
+            long maxVal = 1 << (numBytes * 8) - 1;
+            return (double)getIntFromBytes(readBuffer, pos, numBytes, isLittle) / maxVal;
         }
 
         public static void putBytesFromDouble(byte[] readBuffer, int pos, double sampleValue)
@@ -385,18 +391,36 @@ namespace LibRXFFT.Libraries
             putBytesFromInt(readBuffer, pos, (int)(sampleValue * 0x7FFF));
         }
 
-        public static int getIntFromBytes(byte[] readBuffer, int pos)
+        public static long getIntFromBytes(byte[] readBuffer, int pos, int numBytes, bool isLittle)
         {
             if (readBuffer == null)
                 return 0;
 
-            int value = (readBuffer[pos + 1] << 8) | readBuffer[pos];
+            long value = 0;
 
-            if (value > 0x7FFF)
-                value = value - 0x10000;
+            for (int byteNum = 0; byteNum < numBytes; byteNum++)
+            {
+                value <<= 8;
+                if (!isLittle)
+                {
+                    value |= readBuffer[pos + byteNum];
+                }
+                else
+                {
+                    value |= readBuffer[pos + (numBytes - byteNum - 1)];
+                }
+            }
 
-            value = Math.Max(value, -0x7FFF);
-            value = Math.Min(value, 0x7FFF);
+            long negBitVal = 1 << (numBytes * 8 - 1);
+            long maxVal = 1 << (numBytes * 8);
+
+            if ((value & negBitVal) != 0)
+            {
+                value = value - maxVal;
+            }
+
+            value = Math.Max(value, -(maxVal / 2 - 1));
+            value = Math.Min(value, (maxVal / 2 - 1));
 
             return value;
         }
@@ -418,10 +442,13 @@ namespace LibRXFFT.Libraries
 
         public enum eSampleFormat
         {
-            Direct16BitIQFixedPoint = 0,
-            Direct32BitIQFloat = 1,
-            Direct32BitIQFloat64k = 2,
-            Unknown = 3
+            Direct16BitIQFixedPointLE = 0,
+            Direct16BitIQFixedPointBE = 1,
+            Direct24BitIQFixedPointLE = 2,
+            Direct24BitIQFixedPointBE = 3,
+            Direct32BitIQFloat = 4,
+            Direct32BitIQFloat64k = 5,
+            Unknown = 6
         }
         
         public static void SamplesFromBinary(byte[] dataBuffer, double[] samplesI, double[] samplesQ, eSampleFormat dataFormat, bool InvertedSpectrum)
@@ -456,9 +483,24 @@ namespace LibRXFFT.Libraries
                     double Q;
                     switch (dataFormat)
                     {
-                        case eSampleFormat.Direct16BitIQFixedPoint:
-                            I = getDoubleFromBytes(dataBuffer, bytesPerSamplePair * pos);
-                            Q = getDoubleFromBytes(dataBuffer, bytesPerSamplePair * pos + bytesPerSample);
+                        case eSampleFormat.Direct16BitIQFixedPointLE:
+                            I = getDoubleFromBytes(dataBuffer, bytesPerSamplePair * pos, 2, true);
+                            Q = getDoubleFromBytes(dataBuffer, bytesPerSamplePair * pos + bytesPerSample, 2, true);
+                            break;
+
+                        case eSampleFormat.Direct16BitIQFixedPointBE:
+                            I = getDoubleFromBytes(dataBuffer, bytesPerSamplePair * pos, 2, false);
+                            Q = getDoubleFromBytes(dataBuffer, bytesPerSamplePair * pos + bytesPerSample, 2, false);
+                            break;
+
+                        case eSampleFormat.Direct24BitIQFixedPointLE:
+                            I = getDoubleFromBytes(dataBuffer, bytesPerSamplePair * pos, 3, true);
+                            Q = getDoubleFromBytes(dataBuffer, bytesPerSamplePair * pos + bytesPerSample, 3, true);
+                            break;
+
+                        case eSampleFormat.Direct24BitIQFixedPointBE:
+                            I = getDoubleFromBytes(dataBuffer, bytesPerSamplePair * pos, 3, false);
+                            Q = getDoubleFromBytes(dataBuffer, bytesPerSamplePair * pos + bytesPerSample, 3, false);
                             break;
 
                         case eSampleFormat.Direct32BitIQFloat:
@@ -495,8 +537,13 @@ namespace LibRXFFT.Libraries
         {
             switch (format)
             {
-                case eSampleFormat.Direct16BitIQFixedPoint:
+                case eSampleFormat.Direct16BitIQFixedPointLE:
+                case eSampleFormat.Direct16BitIQFixedPointBE:
                     return 4;
+
+                case eSampleFormat.Direct24BitIQFixedPointLE:
+                case eSampleFormat.Direct24BitIQFixedPointBE:
+                    return 6;
 
                 case eSampleFormat.Direct32BitIQFloat:
                 case eSampleFormat.Direct32BitIQFloat64k:
@@ -511,8 +558,13 @@ namespace LibRXFFT.Libraries
         {
             switch (format)
             {
-                case eSampleFormat.Direct16BitIQFixedPoint:
+                case eSampleFormat.Direct16BitIQFixedPointLE:
+                case eSampleFormat.Direct16BitIQFixedPointBE:
                     return 2;
+
+                case eSampleFormat.Direct24BitIQFixedPointLE:
+                case eSampleFormat.Direct24BitIQFixedPointBE:
+                    return 3;
 
                 case eSampleFormat.Direct32BitIQFloat:
                 case eSampleFormat.Direct32BitIQFloat64k:
@@ -554,9 +606,12 @@ namespace LibRXFFT.Libraries
 
                     switch (dataFormat)
                     {
-                        case eSampleFormat.Direct16BitIQFixedPoint:
+                        case eSampleFormat.Direct16BitIQFixedPointLE:
                             putBytesFromDouble(dataBuffer, bytesPerSamplePair * pos, I);
                             putBytesFromDouble(dataBuffer, bytesPerSamplePair * pos + bytesPerSample, Q);
+                            break;
+
+                        case eSampleFormat.Direct24BitIQFixedPointLE:
                             break;
 
                         case eSampleFormat.Direct32BitIQFloat:

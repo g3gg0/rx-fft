@@ -89,7 +89,7 @@ namespace RX_Radio
 
                 /* bar update thread */
                 InSampleSource = new ShmemSampleSource("RX-Radio Reader", USBRX.ShmemChannel, 1, 0);
-                InSampleSource.DataFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPoint;
+                InSampleSource.DataFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPointLE;
                 PowerUpdateThread = new Thread(() =>
                     {
                         InSampleSource.SamplesPerBlock = 1024;
@@ -115,7 +115,7 @@ namespace RX_Radio
                 /* demodulator */
                 Demod = new AudioDemodulator();
                 Demod.AudioInSampleSource = new ShmemSampleSource("RX-FFT Audio Decoder", USBRX.ShmemChannel, 1, 0);
-                Demod.AudioInSampleSource.DataFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPoint;
+                Demod.AudioInSampleSource.DataFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPointLE;
                 Demod.AudioOutShmem = new SharedMem(-2, 1, "RX-Radio Demodulated Audio");
 
                 lock (Demod.DemodOptions)

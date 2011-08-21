@@ -42,7 +42,7 @@ namespace LibRXFFT.Libraries.SampleSources
                     InvertedSpectrum = false;
 
                     DataFormatDialog dlg = new DataFormatDialog();
-                    dlg.SampleFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPoint;
+                    dlg.SampleFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPointLE;
                     dlg.EstimateDetails(fileName);
                     dlg.ShowDialog();
 
@@ -55,7 +55,7 @@ namespace LibRXFFT.Libraries.SampleSources
                 case eFileType.WAV:
                     InputStream = new WaveFileReader(fileName, eFileType.WAV);
                     InputSamplingRate = InputStream.SamplingRate;
-                    DataFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPoint;
+                    DataFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPointLE;
                     break;
 
                 case eFileType.Unknown:

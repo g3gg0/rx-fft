@@ -28,7 +28,7 @@ namespace LibRXFFT.Libraries.SoundSinks
     {
         private Mp3Writer Mp3Writer = null;
         private string Description = "";
-        private string FileName = "d:\\audio.mp3";
+        private string FileName = "audio.mp3";
         private Stream FileStream = null;
         private Oversampler AudioOversampler = null;
 
@@ -43,7 +43,7 @@ namespace LibRXFFT.Libraries.SoundSinks
         public SoundFileSink(Control displayControl)
         {
             StatusLabel = new Label();
-            StatusLabel.Text = "Writer idle";
+            StatusLabel.Text = FileName + ": Writer idle";
             StatusLabel.Dock = DockStyle.Fill;
             Status = "";
 
@@ -118,7 +118,7 @@ namespace LibRXFFT.Libraries.SoundSinks
                 {
                     StatusLabel.BeginInvoke(new Action(() =>
                     {
-                        StatusLabel.Text = value;
+                        StatusLabel.Text = FileName + ": " + value;
                     }));
                 }
                 catch (Exception e)
@@ -182,7 +182,10 @@ namespace LibRXFFT.Libraries.SoundSinks
 
         public void Process(double[] data)
         {
-            ProcessDoubleBuffer = AudioOversampler.Oversample(data, ProcessDoubleBuffer);
+            lock (this)
+            {
+                ProcessDoubleBuffer = AudioOversampler.Oversample(data, ProcessDoubleBuffer);
+            }
 
             if (ProcessShortBuffer.Length != ProcessDoubleBuffer.Length)
             {

@@ -7,7 +7,7 @@ namespace LibRXFFT.Libraries.SampleSources
 {
     public class SampleSource
     {
-        public ByteUtil.eSampleFormat ForwardFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPoint;
+        public ByteUtil.eSampleFormat ForwardFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPointLE;
 
         public string SourceName = "<unnamed>";
         public bool InvertedSpectrum = false;
@@ -170,7 +170,7 @@ namespace LibRXFFT.Libraries.SampleSources
 
         protected SampleSource(int oversampling)
         {
-            DataFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPoint;
+            DataFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPointLE;
 
             InternalOversampling = oversampling;
             SamplesPerBlock = 1024;

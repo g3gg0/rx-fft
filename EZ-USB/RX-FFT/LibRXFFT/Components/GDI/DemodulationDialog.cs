@@ -734,7 +734,7 @@ namespace LibRXFFT.Components.GDI
             if (!double.TryParse(txtAmplify.Text, out ampl))
                 return;
 
-            DemodState.AudioAmplification = ampl / 100;
+            DemodState.AudioAmplification = Math.Exp(ampl / 20);
             UpdateInformationInternal(true);
         }
 

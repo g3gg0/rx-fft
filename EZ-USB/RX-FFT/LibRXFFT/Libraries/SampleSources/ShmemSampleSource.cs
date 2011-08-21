@@ -45,7 +45,7 @@ namespace LibRXFFT.Libraries.SampleSources
             ShmemChannel.ReadMode = eReadMode.TimeLimitedNoPartial;
 
             InvertedSpectrum = false;
-            DataFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPoint;
+            DataFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPointLE;
 
             SamplesPerBlock = 1024;
 

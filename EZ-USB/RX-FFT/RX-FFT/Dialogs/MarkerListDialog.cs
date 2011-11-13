@@ -17,7 +17,6 @@ namespace RX_FFT.Dialogs
     {
         private FrequencyMarkerList MarkerList;
         private ListViewItem[] ListItems;
-        private Dictionary<ListViewItem, FrequencyMarker> ItemMarkerMap;
         private MainScreen MainScreen;
 
         public MainScreen.delegateGetTuner GetTuner;
@@ -38,6 +37,16 @@ namespace RX_FFT.Dialogs
         {
             FrequencyMarker[] markers = MarkerList.Markers.ToArray();
 
+            /* sort the list */
+            List<FrequencyMarker> list = new List<FrequencyMarker>(markers);
+
+            list.Sort(delegate(FrequencyMarker p1, FrequencyMarker p2)
+            {
+                return (int)(p1.Frequency - p2.Frequency);
+            });
+
+            markers = list.ToArray();
+
             if (ListItems == null || ListItems.Length != markers.Length)
             {
                 ListItems = new ListViewItem[markers.Length];
@@ -50,11 +59,9 @@ namespace RX_FFT.Dialogs
                 lstMarkers.Items.AddRange(ListItems);
             }
 
-            ItemMarkerMap = new Dictionary<ListViewItem, FrequencyMarker>();
-
             for (int pos = 0; pos < ListItems.Length; pos++)
             {
-                ItemMarkerMap.Add(ListItems[pos], markers[pos]);
+                ListItems[pos].Tag = markers[pos];
                 ListItems[pos].SubItems[0].Text = FrequencyFormatter.FreqToStringAccurate(markers[pos].Frequency);
                 ListItems[pos].SubItems[1].Text = markers[pos].Label;
             }
@@ -79,7 +86,7 @@ namespace RX_FFT.Dialogs
 
                 if (selectedMarkers.Count == 1)
                 {
-                    return ItemMarkerMap[selectedMarkers[0]];
+                    return (FrequencyMarker)selectedMarkers[0].Tag;
                 }
             }
             catch (Exception)
@@ -279,7 +286,7 @@ namespace RX_FFT.Dialogs
 
                 if (selectedMarkers.Count == 1)
                 {
-                    FrequencyMarker marker = ItemMarkerMap[selectedMarkers[0]];
+                    FrequencyMarker marker = (FrequencyMarker)selectedMarkers[0].Tag;
 
                     MarkerDetailsDialog dlg = new MarkerDetailsDialog(marker);
 
@@ -300,7 +307,7 @@ namespace RX_FFT.Dialogs
 
                 if (selectedMarkers.Count == 1)
                 {
-                    FrequencyMarker marker = ItemMarkerMap[selectedMarkers[0]];
+                    FrequencyMarker marker = (FrequencyMarker)selectedMarkers[0].Tag;
 
                     MarkerList.Remove(marker);
                 }

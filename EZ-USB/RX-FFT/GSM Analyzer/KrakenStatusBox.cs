@@ -91,14 +91,23 @@ namespace GSM_Analyzer
 
                     if (connected)
                     {
-                        status = Kraken.Kraken.KrakenJobStatus;
-                        jobId = Kraken.Kraken.RequestId;
+                        int jobs = 0;
 
-                        if (jobId != -1)
+                        foreach (KrakenClient k in Kraken.Kraken)
                         {
-                            progress = Kraken.Kraken.GetJobProgress();
-                            Kraken.GetJobInfo(out jobNumber, out jobcount);
+                            status = k.KrakenJobStatus;
+                            jobId = k.RequestId;
+
+                            if (jobId != -1)
+                            {
+                                jobs++;
+                                progress += k.GetJobProgress();
+                                //Kraken.GetJobInfo(out jobNumber, out jobcount);
+                            }
                         }
+                        progress /= jobs;
+                        jobcount = jobs;
+                        jobNumber = -1;
                     }
                 }
             }

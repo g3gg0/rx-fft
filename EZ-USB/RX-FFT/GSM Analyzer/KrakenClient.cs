@@ -57,7 +57,8 @@ namespace GSM_Analyzer
         private const int ControlTimeout = 10000;
         private const int DataTimeout = 15 * 60 * 1000;
 
-        public static bool UseCache = false;
+        public static bool UseCache = true;
+        private static int _ParallelRequests = 1;
 
 
         /* public status values */
@@ -78,7 +79,8 @@ namespace GSM_Analyzer
 
         public virtual int ParallelRequests
         {
-            get { return 1; }
+            get { return _ParallelRequests; }
+            set { _ParallelRequests = value; }
         }
 
 
@@ -415,27 +417,30 @@ namespace GSM_Analyzer
 
         public virtual void Disconnect()
         {
-            try
+            lock (this)
             {
-                if (DataClient != null)
+                try
                 {
-                    DataClient.Close();
+                    if (DataClient != null)
+                    {
+                        DataClient.Close();
+                    }
+                    if (ControlClient != null)
+                    {
+                        ControlClient.Close();
+                    }
                 }
-                if (ControlClient != null)
+                catch (ThreadAbortException e)
                 {
-                    ControlClient.Close();
+                    throw e;
                 }
-            }
-            catch (ThreadAbortException e)
-            {
-                throw e;
-            }
-            catch { }
+                catch { }
 
-            DataClient = null;
-            DataStream = null;
-            ControlClient = null;
-            ControlStream = null;
+                DataClient = null;
+                DataStream = null;
+                ControlClient = null;
+                ControlStream = null;
+            }
         }
 
         public virtual bool Connect()
@@ -478,78 +483,86 @@ namespace GSM_Analyzer
 
         public virtual byte[] RequestResult(bool[] key1, uint count1, bool[] key2, uint count2)
         {
-            string request = "crack " + ByteUtil.BitsToString(key1) + " " + count1 + " " + ByteUtil.BitsToString(key2) + " " + count2;
-            byte[] result = new byte[8];
-
-            RequestId = -1;
-
-            //Log.AddMessage("Kraken: > '" + request.Substring(0, 35) + "...'");
-
-            /* do we have data for this request already in cache? */
-            if (CheckScanResult(request, ref result))
+            if (!Connected)
             {
+                Reconnect();
+            }
+
+            lock (this)
+            {
+                string request = "crack " + ByteUtil.BitsToString(key1) + " " + count1 + " " + ByteUtil.BitsToString(key2) + " " + count2;
+                byte[] result = new byte[8];
+
+                RequestId = -1;
+
+                Log.AddMessage("Kraken: > '" + request.Substring(0, 35) + "...'");
+
+                /* do we have data for this request already in cache? */
+                if (CheckScanResult(request, ref result))
+                {
+                    return result;
+                }
+
+                try
+                {
+                    /* try a few times to get the key cracked */
+                    for (int tries = 0; tries < 3; tries++)
+                    {
+                        DataStream.Flush();
+                        Write(request);
+                        KrakenJobStatus = KrakenJobStatus.Submitted;
+
+                        result = GetResult();
+
+                        if (result != null)
+                        {
+                            /* found valid key, add result and jump out of loop */
+                            AddScanResult(request, result);
+                            break;
+                        }
+                        else if (KrakenJobStatus == KrakenJobStatus.NotFound)
+                        {
+                            /* found no valid key, add result and jump out of loop */
+                            AddScanResult(request, result);
+                            break;
+                        }
+                        else
+                        {
+                            /* there went something wrong */
+
+                            KrakenJobStatus = KrakenJobStatus.Unknown;
+
+                            Log.AddMessage("KrakenClient", "Failed to crack. Reconnecting");
+                            Reconnect();
+
+                            /* cancel old job with the new connection */
+                            if (RequestId != -1)
+                            {
+                                Log.AddMessage("KrakenClient", "   + cancel job " + RequestId);
+                                Write("cancel " + RequestId);
+                                RequestId = -1;
+                            }
+
+                        }
+                    }
+                }
+                catch (ThreadAbortException ex)
+                {
+                    /* try to cancel job with new connection */
+                    if (RequestId != -1)
+                    {
+                        Log.AddMessage("KrakenClient", "Aborting. Reconnecting to cancel job" + RequestId);
+                        Reconnect();
+                        Write("cancel " + RequestId);
+                        Disconnect();
+                        Log.AddMessage("KrakenClient", "Aborting finished");
+                        RequestId = -1;
+                    }
+                }
+
+                RequestId = -1;
                 return result;
             }
-
-            try
-            {
-                /* try a few times to get the key cracked */
-                for (int tries = 0; tries < 3; tries++)
-                {
-                    DataStream.Flush();
-                    Write(request);
-                    KrakenJobStatus = KrakenJobStatus.Submitted;
-
-                    result = GetResult();
-
-                    if (result != null)
-                    {
-                        /* found valid key, add result and jump out of loop */
-                        AddScanResult(request, result);
-                        break;
-                    }
-                    else if (KrakenJobStatus == KrakenJobStatus.NotFound)
-                    {
-                        /* found no valid key, add result and jump out of loop */
-                        AddScanResult(request, result);
-                        break;
-                    }
-                    else
-                    {
-                        /* there went something wrong */
-
-                        KrakenJobStatus = KrakenJobStatus.Unknown;
-
-                        Log.AddMessage("KrakenClient", "Failed to crack. Reconnecting");
-                        Reconnect();
-
-                        /* cancel old job with the new connection */
-                        if (RequestId != -1)
-                        {
-                            Log.AddMessage("KrakenClient", "   + cancel job " + RequestId);
-                            Write("cancel " + RequestId);
-                            RequestId = -1;
-                        }
-
-                    }
-                }
-            }
-            catch (ThreadAbortException ex)
-            {
-                /* try to cancel job with new connection */
-                if (RequestId != -1)
-                {
-                    Log.AddMessage("KrakenClient", "Aborting. Reconnecting to cancel job" + RequestId);
-                    Reconnect();
-                    Write("cancel " + RequestId);
-                    Disconnect();
-                    Log.AddMessage("KrakenClient", "Aborting finished");
-                    RequestId = -1;
-                }
-            }
-
-            RequestId = -1;
-            return result;
         }
 
         public virtual double GetJobProgress()

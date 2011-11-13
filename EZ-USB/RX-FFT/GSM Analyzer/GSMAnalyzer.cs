@@ -103,9 +103,11 @@ namespace GSM_Analyzer
         public class KrakenCracker : CipherCracker
         {
             private GSMAnalyzer Analyzer = null;
-            public KrakenClient Kraken = null;
+            public KrakenClient[] Kraken = null;
+            private bool[] KrakenUsed = null;
             private int JobNumber = 0;
             private int JobCount = 0;
+            private int ParallelConnections = 8;
             private DateTime LastConnect = DateTime.MinValue;
 
             public KrakenCracker(GSMAnalyzer analyzer)
@@ -131,102 +133,163 @@ namespace GSM_Analyzer
             {
                 if (!Available)
                 {
+                    Log.AddMessage("Not connected...");
                     return null;
                 }
 
-                return Kraken.RequestResult(key1, count1, key2, count2);
+                int id = -1;
+                byte[] ret = null;
+
+                try
+                {
+                    while (id == -1)
+                    {
+                        lock (this)
+                        {
+                            for (int num = 0; num < ParallelConnections; num++)
+                            {
+                                if (!KrakenUsed[num])
+                                {
+                                    id = num;
+                                    KrakenUsed[id] = true;
+                                    break;
+                                }
+                            }
+                        }
+                        Thread.Sleep(100);
+                    }
+
+
+                    ret = Kraken[id].RequestResult(key1, count1, key2, count2);
+                    KrakenUsed[id] = false;
+                }
+                catch (Exception e)
+                {
+                    Log.AddMessage("Exception while cracking: " + e.ToString());
+                    if (id != -1)
+                    {
+                        KrakenUsed[id] = false;
+                    }
+                    throw e;
+                }
+
+                return ret;
             }
 
             public bool Available
             {
                 get
                 {
-                    if (Kraken == null)
+                    lock (this)
                     {
-                        /* first time and host configured */
-                        if (Analyzer.KrakenHostAddress != null && Analyzer.KrakenHostAddress.Length > 0)
+                        if (Kraken == null)
                         {
-                            if (Analyzer.KrakenHostAddress.StartsWith("XMPP"))
+                            /* first time and host configured */
+                            if (Analyzer.KrakenHostAddress != null && Analyzer.KrakenHostAddress.Length > 0)
                             {
-                                Kraken = new KrakenNet(Analyzer.KrakenHostAddress);
+                                Connect();
                             }
                             else
                             {
-                                Kraken = new KrakenClient(Analyzer.KrakenHostAddress);
-                            }
-                            Kraken.Connect();
-                        }
-                        else
-                        {
-                            /* no host configured */
-                            return false;
-                        }
-                    }
-                    else
-                    {
-                        /* no host configured anymore */
-                        if (Analyzer.KrakenHostAddress == null || Analyzer.KrakenHostAddress.Length == 0)
-                        {
-                            Kraken.Disconnect();
-                            Kraken = null;
-                            return false;
-                        }
-
-                        /* host changed */
-                        if (Analyzer.KrakenHostAddress != Kraken.Hostname)
-                        {
-                            Kraken.Disconnect();
-                            if (Analyzer.KrakenHostAddress.StartsWith("XMPP"))
-                            {
-                                Kraken = new KrakenNet(Analyzer.KrakenHostAddress);
-                            }
-                            else
-                            {
-                                Kraken = new KrakenClient(Analyzer.KrakenHostAddress);
-                            }
-                            Kraken.Connect();
-                        }
-                    }
-
-                    /* check if still connected */
-                    if (!Kraken.Connected)
-                    {
-                        /* dont flood */
-                        if ((DateTime.Now - LastConnect).TotalSeconds > 10)
-                        {
-                            Log.AddMessage("KrakenCracker", "Trying to reconnect to Kraken server (" + Analyzer.KrakenHostAddress + ") ...");
-                            LastConnect = DateTime.Now;
-                            Kraken.Connect();
-
-                            if (Kraken.Connected)
-                            {
-                                Log.AddMessage("KrakenCracker", "    Connected!");
-                                return true;
-                            }
-                            else
-                            {
-                                Log.AddMessage("KrakenCracker", "    Failed!");
+                                /* no host configured */
                                 return false;
                             }
                         }
                         else
                         {
-                            return false;
+                            /* no host configured anymore */
+                            if (Analyzer.KrakenHostAddress == null || Analyzer.KrakenHostAddress.Length == 0)
+                            {
+                                for (int num = 0; num < ParallelConnections; num++)
+                                {
+                                    Kraken[num].Disconnect();
+                                }
+                                Kraken = null;
+                                return false;
+                            }
+
+                            /* host changed */
+                            if (Analyzer.KrakenHostAddress != Kraken[0].Hostname)
+                            {
+                                Connect();
+                            }
                         }
+
+                        bool ret = false;
+
+                        for (int num = 0; num < ParallelConnections; num++)
+                        {
+                            /* check if still connected */
+                            if (!Kraken[num].Connected)
+                            {
+                                /* dont flood */
+                                if ((DateTime.Now - LastConnect).TotalSeconds > 10)
+                                {
+                                    Log.AddMessage("KrakenCracker[" + num + "]", "Trying to reconnect to Kraken server (" + Analyzer.KrakenHostAddress + ") ...");
+                                    LastConnect = DateTime.Now;
+                                    Kraken[num].Connect();
+
+                                    if (Kraken[num].Connected)
+                                    {
+                                        Log.AddMessage("KrakenCracker[" + num + "]", "    Connected!");
+                                        ret = true;
+                                    }
+                                    else
+                                    {
+                                        Log.AddMessage("KrakenCracker[" + num + "]", "    Failed!");
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                ret = true;
+                            }
+                        }
+                        return ret;
+                    }
+                }
+            }
+
+            private void Connect()
+            {
+                if (Analyzer.KrakenHostAddress.StartsWith("XMPP"))
+                {
+                    ParallelConnections = 1;
+                    Kraken = new KrakenClient[1];
+                    KrakenUsed = new bool[1];
+                    Kraken[0] = new KrakenNet(Analyzer.KrakenHostAddress);
+                    KrakenUsed[0] = false;
+                }
+                else
+                {
+                    /* experimental - multiple connections to one host */
+                    ParallelConnections = 4;
+                    Kraken = new KrakenClient[ParallelConnections];
+                    KrakenUsed = new bool[ParallelConnections];
+                    for (int num = 0; num < ParallelConnections; num++)
+                    {
+                        Kraken[num] = new KrakenClient(Analyzer.KrakenHostAddress);
+                        KrakenUsed[num] = false;
+                    }
+                }
+
+                for (int num = 0; num < ParallelConnections; num++)
+                {
+                    if (Kraken[num].Connect())
+                    {
+                        Log.AddMessage("KrakenCracker[" + num + "]", "Connected!");
                     }
                     else
                     {
-                        return true;
+                        Log.AddMessage("KrakenCracker[" + num + "]", "Failed to connect!");
                     }
-
-                    return false;
                 }
             }
 
 
             public int SearchDuration
             {
-                get { return Kraken.SearchDuration; }
+                get { return Kraken[0].SearchDuration; }
             }
 
             public void Close()
@@ -236,7 +299,10 @@ namespace GSM_Analyzer
                     return;
                 }
 
-                Kraken.Disconnect();
+                for (int num = 0; num < ParallelConnections; num++)
+                {
+                    Kraken[num].Disconnect();
+                }
             }
 
             public int ParallelRequests
@@ -246,8 +312,14 @@ namespace GSM_Analyzer
                     if (Kraken == null)
                     {
                         return 0;
-                    } 
-                    return Kraken.ParallelRequests;
+                    }
+
+                    if (Analyzer.KrakenHostAddress.StartsWith("XMPP"))
+                    {
+                        return Kraken[0].ParallelRequests;
+                    }
+
+                    return ParallelConnections;
                 }
             }
 

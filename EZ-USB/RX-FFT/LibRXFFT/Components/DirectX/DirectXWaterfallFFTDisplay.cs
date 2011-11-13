@@ -17,8 +17,34 @@ namespace LibRXFFT.Components.DirectX
     {
         public UserEventCallbackDelegate UserEventCallback;
 
-        public AttenuationCorrection ReceiverCorrection = new AttenuationCorrection();
-        public AttenuationCorrection FilterCorrection = new AttenuationCorrection();
+        public AttenuationCorrection _ReceiverCorrection = new AttenuationCorrection();
+        public AttenuationCorrection _FilterCorrection = new AttenuationCorrection();
+
+        public AttenuationCorrection ReceiverCorrection
+        {
+            set
+            {
+                _ReceiverCorrection = value;
+                ReceiverCorrection.BuildCorrectionTable(LowestFrequency, HighestFrequency, FFTSize);
+            }
+            get
+            {
+                return _ReceiverCorrection;
+            }
+        }
+
+        public AttenuationCorrection FilterCorrection
+        {
+            set
+            {
+                _FilterCorrection = value;
+                FilterCorrection.BuildCorrectionTable((long)(-SamplingRate / 2), (long)(SamplingRate / 2), FFTSize);
+            }
+            get
+            {
+                return _FilterCorrection;
+            }
+        }
 
         private Color MarkerColor = Color.LightGreen;
 
@@ -290,12 +316,22 @@ namespace LibRXFFT.Components.DirectX
 
         public long SamplesToAverage
         {
-            set 
+            set
             {
                 FFTDisplay.SamplesToAverage = value;
                 WaterfallDisplay.SamplesToAverage = value;
             }
             get { return FFTDisplay.SamplesToAverage; }
+        }
+
+        public bool SampleValuesTrackPeaks
+        {
+            set
+            {
+                FFTDisplay.SampleValuesTrackPeaks = value;
+                WaterfallDisplay.SampleValuesTrackPeaks = value;
+            }
+            get { return FFTDisplay.SampleValuesTrackPeaks; }
         }
 
         public bool SavingEnabled
@@ -328,10 +364,11 @@ namespace LibRXFFT.Components.DirectX
             }
             set
             {
-                ReceiverCorrection.BuildCorrectionTable(LowestFrequency, HighestFrequency, FFTSize);
-                FilterCorrection.BuildCorrectionTable((long)(-SamplingRate / 2), (long)(SamplingRate / 2), FFTSize);
                 FFTDisplay.CenterFrequency = value;
                 WaterfallDisplay.CenterFrequency = value;
+
+                /* frequency changed, so update the receiver correction. Filter correction does not change */
+                ReceiverCorrection.BuildCorrectionTable(LowestFrequency, HighestFrequency, FFTSize);
             }
         }
 

@@ -6,6 +6,7 @@ using LuaInterface;
 using System.Reflection;
 using RX_FFT.Components.GDI;
 using System.Collections;
+using System.Windows.Forms;
 
 namespace LibRXFFT.Libraries
 {
@@ -113,6 +114,18 @@ namespace LibRXFFT.Libraries
             }
         }
 
+        [AttrLuaFunc("msg", "Print string into message box", new[] { "Text to print", "Window title" })]
+        public static void LuaMsg(string text, string caption)
+        {
+            MessageBox.Show(text, caption);
+        }
+
+        [AttrLuaFunc("msg_ask", "Print string into message box with yes/no button and return if yes was pressed", new[] { "Text to print", "Window title" })]
+        public static bool LuaMsgAsk(string text, string caption)
+        {
+            return MessageBox.Show(text, caption, MessageBoxButtons.YesNo) == DialogResult.Yes;
+        }
+
         [AttrLuaFunc("print", "Print string into log window", new[] { "Text to print" })]
         public static void LuaPrint(string text)
         {
@@ -167,6 +180,14 @@ namespace LibRXFFT.Libraries
             }
 
             return Activator.CreateInstance(type);
+        }
+
+        [AttrLuaFunc("class", "Get class reference", new[] { "Class name to reference" })]
+        public static Type LuaClass(string className)
+        {
+            Type type = FindType(className);
+
+            return type;
         }
 
         [AttrLuaFunc("new_args", "Instanciate a new object", new[] { "Class name to instanciate", "optional parameters" })]

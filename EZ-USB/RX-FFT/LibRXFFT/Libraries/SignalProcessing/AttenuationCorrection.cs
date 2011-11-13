@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using System.Xml.Serialization;
+using System.Collections;
 
 namespace LibRXFFT.Libraries.SignalProcessing
 {
@@ -52,6 +53,69 @@ namespace LibRXFFT.Libraries.SignalProcessing
             });
 
             ProfilePoints = new LinkedList<CorrectionProfilePoint>(list);
+        }
+
+        public CorrectionProfile(CorrectionProfile profile1, CorrectionProfile profile2)
+        {
+            ArrayList newList = new ArrayList();
+
+            /* first sort the list by frequency */
+            List<CorrectionProfilePoint> list1 = new List<CorrectionProfilePoint>(profile1.ProfilePoints);
+            List<CorrectionProfilePoint> list2 = new List<CorrectionProfilePoint>(profile2.ProfilePoints);
+
+            list1.Sort(delegate(CorrectionProfilePoint p1, CorrectionProfilePoint p2)
+            {
+                return (int)(p1.Frequency - p2.Frequency);
+            });
+            list2.Sort(delegate(CorrectionProfilePoint p1, CorrectionProfilePoint p2)
+            {
+                return (int)(p1.Frequency - p2.Frequency);
+            });
+
+            int pos1 = 0;
+            int pos2 = 0;
+
+            while ((pos1 < list1.Count) || (pos2 < list2.Count))
+            {
+                if (pos1 >= list1.Count)
+                {
+                    newList.Add(new CorrectionProfilePoint(list2[pos2].Frequency, list2[pos2].CorrectionOffset));
+                    pos2++;
+                }
+                else if (pos2 >= list2.Count)
+                {
+                    newList.Add(new CorrectionProfilePoint(list1[pos1].Frequency, list1[pos1].CorrectionOffset));
+                    pos1++;
+                }
+                else if (list1[pos1].Frequency == list2[pos2].Frequency)
+                {
+                    newList.Add(new CorrectionProfilePoint(list1[pos1].Frequency, (list1[pos1].CorrectionOffset + list2[pos2].CorrectionOffset) / 2));
+                    pos1++;
+                    pos2++;
+                }
+                else if (list1[pos1].Frequency < list2[pos2].Frequency)
+                {
+                    newList.Add(new CorrectionProfilePoint(list1[pos1].Frequency, list1[pos1].CorrectionOffset));
+                    pos1++;
+                }
+                else if (list1[pos1].Frequency > list2[pos2].Frequency)
+                {
+                    newList.Add(new CorrectionProfilePoint(list2[pos2].Frequency, list2[pos2].CorrectionOffset));
+                    pos2++;
+                }
+            }
+
+            LinkedList<CorrectionProfilePoint> profilePoints = new LinkedList<CorrectionProfilePoint>((CorrectionProfilePoint[])newList.ToArray(typeof(CorrectionProfilePoint)));
+
+            ProfilePoints = new LinkedList<CorrectionProfilePoint>(profilePoints);
+        }
+
+        public bool Empty
+        {
+            get
+            {
+                return ProfilePoints.Count == 0;
+            }
         }
 
         public void Add(CorrectionProfilePoint point)
@@ -133,6 +197,12 @@ namespace LibRXFFT.Libraries.SignalProcessing
             double diff1 = p2.Frequency - p1.Frequency;
             double diff2 = p2.Frequency - freq;
 
+            /* reached end of list */
+            if (diff1 < 1)
+            {
+                return p1.CorrectionOffset;
+            }
+
             double corr1 = diff2 / diff1;
             double corr2 = 1 - diff2 / diff1;
 
@@ -148,7 +218,7 @@ namespace LibRXFFT.Libraries.SignalProcessing
 
             if (points != null)
             {
-                ProfilePoints.Clear();
+                ProfilePoints = new LinkedList<CorrectionProfilePoint>();
                 foreach (CorrectionProfilePoint point in points)
                 {
                     ProfilePoints.AddLast(point);
@@ -186,6 +256,20 @@ namespace LibRXFFT.Libraries.SignalProcessing
         {
             Profile = profile;
         }
+
+        public CorrectionProfile GetProfile()
+        {
+            return Profile;
+        }
+
+        public bool Empty
+        {
+            get
+            {
+                return (Profile == null) || Profile.Empty;
+            }
+        }
+
 
         public void BuildCorrectionTable(long startFreq, long endFreq, long steps)
         {

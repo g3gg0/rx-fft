@@ -779,8 +779,10 @@ namespace LibRXFFT.Components.DirectX
 
                     lock (LinePointsLock)
                     {
-                        if (LinePoints == null || LinePoints.Length < samples)
+                        if (LinePoints == null || LinePoints.Length != samples)
+                        {
                             LinePoints = new Point[samples];
+                        }
 
                         for (int pos = 0; pos < SamplesWritten; pos++)
                         {

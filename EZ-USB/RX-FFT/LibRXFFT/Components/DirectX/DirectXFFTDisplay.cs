@@ -76,6 +76,8 @@ namespace LibRXFFT.Components.DirectX
         public double[] SampleValues = new double[0];
         protected long SampleValuesAveraged = 0;
         public long SamplesToAverage = 2;
+        /* instead of averaging, get the peaks */
+        public bool SampleValuesTrackPeaks = false;
 
         /* processing related */
         protected Mutex FFTLock = new Mutex();
@@ -307,8 +309,21 @@ namespace LibRXFFT.Components.DirectX
                     }
                     else
                     {
-                        for (int pos = 0; pos < spectSize; pos++)
-                            SampleValues[spectPart * spectSize + pos] += amplitudes[pos];
+                        /* track peaks if configured */
+                        if (SampleValuesTrackPeaks)
+                        {
+                            for (int pos = 0; pos < spectSize; pos++)
+                            {
+                                SampleValues[spectPart * spectSize + pos] = Math.Max(SampleValues[spectPart * spectSize + pos], amplitudes[pos]);
+                            }
+                        }
+                        else
+                        {
+                            for (int pos = 0; pos < spectSize; pos++)
+                            {
+                                SampleValues[spectPart * spectSize + pos] += amplitudes[pos];
+                            }
+                        }
                     }
 
                     if (spectPart + 1 == spectParts)
@@ -325,12 +340,28 @@ namespace LibRXFFT.Components.DirectX
                         if (SampleValuesAveraged == 0)
                         {
                             for (int pos = 0; pos < spectSize; pos++)
+                            {
                                 SampleValues[spectPart * spectSize + pos] = amplitudes[pos];
+                            }
                         }
                         else
                         {
-                            for (int pos = 0; pos < spectSize; pos++)
-                                SampleValues[spectPart * spectSize + pos] += amplitudes[pos];
+                            /* track peaks if configured */
+                            if (SampleValuesTrackPeaks)
+                            {
+                                for (int pos = 0; pos < spectSize; pos++)
+                                {
+                                    int valPos = spectPart * spectSize + pos;
+                                    SampleValues[valPos] = Math.Max(SampleValues[valPos], amplitudes[pos]);
+                                }
+                            }
+                            else
+                            {
+                                for (int pos = 0; pos < spectSize; pos++)
+                                {
+                                    SampleValues[spectPart * spectSize + pos] += amplitudes[pos];
+                                }
+                            }
                         }
 
                         SampleValuesAveraged++;
@@ -1178,7 +1209,7 @@ namespace LibRXFFT.Components.DirectX
 
                         lock (LinePointsLock)
                         {
-                            if (LinePoints == null || LinePoints.Length < samples)
+                            if (LinePoints == null || LinePoints.Length != samples)
                             {
                                 Array.Resize(ref LinePoints, samples);
                                 //LinePoints = new Point[samples];
@@ -1191,16 +1222,28 @@ namespace LibRXFFT.Components.DirectX
 
                                 LinePoints[pos].X = posX;
 
-                                /* some simple averaging */
-                                unchecked
+                                /* if configured to track peaks, dont average values */
+                                if (SampleValuesTrackPeaks)
                                 {
+                                    SampleValuesAveraged = 1;
+                                }
+
+                                if (VerticalSmooth != 1.0f)
+                                {
+                                    /* some simple averaging */
                                     LinePoints[pos].Y *= (VerticalSmooth - 1);
                                     LinePoints[pos].Y += posY / SampleValuesAveraged;
                                     LinePoints[pos].Y /= VerticalSmooth;
                                 }
+                                else
+                                {
+                                    LinePoints[pos].Y = posY / SampleValuesAveraged;
+                                }
 
                                 if (double.IsNaN(LinePoints[pos].Y))
+                                {
                                     LinePoints[pos].Y = 0;
+                                }
                             }
                             LinePointEntries = samples;
                             LinePointsUpdated = true;

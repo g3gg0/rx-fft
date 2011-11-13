@@ -626,27 +626,40 @@ namespace LibRXFFT.Components.DirectX
                         if (LinePoints == null || LinePoints.Length < samples)
                         {
                             Array.Resize(ref LinePoints, samples);
-                            //LinePoints = new Point[samples];
                         }
 
                         for (int pos = 0; pos < samples; pos++)
                         {
-                            double sampleValue = SampleValues[pos];
+                            double posY = SampleValues[pos];
                             double posX = pos;
-                            double posY = sampleValue;
 
                             LinePoints[pos].X = posX;
 
-                            /* some simple averaging */
+                            /* if configured to track peaks, dont average values */
+                            if (SampleValuesTrackPeaks)
+                            {
+                                SampleValuesAveraged = 1;
+                            }
+
                             unchecked
                             {
-                                LinePoints[pos].Y *= (VerticalSmooth - 1);
-                                LinePoints[pos].Y += posY / SampleValuesAveraged;
-                                LinePoints[pos].Y /= VerticalSmooth;
+                                if (VerticalSmooth != 1.0f)
+                                {
+                                    /* some simple averaging */
+                                    LinePoints[pos].Y *= (VerticalSmooth - 1);
+                                    LinePoints[pos].Y += posY / SampleValuesAveraged;
+                                    LinePoints[pos].Y /= VerticalSmooth;
+                                }
+                                else
+                                {
+                                    LinePoints[pos].Y = posY / SampleValuesAveraged;
+                                }
                             }
 
                             if (double.IsNaN(LinePoints[pos].Y))
+                            {
                                 LinePoints[pos].Y = 0;
+                            }
 
                             if (DynamicLimits)
                             {

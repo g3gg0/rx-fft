@@ -69,6 +69,10 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
         public long ARFCN = -1;
         public eLinkDirection Direction = eLinkDirection.Downlink;
 
+        /* used in crack threads */
+        private bool Logging = true;
+
+
         internal bool[] FireCRCBuffer;
 
 
@@ -718,86 +722,121 @@ namespace LibRXFFT.Libraries.GSM.Layer1.Bursts
 
             try
             {
-                for (int pos = 0; pos < threads; pos++)
-                {
-                    CrackThreads[pos] = new Thread(() =>
-                    {
-                        lock (signalObject)
-                        {
-                            runningThreads++;
-                        }
-
-                        while (true)
-                        {
-                            sCrackRequest req;
-
-                            lock (CrackQueue)
-                            {
-                                if (CrackQueue.Count > 0)
-                                {
-                                    req = CrackQueue.Dequeue();
-                                }
-                                else
-                                {
-                                    Log.AddMessage("Crack thread " + pos + " has nothing to do anymore");
-                                    lock (signalObject)
-                                    {
-                                        runningThreads--;
-                                        if (runningThreads == 0)
-                                        {
-                                            Log.AddMessage("Crack thread " + pos + " was the last one running. signal!");
-                                            Monitor.PulseAll(signalObject);
-                                        }
-                                    }
-                                    return;
-                                }
-                            }
-
-
-                            /* make sure the UI does get all information */
-                            //param.CipherCracker.SetJobInfo(burstNum + burst + 1, burstCount);
-                            //byte[] key = param.CipherCracker.Crack(guessedKeyBits[dstBurst], counts[dstBurst], guessedKeyBits[nextBurst], counts[nextBurst]);
-
-                            Log.AddMessage("Crack thread " + pos + " tries to crack...");
-                            byte[] key = param.CipherCracker.Crack(req.key1, req.count1, req.key2, req.count2);
-
-                            /* make sure this is executed only once */
-                            lock (signalObject)
-                            {
-                                if (key != null)
-                                {
-                                    Log.AddMessage("Crack thread " + pos + " cracked the key");
-
-                                    if (!keyFound)
-                                    {
-                                        param.AddA5Key(key);
-                                        A5CipherKey = key;
-
-                                        /* also set encryption info in associated SACCH */
-                                        if (AssociatedSACCH != null)
-                                        {
-                                            AssociatedSACCH.A5CipherKey = A5CipherKey;
-                                            AssociatedSACCH.A5Algorithm = A5Algorithm;
-                                        }
-
-                                        Log.AddMessage("Crack thread " + pos + " signals found key. signal!");
-                                        keyFound = true;
-                                        Monitor.PulseAll(signalObject);
-                                    }
-                                }
-                                else
-                                {
-                                    Log.AddMessage("Crack thread " + pos + " did not find key");
-                                }
-                            }
-                        }
-                    });
-                    CrackThreads[pos].Name = "Crack thread " + pos;
-                    CrackThreads[pos].Start();
-                }
-
                 lock (signalObject)
                 {
+                    for (int pos = 0; pos < threads; pos++)
+                    {
+                        int threadNum = pos;
+                        CrackThreads[pos] = new Thread(() =>
+                        {
+                            string Name = "Crack thread " + threadNum;
+
+                            lock (signalObject)
+                            {
+                                runningThreads++;
+                            }
+
+                            try
+                            {
+                                while (true)
+                                {
+                                    sCrackRequest req;
+
+                                    lock (CrackQueue)
+                                    {
+                                        if (CrackQueue.Count > 0)
+                                        {
+                                            req = CrackQueue.Dequeue();
+                                            if (Logging)
+                                            {
+                                                Log.AddMessage(Name + ": new request. " + CrackQueue.Count + " requests remaining");
+                                            }
+                                        }
+                                        else
+                                        {
+                                            if (Logging)
+                                            {
+                                                Log.AddMessage(Name + " has nothing to do anymore");
+                                            }
+                                            lock (signalObject)
+                                            {
+                                                runningThreads--;
+                                                if (runningThreads == 0)
+                                                {
+                                                    if (Logging)
+                                                    {
+                                                        Log.AddMessage(Name + " was the last one running. signal!"); 
+                                                    }
+                                                    Monitor.PulseAll(signalObject);
+                                                }
+                                            }
+                                            return;
+                                        }
+                                    }
+
+
+                                    /* make sure the UI does get all information */
+                                    //param.CipherCracker.SetJobInfo(burstNum + burst + 1, burstCount);
+                                    //byte[] key = param.CipherCracker.Crack(guessedKeyBits[dstBurst], counts[dstBurst], guessedKeyBits[nextBurst], counts[nextBurst]);
+                                    if (Logging)
+                                    {
+                                        Log.AddMessage(Name + " tries to crack..."); 
+                                    }
+                                    byte[] key = param.CipherCracker.Crack(req.key1, req.count1, req.key2, req.count2);
+
+                                    /* make sure this is executed only once */
+                                    lock (signalObject)
+                                    {
+                                        if (key != null)
+                                        {
+                                            if (Logging)
+                                            {
+                                                Log.AddMessage(Name + " cracked the key"); 
+                                            }
+
+                                            if (!keyFound)
+                                            {
+                                                param.AddA5Key(key);
+                                                A5CipherKey = key;
+
+                                                /* also set encryption info in associated SACCH */
+                                                if (AssociatedSACCH != null)
+                                                {
+                                                    AssociatedSACCH.A5CipherKey = A5CipherKey;
+                                                    AssociatedSACCH.A5Algorithm = A5Algorithm;
+                                                }
+
+                                                if (Logging)
+                                                {
+                                                    Log.AddMessage(Name + " signals found key. signal!"); 
+                                                }
+                                                keyFound = true;
+                                                Monitor.PulseAll(signalObject);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            if (Logging)
+                                            {
+                                                Log.AddMessage(Name + " did not find key"); 
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                lock (signalObject)
+                                {
+                                    Monitor.PulseAll(signalObject);
+                                }
+                            }
+                        });
+                        CrackThreads[pos].Name = "Crack thread " + pos;
+                        CrackThreads[pos].Start();
+                    }
+
+                    /* releases lock of signalObject here */
                     Monitor.Wait(signalObject);
                 }
 

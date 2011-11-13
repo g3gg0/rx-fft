@@ -36,6 +36,8 @@ namespace RX_FFT
         /// </summary>
         private void InitializeComponent()
         {
+            LibRXFFT.Libraries.SignalProcessing.AttenuationCorrection attenuationCorrection1 = new LibRXFFT.Libraries.SignalProcessing.AttenuationCorrection();
+            LibRXFFT.Libraries.SignalProcessing.AttenuationCorrection attenuationCorrection2 = new LibRXFFT.Libraries.SignalProcessing.AttenuationCorrection();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.statusLabel = new System.Windows.Forms.ToolStripStatusLabel();
@@ -55,6 +57,7 @@ namespace RX_FFT
             this.openNetworkDeviceMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.openRandomDataMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.openUSRPMenu = new System.Windows.Forms.ToolStripMenuItem();
+            this.hiQSDRToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.pauseMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.saveMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.closeMenu = new System.Windows.Forms.ToolStripMenuItem();
@@ -108,7 +111,7 @@ namespace RX_FFT
             this.deviceInformationMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripContainer1 = new System.Windows.Forms.ToolStripContainer();
             this.FFTDisplay = new LibRXFFT.Components.DirectX.DirectXWaterfallFFTDisplay();
-            this.hiQSDRToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.trackPeaksItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip1.SuspendLayout();
             this.mainMenu.SuspendLayout();
             this.toolStripContainer1.ContentPanel.SuspendLayout();
@@ -302,6 +305,13 @@ namespace RX_FFT
             this.openUSRPMenu.Size = new System.Drawing.Size(250, 22);
             this.openUSRPMenu.Text = "USRP Device";
             this.openUSRPMenu.Click += new System.EventHandler(this.openUSRPMenu_Click);
+            // 
+            // hiQSDRToolStripMenuItem
+            // 
+            this.hiQSDRToolStripMenuItem.Name = "hiQSDRToolStripMenuItem";
+            this.hiQSDRToolStripMenuItem.Size = new System.Drawing.Size(250, 22);
+            this.hiQSDRToolStripMenuItem.Text = "HiQ-SDR";
+            this.hiQSDRToolStripMenuItem.Click += new System.EventHandler(this.openHiQSDRMenuItem_Click);
             // 
             // pauseMenu
             // 
@@ -537,7 +547,8 @@ namespace RX_FFT
             // averageSamplesToolStripMenuItem
             // 
             this.averageSamplesToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.averageSamplesText});
+            this.averageSamplesText,
+            this.trackPeaksItem});
             this.averageSamplesToolStripMenuItem.Name = "averageSamplesToolStripMenuItem";
             this.averageSamplesToolStripMenuItem.Size = new System.Drawing.Size(214, 22);
             this.averageSamplesToolStripMenuItem.Text = "Average Samples";
@@ -694,6 +705,7 @@ namespace RX_FFT
             this.FFTDisplay.Dock = System.Windows.Forms.DockStyle.Fill;
             this.FFTDisplay.DynamicLimits = false;
             this.FFTDisplay.FFTSize = 2048;
+            this.FFTDisplay.FilterCorrection = attenuationCorrection1;
             this.FFTDisplay.FitSpectrumEnabled = false;
             this.FFTDisplay.Interleaving = 1;
             this.FFTDisplay.LimiterColor = System.Drawing.Color.Green;
@@ -704,7 +716,9 @@ namespace RX_FFT
             this.FFTDisplay.LimiterUpperLimit = 0;
             this.FFTDisplay.Location = new System.Drawing.Point(0, 0);
             this.FFTDisplay.Name = "FFTDisplay";
+            this.FFTDisplay.ReceiverCorrection = attenuationCorrection2;
             this.FFTDisplay.SamplesToAverage = ((long)(1));
+            this.FFTDisplay.SampleValuesTrackPeaks = true;
             this.FFTDisplay.SamplingRate = 0;
             this.FFTDisplay.SavingEnabled = false;
             this.FFTDisplay.SavingName = "waterfall.png";
@@ -715,12 +729,12 @@ namespace RX_FFT
             this.FFTDisplay.VerticalSmooth = 1;
             this.FFTDisplay.WindowingFunction = LibRXFFT.Libraries.FFTW.FFTTransformer.eWindowingFunction.BlackmanHarris;
             // 
-            // hiQSDRToolStripMenuItem
+            // trackPeaksItem
             // 
-            this.hiQSDRToolStripMenuItem.Name = "hiQSDRToolStripMenuItem";
-            this.hiQSDRToolStripMenuItem.Size = new System.Drawing.Size(250, 22);
-            this.hiQSDRToolStripMenuItem.Text = "HiQ-SDR";
-            this.hiQSDRToolStripMenuItem.Click += new System.EventHandler(this.openHiQSDRMenuItem_Click);
+            this.trackPeaksItem.Name = "trackPeaksItem";
+            this.trackPeaksItem.Size = new System.Drawing.Size(160, 22);
+            this.trackPeaksItem.Text = "Track Peaks";
+            this.trackPeaksItem.Click += new System.EventHandler(this.trackPeaksItem_Click);
             // 
             // MainScreen
             // 
@@ -825,6 +839,7 @@ namespace RX_FFT
         private System.Windows.Forms.ToolStripMenuItem scanBandMenu;
         private System.Windows.Forms.ToolStripMenuItem openUSRPMenu;
         private System.Windows.Forms.ToolStripMenuItem hiQSDRToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem trackPeaksItem;
     }
 }
 

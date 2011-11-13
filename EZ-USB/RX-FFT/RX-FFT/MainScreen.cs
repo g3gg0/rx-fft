@@ -110,7 +110,6 @@ namespace RX_FFT
         public double LastSamplingRate = 48000;
         public long MouseDragStartFreq;
 
-
         private LinkedList<FrequencyMarker> ScanFrequencies = new LinkedList<FrequencyMarker>();
 
         public ShmemSampleSource AudioShmem;
@@ -679,6 +678,16 @@ namespace RX_FFT
                 FFTDisplay.SamplesToAverage = value;
             }
         }
+        
+        public bool SampleValuesTrackPeaks
+        {
+            get { return FFTDisplay.SampleValuesTrackPeaks; }
+            set
+            {
+                FFTDisplay.SampleValuesTrackPeaks = value;
+            }
+        }
+
 
         bool FitSpectrum
         {
@@ -769,10 +778,11 @@ namespace RX_FFT
 
                             long currentFreq = Device.GetFrequency();
                             long newFreq = currentFreq - (mouseFreq - MouseDragStartFreq);
+                            long freq = Math.Min(Device.HighestFrequency, Math.Max(0, newFreq));
 
                             //FFTDisplay.CenterFrequency = newFreq;
-                            CurrentFrequency = newFreq;
-                            CallScript("FrequencyChanged", newFreq);
+                            CurrentFrequency = freq;
+                            CallScript("FrequencyChanged", freq);
                         }
                     }
                     break;
@@ -781,7 +791,7 @@ namespace RX_FFT
                 case eUserEvent.MouseDoubleClickLeft:
                     if (Device != null)
                     {
-                        long freq = FFTDisplay.Frequency;
+                        long freq = Math.Min(Device.HighestFrequency, Math.Max(0, FFTDisplay.Frequency));
 
                         if (ScanFrequenciesEnabled)
                         {
@@ -809,46 +819,123 @@ namespace RX_FFT
                         menuItem.Enabled = false;
                         contextMenu.MenuItems.Add(menuItem);
 
-                        menuItem = new MenuItem("Send to Locator");
-                        menuItem.Click += (object sender, EventArgs e) => { CallScript("SendToLocator", freq); };
+                        menuItem = new MenuItem("Jump there");
+                        menuItem.Click += (object sender, EventArgs e) => 
+                        {
+                            if (Device != null)
+                            {
+                                if (ScanFrequenciesEnabled)
+                                {
+                                    ScanFrequenciesEnabled = false;
+                                }
+
+                                CurrentFrequency = freq;
+                                CallScript("FrequencyChanged", freq);
+                            }
+                        };
                         contextMenu.MenuItems.Add(menuItem);
 
                         menuItem = new MenuItem("Add Marker...");
                         menuItem.Click += (object sender, EventArgs e) => { AddMarker(freq); };
                         contextMenu.MenuItems.Add(menuItem);
 
+                        if (LuaContextEntries.Count > 0)
+                        {
+                            menuItem = new MenuItem("-");
+                            menuItem.Enabled = false;
+                            contextMenu.MenuItems.Add(menuItem);
+
+                            menuItem = new MenuItem("LUA scripts:");
+                            menuItem.Enabled = false;
+                            contextMenu.MenuItems.Add(menuItem);
+
+                            foreach (KeyValuePair<string, string> entry in LuaContextEntries)
+                            {
+                                string func = entry.Value;
+                                menuItem = new MenuItem("    " + entry.Key);
+                                menuItem.Click += (object sender, EventArgs e) => { CallScript(func, freq); };
+                                contextMenu.MenuItems.Add(menuItem);
+                            }
+                        }
+
                         menuItem = new MenuItem("-");
                         menuItem.Enabled = false;
                         contextMenu.MenuItems.Add(menuItem);
 
-                        menuItem = new MenuItem("Gradient");
+                        menuItem = new MenuItem("Waterfall colors:");
+                        menuItem.Enabled = false;
+                        contextMenu.MenuItems.Add(menuItem);
+
+                        menuItem = new MenuItem("     Gradient");
                         menuItem.Click += (object sender, EventArgs e) => 
                         {
                             ColorDialog dlg = new ColorDialog();
                             dlg.ShowDialog();
-
                             FFTDisplay.WaterfallDisplay.ColorTable = new ColorLookupTable(dlg.Color);
                         };
+                        menuItem.Checked = (FFTDisplay.WaterfallDisplay.ColorTable.GetType() == typeof(ColorLookupTable));
                         contextMenu.MenuItems.Add(menuItem);
 
-                        menuItem = new MenuItem("TriColor");
+                        menuItem = new MenuItem("     TriColor");
                         menuItem.Click += (object sender, EventArgs e) => { FFTDisplay.WaterfallDisplay.ColorTable = new MultiColorMap(8192, Color.Black, Color.FromArgb(0, 0, 128), Color.FromArgb(192, 0, 255), Color.White); };
+                        menuItem.Checked = (FFTDisplay.WaterfallDisplay.ColorTable.GetType() == typeof(MultiColorMap));
                         contextMenu.MenuItems.Add(menuItem);
 
-                        menuItem = new MenuItem("Pseudocolors");
+                        menuItem = new MenuItem("     Pseudocolors");
                         menuItem.Click += (object sender, EventArgs e) => { FFTDisplay.WaterfallDisplay.ColorTable = new HeatColors(8192); };
+                        menuItem.Checked = (FFTDisplay.WaterfallDisplay.ColorTable.GetType() == typeof(HeatColors));
                         contextMenu.MenuItems.Add(menuItem);
 
                         menuItem = new MenuItem("-");
                         menuItem.Enabled = false;
                         contextMenu.MenuItems.Add(menuItem);
 
-                        menuItem = new MenuItem("Save Profile");
-                        menuItem.Click += (object sender, EventArgs e) => { SaveProfile(); };
+                        menuItem = new MenuItem("Filter correction profile:");
+                        menuItem.Enabled = false;
                         contextMenu.MenuItems.Add(menuItem);
 
-                        menuItem = new MenuItem("Clear Profile");
+                        menuItem = new MenuItem("    Add current view to profile");
+                        menuItem.Click += (object sender, EventArgs e) => { ProfileApply(false); };
+                        contextMenu.MenuItems.Add(menuItem);
+
+                        menuItem = new MenuItem("    Load profile...");
+                        menuItem.Click += (object sender, EventArgs e) => { ProfileLoad(false); };
+                        contextMenu.MenuItems.Add(menuItem);
+
+                        menuItem = new MenuItem("    Save profile...");
+                        menuItem.Click += (object sender, EventArgs e) => { ProfileSave(false); }; 
+                        menuItem.Enabled = !FFTDisplay.FilterCorrection.Empty;
+                        contextMenu.MenuItems.Add(menuItem);
+
+                        menuItem = new MenuItem("    Clear profile");
                         menuItem.Click += (object sender, EventArgs e) => { FFTDisplay.FilterCorrection = new AttenuationCorrection(); };
+                        menuItem.Enabled = !FFTDisplay.FilterCorrection.Empty;
+                        contextMenu.MenuItems.Add(menuItem);
+
+                        menuItem = new MenuItem("-");
+                        menuItem.Enabled = false;
+                        contextMenu.MenuItems.Add(menuItem);
+
+                        menuItem = new MenuItem("Receiver correction profile:");
+                        menuItem.Enabled = false;
+                        contextMenu.MenuItems.Add(menuItem);
+
+                        menuItem = new MenuItem("    Add current view to profile");
+                        menuItem.Click += (object sender, EventArgs e) => { ProfileApply(true); };
+                        contextMenu.MenuItems.Add(menuItem);
+
+                        menuItem = new MenuItem("    Load profile...");
+                        menuItem.Click += (object sender, EventArgs e) => { ProfileLoad(true); };
+                        contextMenu.MenuItems.Add(menuItem);
+
+                        menuItem = new MenuItem("    Save profile...");
+                        menuItem.Click += (object sender, EventArgs e) => { ProfileSave(true); };
+                        menuItem.Enabled = !FFTDisplay.ReceiverCorrection.Empty;
+                        contextMenu.MenuItems.Add(menuItem);
+
+                        menuItem = new MenuItem("    Clear profile");
+                        menuItem.Click += (object sender, EventArgs e) => { FFTDisplay.ReceiverCorrection = new AttenuationCorrection(); };
+                        menuItem.Enabled = !FFTDisplay.ReceiverCorrection.Empty;
                         contextMenu.MenuItems.Add(menuItem);
 
                         Point popupPos = this.PointToClient(MousePosition);
@@ -861,7 +948,7 @@ namespace RX_FFT
             }
         }
 
-        private void SaveProfile()
+        private void ProfileApply(bool receiver)
         {
             CorrectionProfile profile = new CorrectionProfile();
 
@@ -875,14 +962,98 @@ namespace RX_FFT
                 maxValue = Math.Min(maxValue, points[pos].Y);
             }
 
-            for (int pos = 0; pos < points.Length; pos++)
+            if (receiver)
             {
-                profile.Add(new CorrectionProfilePoint((long)(pos * freqStep - rate / 2), maxValue - points[pos].Y));
+                for (int pos = 0; pos < points.Length; pos++)
+                {
+                    profile.Add(new CorrectionProfilePoint((long)(FFTDisplay.CenterFrequency + (pos * freqStep - rate / 2)), maxValue - points[pos].Y));
+                }
+
+                CorrectionProfile oldProfile = FFTDisplay.ReceiverCorrection.GetProfile();
+
+                CorrectionProfile merged = new CorrectionProfile(oldProfile, profile);
+                FFTDisplay.ReceiverCorrection = new AttenuationCorrection(merged);
+            }
+            else
+            {
+                for (int pos = 0; pos < points.Length; pos++)
+                {
+                    profile.Add(new CorrectionProfilePoint((long)(pos * freqStep - rate / 2), maxValue - points[pos].Y));
+                }
+
+                FFTDisplay.FilterCorrection = new AttenuationCorrection(profile);
+            }
+        }
+
+        private void ProfileSave(bool receiver)
+        {
+            if (FFTDisplay.FilterCorrection != null)
+            {
+                SaveFileDialog dlg = new SaveFileDialog();
+
+                if (receiver)
+                {
+                    dlg.Filter = "Receiver profiles (*.rpr)|*.rpr|All files (*.*)|*.*";
+                }
+                else
+                {
+                    dlg.Filter = "Filter profiles (*.fpr)|*.fpr|All files (*.*)|*.*";
+                }
+
+                if (dlg.ShowDialog() == DialogResult.OK)
+                {
+                    try
+                    {
+                        CorrectionProfile profile = null;
+                        if (receiver)
+                        {
+                            profile = FFTDisplay.ReceiverCorrection.GetProfile();
+                        }
+                        else
+                        {
+                            profile = FFTDisplay.FilterCorrection.GetProfile();
+                        }
+                        profile.Save(dlg.FileName);
+                    }
+                    catch (Exception e)
+                    {
+                        MessageBox.Show("Error occurred: " + e.GetType().ToString());
+                    }
+                }
+            }
+        }
+
+        private void ProfileLoad(bool receiver)
+        {
+            OpenFileDialog dlg = new OpenFileDialog();
+
+            if (receiver)
+            {
+                dlg.Filter = "Receiver profiles (*.rpr)|*.rpr|All files (*.*)|*.*";
+            }
+            else
+            {
+                dlg.Filter = "Filter profiles (*.fpr)|*.fpr|All files (*.*)|*.*";
             }
 
-            profile.Save("TestProfile.fpr.xml");
-
-            FFTDisplay.FilterCorrection = new AttenuationCorrection(profile);
+            if (dlg.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    if (receiver)
+                    {
+                        FFTDisplay.ReceiverCorrection = new AttenuationCorrection(dlg.FileName);
+                    }
+                    else
+                    {
+                        FFTDisplay.FilterCorrection = new AttenuationCorrection(dlg.FileName);
+                    }
+                }
+                catch (Exception e)
+                {
+                    MessageBox.Show("Error occurred: " + e.GetType().ToString());
+                }
+            }
         }
 
         private void AddMarker(long freq)
@@ -1671,8 +1842,7 @@ namespace RX_FFT
             saveMenu.Text = "Stop saving";
         }
 
-
-
+        private Dictionary<string, string> LuaContextEntries = new Dictionary<string, string>();
         private LinkedList<Script> RegisteredScripts = new LinkedList<Script>();
         private struct Script
         {
@@ -1785,6 +1955,18 @@ namespace RX_FFT
             return false;
         }
 
+        public void LuaAddContextMenuScript(string name, string function)
+        {
+            if (LuaContextEntries.ContainsKey(name))
+            {
+                LuaContextEntries[name] = function;
+            }
+            else
+            {
+                LuaContextEntries.Add(name, function);
+            }
+        }
+
         private void loadScriptMenu_Click(object sender, EventArgs e)
         {
             FileDialog dlg = new OpenFileDialog();
@@ -1808,7 +1990,6 @@ namespace RX_FFT
         {
             UnregisterScripts();
         }
-
 
     }
 }

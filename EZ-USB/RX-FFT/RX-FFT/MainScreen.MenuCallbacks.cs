@@ -378,14 +378,20 @@ namespace RX_FFT
             }
         }
 
+        private void trackPeaksItem_Click(object sender, EventArgs e)
+        {
+            trackPeaksItem.Checked ^= true;
+            SampleValuesTrackPeaks = trackPeaksItem.Checked;
+        }
+
         private void averageSamplesText_KeyPress(object sender, KeyPressEventArgs e)
         {
             if (e == null || e.KeyChar == 0x0D)
             {
-                int rate = 0;
-                if (TryParseMenuText(averageSamplesText, out rate))
+                int value = 0;
+                if (TryParseMenuText(averageSamplesText, out value))
                 {
-                    SamplesToAverage = rate;
+                    SamplesToAverage = value;
                     if (e != null)
                     {
                         e.Handled = true;

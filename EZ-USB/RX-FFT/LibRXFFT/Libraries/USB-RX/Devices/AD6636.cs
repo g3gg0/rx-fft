@@ -15,16 +15,17 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         private int CurrentChannel = 0;
         public bool AgcState = false;
 
-        private AD6636Interface Device;
+        public AD6636Interface Device;
         private double NCOMul;
         private long _NCOFreq;
         private long CachedRegister = 0;
 
         private FilterInformation CurrentFilter;
 
-
         private static int AD6636_REG_IOAC = 0x02;
         private static int AD6636_REG_IOAC_L = 1;
+        private static int AD6636_REG_MONA = 0x30;
+        private static int AD6636_REG_MONA_L = 3;
         private static int AD6636_REG_CEN = 0x03;
         private static int AD6636_REG_CEN_L = 1;
         private static int AD6636_REG_SOFTSYNC = 0x05;
@@ -178,7 +179,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             {
                 success &= this.Device.AD6636WriteReg(AD6636_REG_IOAC, AD6636_REG_IOAC_L, (1 << channel));
 
-                if (gain >= 0)
+                if (gain > 0)
                 {
                     int register = (int)FloatToRegister(96-gain, 4, 8, 6.02, 0.024);
 
@@ -194,7 +195,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                 }
                 else
                 {
-                    success &= this.Device.AD6636WriteReg(AD6636_REG_AGCCR, AD6636_REG_AGCCR_L, 0x040D);
+                    success &= this.Device.AD6636WriteReg(AD6636_REG_AGCCR, AD6636_REG_AGCCR_L, 0x0401);
                 }
 
                 AgcState = false;
@@ -228,6 +229,23 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             ulong mantValue = ((ulong)Math.Round(mant / mantSteps));
 
             return (exp << mantBits) | mantValue;
+        }
+
+        private double RegisterToFloat(ulong value, int expBits, int mantBits)
+        {
+            return RegisterToFloat(value, expBits, mantBits, 1.0, 1.0/(1<<mantBits) );
+        }
+
+
+        private double RegisterToFloat(ulong value, int expBits, int mantBits, double expSteps, double mantSteps)
+        {
+            ulong expMax = (ulong)(1 << expBits) - 1;
+            ulong mantMax = (ulong)(1 << mantBits) - 1;
+
+            ulong exp = (value >> mantBits) & expMax;
+            ulong mant = value & mantMax;
+
+            return exp * expSteps + mant * mantSteps;
         }
 
         public bool SetAgc()

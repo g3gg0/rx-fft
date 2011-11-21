@@ -97,7 +97,6 @@ namespace LibRXFFT.Components.DirectX
         /* if the fft data provided is already squared, set to true */
         public bool SquaredFFTData = false;
 
-
         /* the averaging value to smooth the displayed lines */
         public double VerticalSmooth = 1;
 

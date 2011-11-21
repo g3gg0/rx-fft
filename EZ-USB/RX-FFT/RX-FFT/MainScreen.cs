@@ -33,7 +33,7 @@ namespace RX_FFT
 {
     public partial class MainScreen : Form
     {
-
+        public static MainScreen Instance = null;
         public delegate DigitalTuner delegateGetTuner();
 
         bool WindowActivated = true;
@@ -133,12 +133,15 @@ namespace RX_FFT
         public DemodulatorDialog DemodulatorWindow = new DemodulatorDialog();
         public GSMAnalyzer GsmAnalyzerWindow = new GSMAnalyzer();
 
+        public LuaShell LuaShellWindow = null;
+
         public StaticText SignalOverLoad;
         public DockPanel RightDockPanel;
         public DockPanel LeftDockPanel;
         public DockPanel BottomDockPanel;
         public DockPanel TopDockPanel;
         public PowerBarDock SignalPowerBar;
+        
         public StaticTextDock StatusTextDock;
         public FFTAreaSelection AreaSelection;
 
@@ -155,6 +158,8 @@ namespace RX_FFT
 
         public MainScreen()
         {
+            Instance = this;
+
             InitializeComponent();
             
             Log.Init();
@@ -267,11 +272,12 @@ namespace RX_FFT
             FFTDisplay.DynamicLimits = true;
             DisplayFilterMargins = true;
 
+
+            LuaShellWindow = new LuaShell();
+            LuaShellWindow.RunCommand = LuaRunCommand;
             LuaHelpers.RegisterNamespace("DemodulatorCollection.Demodulators");
             LuaHelpers.RegisterNamespace("DemodulatorCollection.BitClockSinks");
             RegisterScript("startup.lua", true);
-
-
         }
 
         void AreaSelectionUpdate()
@@ -1852,6 +1858,13 @@ namespace RX_FFT
             public bool hidden;
         }
 
+
+        [AttrLuaFunc("print", "Print string into log window", new[] { "Text to print" })]
+        public static void LuaPrint(string text)
+        {
+            Instance.LuaShellWindow.AddMessage(text);
+        }
+
         private Script RegisterScript(string fileName)
         {
             return RegisterScript(fileName, false);
@@ -1874,6 +1887,7 @@ namespace RX_FFT
             RegisteredScripts.AddLast(script);
 
             LuaHelpers.RegisterLuaFunctions(script.luaVm, new LuaHelpers());
+            /* override e.g. print */
             LuaHelpers.RegisterLuaFunctions(script.luaVm, this);
 
             try
@@ -1885,7 +1899,7 @@ namespace RX_FFT
                 }
                 catch (Exception e)
                 {
-                    Log.AddMessage("Failed to init LUA Script: " + e.ToString());
+                    LuaShellWindow.AddMessage("Failed to init LUA Script: " + e.ToString());
                 }
             }
             catch (Exception e)
@@ -1893,6 +1907,30 @@ namespace RX_FFT
             }
 
             return script;
+        }
+
+
+        private void ReloadScriptsMenu_Click(object sender, EventArgs e)
+        {
+            LinkedList<Script> tempList = new LinkedList<Script>();
+
+            foreach (Script script in RegisteredScripts)
+            {
+                if (!script.hidden)
+                {
+                    tempList.AddLast(script);
+                }
+            }
+
+            foreach (Script script in tempList)
+            {
+                UnregisterScript(script);
+            }
+
+            foreach (Script script in tempList)
+            {
+                RegisterScript(script.fileName, script.hidden);
+            }
         }
 
         private void UnregisterScripts()
@@ -1929,9 +1967,25 @@ namespace RX_FFT
             }
             catch (Exception e)
             {
-                Log.AddMessage("Failed to unregister LUA Script '" + script.fileName + "': " + e.ToString());
+                LuaShellWindow.AddMessage("Failed to unregister LUA Script '" + script.fileName + "': " + e.ToString());
             }
 
+            return false;
+        }
+
+        private bool LuaRunCommand(string command)
+        {
+            foreach (Script script in RegisteredScripts)
+            {
+                try
+                {
+                    script.luaVm.DoString(command);
+                    return true;
+                }
+                catch (Exception e)
+                {
+                }
+            }
             return false;
         }
 
@@ -1949,7 +2003,7 @@ namespace RX_FFT
                 }
                 catch (Exception e)
                 {
-                    Log.AddMessage("Failed to call '" + function + "' in script '" + script.fileName + "': " + e.ToString());
+                    LuaShellWindow.AddMessage("Failed to call '" + function + "' in script '" + script.fileName + "': " + e.ToString());
                 }
             }
             return false;
@@ -1991,5 +2045,28 @@ namespace RX_FFT
             UnregisterScripts();
         }
 
+
+        private void ScriptShellMenu_Click(object sender, EventArgs e)
+        {
+            if (LuaShellWindow != null )
+            {
+                if (LuaShellWindow.IsDisposed)
+                {
+                    LuaShellWindow = null;
+                }
+                else
+                {
+                    LuaShellWindow.Show();
+                    return;
+                }
+            }
+            
+            if (LuaShellWindow == null)
+            {
+                LuaShellWindow = new LuaShell();
+                LuaShellWindow.RunCommand = LuaRunCommand;
+                LuaShellWindow.Show();
+            }
+        }
     }
 }

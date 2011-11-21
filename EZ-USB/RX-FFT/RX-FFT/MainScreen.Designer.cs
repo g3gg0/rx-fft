@@ -74,6 +74,7 @@ namespace RX_FFT
             this.unloadScriptToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.unloadAllMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator7 = new System.Windows.Forms.ToolStripSeparator();
+            this.ScriptShellMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
             this.quitMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator6 = new System.Windows.Forms.ToolStripSeparator();
@@ -92,6 +93,7 @@ namespace RX_FFT
             this.updateRateText = new System.Windows.Forms.ToolStripTextBox();
             this.averageSamplesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.averageSamplesText = new System.Windows.Forms.ToolStripTextBox();
+            this.trackPeaksItem = new System.Windows.Forms.ToolStripMenuItem();
             this.verticalSmoothMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.verticalSmoothMenuText = new System.Windows.Forms.ToolStripTextBox();
             this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
@@ -111,7 +113,7 @@ namespace RX_FFT
             this.deviceInformationMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripContainer1 = new System.Windows.Forms.ToolStripContainer();
             this.FFTDisplay = new LibRXFFT.Components.DirectX.DirectXWaterfallFFTDisplay();
-            this.trackPeaksItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.ReloadScriptsMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip1.SuspendLayout();
             this.mainMenu.SuspendLayout();
             this.toolStripContainer1.ContentPanel.SuspendLayout();
@@ -234,7 +236,9 @@ namespace RX_FFT
             this.markersMenu,
             this.toolStripSeparator2,
             this.loadScriptMenu,
+            this.ReloadScriptsMenu,
             this.unloadScriptToolStripMenuItem,
+            this.ScriptShellMenu,
             this.toolStripSeparator5,
             this.quitMenu,
             this.toolStripSeparator6});
@@ -410,14 +414,21 @@ namespace RX_FFT
             // unloadAllMenu
             // 
             this.unloadAllMenu.Name = "unloadAllMenu";
-            this.unloadAllMenu.Size = new System.Drawing.Size(127, 22);
+            this.unloadAllMenu.Size = new System.Drawing.Size(152, 22);
             this.unloadAllMenu.Text = "Unload all";
             this.unloadAllMenu.Click += new System.EventHandler(this.unloadAllMenu_Click);
             // 
             // toolStripSeparator7
             // 
             this.toolStripSeparator7.Name = "toolStripSeparator7";
-            this.toolStripSeparator7.Size = new System.Drawing.Size(124, 6);
+            this.toolStripSeparator7.Size = new System.Drawing.Size(149, 6);
+            // 
+            // ScriptShellMenu
+            // 
+            this.ScriptShellMenu.Name = "ScriptShellMenu";
+            this.ScriptShellMenu.Size = new System.Drawing.Size(191, 22);
+            this.ScriptShellMenu.Text = "Script Shell...";
+            this.ScriptShellMenu.Click += new System.EventHandler(this.ScriptShellMenu_Click);
             // 
             // toolStripSeparator5
             // 
@@ -558,6 +569,13 @@ namespace RX_FFT
             this.averageSamplesText.Name = "averageSamplesText";
             this.averageSamplesText.Size = new System.Drawing.Size(100, 23);
             this.averageSamplesText.Text = "4";
+            // 
+            // trackPeaksItem
+            // 
+            this.trackPeaksItem.Name = "trackPeaksItem";
+            this.trackPeaksItem.Size = new System.Drawing.Size(160, 22);
+            this.trackPeaksItem.Text = "Track Peaks";
+            this.trackPeaksItem.Click += new System.EventHandler(this.trackPeaksItem_Click);
             // 
             // verticalSmoothMenu
             // 
@@ -729,12 +747,12 @@ namespace RX_FFT
             this.FFTDisplay.VerticalSmooth = 1;
             this.FFTDisplay.WindowingFunction = LibRXFFT.Libraries.FFTW.FFTTransformer.eWindowingFunction.BlackmanHarris;
             // 
-            // trackPeaksItem
+            // ReloadScriptsMenu
             // 
-            this.trackPeaksItem.Name = "trackPeaksItem";
-            this.trackPeaksItem.Size = new System.Drawing.Size(160, 22);
-            this.trackPeaksItem.Text = "Track Peaks";
-            this.trackPeaksItem.Click += new System.EventHandler(this.trackPeaksItem_Click);
+            this.ReloadScriptsMenu.Name = "ReloadScriptsMenu";
+            this.ReloadScriptsMenu.Size = new System.Drawing.Size(191, 22);
+            this.ReloadScriptsMenu.Text = "Reload Scripts";
+            this.ReloadScriptsMenu.Click += new System.EventHandler(this.ReloadScriptsMenu_Click);
             // 
             // MainScreen
             // 
@@ -840,6 +858,8 @@ namespace RX_FFT
         private System.Windows.Forms.ToolStripMenuItem openUSRPMenu;
         private System.Windows.Forms.ToolStripMenuItem hiQSDRToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem trackPeaksItem;
+        private System.Windows.Forms.ToolStripMenuItem ScriptShellMenu;
+        private System.Windows.Forms.ToolStripMenuItem ReloadScriptsMenu;
     }
 }
 

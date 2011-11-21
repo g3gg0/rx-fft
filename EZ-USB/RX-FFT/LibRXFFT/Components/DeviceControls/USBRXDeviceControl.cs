@@ -16,7 +16,7 @@ namespace LibRXFFT.Components.DeviceControls
 {
     public partial class USBRXDeviceControl : Form, DeviceControl
     {
-        private USBRXDevice USBRX;
+        public USBRXDevice USBRX;
         private SampleSource _SampleSource;
         private int BytesPerSamplePair = 4;
         private bool ClosingAllowed = false;
@@ -230,6 +230,7 @@ namespace LibRXFFT.Components.DeviceControls
         {
             SelectFiles(false);
         }
+
 
         #region DigitalTuner Member
 

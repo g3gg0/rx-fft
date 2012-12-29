@@ -38,6 +38,7 @@ namespace RX_FFT
         {
             LibRXFFT.Libraries.SignalProcessing.AttenuationCorrection attenuationCorrection1 = new LibRXFFT.Libraries.SignalProcessing.AttenuationCorrection();
             LibRXFFT.Libraries.SignalProcessing.AttenuationCorrection attenuationCorrection2 = new LibRXFFT.Libraries.SignalProcessing.AttenuationCorrection();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainScreen));
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.statusLabel = new System.Windows.Forms.ToolStripStatusLabel();
@@ -71,6 +72,7 @@ namespace RX_FFT
             this.markersMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.loadScriptMenu = new System.Windows.Forms.ToolStripMenuItem();
+            this.ReloadScriptsMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.unloadScriptToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.unloadAllMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator7 = new System.Windows.Forms.ToolStripSeparator();
@@ -113,11 +115,25 @@ namespace RX_FFT
             this.deviceInformationMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripContainer1 = new System.Windows.Forms.ToolStripContainer();
             this.FFTDisplay = new LibRXFFT.Components.DirectX.DirectXWaterfallFFTDisplay();
-            this.ReloadScriptsMenu = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuButtons = new System.Windows.Forms.ToolStrip();
+            this.btnOpenDevice = new System.Windows.Forms.ToolStripButton();
+            this.btnCloseDevice = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator9 = new System.Windows.Forms.ToolStripSeparator();
+            this.btnStartScope = new System.Windows.Forms.ToolStripButton();
+            this.btnStartGsmAnalyzer = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator10 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripSplitButton1 = new System.Windows.Forms.ToolStripSplitButton();
+            this.menuFft512 = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuFft1024 = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuFft2048 = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuFft4096 = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuFft8192 = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip1.SuspendLayout();
             this.mainMenu.SuspendLayout();
             this.toolStripContainer1.ContentPanel.SuspendLayout();
+            this.toolStripContainer1.TopToolStripPanel.SuspendLayout();
             this.toolStripContainer1.SuspendLayout();
+            this.menuButtons.SuspendLayout();
             this.SuspendLayout();
             // 
             // statusStrip1
@@ -265,14 +281,14 @@ namespace RX_FFT
             // 
             this.openBO35Menu.Name = "openBO35Menu";
             this.openBO35Menu.Size = new System.Drawing.Size(250, 22);
-            this.openBO35Menu.Text = "BO-35digi";
+            this.openBO35Menu.Text = "USB-RX";
             this.openBO35Menu.Click += new System.EventHandler(this.openBO35Menu_Click);
             // 
             // openBO35PlainMenu
             // 
             this.openBO35PlainMenu.Name = "openBO35PlainMenu";
             this.openBO35PlainMenu.Size = new System.Drawing.Size(250, 22);
-            this.openBO35PlainMenu.Text = "BO-35digi (autodetect ext. Tuner)";
+            this.openBO35PlainMenu.Text = "USB-RX (autodetect ext. Tuner)";
             this.openBO35PlainMenu.Click += new System.EventHandler(this.openBO35PlainMenu_Click);
             // 
             // openFileMenu
@@ -402,6 +418,13 @@ namespace RX_FFT
             this.loadScriptMenu.Text = "Load Script...";
             this.loadScriptMenu.Click += new System.EventHandler(this.loadScriptMenu_Click);
             // 
+            // ReloadScriptsMenu
+            // 
+            this.ReloadScriptsMenu.Name = "ReloadScriptsMenu";
+            this.ReloadScriptsMenu.Size = new System.Drawing.Size(191, 22);
+            this.ReloadScriptsMenu.Text = "Reload Scripts";
+            this.ReloadScriptsMenu.Click += new System.EventHandler(this.ReloadScriptsMenu_Click);
+            // 
             // unloadScriptToolStripMenuItem
             // 
             this.unloadScriptToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -414,14 +437,14 @@ namespace RX_FFT
             // unloadAllMenu
             // 
             this.unloadAllMenu.Name = "unloadAllMenu";
-            this.unloadAllMenu.Size = new System.Drawing.Size(152, 22);
+            this.unloadAllMenu.Size = new System.Drawing.Size(127, 22);
             this.unloadAllMenu.Text = "Unload all";
             this.unloadAllMenu.Click += new System.EventHandler(this.unloadAllMenu_Click);
             // 
             // toolStripSeparator7
             // 
             this.toolStripSeparator7.Name = "toolStripSeparator7";
-            this.toolStripSeparator7.Size = new System.Drawing.Size(149, 6);
+            this.toolStripSeparator7.Size = new System.Drawing.Size(124, 6);
             // 
             // ScriptShellMenu
             // 
@@ -707,13 +730,17 @@ namespace RX_FFT
             // toolStripContainer1.ContentPanel
             // 
             this.toolStripContainer1.ContentPanel.Controls.Add(this.FFTDisplay);
-            this.toolStripContainer1.ContentPanel.Size = new System.Drawing.Size(924, 335);
+            this.toolStripContainer1.ContentPanel.Size = new System.Drawing.Size(924, 329);
             this.toolStripContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.toolStripContainer1.Location = new System.Drawing.Point(0, 24);
             this.toolStripContainer1.Name = "toolStripContainer1";
             this.toolStripContainer1.Size = new System.Drawing.Size(924, 360);
             this.toolStripContainer1.TabIndex = 8;
             this.toolStripContainer1.Text = "toolStripContainer1";
+            // 
+            // toolStripContainer1.TopToolStripPanel
+            // 
+            this.toolStripContainer1.TopToolStripPanel.Controls.Add(this.menuButtons);
             // 
             // FFTDisplay
             // 
@@ -740,19 +767,131 @@ namespace RX_FFT
             this.FFTDisplay.SamplingRate = 0;
             this.FFTDisplay.SavingEnabled = false;
             this.FFTDisplay.SavingName = "waterfall.png";
-            this.FFTDisplay.Size = new System.Drawing.Size(924, 335);
+            this.FFTDisplay.Size = new System.Drawing.Size(924, 329);
             this.FFTDisplay.SpectParts = 1;
             this.FFTDisplay.TabIndex = 0;
             this.FFTDisplay.UpdateRate = 10;
             this.FFTDisplay.VerticalSmooth = 1;
             this.FFTDisplay.WindowingFunction = LibRXFFT.Libraries.FFTW.FFTTransformer.eWindowingFunction.BlackmanHarris;
             // 
-            // ReloadScriptsMenu
+            // menuButtons
             // 
-            this.ReloadScriptsMenu.Name = "ReloadScriptsMenu";
-            this.ReloadScriptsMenu.Size = new System.Drawing.Size(191, 22);
-            this.ReloadScriptsMenu.Text = "Reload Scripts";
-            this.ReloadScriptsMenu.Click += new System.EventHandler(this.ReloadScriptsMenu_Click);
+            this.menuButtons.AutoSize = false;
+            this.menuButtons.Dock = System.Windows.Forms.DockStyle.None;
+            this.menuButtons.ImageScalingSize = new System.Drawing.Size(24, 24);
+            this.menuButtons.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.btnOpenDevice,
+            this.btnCloseDevice,
+            this.toolStripSeparator9,
+            this.btnStartScope,
+            this.btnStartGsmAnalyzer,
+            this.toolStripSeparator10,
+            this.toolStripSplitButton1});
+            this.menuButtons.Location = new System.Drawing.Point(0, 0);
+            this.menuButtons.MinimumSize = new System.Drawing.Size(0, 0);
+            this.menuButtons.Name = "menuButtons";
+            this.menuButtons.Size = new System.Drawing.Size(924, 31);
+            this.menuButtons.Stretch = true;
+            this.menuButtons.TabIndex = 0;
+            // 
+            // btnOpenDevice
+            // 
+            this.btnOpenDevice.Image = ((System.Drawing.Image)(resources.GetObject("btnOpenDevice.Image")));
+            this.btnOpenDevice.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnOpenDevice.Name = "btnOpenDevice";
+            this.btnOpenDevice.Size = new System.Drawing.Size(102, 28);
+            this.btnOpenDevice.Text = "Open Device";
+            this.btnOpenDevice.Click += new System.EventHandler(this.btnOpenDevice_Click);
+            // 
+            // btnCloseDevice
+            // 
+            this.btnCloseDevice.Enabled = false;
+            this.btnCloseDevice.Image = ((System.Drawing.Image)(resources.GetObject("btnCloseDevice.Image")));
+            this.btnCloseDevice.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnCloseDevice.Name = "btnCloseDevice";
+            this.btnCloseDevice.Size = new System.Drawing.Size(102, 28);
+            this.btnCloseDevice.Text = "Close Device";
+            this.btnCloseDevice.Click += new System.EventHandler(this.btnCloseDevice_Click);
+            // 
+            // toolStripSeparator9
+            // 
+            this.toolStripSeparator9.Name = "toolStripSeparator9";
+            this.toolStripSeparator9.Size = new System.Drawing.Size(6, 31);
+            // 
+            // btnStartScope
+            // 
+            this.btnStartScope.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnStartScope.Image = ((System.Drawing.Image)(resources.GetObject("btnStartScope.Image")));
+            this.btnStartScope.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnStartScope.Name = "btnStartScope";
+            this.btnStartScope.Size = new System.Drawing.Size(28, 28);
+            this.btnStartScope.Text = "Oscilloscope";
+            this.btnStartScope.Click += new System.EventHandler(this.btnStartScope_Click);
+            // 
+            // btnStartGsmAnalyzer
+            // 
+            this.btnStartGsmAnalyzer.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnStartGsmAnalyzer.Image = ((System.Drawing.Image)(resources.GetObject("btnStartGsmAnalyzer.Image")));
+            this.btnStartGsmAnalyzer.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnStartGsmAnalyzer.Name = "btnStartGsmAnalyzer";
+            this.btnStartGsmAnalyzer.Size = new System.Drawing.Size(28, 28);
+            this.btnStartGsmAnalyzer.Text = "GSM Analyzer";
+            this.btnStartGsmAnalyzer.Click += new System.EventHandler(this.btnStartGsmAnalyzer_Click);
+            // 
+            // toolStripSeparator10
+            // 
+            this.toolStripSeparator10.Name = "toolStripSeparator10";
+            this.toolStripSeparator10.Size = new System.Drawing.Size(6, 31);
+            // 
+            // toolStripSplitButton1
+            // 
+            this.toolStripSplitButton1.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripSplitButton1.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.menuFft512,
+            this.menuFft1024,
+            this.menuFft2048,
+            this.menuFft4096,
+            this.menuFft8192});
+            this.toolStripSplitButton1.Image = ((System.Drawing.Image)(resources.GetObject("toolStripSplitButton1.Image")));
+            this.toolStripSplitButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripSplitButton1.Name = "toolStripSplitButton1";
+            this.toolStripSplitButton1.Size = new System.Drawing.Size(40, 28);
+            this.toolStripSplitButton1.Text = "toolStripSplitButton1";
+            // 
+            // menuFft512
+            // 
+            this.menuFft512.Name = "menuFft512";
+            this.menuFft512.Size = new System.Drawing.Size(98, 22);
+            this.menuFft512.Text = "512";
+            this.menuFft512.Click += new System.EventHandler(this.menuFft512_Click);
+            // 
+            // menuFft1024
+            // 
+            this.menuFft1024.Name = "menuFft1024";
+            this.menuFft1024.Size = new System.Drawing.Size(98, 22);
+            this.menuFft1024.Text = "1024";
+            this.menuFft1024.Click += new System.EventHandler(this.menuFft1024_Click);
+            // 
+            // menuFft2048
+            // 
+            this.menuFft2048.Name = "menuFft2048";
+            this.menuFft2048.Size = new System.Drawing.Size(98, 22);
+            this.menuFft2048.Text = "2048";
+            this.menuFft2048.Click += new System.EventHandler(this.menuFft2048_Click);
+            // 
+            // menuFft4096
+            // 
+            this.menuFft4096.Name = "menuFft4096";
+            this.menuFft4096.Size = new System.Drawing.Size(98, 22);
+            this.menuFft4096.Text = "4096";
+            this.menuFft4096.Click += new System.EventHandler(this.menuFft4096_Click);
+            // 
+            // menuFft8192
+            // 
+            this.menuFft8192.Name = "menuFft8192";
+            this.menuFft8192.Size = new System.Drawing.Size(98, 22);
+            this.menuFft8192.Text = "8192";
+            this.menuFft8192.Click += new System.EventHandler(this.menuFft8192_Click);
             // 
             // MainScreen
             // 
@@ -763,6 +902,7 @@ namespace RX_FFT
             this.Controls.Add(this.toolStripContainer1);
             this.Controls.Add(this.mainMenu);
             this.Controls.Add(this.statusStrip1);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "MainScreen";
             this.Text = "RX-FFT";
             this.statusStrip1.ResumeLayout(false);
@@ -770,8 +910,11 @@ namespace RX_FFT
             this.mainMenu.ResumeLayout(false);
             this.mainMenu.PerformLayout();
             this.toolStripContainer1.ContentPanel.ResumeLayout(false);
+            this.toolStripContainer1.TopToolStripPanel.ResumeLayout(false);
             this.toolStripContainer1.ResumeLayout(false);
             this.toolStripContainer1.PerformLayout();
+            this.menuButtons.ResumeLayout(false);
+            this.menuButtons.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -860,6 +1003,19 @@ namespace RX_FFT
         private System.Windows.Forms.ToolStripMenuItem trackPeaksItem;
         private System.Windows.Forms.ToolStripMenuItem ScriptShellMenu;
         private System.Windows.Forms.ToolStripMenuItem ReloadScriptsMenu;
+        private System.Windows.Forms.ToolStrip menuButtons;
+        private System.Windows.Forms.ToolStripButton btnOpenDevice;
+        private System.Windows.Forms.ToolStripButton btnCloseDevice;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator9;
+        private System.Windows.Forms.ToolStripButton btnStartScope;
+        private System.Windows.Forms.ToolStripButton btnStartGsmAnalyzer;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator10;
+        private System.Windows.Forms.ToolStripSplitButton toolStripSplitButton1;
+        private System.Windows.Forms.ToolStripMenuItem menuFft512;
+        private System.Windows.Forms.ToolStripMenuItem menuFft1024;
+        private System.Windows.Forms.ToolStripMenuItem menuFft2048;
+        private System.Windows.Forms.ToolStripMenuItem menuFft4096;
+        private System.Windows.Forms.ToolStripMenuItem menuFft8192;
     }
 }
 

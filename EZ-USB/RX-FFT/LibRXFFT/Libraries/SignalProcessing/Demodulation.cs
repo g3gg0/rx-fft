@@ -38,7 +38,7 @@ namespace LibRXFFT.Libraries.SignalProcessing
         {
             get
             {
-                return InputRate / AudioDecimation / InputSignalDecimation;
+                return InputRate / InputSignalDecimation / AudioDecimation;
             }
         }
 
@@ -85,6 +85,8 @@ namespace LibRXFFT.Libraries.SignalProcessing
         public Demodulator SignalDemodulator = new AMDemodulator();
         public Downmixer DemodulationDownmixer = new Downmixer();
         public Downmixer SSBDownmixer = new Downmixer();
+        public Filter SSBLowPassI = new FIRFilter(FIRCoefficients.FIRLowPass_2);
+        public Filter SSBLowPassQ = new FIRFilter(FIRCoefficients.FIRLowPass_2);
 
         public DemodFFTView DemodView = null;
 
@@ -95,6 +97,8 @@ namespace LibRXFFT.Libraries.SignalProcessing
         public eSquelchState SquelchState = eSquelchState.Open;
         public long SquelchSampleCounter = 0;
         public long SquelchSampleCount = 50;
+
+
 
         public bool AudioLowPassEnabled = false;
         public int AudioLowPassWidthFract = 2;
@@ -113,28 +117,31 @@ namespace LibRXFFT.Libraries.SignalProcessing
             }
         }
 
-        public bool CursorPositionWindowEnabled = false;
-        public int CursorWindowFilterWidthFract = 2;
+        public bool BandwidthLimiter = false;
+        public int BandwidthLimiterFract = 1;
+
+        public int DemodulatorFiltering
+        {
+            get
+            {
+                if (SignalDemodulator is SSBDemodulator)
+                {
+                    return 2;
+                }
+                else
+                {
+                    return 1;
+                }
+            }
+        }
         public int InputSignalDecimation
         {
             get
             {
-                if (!CursorPositionWindowEnabled)
+                if (!BandwidthLimiter)
                     return 1;
 
-                if (CursorWindowFilterWidthFract > 1)
-                {
-                    if (SignalDemodulator is SSBDemodulator)
-                    {
-                        return CursorWindowFilterWidthFract / 2;
-                    }
-                    else
-                    {
-                        return CursorWindowFilterWidthFract;
-                    }
-                }
-
-                return 1;
+                return BandwidthLimiterFract;
             }
         }
 
@@ -282,7 +289,7 @@ namespace LibRXFFT.Libraries.SignalProcessing
 
     public struct SoundSinkInfo
     {
-        public TabPage Page;
+        public SinkTab Page;
         public SoundSink Sink;
         public DemodulationDialog DemodDialog;
     }

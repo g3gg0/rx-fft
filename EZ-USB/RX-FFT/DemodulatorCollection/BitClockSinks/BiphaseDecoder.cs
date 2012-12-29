@@ -21,6 +21,8 @@ namespace DemodulatorCollection.BitClockSinks
         private bool LastBitState = false;
         private bool PositivePhase = false;
 
+        public bool Verbose = true;
+
         public BitClockSink BitSink { get; set; }
 
         public void Synchronize(bool positivePhase)
@@ -47,7 +49,10 @@ namespace DemodulatorCollection.BitClockSinks
                         /* the phase depends on the current state */
                         PositivePhase = state;
 
-                        Log.AddMessage("BiphaseDecoder", "Synchronized.");
+                        if (Verbose)
+                        {
+                            Log.AddMessage("BiphaseDecoder", "Synchronized.");
+                        }
                         BitSink.Resynchronized();
                         BitSink.ClockBit(false);
                         State = eLearnState.ProcessingBit1;
@@ -68,7 +73,11 @@ namespace DemodulatorCollection.BitClockSinks
                     {
                         if (PositivePhase == state)
                         {
-                            Log.AddMessage("BiphaseDecoder", "Decoding failed. Resynchronizing.");
+                            if (Verbose)
+                            {
+                                Log.AddMessage("BiphaseDecoder", "Decoding failed. Resynchronizing.");
+                            }
+                            BitSink.Desynchronized();
                             State = eLearnState.Idle;
                             return;
                         }
@@ -82,7 +91,11 @@ namespace DemodulatorCollection.BitClockSinks
                     {
                         if (PositivePhase != state)
                         {
-                            Log.AddMessage("BiphaseDecoder", "Decoding failed. Resynchronizing.");
+                            if (Verbose)
+                            {
+                                Log.AddMessage("BiphaseDecoder", "Decoding failed. Resynchronizing.");
+                            }
+                            BitSink.Desynchronized();
                             State = eLearnState.Idle;
                             return;
                         }
@@ -99,6 +112,10 @@ namespace DemodulatorCollection.BitClockSinks
         public void Resynchronized()
         {
             State = eLearnState.Idle;
+        }
+
+        public void Desynchronized()
+        {
         }
 
         public void TransmissionStart()

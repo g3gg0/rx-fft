@@ -15,12 +15,14 @@ namespace LibRXFFT.Libraries.SoundSinks
         private DXSoundDevice SoundDevice = null;
         private Guid SelectedDevice = Guid.Empty;
         private SoundCardSinkControl Control = null;
+        private Control DisplayControl = null;
 
         public SoundCardSink(Control displayControl)
         {
             Control = new SoundCardSinkControl(this);
             Control.Dock = DockStyle.Fill;
-            displayControl.Controls.Add(Control);
+            DisplayControl = displayControl;
+            DisplayControl.Controls.Add(Control);
         }
 
         public DeviceInfo[] GetDevices()

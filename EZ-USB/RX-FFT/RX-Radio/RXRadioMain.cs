@@ -62,7 +62,7 @@ namespace RX_Radio
                 {
                     if (!device.Init())
                     {
-                        ErrorMessage = "There was no BO-35digi found on USB bus.";
+                        ErrorMessage = "There was no USB-RX found on USB bus.";
                         return;
                     }
                 }

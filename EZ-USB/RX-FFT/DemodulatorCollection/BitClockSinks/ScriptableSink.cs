@@ -85,6 +85,11 @@ namespace DemodulatorCollection.BitClockSinks
             CallFunction("Resynchronized");
         }
 
+        public void Desynchronized()
+        {
+            CallFunction("Desynchronized");
+        }
+
         public void TransmissionStart()
         {
             CallFunction("TransmissionStart");

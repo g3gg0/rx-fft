@@ -49,7 +49,7 @@
             this.lstDevice.FormattingEnabled = true;
             this.lstDevice.Location = new System.Drawing.Point(0, 0);
             this.lstDevice.Name = "lstDevice";
-            this.lstDevice.Size = new System.Drawing.Size(527, 21);
+            this.lstDevice.Size = new System.Drawing.Size(625, 21);
             this.lstDevice.TabIndex = 0;
             this.lstDevice.SelectedIndexChanged += new System.EventHandler(this.lstDevice_SelectedIndexChanged);
             // 
@@ -77,6 +77,7 @@
             // 
             this.splitContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.splitContainer2.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
+            this.splitContainer2.IsSplitterFixed = true;
             this.splitContainer2.Location = new System.Drawing.Point(0, 0);
             this.splitContainer2.Name = "splitContainer2";
             // 
@@ -88,17 +89,21 @@
             // 
             this.splitContainer2.Panel2.Controls.Add(this.btnClearPlot);
             this.splitContainer2.Size = new System.Drawing.Size(657, 25);
-            this.splitContainer2.SplitterDistance = 527;
+            this.splitContainer2.SplitterDistance = 625;
             this.splitContainer2.TabIndex = 2;
             // 
             // btnClearPlot
             // 
-            this.btnClearPlot.Dock = System.Windows.Forms.DockStyle.Left;
-            this.btnClearPlot.Location = new System.Drawing.Point(0, 0);
+            this.btnClearPlot.AutoSize = true;
+            this.btnClearPlot.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.btnClearPlot.Dock = System.Windows.Forms.DockStyle.Right;
+            this.btnClearPlot.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnClearPlot.Location = new System.Drawing.Point(2, 0);
+            this.btnClearPlot.Margin = new System.Windows.Forms.Padding(0);
             this.btnClearPlot.Name = "btnClearPlot";
-            this.btnClearPlot.Size = new System.Drawing.Size(75, 25);
+            this.btnClearPlot.Size = new System.Drawing.Size(26, 25);
             this.btnClearPlot.TabIndex = 1;
-            this.btnClearPlot.Text = "Clear Plots";
+            this.btnClearPlot.Text = "C";
             this.btnClearPlot.UseVisualStyleBackColor = true;
             this.btnClearPlot.Click += new System.EventHandler(this.btnClearPlot_Click);
             // 
@@ -149,6 +154,7 @@
             this.splitContainer1.ResumeLayout(false);
             this.splitContainer2.Panel1.ResumeLayout(false);
             this.splitContainer2.Panel2.ResumeLayout(false);
+            this.splitContainer2.Panel2.PerformLayout();
             this.splitContainer2.ResumeLayout(false);
             this.groupBox1.ResumeLayout(false);
             this.ResumeLayout(false);

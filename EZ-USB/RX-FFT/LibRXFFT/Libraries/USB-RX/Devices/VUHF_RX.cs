@@ -188,7 +188,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         {
             get
             {
-                return false;
+                return true;
             }
         }
 

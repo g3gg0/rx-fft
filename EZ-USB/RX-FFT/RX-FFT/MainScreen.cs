@@ -129,9 +129,9 @@ namespace RX_FFT
         public PerformaceStatsDialog StatsDialog;
         public AudioDemodulator.PerformanceEnvelope PerformanceCounters = new LibRXFFT.Libraries.SignalProcessing.AudioDemodulator.PerformanceEnvelope();
 
-        public RXOscilloscope OscilloscopeWindow = new RXOscilloscope();
         public DemodulatorDialog DemodulatorWindow = new DemodulatorDialog();
-        public GSMAnalyzer GsmAnalyzerWindow = new GSMAnalyzer();
+        public RXOscilloscope OscilloscopeWindow = null;
+        public GSMAnalyzer GsmAnalyzerWindow = null;
 
         public LuaShell LuaShellWindow = null;
 
@@ -259,6 +259,7 @@ namespace RX_FFT
             }
 
             ToolStripManager.LoadSettings(this);
+            menuButtons.Show();
 
             StatusUpdateTimer = new Timer(StatusUpdateTimerFunc, null, 500, 500);
 
@@ -272,12 +273,12 @@ namespace RX_FFT
             FFTDisplay.DynamicLimits = true;
             DisplayFilterMargins = true;
 
-
             LuaShellWindow = new LuaShell();
             LuaShellWindow.RunCommand = LuaRunCommand;
             LuaHelpers.RegisterNamespace("DemodulatorCollection.Demodulators");
             LuaHelpers.RegisterNamespace("DemodulatorCollection.BitClockSinks");
             RegisterScript("startup.lua", true);
+
         }
 
         void AreaSelectionUpdate()
@@ -288,13 +289,13 @@ namespace RX_FFT
 
             string text = "";
 
-            if (!DeviceOpened || DemodState == null || !DemodState.DemodulationEnabled || !DemodState.CursorPositionWindowEnabled)
+            if (!DeviceOpened || DemodState == null || !DemodState.DemodulationEnabled || !DemodState.BandwidthLimiter)
             {
                 sel.Text = text;
                 return;
             }
 
-            double filterWidth = Device.SamplingRate / DemodState.CursorWindowFilterWidthFract;
+            double filterWidth = Device.SamplingRate / DemodState.BandwidthLimiterFract;
 
             if (DemodState.SignalDemodulator is AMDemodulator)
             {
@@ -314,12 +315,12 @@ namespace RX_FFT
                         text = "USB: ";
                         sel.AreaMode = FFTAreaSelection.eAreaMode.USB;
                         cursorStartFreq = 0;
-                        cursorEndFreq = filterWidth;
+                        cursorEndFreq = filterWidth / 2;
                         break;
                     case eSsbType.Lsb:
                         text = "LSB: ";
                         sel.AreaMode = FFTAreaSelection.eAreaMode.LSB;
-                        cursorStartFreq = -filterWidth;
+                        cursorStartFreq = -filterWidth / 2;
                         cursorEndFreq = 0;
                         break;
                 }
@@ -327,26 +328,32 @@ namespace RX_FFT
 
             sel.Text = text + FrequencyFormatter.FreqToStringAccurate(filterWidth);
 
-            if (sel.Visible)
+            switch (DemodState.SourceFrequency)
             {
-                FFTDisplay.FFTDisplay.HorLineFixed = false;
-            }
-            else
-            {
-                FFTDisplay.FFTDisplay.HorLineFixed = true;
-                FFTDisplay.FFTDisplay.HorLineStart = cursorStartFreq;
-                FFTDisplay.FFTDisplay.HorLineEnd = cursorEndFreq;
+                case DemodulationState.eSourceFrequency.Selection:
+                    FFTDisplay.FFTDisplay.HorLineFixed = false;
+                    break;
+                case DemodulationState.eSourceFrequency.Cursor:
+                    FFTDisplay.FFTDisplay.HorLineFixed = true;
+                    FFTDisplay.FFTDisplay.HorLineStart = cursorStartFreq;
+                    FFTDisplay.FFTDisplay.HorLineEnd = cursorEndFreq;
+                    break;
+                case DemodulationState.eSourceFrequency.Center:
+                    FFTDisplay.FFTDisplay.HorLineFixed = true;
+                    FFTDisplay.FFTDisplay.HorLineStart = cursorStartFreq;
+                    FFTDisplay.FFTDisplay.HorLineEnd = cursorEndFreq;
+                    break;
             }
         }
 
         void DemodOptions_CursorWindowFilterChanged(object sender, EventArgs e)
         {
-            if (!DeviceOpened || DemodState == null || !DemodState.DemodulationEnabled || !DemodState.CursorPositionWindowEnabled)
+            if (!DeviceOpened || DemodState == null || !DemodState.DemodulationEnabled || !DemodState.BandwidthLimiter)
             {
                 return;
             }
 
-            double filterWidth = Device.SamplingRate / DemodState.CursorWindowFilterWidthFract;
+            double filterWidth = Device.SamplingRate / DemodState.BandwidthLimiterFract;
 
  
             if (DemodState.SignalDemodulator is AMDemodulator || DemodState.SignalDemodulator is FMDemodulator)
@@ -429,7 +436,7 @@ namespace RX_FFT
             AreaSelectionUpdate();
 
             /* not being used, so dont do anything */
-            if (!DeviceOpened || !DemodState.DemodulationEnabled || !DemodState.CursorPositionWindowEnabled)
+            if (!DeviceOpened || !DemodState.DemodulationEnabled || !DemodState.BandwidthLimiter)
             {
                 return;
             }
@@ -591,6 +598,8 @@ namespace RX_FFT
                 closeMenu.Enabled = DeviceOpened;
                 pauseMenu.Enabled = DeviceOpened;
                 openMenu.Enabled = !DeviceOpened;
+                btnCloseDevice.Enabled = DeviceOpened;
+                btnOpenDevice.Enabled = !DeviceOpened;
 
                 if (value)
                 {
@@ -1904,6 +1913,7 @@ namespace RX_FFT
             }
             catch (Exception e)
             {
+                LuaShellWindow.AddMessage("Failed to load LUA Script: " + e.ToString());
             }
 
             return script;
@@ -2067,6 +2077,51 @@ namespace RX_FFT
                 LuaShellWindow.RunCommand = LuaRunCommand;
                 LuaShellWindow.Show();
             }
+        }
+
+        private void menuFft512_Click(object sender, EventArgs e)
+        {
+            FFTSize = 512;
+        }
+
+        private void menuFft1024_Click(object sender, EventArgs e)
+        {
+            FFTSize = 1024;
+        }
+
+        private void menuFft2048_Click(object sender, EventArgs e)
+        {
+            FFTSize = 2048;
+        }
+
+        private void menuFft4096_Click(object sender, EventArgs e)
+        {
+            FFTSize = 4096;
+        }
+
+        private void menuFft8192_Click(object sender, EventArgs e)
+        {
+            FFTSize = 8192;
+        }
+
+        private void btnStartScope_Click(object sender, EventArgs e)
+        {
+            oscilloscopeMenu_Click(sender, e);
+        }
+
+        private void btnStartGsmAnalyzer_Click(object sender, EventArgs e)
+        {
+            gsmAnalyzerMenu_Click(sender, e);
+        }
+
+        private void btnCloseDevice_Click(object sender, EventArgs e)
+        {
+            closeMenu_Click(sender, e);
+        }
+
+        private void btnOpenDevice_Click(object sender, EventArgs e)
+        {
+            openBO35PlainMenu_Click(sender, e);
         }
     }
 }

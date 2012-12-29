@@ -67,11 +67,11 @@ namespace LibRXFFT.Components.GDI
         {
             UpdateFrequencyInternal();
             chkEnableDemod.Checked = DemodState.DemodulationEnabled;
-            chkEnableLimiter.Checked = DemodState.CursorPositionWindowEnabled;
+            chkEnableLimiter.Checked = DemodState.BandwidthLimiter;
             chkAmplify.Checked = DemodState.AudioAmplificationEnabled;
             chkNative.Checked = FIRFilter.UseNative;
 
-            txtAmplify.Text = (DemodState.AudioAmplification*100).ToString();
+            txtAmplify.Text = (Math.Log(DemodState.AudioAmplification)*20).ToString();
             txtDecim.Text = DemodState.AudioDecimation.ToString();
             txtSquelchLimit.Text = DemodState.SquelchLowerLimit.ToString();
 
@@ -113,7 +113,7 @@ namespace LibRXFFT.Components.GDI
                 }
             }
 
-            switch (DemodState.CursorWindowFilterWidthFract)
+            switch (DemodState.BandwidthLimiterFract)
             {
                 case 256:
                     radioFilter256.Checked = true;
@@ -342,6 +342,12 @@ namespace LibRXFFT.Components.GDI
 
         private void UpdateInformationInternal(bool notify)
         {
+            lblDebugText.Text = "In: " + FrequencyFormatter.FreqToStringAccurate(DemodState.InputRate);
+            lblDebugText.Text += " Limiter: /" + DemodState.BandwidthLimiterFract + " ("+(DemodState.BandwidthLimiter?"ON":"OFF")+")";
+            lblDebugText.Text += " Demod: /" + DemodState.DemodulatorFiltering;
+            lblDebugText.Text += " Decim: /" + DemodState.AudioDecimation;
+            lblDebugText.Text += " => Output: " + DemodState.AudioRate;
+
             txtDemodRate.Text = FrequencyFormatter.FreqToString(DemodState.AudioRate);
             txtDecim.Value = DemodState.AudioDecimation;
 
@@ -464,7 +470,7 @@ namespace LibRXFFT.Components.GDI
         {
             lock (DemodState)
             {
-                DemodState.CursorPositionWindowEnabled = chkEnableLimiter.Checked;
+                DemodState.BandwidthLimiter = chkEnableLimiter.Checked;
                 DemodState.ReinitSound = true;
                 UpdateInformationInternal(true);
             }
@@ -526,7 +532,7 @@ namespace LibRXFFT.Components.GDI
                 return;
             lock (DemodState)
             {
-                DemodState.CursorWindowFilterWidthFract = 2;
+                DemodState.BandwidthLimiterFract = 2;
 //                Demod.CursorWindowFilterI = new FIRFilter(FIRCoefficients.FIRLowPass_2_Low);
 //                Demod.CursorWindowFilterQ = new FIRFilter(FIRCoefficients.FIRLowPass_2_Low);
                 DemodState.CursorWindowFilterI = new IIRFilter(IIRCoefficients.IIRLowPass_2);
@@ -542,7 +548,7 @@ namespace LibRXFFT.Components.GDI
                 return;
             lock (DemodState)
             {
-                DemodState.CursorWindowFilterWidthFract = 4;
+                DemodState.BandwidthLimiterFract = 4;
                 DemodState.CursorWindowFilterI = new IIRFilter(IIRCoefficients.IIRLowPass_4);
                 DemodState.CursorWindowFilterQ = new IIRFilter(IIRCoefficients.IIRLowPass_4);
                 DemodState.ReinitSound = true;
@@ -556,7 +562,7 @@ namespace LibRXFFT.Components.GDI
                 return;
             lock (DemodState)
             {
-                DemodState.CursorWindowFilterWidthFract = 8;
+                DemodState.BandwidthLimiterFract = 8;
                 DemodState.CursorWindowFilterI = new IIRFilter(IIRCoefficients.IIRLowPass_8);
                 DemodState.CursorWindowFilterQ = new IIRFilter(IIRCoefficients.IIRLowPass_8);
                 DemodState.ReinitSound = true;
@@ -570,7 +576,7 @@ namespace LibRXFFT.Components.GDI
                 return;
             lock (DemodState)
             {
-                DemodState.CursorWindowFilterWidthFract = 16;
+                DemodState.BandwidthLimiterFract = 16;
                 DemodState.CursorWindowFilterI = new IIRFilter(IIRCoefficients.IIRLowPass_16);
                 DemodState.CursorWindowFilterQ = new IIRFilter(IIRCoefficients.IIRLowPass_16);
                 DemodState.ReinitSound = true;
@@ -584,7 +590,7 @@ namespace LibRXFFT.Components.GDI
                 return;
             lock (DemodState)
             {
-                DemodState.CursorWindowFilterWidthFract = 32;
+                DemodState.BandwidthLimiterFract = 32;
                 DemodState.CursorWindowFilterI = new IIRFilter(IIRCoefficients.IIRLowPass_32);
                 DemodState.CursorWindowFilterQ = new IIRFilter(IIRCoefficients.IIRLowPass_32);
                 DemodState.ReinitSound = true;
@@ -598,7 +604,7 @@ namespace LibRXFFT.Components.GDI
                 return;
             lock (DemodState)
             {
-                DemodState.CursorWindowFilterWidthFract = 64;
+                DemodState.BandwidthLimiterFract = 64;
                 DemodState.CursorWindowFilterI = new IIRFilter(IIRCoefficients.IIRLowPass_64);
                 DemodState.CursorWindowFilterQ = new IIRFilter(IIRCoefficients.IIRLowPass_64);
                 DemodState.ReinitSound = true;
@@ -612,7 +618,7 @@ namespace LibRXFFT.Components.GDI
                 return;
             lock (DemodState)
             {
-                DemodState.CursorWindowFilterWidthFract = 128;
+                DemodState.BandwidthLimiterFract = 128;
                 DemodState.CursorWindowFilterI = new IIRFilter(IIRCoefficients.IIRLowPass_128);
                 DemodState.CursorWindowFilterQ = new IIRFilter(IIRCoefficients.IIRLowPass_128);
                 DemodState.ReinitSound = true;
@@ -626,7 +632,7 @@ namespace LibRXFFT.Components.GDI
                 return;
             lock (DemodState)
             {
-                DemodState.CursorWindowFilterWidthFract = 256;
+                DemodState.BandwidthLimiterFract = 256;
                 DemodState.CursorWindowFilterI = new IIRFilter(IIRCoefficients.IIRLowPass_256);
                 DemodState.CursorWindowFilterQ = new IIRFilter(IIRCoefficients.IIRLowPass_256);
                 DemodState.ReinitSound = true;
@@ -804,8 +810,8 @@ namespace LibRXFFT.Components.GDI
         {
             SoundSinkInfo info = new SoundSinkInfo();
 
-            info.Page = new TabPage("Sound");
-            info.Sink = new SoundCardSink(info.Page);
+            info.Page = new SinkTab("Sound");
+            info.Sink = new SoundCardSink(info.Page.splitContainer.Panel2);
 
             PrepareSinkTab(info);
             DemodState.AddSink(info);
@@ -825,8 +831,8 @@ namespace LibRXFFT.Components.GDI
         private void btnMp3_Click(object sender, EventArgs e)
         {
             SoundSinkInfo info = new SoundSinkInfo();
-            info.Page = new TabPage("Stream");
-            info.Sink = new ShoutcastSink(info.Page);
+            info.Page = new SinkTab("Stream");
+            info.Sink = new ShoutcastSink(info.Page.splitContainer.Panel2);
 
             PrepareSinkTab(info);
             DemodState.AddSink(info);
@@ -835,8 +841,8 @@ namespace LibRXFFT.Components.GDI
         private void btnMp3File_Click(object sender, EventArgs e)
         {
             SoundSinkInfo info = new SoundSinkInfo();
-            info.Page = new TabPage("MP3");
-            info.Sink = new SoundFileSink(info.Page);
+            info.Page = new SinkTab("MP3");
+            info.Sink = new SoundFileSink(info.Page.splitContainer.Panel2);
 
             PrepareSinkTab(info);
             DemodState.AddSink(info);
@@ -845,8 +851,8 @@ namespace LibRXFFT.Components.GDI
         private void btnShmem_Click(object sender, EventArgs e)
         {
             SoundSinkInfo info = new SoundSinkInfo();
-            info.Page = new TabPage("Shared Mem");
-            info.Sink = new SharedMemSink(info.Page);
+            info.Page = new SinkTab("Shared Mem");
+            info.Sink = new SharedMemSink(info.Page.splitContainer.Panel2);
 
             PrepareSinkTab(info);
             DemodState.AddSink(info);
@@ -856,28 +862,24 @@ namespace LibRXFFT.Components.GDI
         {
             tabSoundOut.Controls.Add(info.Page);
 
-            Label closeLabel = new Label();
-            closeLabel.Text = "X";
-            closeLabel.Dock = DockStyle.Right | DockStyle.Top;
-            //closeLabel.Anchor = AnchorStyles.Right | AnchorStyles.Top;
-            //closeLabel.Location = new System.Drawing.Point(info.Page.Size.Width - 15, 0);
-            closeLabel.MouseClick += (object s, MouseEventArgs a) =>
+            info.Page.closeLabel.MouseClick += (object s, MouseEventArgs a) =>
             {
                 if (a.Button == MouseButtons.Left)
                 {
+                    tabSoundOut.Controls.Remove(info.Page);
                     DemodState.RemoveSink(info);
-                    //tabSoundOut.Controls.Remove(info.Page);
                 }
             };
-            closeLabel.MouseEnter += (object s, EventArgs a) =>
+            info.Page.closeLabel.MouseEnter += (object s, EventArgs a) =>
             {
-                closeLabel.ForeColor = Color.Gray;
+                info.Page.closeLabel.ForeColor = Color.Gray;
             };
-            closeLabel.MouseLeave += (object s, EventArgs a) =>
+            info.Page.closeLabel.MouseLeave += (object s, EventArgs a) =>
             {
-                closeLabel.ForeColor = Color.Black;
+                info.Page.closeLabel.ForeColor = Color.Black;
             };
-            info.Page.Controls.Add(closeLabel);
+
+            tabSoundOut.SelectedTab = info.Page;
         }
     }
 }

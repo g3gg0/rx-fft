@@ -133,6 +133,7 @@ namespace DemodulatorCollection
                 SampleSource.CloseControl();
                 SampleSource = null;
             }
+            CloseDemod();
         }
 
         void SampleSource_SamplingRateChanged(object sender, EventArgs e)

@@ -24,6 +24,8 @@ namespace LibRXFFT.Libraries.SignalProcessing
         public PerformanceEnvelope PerformanceCounters = new PerformanceEnvelope();
         public bool ProcessPaused = false;
 
+        private double[] DecimatedSSBInputI = new double[0];
+        private double[] DecimatedSSBInputQ = new double[0];
         private double[] DecimatedInputI = new double[0];
         private double[] DecimatedInputQ = new double[0];
         private double[] AudioSampleBuffer = new double[0];
@@ -176,12 +178,12 @@ namespace LibRXFFT.Libraries.SignalProcessing
                 switch (((SSBDemodulator)DemodState.SignalDemodulator).Type)
                 {
                     case eSsbType.Lsb:
-                        relative -= -0.5f / DemodState.CursorWindowFilterWidthFract;
-                        DemodState.SSBDownmixer.TimeStep = (-0.5f / DemodState.CursorWindowFilterWidthFract) * (2 * Math.PI);
+                        relative -= -0.5f / DemodState.BandwidthLimiterFract;
+                        DemodState.SSBDownmixer.TimeStep = (-0.5f / DemodState.BandwidthLimiterFract) * (2 * Math.PI);
                         break;
                     case eSsbType.Usb:
-                        relative -= 0.5f / DemodState.CursorWindowFilterWidthFract;
-                        DemodState.SSBDownmixer.TimeStep = (0.5f / DemodState.CursorWindowFilterWidthFract) * (2 * Math.PI);
+                        relative -= 0.5f / DemodState.BandwidthLimiterFract;
+                        DemodState.SSBDownmixer.TimeStep = (0.5f / DemodState.BandwidthLimiterFract) * (2 * Math.PI);
                         break;
                 }
             }
@@ -279,7 +281,7 @@ namespace LibRXFFT.Libraries.SignalProcessing
                                         bool blockSizeChanged = AudioSampleBuffer.Length != (inputI.Length / lastInputDecim);
                                         bool rateChanged = Math.Abs(rate - InputSamplingRate) > 0;
                                         bool updateAudio = (blockSizeChanged || DemodState.ReinitSound || rateChanged || rate == 0);
-                                        lastCursorWinEnabled = DemodState.CursorPositionWindowEnabled;
+                                        lastCursorWinEnabled = DemodState.BandwidthLimiter;
 
                                         if (updateAudio)
                                         {
@@ -299,6 +301,8 @@ namespace LibRXFFT.Libraries.SignalProcessing
                                             Array.Resize<double>(ref AudioSampleBuffer, inputI.Length / lastInputDecim);
                                             Array.Resize<double>(ref AudioSampleBufferDecim, inputI.Length / lastAudioDecim / lastInputDecim);
 
+                                            Array.Resize<double>(ref DecimatedSSBInputI, inputI.Length / (lastInputDecim / 2));
+                                            Array.Resize<double>(ref DecimatedSSBInputQ, inputQ.Length / (lastInputDecim / 2));
                                             Array.Resize<double>(ref DecimatedInputI, inputI.Length / lastInputDecim);
                                             Array.Resize<double>(ref DecimatedInputQ, inputQ.Length / lastInputDecim);
                                         }
@@ -358,16 +362,41 @@ namespace LibRXFFT.Libraries.SignalProcessing
                                                     /* decimate input signal */
                                                     PerformanceCounters.CounterXlatDecimate.Start();
 
-                                                    if (lastInputDecim > 1)
+                                                    /* when SSB demodulation is enabled, decimate and 1/2 lowpass first */
+                                                    if (DemodState.SignalDemodulator is SSBDemodulator)
                                                     {
+                                                        for (int pos = 0; pos < DecimatedSSBInputI.Length; pos++)
+                                                        {
+                                                            DecimatedSSBInputI[pos] = inputI[pos * (lastInputDecim / 2)];
+                                                            DecimatedSSBInputQ[pos] = inputQ[pos * (lastInputDecim / 2)];
+                                                        }
+
+                                                        DemodState.SSBLowPassI.Process(DecimatedSSBInputI, DecimatedSSBInputI);
+                                                        DemodState.SSBLowPassQ.Process(DecimatedSSBInputQ, DecimatedSSBInputQ);
+
                                                         for (int pos = 0; pos < DecimatedInputI.Length; pos++)
                                                         {
-                                                            DecimatedInputI[pos] = inputI[pos * lastInputDecim];
-                                                            DecimatedInputQ[pos] = inputQ[pos * lastInputDecim];
+                                                            DecimatedInputI[pos] = DecimatedSSBInputI[pos * 2];
+                                                            DecimatedInputQ[pos] = DecimatedSSBInputQ[pos * 2];
                                                         }
 
                                                         inputI = DecimatedInputI;
                                                         inputQ = DecimatedInputQ;
+                                                    }
+                                                    else
+                                                    {
+                                                        /* normal demodulation, no need for a lowpass */
+                                                        if (lastInputDecim > 1)
+                                                        {
+                                                            for (int pos = 0; pos < DecimatedInputI.Length; pos++)
+                                                            {
+                                                                DecimatedInputI[pos] = inputI[pos * lastInputDecim];
+                                                                DecimatedInputQ[pos] = inputQ[pos * lastInputDecim];
+                                                            }
+
+                                                            inputI = DecimatedInputI;
+                                                            inputQ = DecimatedInputQ;
+                                                        }
                                                     }
 
                                                     PerformanceCounters.CounterXlatDecimate.Stop();
@@ -480,8 +509,10 @@ namespace LibRXFFT.Libraries.SignalProcessing
                                                 /* audio decimation */
                                                 if (lastAudioDecim > 1)
                                                 {
-                                                    PerformanceCounters.CounterDemodDecimate.Start();
                                                     double ampl = 1;
+
+                                                    PerformanceCounters.CounterDemodDecimate.Start();
+
                                                     if (DemodState.AudioAmplificationEnabled)
                                                     {
                                                         ampl = DemodState.AudioAmplification;

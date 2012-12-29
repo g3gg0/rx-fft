@@ -35,6 +35,11 @@ namespace DemodulatorCollection.BitClockSinks
             BitSink.Resynchronized();
         }
 
+        public void Desynchronized()
+        {
+            BitSink.Desynchronized();
+        }
+
         public void TransmissionStart()
         {
             BitSink.TransmissionStart();

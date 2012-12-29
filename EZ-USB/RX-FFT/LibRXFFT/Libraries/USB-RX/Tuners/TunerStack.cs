@@ -316,11 +316,11 @@ namespace LibRXFFT.Libraries.USB_RX.Tuners
             long delta = frequency - freqMaster;
 
             if (MasterTuner.InvertedSpectrum)
-                freqSlave += delta;
-            else
                 freqSlave -= delta;
+            else
+                freqSlave += delta;
 
-            //Log.AddMessage("-> " + frequency + "  = M: " + freqMaster + " S: " + (freqSlave - MasterTuner.IntermediateFrequency));
+            Log.AddMessage("-> " + frequency + "  = M: " + freqMaster + " S: " + (freqSlave + MasterTuner.IntermediateFrequency));
 
             if (!SlaveTuner.SetFrequency(freqSlave))
                 return false;

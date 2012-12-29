@@ -202,6 +202,20 @@ namespace DemodulatorCollection.Demodulators
             }
         }
 
+        public void Desynchronized()
+        {
+            if (CallDepth == 0 && BitSink != null)
+            {
+                CallDepth++;
+                BitSink.Desynchronized();
+                CallDepth--;
+            }
+            else if (_LuaVm.GetFunction("Desynchronized") != null)
+            {
+                CallFunction("Desynchronized");
+            }
+        }
+
         public void TransmissionStart()
         {
             if (CallDepth == 0 && BitSink != null)

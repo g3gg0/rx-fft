@@ -8,5 +8,6 @@ namespace DemodulatorCollection.Interfaces
         void TransmissionEnd();
 
         void Resynchronized();
+        void Desynchronized();
     }
 }

@@ -166,6 +166,25 @@ namespace LibRXFFT.Libraries
                 }
             }
 
+            /* try assemblies that were loaded by application */
+            Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+
+            foreach (Assembly a in assemblies)
+            {
+                if (type == null)
+                {
+                    type = a.GetType(className);
+                }
+
+                foreach (string name in RegisteredNamespaces)
+                {
+                    if (type == null)
+                    {
+                        type = a.GetType(name + "." + className);
+                    }
+                }
+            }
+
             return type;
         }
 

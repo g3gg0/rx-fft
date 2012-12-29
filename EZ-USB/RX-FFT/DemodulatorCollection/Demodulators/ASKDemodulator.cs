@@ -27,11 +27,12 @@ namespace DemodulatorCollection.Demodulators
         public int BaudRate = 1200;
         public int MinDbDistance = 10;
         public int MinBitLength = 10;
-        public double _SamplingRate = 0;
+        public bool EnableAGC = true;
         public BitClockSink BitSink { get; set; }
-
         public bool BitTimeLocked = false;
         public bool SignalStrengthLocked = false;
+
+        private double _SamplingRate = 0;
 
         private int SignalStrengthUpdateRate = 100000000;
         private int NoiseFloorUpdateRate = 100000;
@@ -56,7 +57,7 @@ namespace DemodulatorCollection.Demodulators
 
         private bool Initialized = false;
         private eLearningState State = eLearningState.Idle;
-        private bool EnableAGC = true;
+
 
         private int LearnBits = 0;
         private bool LearnTransmitState = false;
@@ -328,9 +329,7 @@ namespace DemodulatorCollection.Demodulators
                     }
                     break;
             }
-
         }
-
 
         private void LearnedTiming()
         {

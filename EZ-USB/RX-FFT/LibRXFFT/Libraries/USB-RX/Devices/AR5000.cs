@@ -5,14 +5,18 @@ using RX_FFT.Components.GDI;
 
 namespace LibRXFFT.Libraries.USB_RX.Devices
 {
-    public class BO35 : SerialPortTuner
+    public class AR5000 : SerialPortTuner
     {
         public static bool DeviceTypeDisabled = false;
 
-        public BO35(bool autoDetect)
+        public AR5000(bool autoDetect)
             : base(autoDetect)
         {
-            BaudRates = new[] { 115200 };
+            BaudRates = new[] { 19200, 9600, 4800 };
+            Properties.DataBits = 8;
+            Properties.StopBits = System.IO.Ports.StopBits.Two;
+            Properties.Parity = System.IO.Ports.Parity.None;
+            Properties.Handshake = System.IO.Ports.Handshake.None;
         }
 
         public override bool ConnectionCheck()
@@ -20,50 +24,41 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             if (DeviceTypeDisabled)
                 return false;
 
-            int tries = 50;
+            int tries = 5;
             double avgDelay = 0;
 
-            /* Datasheet says, send empty command, read empty answer several times */
+            Port.DiscardNull = true;
+
+            Port.ReadTimeout = 200;
+            /* send some data to make it power on */
+            Send("");
+            /* receive or wait for timeout */
+            Receive(true);
+
+            Port.ReadTimeout = 800;
+
             for (int num = 0; num < tries; num++)
             {
                 Send("");
-                if (Receive() != "")
+                if (Receive() != "?")
                 {
                     return false;
                 }
                 avgDelay += TransmitDuration;
             }
 
-            try
-            {
-                if (!Power)
-                {
-                    Power = true;
-                }
-            }
-            catch (ArgumentException e)
-            {
-                if (!AutoDetectRunning)
-                {
-                    Log.AddMessage("No BO-35 on port " + Port.PortName + ". Reason: Could not read power state. '" + e + "'");
-                }
-                return false;
-            }
-
             string ver = SystemVersion;
-            if (ver.Substring(0, 2) != "VR")
+            if (ver.Substring(0, 4) != "VER-")
             {
                 if (!AutoDetectRunning)
                 {
-                    Log.AddMessage("No BO-35 on port " + Port.PortName + ". Reason: Invalid System Version '" + ver + "'");
+                    Log.AddMessage("No AR5000 on port " + Port.PortName + ". Reason: Invalid System Version '" + ver + "'");
                 }
                 return false;
             }
 
-            /*
-            Log.AddMessage("Connected to BO-35");
+            Log.AddMessage("Connected to AR5000");
             Log.AddMessage("Average ping delay: " + FrequencyFormatter.TimeToString(avgDelay / tries));
-            */
 
             return true;
         }
@@ -86,10 +81,9 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             try
             {
                 SendCommand("RF0", false);
-                SendCommand("AC3", true); /* BO-35 */
-                SendCommand("ACF", true); /* AR-5000 */
-                SendCommand("AT0", false);
-                SendCommand("AI1", true);
+                SendCommand("ACF", true); /* AR-5000: AGC control fast */
+                SendCommand("AI1", true); /* AR-5000: EXIT-IF 1 ON */
+                SendCommand("AN2", true); /* AR-5000: ANTENNA 2 */
             }
             catch (Exception e)
             {
@@ -99,9 +93,32 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             return true;
         }
 
+        public int SelectedAntenna
+        {
+            get
+            {
+                Send("AN");
+                string ant = Receive();
+
+                if (!ant.StartsWith("AN"))
+                {
+                    return 0;
+                }
+                return int.Parse(ant.Substring(2).Trim());
+            }
+            set
+            {
+                if (value >= 1 && value <= 4)
+                {
+                    SendCommand("AN" + value);
+                }
+            }
+        }
+
         public override void CloseTuner()
         {
-            SendCommand("PW0", true);
+            Power = false;
+
             base.CloseTuner();
         }
 
@@ -138,8 +155,8 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                 /* Datasheet says, send empty command, read empty answer several times */
                 for (int num = 0; num < tries; num++)
                 {
-                    Send("");
-                    if (Receive() != "")
+                    Send("VR");
+                    if (!Receive().StartsWith("VER"))
                     {
                         return 0;
                     }
@@ -156,36 +173,15 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         {
             get
             {
-                Send("PW");
-                string resp = Receive();
-
-                switch (resp)
-                {
-                    case "PW0":
-                        return false;
-                        break;
-
-                    case "PW1":
-                        return true;
-                        break;
-
-                    default:
-                        throw new ArgumentException("Unexpected answer: " + resp);
-                        break;
-                }
+                return true;
             }
 
             set
             {
-                if (value)
+                if (!value)
                 {
-                    Send("PW1");
+                    Send("QP");
                 }
-                else
-                {
-                    Send("PW0");
-                }
-                CheckReturncode();
             }
         }
 
@@ -202,12 +198,17 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         {
             get
             {
-                Send("RF");
+                Send("RX");
 
                 string freq = Receive();
-                if (freq.StartsWith("RF"))
+                string[] tokens = freq.Split(' ');
+
+                foreach (string token in tokens)
                 {
-                    return long.Parse(freq.Replace("RF", "").Replace(".", ""));
+                    if (token.StartsWith("RF"))
+                    {
+                        return long.Parse(token.Replace("RF", ""));
+                    }
                 }
 
                 return 0;
@@ -215,7 +216,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
             set
             {
-                string rf = "RF" + (value / 1000000) + "." + (value % 1000000).ToString("000000");
+                string rf = "RF" + value.ToString("0000000000");
 
                 Send(rf);
                 CheckReturncode();
@@ -256,18 +257,18 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         {
             get
             {
-                return "BO-35 " + FrequencyFormatter.FreqToString(FilterWidth) + " hard limit";
+                return "AR5000 " + FrequencyFormatter.FreqToString(FilterWidth) + " hard limit";
             }
         }
         public override bool InvertedSpectrum { get { return GetFrequency() < 2010000000; } }
 
         public override string[] Name
         {
-            get { return new[] { "Boger BO-35" }; }
+            get { return new[] { "Boger AR5000" }; }
         }
         public override string[] Description
         {
-            get { return new[] { "BO-35 10kHz-3.5GHz Receiver" }; }
+            get { return new[] { "AR5000 10kHz-3.5GHz Receiver" }; }
         }
         public override string[] Details
         {
@@ -293,11 +294,11 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             {
                 if (CurrentFrequency + FilterWidth / 2 > HighestFrequency)
                 {
-                    return "BO-35 max. freq";
+                    return "AR5000 max. freq";
                 }
                 else
                 {
-                    return "BO-35 filter width";
+                    return "AR5000 filter width";
                 }
             }
         }
@@ -308,11 +309,11 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             {
                 if (CurrentFrequency - FilterWidth / 2 < LowestFrequency)
                 {
-                    return "BO-35 min. freq.";
+                    return "AR5000 min. freq.";
                 }
                 else
                 {
-                    return "BO-35 filter width";
+                    return "AR5000 filter width";
                 }
             }
         }

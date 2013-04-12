@@ -731,6 +731,7 @@ namespace LibRXFFT.Components.DeviceControls
                 {
                     if (USBRX.DeviceLost)
                     {
+                        RX_FFT.Components.GDI.Log.AddMessage("USBRX -> DeviceLost");
                         if (DeviceDisappeared != null)
                         {
                             DeviceDisappeared(this, null);

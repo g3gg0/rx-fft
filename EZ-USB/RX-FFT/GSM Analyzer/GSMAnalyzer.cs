@@ -107,7 +107,7 @@ namespace GSM_Analyzer
             private bool[] KrakenUsed = null;
             private int JobNumber = 0;
             private int JobCount = 0;
-            private int ParallelConnections = 8;
+            private int ParallelConnections = 1;
             private DateTime LastConnect = DateTime.MinValue;
 
             public KrakenCracker(GSMAnalyzer analyzer)
@@ -263,7 +263,7 @@ namespace GSM_Analyzer
                 else
                 {
                     /* experimental - multiple connections to one host */
-                    ParallelConnections = 4;
+                    ParallelConnections = 1;
                     Kraken = new KrakenClient[ParallelConnections];
                     KrakenUsed = new bool[ParallelConnections];
                     for (int num = 0; num < ParallelConnections; num++)

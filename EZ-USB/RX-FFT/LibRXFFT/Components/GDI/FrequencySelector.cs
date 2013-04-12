@@ -310,6 +310,13 @@ namespace LibRXFFT.Components.GDI
             }
             set
             {
+                if (CurrentFrequency == value)
+                {
+                    return;
+                }
+
+                int pos = SelectionStart;
+
                 if (FixedLengthString)
                 {
                     Text = String.Format(FixedLengthFormat, value);
@@ -318,6 +325,7 @@ namespace LibRXFFT.Components.GDI
                 {
                     Text = FrequencyFormatter.FreqToStringAccurate(value);
                 }
+                SelectionStart = pos;
                 ParseFrequency();
             }
         }

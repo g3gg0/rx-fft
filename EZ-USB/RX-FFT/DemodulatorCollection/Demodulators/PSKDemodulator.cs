@@ -41,11 +41,12 @@ namespace DemodulatorCollection.Demodulators
         private double PhaseDiffHigh;
         private double PhaseDiffLow;
 
-        private long SyncStartSample;
-        private long TransmittingSamples;
         private long SymbolDistance;
-        private long NextSamplePoint;
+        private long SamplePointStart;
+        private long SamplePointEnd;
         private bool PhasePositive = false;
+        private double PhaseDifferenceSmooth = 0.0f;
+        private double PhaseSum = 0.0f;
 
         public double SamplingRate
         {
@@ -166,8 +167,8 @@ namespace DemodulatorCollection.Demodulators
 
                 case eLearningState.TransmissionStart:
                     /* wait until quarter of a symbol was sent before using phase information */
-                    SyncStartSample = SampleNum + SymbolDistance / 4;
-                    NextSamplePoint = SampleNum + SymbolDistance / 2;
+                    SamplePointStart = SampleNum + SymbolDistance / 4;
+                    SamplePointEnd = SamplePointStart + SymbolDistance / 2;
                     State = eLearningState.TransmissionActive;
 
                     if (BitSink != null)
@@ -178,42 +179,59 @@ namespace DemodulatorCollection.Demodulators
 
 
                 case eLearningState.TransmissionActive:
-                    if (SampleNum >= SyncStartSample)
+                    if (SampleNum < SamplePointStart || SampleNum > SamplePointEnd)
                     {
-                        if (phaseDifference > PhaseDiffHigh)
+                        PhaseDifferenceSmooth /= 2;
+                        PhaseDifferenceSmooth += phaseDifference;
+
+                        if (PhaseDifferenceSmooth / 1.75f > PhaseDiffHigh)
                         {
                             /* handle a low->high transition */
                             if (!PhasePositive)
                             {
                                 PhasePositive = true;
-                                NextSamplePoint = SampleNum + SymbolDistance / 2;
+                                SamplePointStart = (long) (SampleNum + SymbolDistance * 0.15f);
+                                SamplePointEnd = (long)(SamplePointStart + SymbolDistance * 0.7f);
                             }
                         }
-                        else if (phaseDifference < PhaseDiffLow)
+                        else if (PhaseDifferenceSmooth / 1.75f < PhaseDiffLow)
                         {
                             /* handle a high->low transition */
                             if (PhasePositive)
                             {
                                 PhasePositive = false;
-                                NextSamplePoint = SampleNum + SymbolDistance / 2;
+                                SamplePointStart = (long)(SampleNum + SymbolDistance * 0.15f);
+                                SamplePointEnd = (long)(SamplePointStart + SymbolDistance * 0.7f);
                             }
                         }
+                    }
+                    else if (SampleNum == SamplePointStart)
+                    {
+                        PhaseSum = 0;
+                    }
+                    else if (SampleNum == SamplePointEnd)
+                    {
+                        PhasePositive = PhaseSum > 0;
 
-                        /* this is the center of the current symbol */
-                        if (SampleNum == NextSamplePoint)
+                        if (BitSink != null)
                         {
-                            NextSamplePoint = SampleNum + SymbolDistance;
-
-                            if (BitSink != null)
-                            {
-                                BitSink.ClockBit(!PhasePositive);
-                            }
+                            BitSink.ClockBit(!PhasePositive);
                         }
 
+                        /* set the next sampling points. will get overriden when phase changes */
+                        SamplePointStart += SymbolDistance;
+                        SamplePointEnd += SymbolDistance;
+                    }
+                    else
+                    {
                         /* check whether signal strength has decreased */
                         if (signalDb < noiseDb + MinDbDistance)
                         {
                             State = eLearningState.TransmissionStop;
+                        }
+                        else
+                        {
+                            PhaseSum += phaseDifference;
                         }
                     }
 

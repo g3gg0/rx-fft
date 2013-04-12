@@ -35,6 +35,7 @@
             this.btnFirmwareProgram = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.chkSlowI2C = new System.Windows.Forms.CheckBox();
             this.btnI2cScan = new System.Windows.Forms.Button();
             this.btnI2cTest = new System.Windows.Forms.Button();
             this.btnAtmelDelay = new System.Windows.Forms.Button();
@@ -45,7 +46,8 @@
             this.groupBox4 = new System.Windows.Forms.GroupBox();
             this.btnCypressEepromProgram = new System.Windows.Forms.Button();
             this.btnCypressEepromRead = new System.Windows.Forms.Button();
-            this.chkSlowI2C = new System.Windows.Forms.CheckBox();
+            this.txtPid = new System.Windows.Forms.TextBox();
+            this.label1 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -126,6 +128,17 @@
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "I²C Basics";
             // 
+            // chkSlowI2C
+            // 
+            this.chkSlowI2C.AutoSize = true;
+            this.chkSlowI2C.Location = new System.Drawing.Point(12, 77);
+            this.chkSlowI2C.Name = "chkSlowI2C";
+            this.chkSlowI2C.Size = new System.Drawing.Size(94, 17);
+            this.chkSlowI2C.TabIndex = 10;
+            this.chkSlowI2C.Text = "Slow I²C mode";
+            this.chkSlowI2C.UseVisualStyleBackColor = true;
+            this.chkSlowI2C.CheckedChanged += new System.EventHandler(this.chkSlowI2C_CheckedChanged);
+            // 
             // btnI2cScan
             // 
             this.btnI2cScan.Location = new System.Drawing.Point(116, 48);
@@ -197,11 +210,13 @@
             // 
             // groupBox4
             // 
+            this.groupBox4.Controls.Add(this.label1);
             this.groupBox4.Controls.Add(this.btnCypressEepromProgram);
             this.groupBox4.Controls.Add(this.btnCypressEepromRead);
+            this.groupBox4.Controls.Add(this.txtPid);
             this.groupBox4.Location = new System.Drawing.Point(13, 296);
             this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(226, 65);
+            this.groupBox4.Size = new System.Drawing.Size(226, 78);
             this.groupBox4.TabIndex = 8;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Cypress EEPROM";
@@ -226,22 +241,30 @@
             this.btnCypressEepromRead.UseVisualStyleBackColor = true;
             this.btnCypressEepromRead.Click += new System.EventHandler(this.btnCypressEepromRead_Click);
             // 
-            // chkSlowI2C
+            // txtPid
             // 
-            this.chkSlowI2C.AutoSize = true;
-            this.chkSlowI2C.Location = new System.Drawing.Point(12, 77);
-            this.chkSlowI2C.Name = "chkSlowI2C";
-            this.chkSlowI2C.Size = new System.Drawing.Size(94, 17);
-            this.chkSlowI2C.TabIndex = 10;
-            this.chkSlowI2C.Text = "Slow I²C mode";
-            this.chkSlowI2C.UseVisualStyleBackColor = true;
-            this.chkSlowI2C.CheckedChanged += new System.EventHandler(this.chkSlowI2C_CheckedChanged);
+            this.txtPid.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txtPid.Location = new System.Drawing.Point(116, 49);
+            this.txtPid.Name = "txtPid";
+            this.txtPid.Size = new System.Drawing.Size(99, 20);
+            this.txtPid.TabIndex = 1;
+            this.txtPid.Text = "EE01";
+            this.txtPid.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(78, 52);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(28, 13);
+            this.label1.TabIndex = 2;
+            this.label1.Text = "PID:";
             // 
             // RXSetup
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(247, 373);
+            this.ClientSize = new System.Drawing.Size(247, 397);
             this.Controls.Add(this.groupBox4);
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.lblStats);
@@ -257,6 +280,7 @@
             this.groupBox2.PerformLayout();
             this.groupBox3.ResumeLayout(false);
             this.groupBox4.ResumeLayout(false);
+            this.groupBox4.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -283,6 +307,8 @@
         private System.Windows.Forms.Button btnCypressEepromRead;
         private System.Windows.Forms.Button btnSetSerial;
         private System.Windows.Forms.CheckBox chkSlowI2C;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.TextBox txtPid;
     }
 }
 

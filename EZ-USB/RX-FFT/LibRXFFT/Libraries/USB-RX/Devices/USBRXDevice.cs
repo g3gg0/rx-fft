@@ -18,6 +18,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         {
             Automatic,
             BO35,
+            AR5000,
             VUHF_RX,
             MT2131,
             None
@@ -110,6 +111,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
                 bool success = false;
                 BO35 bo35 = null;
+                AR5000 ar5000 = null;
                 MT2131 mt2131 = null;
                 VUHF_RX vuhfrx = null;
 
@@ -132,6 +134,29 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                         mainTuner = bo35;
                     }
                     else if (TunerCombination == eCombinationType.BO35)
+                    {
+                        return false;
+                    }
+                }
+                if (mainTuner == null && (TunerCombination == eCombinationType.AR5000 || TunerCombination == eCombinationType.Automatic))
+                {
+                    /* try to open BO-35 */
+                    ar5000 = new AR5000(true);
+
+                    try
+                    {
+                        success = ar5000.OpenTuner();
+                    }
+                    catch (Exception e)
+                    {
+                    }
+
+                    if (success)
+                    {
+                        stepSize = 0;
+                        mainTuner = ar5000;
+                    }
+                    else if (TunerCombination == eCombinationType.AR5000)
                     {
                         return false;
                     }

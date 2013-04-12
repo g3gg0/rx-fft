@@ -14,7 +14,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         private int BusID;
         private static int DefaultBusID = 0x51;
         private bool Use16Bit = false;
-        public int Size = 128;
+        public int Size = 0;
         public int AddressWidth
         {
             get

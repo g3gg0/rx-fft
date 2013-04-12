@@ -53,7 +53,8 @@ namespace RX_FFT.Components.GDI
             {
                 if (LogFile == null && EnableLogFile)
                 {
-                    string name = "GSMAnalyzer_" + DateTime.Now.ToShortDateString() + ".log";
+                    string app = Application.ProductName;
+                    string name = app + "_" + DateTime.Now.ToShortDateString() + ".log";
                     FileStream file = File.Open(name, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
                     LogFile = new StreamWriter(file);
                     LogText += "Logging to '" + name + "'" + Environment.NewLine;

@@ -8,6 +8,7 @@ using System.Threading;
 using LibRXFFT.Libraries.Timers;
 using System.IO;
 using System.Collections;
+using System.Globalization;
 
 namespace RX_Setup
 {
@@ -1537,10 +1538,20 @@ namespace RX_Setup
                 return;
             }
 
+            ushort vid = 0x2839;
+            ushort pid = 0;
+
+            if (!ushort.TryParse(txtPid.Text, System.Globalization.NumberStyles.AllowHexSpecifier | System.Globalization.NumberStyles.HexNumber, CultureInfo.CurrentCulture, out pid))
+            {
+                MessageBox.Show("Invalid PID");
+                return;
+            }
+
             FileDialog dlg = new OpenFileDialog();
 
             dlg.Filter = "HEX Firmware data (*.hex)|*.hex|Raw EEPROM Image (*.bin)|*.bin|All files (*.*)|*.*";
             dlg.DefaultExt = ".hex";
+            dlg.Title = "Choose .hex/.bin or abort to write default header";
 
             if (dlg.ShowDialog() == DialogResult.OK)
             {
@@ -1549,10 +1560,12 @@ namespace RX_Setup
 
                 try
                 {
+                    Log.AddMessage("Loading " + dlg.FileName);
                     if (dlg.FileName.EndsWith(".hex"))
                     {
                         IntelHexFile hf = new IntelHexFile(dlg.FileName);
                         dump = hf.Parse();
+                        Log.AddMessage("Hex file, will add headers to EEPROM content.");
                         rawImage = false;
                     }
                     else if (dlg.FileName.EndsWith(".bin"))
@@ -1560,6 +1573,7 @@ namespace RX_Setup
                         dump = new MemoryDump8Bit();
                         dump.StartAddress = 0;
                         dump.Data = File.ReadAllBytes(dlg.FileName);
+                        Log.AddMessage("Binary file, will add no headers to EEPROM content and write raw EEPROM content.");
                         rawImage = true;
                     }
                     else
@@ -1597,7 +1611,7 @@ namespace RX_Setup
                             }));
 
                             /* add default usb ids, force disconnect after loading */
-                            buildBuffer.AddRange(new byte[] { 0xC2, 0xB4, 0x04, 0x01, 0xEE, 0x00, 0x01, 0x41 });
+                            buildBuffer.AddRange(new byte[] { 0xC2, (byte)(vid & 0xFF), (byte)(vid >> 8), (byte)(pid & 0xFF), (byte)(pid >> 8), 0x00, 0x01, 0x41 });
 
                             /* split firmware into 1023 byte blocks */
                             int maxBlockSize = 1023;
@@ -1626,7 +1640,9 @@ namespace RX_Setup
                     }
 
                     /* first some safety check */
+                    Log.AddMessage("EEPROM reported as " + EEPROMDevice.Size + " bytes");
                     Log.AddMessage("Firmware requires " + eepromBuffer.Length + " bytes of EEPROM");
+
                     if (eepromBuffer.Length > EEPROMDevice.Size)
                     {
                         Log.AddMessage("Aborting. EEPROM is too small for this firmware.");
@@ -1665,8 +1681,9 @@ namespace RX_Setup
             }
             else
             {
-                Log.AddMessage("Writing default EEPROM header");
-                EEPROMDevice.WriteBytes(0, new byte[] { 0xC0, 0xB4, 0x04, 0x01, 0xEE, 0x00, 0x01, 0x01 });
+                pid = 0xEE00;
+                Log.AddMessage("Writing default EEPROM header (PID: EE00)");
+                EEPROMDevice.WriteBytes(0, new byte[] { 0xC0, (byte)(vid & 0xFF), (byte)(vid >> 8), (byte)(pid & 0xFF), (byte)(pid >> 8), 0x00, 0x01, 0x01 });
             }
         }
 

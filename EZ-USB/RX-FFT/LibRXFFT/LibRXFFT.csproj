@@ -428,6 +428,7 @@
     <Compile Include="Libraries\USB-RX\Devices\BO35.cs" />
     <Compile Include="Libraries\USB-RX\Devices\BO35Interface.cs" />
     <Compile Include="Libraries\USB-RX\Devices\EEPROM.cs" />
+    <Compile Include="Libraries\USB-RX\Devices\AR5000.cs" />
     <Compile Include="Libraries\USB-RX\Devices\VUHF_RX.cs" />
     <Compile Include="Libraries\USB-RX\Devices\SerialPortTuner.cs" />
     <Compile Include="Libraries\USB-RX\Interfaces\AD6636Interface.cs" />

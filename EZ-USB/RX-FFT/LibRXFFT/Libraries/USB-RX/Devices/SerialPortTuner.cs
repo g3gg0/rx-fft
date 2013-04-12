@@ -20,6 +20,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
     public class SerialPortTuner : Tuner
     {
         public SerialPortProperties Properties = new SerialPortProperties();
+        public bool Debug = true;
 
         protected bool AutoDetectRunning = false;
         protected SerialPort Port;
@@ -44,6 +45,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         private bool TransferFailure;
         private bool AutoDetect;
 
+        protected int[] BaudRates = new[] { 2400, 4800, 9600, 19200 };
 
         public SerialPortTuner(bool autoDetect)
         {
@@ -58,10 +60,16 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
             foreach (string portName in portNames)
             {
-                if (Connect(portName))
+                foreach (int rate in BaudRates)
                 {
-                    AutoDetectRunning = false;
-                    return true;
+                    Properties.BaudRate = rate;
+                    TransferFailure = false;
+                    Log.AddMessage("[SerialPortTuner] Check " + portName + ", " + rate + " Baud");
+                    if (Connect(portName))
+                    {
+                        AutoDetectRunning = false;
+                        return true;
+                    }
                 }
             }
 
@@ -110,6 +118,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
         private void TransferThreadMain()
         {
+            string lastSendString = "";
             try
             {
                 lock (TransferLock)
@@ -117,38 +126,62 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                     while (true)
                     {
                         Monitor.Wait(TransferLock);
+                        bool retry = true;
 
-                        try
+                        for (int tries = 5; retry && (tries > 0); tries--)
                         {
-                            switch (TransferDirection)
+                            /* default: do not retry transmission */
+                            retry = false;
+                            try
                             {
-                                case eTransferDirection.Receive:
-                                    TransferString = ReceiveInternal();
-                                    TransmitDelay.Stop();
-                                    TransmitDuration = TransmitDelay.Duration;
+                                switch (TransferDirection)
+                                {
+                                    case eTransferDirection.Receive:
+                                        TransferString = ReceiveInternal();
+                                        TransmitDelay.Stop();
+                                        TransmitDuration = TransmitDelay.Duration;
+                                        lastSendString = "";
+                                        break;
 
-                                    break;
+                                    case eTransferDirection.Send:
+                                        TransmitDelay.Start();
+                                        SendInternal(TransferString);
+                                        lastSendString = TransferString;
+                                        break;
 
-                                case eTransferDirection.Send:
-                                    TransmitDelay.Start();
-                                    SendInternal(TransferString);
-                                    break;
-
-                                case eTransferDirection.None:
-                                    break;
+                                    case eTransferDirection.None:
+                                        break;
+                                }
+                            }
+                            catch (TimeoutException e)
+                            {
+                                RX_FFT.Components.GDI.Log.AddMessage("[SerialPortTuner] Failure: TIMEOUT");
+                                if (tries == 0 || lastSendString == "")
+                                {
+                                    TransferString = "TIMEOUT";
+                                    TransferFailure = true;
+                                }
+                                else
+                                {
+                                    retry = true;
+                                    SendInternal(lastSendString);
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                RX_FFT.Components.GDI.Log.AddMessage("[SerialPortTuner] Failure: TRANSFER FAILURE (" + e.ToString() + ")");
+                                if (tries == 0 || lastSendString == "")
+                                {
+                                    TransferString = "TRANSFER FAILURE";
+                                    TransferFailure = true;
+                                }
+                                else
+                                {
+                                    retry = true;
+                                    SendInternal(lastSendString);
+                                }
                             }
                         }
-                        catch (TimeoutException e)
-                        {
-                            TransferString = "TIMEOUT";
-                            TransferFailure = true;
-                        }
-                        catch (Exception e)
-                        {
-                            TransferString = "TRANSFER FAILURE";
-                            TransferFailure = true;
-                        }
-
                         TransferDirection = eTransferDirection.None;
                         Monitor.Pulse(TransferLock);
                     }
@@ -165,23 +198,40 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
         public string ReceiveInternal()
         {
-            string ret = Port.ReadLine();
-            //Log.AddMessage("< " + ret);
+            string ret = Port.ReadLine().Trim(new []{'\r', '\n'});
+            if (Debug)
+            {
+                Log.AddMessage("< '" + ret + "'");
+            }
 
             return ret;
         }
 
         public void SendInternal(string cmd)
         {
-            //Log.AddMessage("> " + cmd);
+            if (Debug)
+            {
+                Log.AddMessage("> '" + cmd + "'");
+            }
             Port.WriteLine(cmd);
         }
 
 
         public string Receive()
         {
+            return Receive(false);
+        }
+
+        public string Receive(bool ignoreErrors)
+        {
             if (!IsOpened && !IsOpening)
                 return "NOT CONNECTED";
+
+            /* reset failure flag if requested */
+            if (ignoreErrors)
+            {
+                TransferFailure = false;
+            }
 
             if (TransferFailure)
                 return TransferString;
@@ -198,8 +248,9 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                         Monitor.Wait(TransferLock, 5);
                     }
 
-                    if (TransferFailure)
+                    if (TransferFailure && !ignoreErrors)
                     {
+                        RX_FFT.Components.GDI.Log.AddMessage("SerialPortTuner TransferFailure -> DeviceLost");
                         if (DeviceDisappeared != null)
                         {
                             DeviceDisappeared(this, null);
@@ -209,6 +260,12 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             }
             catch (Exception e)
             {
+            }
+
+            /* reset failure flag if requested */
+            if (ignoreErrors)
+            {
+                TransferFailure = false;
             }
 
             return TransferString;

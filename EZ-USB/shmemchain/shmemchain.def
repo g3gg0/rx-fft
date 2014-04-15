@@ -1,0 +1,46 @@
+LIBRARY	"shmemchain"
+EXPORTS
+	_shmemchain_get_mutex@0
+	_shmemchain_get_nodeinfo@0
+	_shmemchain_read_data@16
+	_shmemchain_register_node@8
+	_shmemchain_register_node_special@16
+	_shmemchain_unregister_node@4
+	_shmemchain_update_node@12
+	_shmemchain_update_buffer_size@8
+	_shmemchain_is_write_blocking@8
+	_shmemchain_write_data@12
+	
+	_shmemchain_update_node_name@8
+	_shmemchain_get_last_error@0
+	_shmemchain_get_last_errorcode@0
+	_shmemchain_get_infos@12
+	_shmemchain_get_all_nodes@8
+	_shmemchain_get_rate@4
+	_shmemchain_set_rate@12
+	_shmemchain_get_blocksize@4
+	_shmemchain_set_blocksize@8
+	
+	__?shmemchain_register_node@@YAHHH@Z=_shmemchain_register_node@8
+	__?shmemchain_read_data@@YAIHPAEIH@Z=_shmemchain_read_data@16
+
+	shmemchain_get_mutex=_shmemchain_get_mutex@0
+	shmemchain_get_nodeinfo=_shmemchain_get_nodeinfo@0
+	shmemchain_read_data=_shmemchain_read_data@16
+	shmemchain_register_node=_shmemchain_register_node@8
+	shmemchain_register_node_special=_shmemchain_register_node_special@16
+	shmemchain_unregister_node=_shmemchain_unregister_node@4
+	shmemchain_update_node=_shmemchain_update_node@12
+	shmemchain_update_buffer_size=_shmemchain_update_buffer_size@8
+	shmemchain_write_data=_shmemchain_write_data@12
+	shmemchain_get_last_error=_shmemchain_get_last_error@0
+	shmemchain_get_last_errorcode=_shmemchain_get_last_errorcode@0
+	shmemchain_get_infos=_shmemchain_get_infos@12
+	shmemchain_get_all_nodes=_shmemchain_get_all_nodes@8
+    shmemchain_is_write_blocking=_shmemchain_is_write_blocking@8
+
+	shmemchain_update_node_name=_shmemchain_update_node_name@8
+	shmemchain_get_rate=_shmemchain_get_rate@4
+	shmemchain_set_rate=_shmemchain_set_rate@12
+	shmemchain_get_blocksize=_shmemchain_get_blocksize@4
+	shmemchain_set_blocksize=_shmemchain_set_blocksize@8

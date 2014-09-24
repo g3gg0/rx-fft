@@ -36,6 +36,8 @@ namespace RX_FFT
         public static MainScreen Instance = null;
         public delegate DigitalTuner delegateGetTuner();
 
+        DCOffsetCorrection corr = new DCOffsetCorrection();
+        bool CorrectDCOffset = true;
         bool WindowActivated = true;
         bool ProcessPaused;
         bool ReadThreadRun;
@@ -105,6 +107,8 @@ namespace RX_FFT
         
 
         public Thread ReadThread;
+        public Thread UpdateRateThread;
+        
 
         public DeviceControl Device;
         public double LastSamplingRate = 48000;
@@ -668,6 +672,7 @@ namespace RX_FFT
             }
         }
 
+        object UpdateRateSignal = new object();
         double UpdateRate
         {
             get { return FFTDisplay.UpdateRate; }
@@ -1110,7 +1115,20 @@ namespace RX_FFT
                         /* sleep half the update rate before reading again.
                          * else we will read much too often and burn CPU time.
                          */
-                        Thread.Sleep((int)(500 / UpdateRate));
+                        if (UpdateRate > 0)
+                        {
+                            if (UpdateRate < 100)
+                            {
+                                lock (UpdateRateSignal)
+                                {
+                                    Monitor.Wait(UpdateRateSignal, (int)(1000 / UpdateRate));
+                                }
+                            }
+                        }
+                        else
+                        {
+                            Thread.Sleep(500);
+                        }
                     }
 
                     lock (FFTSizeSpinLock)
@@ -1137,6 +1155,12 @@ namespace RX_FFT
                                 {
                                     inputI = Device.SampleSource.SourceSamplesI;
                                     inputQ = Device.SampleSource.SourceSamplesQ;
+
+                                    if (CorrectDCOffset)
+                                    {
+                                        corr.PerformDCDetection(ref inputI, ref inputQ);
+                                        corr.PerformDCCorrection(ref inputI, ref inputQ);
+                                    }
 
                                     /* update strength display every some ms */
                                     if (DateTime.Now.Subtract(lastStrengthUpdate).TotalMilliseconds > StrengthUpdateTime)
@@ -1484,6 +1508,10 @@ namespace RX_FFT
             ReadThread.Name = "MainScreen Data Read Thread";
             ReadThread.Start();
 
+            UpdateRateThread = new Thread(UpdateRateThreadFunc);
+            UpdateRateThread.Name = "UpdateRateThread";
+            UpdateRateThread.Start();
+
             foreach (AudioDemodulator demod in AudioDemodulators)
             {
                 demod.Start(AudioShmem);
@@ -1491,6 +1519,29 @@ namespace RX_FFT
             foreach (KeyValuePair<FrequencyMarker, AudioDemodulator> pair in MarkerDemodulators)
             {
                 pair.Value.Start(AudioShmem);
+            }
+        }
+
+        private void UpdateRateThreadFunc(object obj)
+        {
+            while(UpdateRateThread != null)
+            {
+                if (UpdateRate < 100)
+                {
+                    lock (UpdateRateThread)
+                    {
+                        Monitor.Wait(UpdateRateThread, (int)(1000 / UpdateRate));
+                    }
+
+                    lock (UpdateRateSignal)
+                    {
+                        Monitor.Pulse(UpdateRateSignal);
+                    }
+                }
+                else
+                {
+                    Thread.Sleep(100);
+                }
             }
         }
 
@@ -1513,6 +1564,12 @@ namespace RX_FFT
                     ReadThread.Abort();
                 }
                 ReadThread = null;
+            }
+
+            if (UpdateRateThread != null)
+            {
+                UpdateRateThread.Abort();
+                UpdateRateThread = null;
             }
 
             foreach (AudioDemodulator demod in AudioDemodulators)

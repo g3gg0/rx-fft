@@ -16,12 +16,12 @@ namespace LibRXFFT.Libraries.Filters
         protected int Section;
         protected double[] Num;
         protected double[] Den;
-        
-        [DllImport("libRXFFT_native.dll", EntryPoint = "IIRInit")]
+
+        [DllImport("libRXFFT_native.dll", EntryPoint = "IIRInit", CallingConvention = CallingConvention.Cdecl)]
         public static unsafe extern IntPtr IIRInit(double gain, int section, double[] num, double[] den);
-        [DllImport("libRXFFT_native.dll", EntryPoint = "IIRProcess")]
+        [DllImport("libRXFFT_native.dll", EntryPoint = "IIRProcess", CallingConvention = CallingConvention.Cdecl)]
         public static unsafe extern void IIRProcess(IntPtr ctx, double[] inData, double[] outData, int samples);
-        [DllImport("libRXFFT_native.dll", EntryPoint = "IIRFree")]
+        [DllImport("libRXFFT_native.dll", EntryPoint = "IIRFree", CallingConvention = CallingConvention.Cdecl)]
         public static unsafe extern void IIRFree(IntPtr ctx);
         
 

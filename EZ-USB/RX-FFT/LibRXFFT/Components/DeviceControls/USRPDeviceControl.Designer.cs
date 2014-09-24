@@ -42,8 +42,8 @@
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.groupBox5 = new System.Windows.Forms.GroupBox();
             this.label4 = new System.Windows.Forms.Label();
-            this.txtChannel = new LibRXFFT.Components.GDI.TextBoxMouseScroll();
-            this.txtMgcValue = new LibRXFFT.Components.GDI.TextBoxMouseScroll();
+            this.txtChannel = new LibRXFFT.Components.GDI.TextBoxMouseScrollLong();
+            this.txtMgcValue = new LibRXFFT.Components.GDI.TextBoxMouseScrollLong();
             this.radioAgcOff = new System.Windows.Forms.RadioButton();
             this.radioAgcManual = new System.Windows.Forms.RadioButton();
             this.radioAgcFast = new System.Windows.Forms.RadioButton();
@@ -51,7 +51,7 @@
             this.radioAgcSlow = new System.Windows.Forms.RadioButton();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.txtAtt = new LibRXFFT.Components.GDI.TextBoxMouseScroll();
+            this.txtAtt = new LibRXFFT.Components.GDI.TextBoxMouseScrollLong();
             this.radioTuner = new System.Windows.Forms.RadioButton();
             this.chkAtt = new System.Windows.Forms.CheckBox();
             this.radioRf1 = new System.Windows.Forms.RadioButton();
@@ -513,12 +513,12 @@
         private System.Windows.Forms.RadioButton radioAgcFast;
         private System.Windows.Forms.RadioButton radioAgcMedium;
         private System.Windows.Forms.RadioButton radioAgcSlow;
-        private LibRXFFT.Components.GDI.TextBoxMouseScroll txtMgcValue;
+        private LibRXFFT.Components.GDI.TextBoxMouseScrollLong txtMgcValue;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label1;
-        private LibRXFFT.Components.GDI.TextBoxMouseScroll txtAtt;
+        private LibRXFFT.Components.GDI.TextBoxMouseScrollLong txtAtt;
         private System.Windows.Forms.Label label4;
-        private LibRXFFT.Components.GDI.TextBoxMouseScroll txtChannel;
+        private LibRXFFT.Components.GDI.TextBoxMouseScrollLong txtChannel;
         private System.Windows.Forms.TextBox txtInfo;
     }
 }

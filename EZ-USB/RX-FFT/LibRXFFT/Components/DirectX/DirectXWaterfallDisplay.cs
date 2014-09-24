@@ -9,6 +9,8 @@ using SlimDX;
 using SlimDX.Direct3D9;
 using Font = SlimDX.Direct3D9.Font;
 using LibRXFFT.Components.Generic;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace LibRXFFT.Components.DirectX
 {
@@ -27,10 +29,17 @@ namespace LibRXFFT.Components.DirectX
         protected Surface DefaultRenderTarget;
         protected Texture WaterfallTexture;
         protected Texture TempWaterfallTexture;
-        protected Texture SaveImageDisplayContext;
+
+        protected struct TextureInfo
+        {
+            public Texture texture;
+            public int lines;
+        }
+
+        protected Queue<TextureInfo> SaveImageDisplayContextsFree = new Queue<TextureInfo>();
+        protected Queue<TextureInfo> SaveImageDisplayContextsFilled = new Queue<TextureInfo>();
         protected Texture SaveWaterfallTexture;
         protected Texture SaveTempWaterfallTexture;
-        //protected Texture SaveImageThreadContext;
         protected Color ColorFaderBG = Color.Orange;
 
         public ColorLookupTable ColorTable = new MultiColorMap(8192, Color.Black, Color.FromArgb(0, 0, 128), Color.FromArgb(192, 0, 255), Color.White);
@@ -70,17 +79,11 @@ namespace LibRXFFT.Components.DirectX
                 if (value)
                 {
                     /* reset parameters */
-                    SaveImageLines = 0;
-                    SaveImageAvailable = false;
                     _SavingEnabled = true;
                 }
                 else
                 {
                     _SavingEnabled = false;
-                    if (SaveImageLines > 0)
-                    {
-                        SaveImageAvailable = true;
-                    }
                 }
 
                 /* notify thread */
@@ -93,8 +96,6 @@ namespace LibRXFFT.Components.DirectX
 
         public bool LevelBarActive = false;
 
-        protected bool SaveImageAvailable;
-        protected int SaveImageLines = 0;
         protected Mutex SaveImageLock = new Mutex();
         protected Semaphore SaveBufferTrigger = new Semaphore(0, 1);
         protected PresentParameters SaveParameters;
@@ -163,102 +164,101 @@ namespace LibRXFFT.Components.DirectX
                     {
                         /* wait until we should do something */
                         Monitor.Wait(SaveBufferTrigger, 250);
+                    }
 
-                        /* if there is a new texture to save */
-                        if (SaveImageAvailable)
+                    /* if there is a new texture to save */
+                    if (SaveImageDisplayContextsFilled.Count == 0)
+                    {
+                        /* clear old file when got disabled */
+                        if (!SavingEnabled && SavedImage != null)
                         {
-                            SaveImageAvailable = false;
+                            SavedImage.Dispose();
+                            SavedImage = null;
+                        }
+                        continue;
+                    }
 
-                            try
-                            {
-                                /* build an image from the texture */
-                                DataStream saveImageStream = Texture.ToStream(SaveImageDisplayContext, ImageFileFormat.Png);
-                                Image curImage = Image.FromStream(saveImageStream);
+                    try
+                    {
+                        /* build an image from the texture */
+                        TextureInfo front = SaveImageDisplayContextsFilled.Dequeue();
 
-                                /* and create a new image with the new size */
-                                Image newImage;
-                                if (SavedImage != null && SavedImage.Width == curImage.Width)
-                                {
-                                    newImage = new Bitmap(curImage.Width, SavedImage.Height + SaveImageLines);
-                                }
-                                else
-                                {
-                                    newImage = new Bitmap(curImage.Width, SaveImageLines);
-                                }
+                        DataStream saveImageStream = Texture.ToStream(front.texture, ImageFileFormat.Png);
+                        Image curImage = Image.FromStream(saveImageStream);
 
-                                /* draw last image and the current texture into the new image */
-                                Graphics g = Graphics.FromImage(newImage);
+                        SaveImageDisplayContextsFree.Enqueue(front);
 
-                                /* but skip the first few lines to make sure timestamp gets drawn */
-                                int offset = -(FixedFontHeight + 1);
-
-                                /* dont skip when saving got disabled and this is our last run */
-                                if (!SavingEnabled)
-                                {
-                                    offset = 0;
-                                }
-                                offset = 0;
-
-
-                                g.DrawImage(curImage, 0, 0 + offset);
-                                if (SavedImage != null)
-                                {
-                                    g.DrawImage(SavedImage, 0, SaveImageLines + offset);
-                                }
-
-                                /* no more lines to save in current buffer */
-                                SaveImageLines = 0;
-
-                                /* save it to disk */
-                                try
-                                {
-                                    newImage.Save(SavingNameExtended, ImageFormat.Png);
-                                }
-                                catch (Exception e)
-                                {
-                                }
-
-                                /* dispose old image */
-                                if (SavedImage != null)
-                                    SavedImage.Dispose();
-
-                                /* and keep for the next time */
-                                SavedImage = newImage;
-                            }
-                            catch (Exception e)
-                            {
-                                /* clear current image and save to a new file
-                                 * TODO: correct filename ;)
-                                 */
-                                SavingNamePostfix++;
-                                string savingName = "";
-
-                                string[] parts = _SavingName.Split('.');
-                                if (parts.Length > 1)
-                                {
-                                    for (int part = 0; part < parts.Length - 1; part++)
-                                    {
-                                        savingName += parts[part] + ".";
-                                    }
-                                    savingName += "_" + SavingNamePostfix + "." + parts[parts.Length - 1];
-                                }
-                                else
-                                {
-                                    savingName = _SavingName + "_" + SavingNamePostfix;
-                                }
-
-                                SavingNameExtended = savingName;
-
-                                if (SavedImage != null)
-                                {
-                                    SavedImage.Dispose();
-                                    SavedImage = null;
-                                }
-                            }
+                        /* and create a new image with the new size */
+                        Image newImage;
+                        if (SavedImage != null && SavedImage.Width == curImage.Width)
+                        {
+                            newImage = new Bitmap(curImage.Width, SavedImage.Height + front.lines);
+                        }
+                        else
+                        {
+                            newImage = new Bitmap(curImage.Width, front.lines);
                         }
 
-                        /* clear old file when got disabled */
-                        if (!SavingEnabled && SaveImageLines == 0 && SaveWaterfallLinesRendered == 0 && SavedImage != null)
+                        /* draw last image and the current texture into the new image */
+                        Graphics g = Graphics.FromImage(newImage);
+
+                        /* but skip the first few lines to make sure timestamp gets drawn */
+                        int offset = -(FixedFontHeight + 1);
+
+                        /* dont skip when saving got disabled and this is our last run */
+                        if (!SavingEnabled)
+                        {
+                            offset = 0;
+                        }
+                        offset = 0;
+
+                        g.DrawImage(curImage, 0, 0 + offset);
+                        if (SavedImage != null)
+                        {
+                            g.DrawImage(SavedImage, 0, front.lines + offset);
+                        }
+
+                        /* save it to disk */
+                        try
+                        {
+                            newImage.Save(SavingNameExtended, ImageFormat.Png);
+                        }
+                        catch (Exception e)
+                        {
+                        }
+
+                        /* dispose old image */
+                        if (SavedImage != null)
+                            SavedImage.Dispose();
+
+                        /* and keep for the next time */
+                        SavedImage = newImage;
+                    }
+                    catch (Exception e)
+                    {
+                        /* clear current image and save to a new file
+                         * TODO: correct filename ;)
+                         */
+                        SavingNamePostfix++;
+                        string savingName = "";
+
+                        string[] parts = _SavingName.Split('.');
+                        if (parts.Length > 1)
+                        {
+                            for (int part = 0; part < parts.Length - 1; part++)
+                            {
+                                savingName += parts[part] + ".";
+                            }
+                            savingName += "_" + SavingNamePostfix + "." + parts[parts.Length - 1];
+                        }
+                        else
+                        {
+                            savingName = _SavingName + "_" + SavingNamePostfix;
+                        }
+
+                        SavingNameExtended = savingName;
+
+                        if (SavedImage != null)
                         {
                             SavedImage.Dispose();
                             SavedImage = null;
@@ -793,18 +793,24 @@ namespace LibRXFFT.Components.DirectX
             AddAllocatedResource(Sprite);
 
             /* save file every screen roll-over */
-            SaveWaterfallLinesToRender = SaveParameters.BackBufferHeight / 2;
+            SaveWaterfallLinesToRender = SaveParameters.BackBufferHeight;
             SaveWaterfallLinesRendered = 0;
 
-            //SaveImageThreadContext = new Texture(SaveDeviceThreadContext, SaveParameters.BackBufferWidth, SaveParameters.BackBufferHeight, 1, Usage.RenderTarget, Format.A8R8G8B8, Pool.Default);
             SaveWaterfallTexture = new Texture(SaveDeviceDisplayContext, SaveParameters.BackBufferWidth, SaveParameters.BackBufferHeight, 1, Usage.RenderTarget, Format.A8R8G8B8, Pool.Default);
             AddAllocatedResource(SaveWaterfallTexture);
 
             SaveTempWaterfallTexture = new Texture(SaveDeviceDisplayContext, SaveParameters.BackBufferWidth, SaveParameters.BackBufferHeight, 1, Usage.RenderTarget, Format.A8R8G8B8, Pool.Default);
             AddAllocatedResource(SaveTempWaterfallTexture);
 
-            SaveImageDisplayContext = new Texture(SaveDeviceDisplayContext, SaveParameters.BackBufferWidth, SaveParameters.BackBufferHeight, 1, Usage.RenderTarget, Format.A8R8G8B8, Pool.Default);
-            AddAllocatedResource(SaveImageDisplayContext);
+            for (int pos = 0; pos < 20; pos++)
+            {
+                TextureInfo info = new TextureInfo();
+                info.texture = new Texture(SaveDeviceDisplayContext, SaveParameters.BackBufferWidth, SaveParameters.BackBufferHeight, 1, Usage.RenderTarget, Format.A8R8G8B8, Pool.Default);
+                ClearTexture(SaveDeviceDisplayContext, info.texture);
+                AddAllocatedResource(info.texture);
+
+                SaveImageDisplayContextsFree.Enqueue(info);
+            }
 
             SaveFixedFont = new Font(SaveDeviceDisplayContext, new System.Drawing.Font("Courier New", 8));
             AddAllocatedResource(SaveFixedFont);
@@ -817,7 +823,6 @@ namespace LibRXFFT.Components.DirectX
             ClearTexture(Device, TempWaterfallTexture);
             ClearTexture(SaveDeviceDisplayContext, SaveWaterfallTexture);
             ClearTexture(SaveDeviceDisplayContext, SaveTempWaterfallTexture);
-            ClearTexture(SaveDeviceDisplayContext, SaveImageDisplayContext);
         }
 
 
@@ -825,9 +830,10 @@ namespace LibRXFFT.Components.DirectX
         {
             base.ReleaseResources();
 
+            SaveImageDisplayContextsFree.Clear();
+            SaveImageDisplayContextsFilled.Clear();
             SaveTempWaterfallTexture = null;
             SaveWaterfallTexture = null;
-            SaveImageDisplayContext = null;
             Sprite = null;
             SaveSprite = null;
             WaterfallTexture = null;
@@ -1239,21 +1245,33 @@ namespace LibRXFFT.Components.DirectX
                         SaveWaterfallLinesRendered++;
                     }
 
-                    if (!SavingEnabled || (SaveWaterfallLinesRendered >= (SaveWaterfallLinesToRender - (SaveWaterfallLinesToRender / 2 + 1))))
+                    if (!SavingEnabled || (SaveWaterfallLinesRendered >= SaveWaterfallLinesToRender))
                     {
                         /* backup the current image */
-                        SaveDeviceDisplayContext.SetRenderTarget(0, SaveImageDisplayContext.GetSurfaceLevel(0));
-
-                        SaveSprite.Begin(SpriteFlags.None);
-                        SaveSprite.Draw(SaveWaterfallTexture, new Color4(Color.White));
-                        SaveSprite.End();
-
-                        lock (SaveBufferTrigger)
+                        if (SaveImageDisplayContextsFree.Count > 0)
                         {
-                            SaveImageLines = SaveWaterfallLinesRendered;
-                            SaveImageAvailable = true;
-                            Monitor.Pulse(SaveBufferTrigger);
+                            TextureInfo front = SaveImageDisplayContextsFree.Dequeue();
+
+                            front.lines = SaveWaterfallLinesRendered;
+                            SaveDeviceDisplayContext.SetRenderTarget(0, front.texture.GetSurfaceLevel(0));
+
+                            SaveSprite.Begin(SpriteFlags.None);
+                            SaveSprite.Draw(SaveWaterfallTexture, new Color4(Color.White));
+                            SaveSprite.End();
+
+                            SaveImageDisplayContextsFilled.Enqueue(front);
+
+                            lock (SaveBufferTrigger)
+                            {
+                                Monitor.Pulse(SaveBufferTrigger);
+                            }
                         }
+                        else
+                        {
+                            SavingEnabled = false;
+                            SaveFixedFont.DrawString(null, "Saving is too slow", 5, 1, (int)(ColorCursor.ToArgb()));
+                        }
+                        
                         SaveWaterfallLinesRendered = 0;
                     }
                     SaveDeviceDisplayContext.EndScene();

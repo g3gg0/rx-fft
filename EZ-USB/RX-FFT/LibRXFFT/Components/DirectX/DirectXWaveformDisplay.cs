@@ -161,27 +161,44 @@ namespace LibRXFFT.Components.DirectX
 
                 if (numPoints > 0)
                 {
-                    if (PlotVerts == null || numPoints > PlotVerts.Length)
+                    double xDist = 1;
+
+                    if (RenderAsLines)
                     {
-                        PlotVerts = new Vertex[numPoints];
+                        if (PlotVerts == null || numPoints > PlotVerts.Length)
+                        {
+                            PlotVerts = new Vertex[numPoints];
+                        }
+                        if (numPoints > PlotVertsOverview.Length)
+                        {
+                            PlotVertsOverview = new Vertex[numPoints];
+                        }
+                        PlotVertsEntries = numPoints - 1;
+                        xDist = DirectXWidth / ((double)PlotVertsEntries);
                     }
-                    if (numPoints > PlotVertsOverview.Length)
+                    else
                     {
-                        PlotVertsOverview = new Vertex[numPoints];
+                        if (numPoints * 2 > PlotVerts.Length)
+                        {
+                            PlotVerts = new Vertex[numPoints * 2];
+                            PlotVertsOverview = new Vertex[numPoints * 2];
+                        }
+                        PlotVertsEntries = 2 * numPoints - 1;
+                        xDist = DirectXWidth / ((double)PlotVertsEntries / 2.0f);
                     }
 
-                    PlotVertsEntries = numPoints - 1;
 
+                    int outPos = 0;
                     for (int pos = 0; pos < numPoints; pos++)
                     {
                         double yVal = points[pos].Y;
-                        double xPos = ((double)points[pos].X / (double)PlotVertsEntries) * DirectXWidth;
+                        double xPos = (double)points[pos].X * xDist;
 
-                        PlotVerts[pos].PositionRhw.X = (float)Math.Min(DirectXWidth, Math.Max(0, ((XAxisSampleOffset + xPos) * XZoomFactor - DisplayXOffset)));
-                        PlotVerts[pos].PositionRhw.Y = (float)Math.Min(DirectXHeight, Math.Max(0, yVal));
-                        PlotVerts[pos].PositionRhw.Z = 0.5f;
-                        PlotVerts[pos].PositionRhw.W = 1;
-                        PlotVerts[pos].Color = 0x9F000000 | colorFG;
+                        PlotVerts[outPos].PositionRhw.X = (float)Math.Min(DirectXWidth, Math.Max(0, ((XAxisSampleOffset + xPos) * XZoomFactor - DisplayXOffset)));
+                        PlotVerts[outPos].PositionRhw.Y = (float)Math.Min(DirectXHeight, Math.Max(0, yVal));
+                        PlotVerts[outPos].PositionRhw.Z = 0.5f;
+                        PlotVerts[outPos].PositionRhw.W = 1;
+                        PlotVerts[outPos].Color = 0x9F000000 | colorFG;
 
                         if (OverviewModeEnabled)
                         {
@@ -190,6 +207,15 @@ namespace LibRXFFT.Components.DirectX
                             PlotVertsOverview[pos].PositionRhw.Z = PlotVerts[pos].PositionRhw.Z;
                             PlotVertsOverview[pos].PositionRhw.W = PlotVerts[pos].PositionRhw.W;
                             PlotVertsOverview[pos].Color = PlotVerts[pos].Color;
+                        }
+
+                        outPos++;
+
+                        if (!RenderAsLines)
+                        {
+                            PlotVerts[outPos] = PlotVerts[outPos - 1];
+                            PlotVerts[outPos].PositionRhw.Z += 0.1f;
+                            outPos++;
                         }
                     }
 

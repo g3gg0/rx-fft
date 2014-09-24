@@ -98,7 +98,7 @@ namespace LibRXFFT.Libraries.SignalProcessing
             }
         }
 
-        private void SetSamplingRate(long rate)
+        private void SetSamplingRate(double rate)
         {
             lock (DemodState.SoundSinkInfos)
             {

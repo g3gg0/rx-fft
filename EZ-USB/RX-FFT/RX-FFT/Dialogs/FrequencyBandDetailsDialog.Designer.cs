@@ -38,8 +38,8 @@ namespace RX_FFT.Dialogs
             this.label2 = new System.Windows.Forms.Label();
             this.label6 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
-            this.txtChannelStart = new LibRXFFT.Components.GDI.TextBoxMouseScroll();
-            this.txtChannelEnd = new LibRXFFT.Components.GDI.TextBoxMouseScroll();
+            this.txtChannelStart = new LibRXFFT.Components.GDI.TextBoxMouseScrollLong();
+            this.txtChannelEnd = new LibRXFFT.Components.GDI.TextBoxMouseScrollLong();
             this.txtLabel = new System.Windows.Forms.TextBox();
             this.btnOk = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
@@ -255,8 +255,8 @@ namespace RX_FFT.Dialogs
         private LibRXFFT.Components.GDI.FrequencySelector txtChannelDist;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label6;
-        private TextBoxMouseScroll txtChannelStart;
-        private TextBoxMouseScroll txtChannelEnd;
+        private TextBoxMouseScrollLong txtChannelStart;
+        private TextBoxMouseScrollLong txtChannelEnd;
         private System.Windows.Forms.Label label3;
     }
 }

@@ -1,8 +1,63 @@
 using System;
 using System.Runtime.InteropServices;
 
+/* https://github.com/tszalay/FFTWSharp */
+
 namespace LibRXFFT.Libraries.FFTW
 {
+    #region Single Precision
+    /// <summary>
+    /// To simplify FFTW memory management
+    /// </summary>
+    public abstract class fftwf_complexarray
+    {
+        private IntPtr handle;
+        public IntPtr Handle
+        { get { return handle; } }
+
+        // The logical length of the array (# of complex numbers, not elements)
+        private int length;
+        public int Length
+        { get { return length; } }
+
+        /// <summary>
+        /// Creates a new array of complex numbers
+        /// </summary>
+        /// <param name="length">Logical length of the array</param>
+        public fftwf_complexarray(int length)
+        {
+            this.length = length;
+            this.handle = fftwf.malloc(this.length * 8);
+        }
+
+        /// <summary>
+        /// Creates an FFTW-compatible array from array of floats, initializes to single precision only
+        /// </summary>
+        /// <param name="data">Array of floats, alternating real and imaginary</param>
+        public fftwf_complexarray(float[] data)
+        {
+            this.length = data.Length / 2;
+            this.handle = fftwf.malloc(this.length * 8);
+            Marshal.Copy(data, 0, handle, this.length * 2);
+        }
+
+        /// <summary>
+        /// Set the data to an array of complex numbers
+        /// </summary>
+        public void SetData(float[] data)
+        {
+            if (data.Length / 2 != this.length)
+                throw new ArgumentException("Array length mismatch!");
+
+            Marshal.Copy(data, 0, handle, this.length * 2);
+        }
+
+        ~fftwf_complexarray()
+        {
+            fftwf.free(handle);
+        }
+    }
+
     /// <summary>
     /// Creates, stores, and destroys fftw plans
     /// </summary>
@@ -126,29 +181,31 @@ namespace LibRXFFT.Libraries.FFTW
         }
 
         public static fftwf_plan r2r_3d(int nx, int ny, int nz, fftwf_complexarray input, fftwf_complexarray output,
-                                        fftw_kind kindx, fftw_kind kindy, fftw_kind kindz, fftw_flags flags)
+        fftw_kind kindx, fftw_kind kindy, fftw_kind kindz, fftw_flags flags)
         {
             fftwf_plan p = new fftwf_plan();
             p.handle = fftwf.r2r_3d(nx, ny, nz, input.Handle, output.Handle,
-                                    kindx, kindy, kindz, flags);
+            kindx, kindy, kindz, flags);
             return p;
         }
 
         public static fftwf_plan r2r(int rank, int[] n, fftwf_complexarray input, fftwf_complexarray output,
-                                     fftw_kind[] kind, fftw_flags flags)
+                    fftw_kind[] kind, fftw_flags flags)
         {
             fftwf_plan p = new fftwf_plan();
             p.handle = fftwf.r2r(rank, n, input.Handle, output.Handle,
-                                 kind, flags);
+            kind, flags);
             return p;
         }
         #endregion
     }
+    #endregion
 
+    #region Double Precision
     /// <summary>
     /// So FFTW can manage its own memory nicely
     /// </summary>
-    public class fftwf_complexarray
+    public class fftw_complexarray
     {
         private IntPtr handle;
         public IntPtr Handle
@@ -162,26 +219,37 @@ namespace LibRXFFT.Libraries.FFTW
         /// Creates a new array of complex numbers
         /// </summary>
         /// <param name="length">Logical length of the array</param>
-        public fftwf_complexarray(int length)
+        public fftw_complexarray(int length)
         {
             this.length = length;
-            this.handle = fftwf.malloc(this.length * 16);
+            this.handle = fftw.malloc(this.length * 16);
         }
 
         /// <summary>
         /// Creates an FFTW-compatible array from array of floats, initializes to single precision only
         /// </summary>
         /// <param name="data">Array of floats, alternating real and imaginary</param>
-        public fftwf_complexarray(double[] data)
+        public fftw_complexarray(double[] data)
         {
             this.length = data.Length / 2;
-            this.handle = fftwf.malloc(this.length * 16);
+            this.handle = fftw.malloc(this.length * 16);
             Marshal.Copy(data, 0, handle, this.length * 2);
         }
 
-        ~fftwf_complexarray()
+        /// <summary>
+        /// Set the data to an array of complex numbers
+        /// </summary>
+        public void SetData(double[] data)
         {
-            fftwf.free(handle);
+            if (data.Length / 2 != this.length)
+                throw new ArgumentException("Array length mismatch!");
+
+            Marshal.Copy(data, 0, handle, this.length * 2);
+        }
+
+        ~fftw_complexarray()
+        {
+            fftw.free(handle);
         }
     }
 
@@ -308,22 +376,23 @@ namespace LibRXFFT.Libraries.FFTW
         }
 
         public static fftw_plan r2r_3d(int nx, int ny, int nz, fftw_complexarray input, fftw_complexarray output,
-                                       fftw_kind kindx, fftw_kind kindy, fftw_kind kindz, fftw_flags flags)
+        fftw_kind kindx, fftw_kind kindy, fftw_kind kindz, fftw_flags flags)
         {
             fftw_plan p = new fftw_plan();
             p.handle = fftw.r2r_3d(nx, ny, nz, input.Handle, output.Handle,
-                                   kindx, kindy, kindz, flags);
+            kindx, kindy, kindz, flags);
             return p;
         }
 
         public static fftw_plan r2r(int rank, int[] n, fftw_complexarray input, fftw_complexarray output,
-                                    fftw_kind[] kind, fftw_flags flags)
+                    fftw_kind[] kind, fftw_flags flags)
         {
             fftw_plan p = new fftw_plan();
             p.handle = fftw.r2r(rank, n, input.Handle, output.Handle,
-                                kind, flags);
+            kind, flags);
             return p;
         }
         #endregion
     }
+    #endregion
 }

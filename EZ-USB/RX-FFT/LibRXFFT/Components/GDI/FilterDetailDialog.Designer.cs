@@ -41,8 +41,8 @@
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
             this.label4 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
-            this.txtFilterOffset = new LibRXFFT.Components.GDI.TextBoxMouseScroll();
-            this.txtFilterGain = new LibRXFFT.Components.GDI.TextBoxMouseScroll();
+            this.txtFilterOffset = new LibRXFFT.Components.GDI.TextBoxMouseScrollLong();
+            this.txtFilterGain = new LibRXFFT.Components.GDI.TextBoxMouseScrollLong();
             this.groupBox1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -276,7 +276,7 @@
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label5;
-        private LibRXFFT.Components.GDI.TextBoxMouseScroll txtFilterOffset;
-        private LibRXFFT.Components.GDI.TextBoxMouseScroll txtFilterGain;
+        private LibRXFFT.Components.GDI.TextBoxMouseScrollLong txtFilterOffset;
+        private LibRXFFT.Components.GDI.TextBoxMouseScrollLong txtFilterGain;
     }
 }

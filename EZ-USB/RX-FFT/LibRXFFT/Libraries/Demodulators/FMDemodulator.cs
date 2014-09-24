@@ -9,11 +9,11 @@ namespace LibRXFFT.Libraries.Demodulators
         private double LastQ = 0;
         public bool Accurate = false;
 
-        [DllImport("libRXFFT_native.dll", EntryPoint = "FMDemodInit")]
+        [DllImport("libRXFFT_native.dll", EntryPoint = "FMDemodInit", CallingConvention = CallingConvention.Cdecl)]
         public static unsafe extern IntPtr FMDemodInit();
-        [DllImport("libRXFFT_native.dll", EntryPoint = "FMDemodProcess")]
+        [DllImport("libRXFFT_native.dll", EntryPoint = "FMDemodProcess", CallingConvention = CallingConvention.Cdecl)]
         public static unsafe extern void FMDemodProcess(IntPtr ctx, double[] inDataI, double[] inDataQ, double[] outData, int entries);
-        [DllImport("libRXFFT_native.dll", EntryPoint = "FMDemodFree")]
+        [DllImport("libRXFFT_native.dll", EntryPoint = "FMDemodFree", CallingConvention = CallingConvention.Cdecl)]
         public static unsafe extern void FMDemodFree(IntPtr ctx);
 
 

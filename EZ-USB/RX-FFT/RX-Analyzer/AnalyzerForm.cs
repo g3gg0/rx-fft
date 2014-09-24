@@ -9,6 +9,7 @@ using System.Windows.Forms;
 using RX_Analyzer.Views;
 using System.Threading;
 using LibRXFFT.Components.DeviceControls;
+using LibRXFFT.Libraries.ShmemChain;
 
 namespace RX_Analyzer
 {
@@ -126,6 +127,60 @@ namespace RX_Analyzer
         private void fileToolStripMenuItem_Click(object sender, EventArgs e)
         {
             InitDevice(new FileSourceDeviceControl());
+        }
+
+        public void OpenSharedMem(int srcChan)
+        {
+            InitDevice(new SharedMemDeviceControl(srcChan));
+        }
+
+        private MenuItem btnOpen_SharedMemoryCreateMenuItem(string name, int srcChan)
+        {
+            MenuItem item;
+
+            if (srcChan < 0)
+            {
+                item = new MenuItem("No data from <" + name + ">");
+                item.Enabled = false;
+            }
+            else
+            {
+                item = new MenuItem("Channel " + srcChan + " from <" + name + ">",
+                new EventHandler(delegate(object sender, EventArgs e)
+                {
+                    OpenSharedMem(srcChan);
+                }));
+            }
+
+            return item;
+        }
+
+        private void sharedMemoryToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                ContextMenu menu = new ContextMenu();
+                NodeInfo[] infos = SharedMem.GetNodeInfos();
+
+                foreach (NodeInfo info in infos)
+                {
+                    MenuItem item = btnOpen_SharedMemoryCreateMenuItem(info.name, info.dstChan);
+                    menu.MenuItems.Add(item);
+                }
+
+                if (infos.Length == 0)
+                {
+                    MenuItem item = new MenuItem("(No nodes found)");
+                    item.Enabled = false;
+                    menu.MenuItems.Add(item);
+                }
+
+                menu.Show(this, new System.Drawing.Point(10, 10));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Failed to init shared memory. Is the correct shmemchain.dll in the program directory? (" + ex.ToString() + ")");
+            }
         }
     }
 }

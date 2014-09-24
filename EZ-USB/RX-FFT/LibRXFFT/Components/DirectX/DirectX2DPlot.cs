@@ -45,10 +45,23 @@ namespace LibRXFFT.Components.DirectX
         protected int ScaleVertexesUsed = 0;
         protected int OverlayVertexesUsed = 0;
 
-        protected Timer ScreenRefreshTimer;
-        protected Timer LinePointUpdateTimer;
+        protected Thread ScreenRefreshTimer;
+        protected Thread LinePointUpdateTimer;
         protected Thread DisplayThread;
-        protected bool NeedsUpdate = false;
+        public object LinePointUpdateSignal = new object();
+        protected bool NeedsUpdate
+        {
+            set
+            {
+                if (value)
+                {
+                    lock (LinePointUpdateSignal)
+                    {
+                        Monitor.Pulse(LinePointUpdateSignal);
+                    }
+                }
+            }
+        }
         public bool EnoughData = false;
 
         public double ScalePosMax = -1;
@@ -108,8 +121,8 @@ namespace LibRXFFT.Components.DirectX
                 RenderSleepDelay = 1000 / value;
                 if (!double.IsNaN(RenderSleepDelay) && !double.IsInfinity(RenderSleepDelay) && LinePointUpdateTimer != null)
                 {
-                    LinePointUpdateTimer.Interval = (uint)RenderSleepDelay;
-                    ScreenRefreshTimer.Interval = (uint)(1000/MinRefreshRate);// ((value < MinRefreshRate) ? (1000 / MinRefreshRate) : RenderSleepDelay);
+                    //LinePointUpdateTimer.Interval = (uint)RenderSleepDelay;
+                    //ScreenRefreshTimer.Interval = (uint)(1000/MinRefreshRate);// ((value < MinRefreshRate) ? (1000 / MinRefreshRate) : RenderSleepDelay);
                 }
             }
         }
@@ -152,15 +165,35 @@ namespace LibRXFFT.Components.DirectX
 
             if (!slaveMode)
             {
-                ScreenRefreshTimer = new Timer();
-                ScreenRefreshTimer.Interval = (uint)(1000 / DefaultRefreshRate);
-                ScreenRefreshTimer.Timer += new EventHandler(ScreenRefreshTimer_Func);
+                ScreenRefreshTimer = new Thread(ScreenRefreshTask);
                 ScreenRefreshTimer.Start();
 
-                LinePointUpdateTimer = new Timer();
-                LinePointUpdateTimer.Interval = (uint)RenderSleepDelay;
-                LinePointUpdateTimer.Timer += new EventHandler(LinePointUpdateTimer_Func);
+                LinePointUpdateTimer = new Thread(LinePointUpdateTask);
                 LinePointUpdateTimer.Start();
+            }
+        }
+
+        void ScreenRefreshTask()
+        {
+            while (ScreenRefreshTimer != null)
+            {
+                lock (NeedsRenderSignal)
+                {
+                    Monitor.Wait(NeedsRenderSignal);
+                }
+                ScreenRefreshTimer_Func(ScreenRefreshTimer, null);
+            }
+        }
+
+        void LinePointUpdateTask()
+        {
+            while (LinePointUpdateTimer != null)
+            {
+                lock (LinePointUpdateSignal)
+                {
+                    Monitor.Wait(LinePointUpdateSignal);
+                }
+                LinePointUpdateTimer_Func(LinePointUpdateTimer, null);
             }
         }
 
@@ -175,24 +208,50 @@ namespace LibRXFFT.Components.DirectX
 
                 if (numPoints > 0)
                 {
-                    if (numPoints > PlotVerts.Length)
+                    double xDist = 1;
+
+                    if (RenderAsLines)
                     {
-                        PlotVerts = new Vertex[numPoints];
-                        PlotVertsOverview = new Vertex[numPoints];
+                        if (numPoints > PlotVerts.Length)
+                        {
+                            PlotVerts = new Vertex[numPoints];
+                            PlotVertsOverview = new Vertex[numPoints];
+                        }
+                        PlotVertsEntries = numPoints - 1;
+                        xDist = DirectXWidth / ((double)PlotVertsEntries);
                     }
+                    else
+                    {
+                        if (numPoints * 2 > PlotVerts.Length)
+                        {
+                            PlotVerts = new Vertex[numPoints * 2];
+                            PlotVertsOverview = new Vertex[numPoints * 2];
+                        }
+                        PlotVertsEntries = 2 * numPoints - 1;
+                        xDist = DirectXWidth / ((double)PlotVertsEntries / 2.0f);
+                    }
+                    
 
-                    PlotVertsEntries = numPoints - 1;
-
+                    int outPos = 0;
                     for (int pos = 0; pos < numPoints; pos++)
                     {
                         double xPos = DirectXWidth / 2 * (1 + points[pos].X / 2 * XZoomFactor);
                         double yPos = DirectXHeight / 2 * (1 + points[pos].Y / 2 * YZoomFactor);
 
-                        PlotVerts[pos].PositionRhw.X = (float)Math.Min(DirectXWidth, Math.Max(0, ((float)xPos - DisplayXOffset)));
-                        PlotVerts[pos].PositionRhw.Y = (float)Math.Min(DirectXHeight, Math.Max(0, ((float)yPos - DisplayYOffset)));
-                        PlotVerts[pos].PositionRhw.Z = 0.5f;
-                        PlotVerts[pos].PositionRhw.W = 1;
-                        PlotVerts[pos].Color = 0x9F000000 | colorFG;
+                        PlotVerts[outPos].PositionRhw.X = (float)Math.Min(DirectXWidth, Math.Max(0, ((float)xPos - DisplayXOffset)));
+                        PlotVerts[outPos].PositionRhw.Y = (float)Math.Min(DirectXHeight, Math.Max(0, ((float)yPos - DisplayYOffset)));
+                        PlotVerts[outPos].PositionRhw.Z = 0.5f;
+                        PlotVerts[outPos].PositionRhw.W = 1;
+                        PlotVerts[outPos].Color = 0x9F000000 | colorFG;
+
+                        outPos++;
+
+                        if (!RenderAsLines)
+                        {
+                            PlotVerts[outPos] = PlotVerts[outPos - 1];
+                            PlotVerts[outPos].PositionRhw.Z += 0.1f;
+                            outPos++;
+                        }
                     }
 
                     foreach (DirectXDrawable drawable in Drawables)
@@ -815,7 +874,7 @@ namespace LibRXFFT.Components.DirectX
             {
                 try
                 {
-                    if (NeedsUpdate && !RealTimeMode)
+                    if (!RealTimeMode)
                     {
                         if (SlavePlot != null)
                             SlavePlot.PrepareLinePoints();

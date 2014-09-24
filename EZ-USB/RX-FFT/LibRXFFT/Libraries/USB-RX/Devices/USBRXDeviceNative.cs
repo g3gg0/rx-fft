@@ -59,7 +59,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         public static extern bool UsbOpen(int DevNum);
         [DllImport("usb2.dll", CallingConvention = CallingConvention.StdCall)]
         public static extern bool UsbClose(int DevNum);
-        [DllImport("usb2.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("usb2.dll", CallingConvention = CallingConvention.StdCall)]
         public static extern bool UsbInit(int DevNum);
         [DllImport("usb2.dll", CallingConvention = CallingConvention.StdCall)]
         public static extern bool UsbGetErrorStringByNr(int ErrNr, byte[] PChar);

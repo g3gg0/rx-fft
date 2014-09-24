@@ -1,5 +1,4 @@
-﻿using System.Numeric;
-
+﻿
 /* code origin OpenBTS / converted to C# */
 
 namespace LibRXFFT.Libraries.GSM.Layer1.ChannelCoding

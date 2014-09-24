@@ -27,9 +27,25 @@ namespace LibRXFFT.Components.DirectX
         public double MinRefreshRate = 60;
         public double RenderSleepDelay;
 
+        public bool RenderAsLines = true;
+
         public DirectXPlot SlavePlot = null;
 
-        internal bool NeedsRender = true;
+        public object NeedsRenderSignal = new object();
+        public bool NeedsRender
+        {
+            set
+            {
+                if (value)
+                {
+                    lock (NeedsRenderSignal)
+                    {
+                        Monitor.Pulse(NeedsRenderSignal);
+                    }
+                }
+            }
+        }
+
         public int NeedsRenderClients = 0;
         public bool KeepText = false;
         public string MainText = "";
@@ -807,12 +823,14 @@ namespace LibRXFFT.Components.DirectX
             if (PlotVertsEntries > 0)
             {
                 if (ShiftPressed)
+                {
                     RenderOverview(PlotVertsEntries, PlotVertsOverview);
+                }
                 else
                 {
                     if (PlotVertsEntries > 0)
                     {
-                        if (true)
+                        if (RenderAsLines)
                         {
                             Device.DrawUserPrimitives(PrimitiveType.LineStrip, PlotVertsEntries, PlotVerts);
                         }
@@ -1694,26 +1712,24 @@ namespace LibRXFFT.Components.DirectX
                 }
 
                 NeedsRenderClients = NeedRenderObjects.Count;
+                NeedsRender = true;
             }
         }
 
         protected void ScreenRefreshTimer_Func(object sender, EventArgs e)
         {
-            if (NeedsRender || NeedsRenderClients > 0)
+            try
             {
-                try
+                if (SlavePlot != null)
                 {
-                    NeedsRender = false;
-
-                    if (SlavePlot != null)
-                        SlavePlot.Render();
-
-                    Render();
+                    SlavePlot.Render();
                 }
-                catch (Exception ex)
-                {
-                    Log.AddMessage(ex.ToString());
-                }
+
+                Render();
+            }
+            catch (Exception ex)
+            {
+                Log.AddMessage(ex.ToString());
             }
         }
     }

@@ -37,10 +37,10 @@
             this.tabPage4 = new System.Windows.Forms.TabPage();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.label5 = new System.Windows.Forms.Label();
-            this.txtEyePlotBlocks = new LibRXFFT.Components.GDI.TextBoxMouseScroll();
+            this.txtEyePlotBlocks = new LibRXFFT.Components.GDI.TextBoxMouseScrollLong();
             this.lblBufferTime = new System.Windows.Forms.Label();
             this.chkEyePlot = new System.Windows.Forms.CheckBox();
-            this.txtBufferTime = new LibRXFFT.Components.GDI.TextBoxMouseScroll();
+            this.txtBufferTime = new LibRXFFT.Components.GDI.TextBoxMouseScrollLong();
             this.label3 = new System.Windows.Forms.Label();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -262,10 +262,10 @@
         private System.Windows.Forms.TabPage tabPage4;
         private System.Windows.Forms.GroupBox groupBox3;
         private System.Windows.Forms.Label label5;
-        private LibRXFFT.Components.GDI.TextBoxMouseScroll txtEyePlotBlocks;
+        private LibRXFFT.Components.GDI.TextBoxMouseScrollLong txtEyePlotBlocks;
         private System.Windows.Forms.Label lblBufferTime;
         private System.Windows.Forms.CheckBox chkEyePlot;
-        private LibRXFFT.Components.GDI.TextBoxMouseScroll txtBufferTime;
+        private LibRXFFT.Components.GDI.TextBoxMouseScrollLong txtBufferTime;
         private System.Windows.Forms.Label label3;
     }
 }

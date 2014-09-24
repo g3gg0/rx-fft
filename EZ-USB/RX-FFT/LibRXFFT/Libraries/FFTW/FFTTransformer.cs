@@ -56,11 +56,11 @@ namespace LibRXFFT.Libraries.FFTW
 
 
 
-        [DllImport("libRXFFT_native.dll", EntryPoint = "FFTInit")]
+        [DllImport("libRXFFT_native.dll", EntryPoint = "FFTInit", CallingConvention = CallingConvention.Cdecl)]
         public static unsafe extern IntPtr FFTInit(int size, IntPtr inData, IntPtr outData);
-        [DllImport("libRXFFT_native.dll", EntryPoint = "FFTProcess")]
+        [DllImport("libRXFFT_native.dll", EntryPoint = "FFTProcess", CallingConvention = CallingConvention.Cdecl)]
         public static unsafe extern void FFTProcess(IntPtr ctx);
-        [DllImport("libRXFFT_native.dll", EntryPoint = "FFTFree")]
+        [DllImport("libRXFFT_native.dll", EntryPoint = "FFTFree", CallingConvention = CallingConvention.Cdecl)]
         public static unsafe extern void FFTFree(IntPtr ctx);
 
         public FFTTransformer()

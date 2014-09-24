@@ -45,7 +45,7 @@ namespace LibRXFFT.Libraries.SoundSinks
 
         #region SoundSink Member
 
-        public long SamplingRate
+        public double SamplingRate
         {
             get;
             set;

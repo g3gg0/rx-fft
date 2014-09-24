@@ -86,9 +86,9 @@
             this.lblDebugText = new System.Windows.Forms.Label();
             this.frequencySelector = new LibRXFFT.Components.GDI.FrequencySelector();
             this.barSquelchPower = new LibRXFFT.Components.GDI.PowerBar();
-            this.txtSquelchLimit = new LibRXFFT.Components.GDI.TextBoxMouseScroll();
-            this.txtAmplify = new LibRXFFT.Components.GDI.TextBoxMouseScroll();
-            this.txtDecim = new LibRXFFT.Components.GDI.TextBoxMouseScroll();
+            this.txtSquelchLimit = new LibRXFFT.Components.GDI.TextBoxMouseScrollLong();
+            this.txtAmplify = new LibRXFFT.Components.GDI.TextBoxMouseScrollLong();
+            this.txtDecim = new LibRXFFT.Components.GDI.TextBoxMouseScrollLong();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -869,7 +869,7 @@
         private System.Windows.Forms.RadioButton radioLowPass2;
         private System.Windows.Forms.CheckBox chkEnableLowpass;
         private System.Windows.Forms.GroupBox groupBox5;
-        private LibRXFFT.Components.GDI.TextBoxMouseScroll txtAmplify;
+        private LibRXFFT.Components.GDI.TextBoxMouseScrollLong txtAmplify;
         private System.Windows.Forms.CheckBox chkAmplify;
         private System.Windows.Forms.RadioButton radioFilter256;
         private System.Windows.Forms.RadioButton radioFilter128;
@@ -877,14 +877,14 @@
         private System.Windows.Forms.RadioButton radioLowPass256;
         private System.Windows.Forms.RadioButton radioLowPass128;
         private System.Windows.Forms.RadioButton radioLowPass64;
-        private LibRXFFT.Components.GDI.TextBoxMouseScroll txtDecim;
+        private LibRXFFT.Components.GDI.TextBoxMouseScrollLong txtDecim;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.CheckBox chkNative;
         private System.Windows.Forms.GroupBox groupBox6;
         private System.Windows.Forms.CheckBox chkEnableSquelch;
         private System.Windows.Forms.TextBox txtSquelchAvg;
         private System.Windows.Forms.TextBox txtSquelchMax;
-        private LibRXFFT.Components.GDI.TextBoxMouseScroll txtSquelchLimit;
+        private LibRXFFT.Components.GDI.TextBoxMouseScrollLong txtSquelchLimit;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label6;

@@ -8,9 +8,9 @@ namespace LibRXFFT.Libraries
     {
         public static bool UseNative = true;
 
-        [DllImport("libRXFFT_native.dll", EntryPoint = "SamplesFromBinary")]
+        [DllImport("libRXFFT_native.dll", EntryPoint = "SamplesFromBinary", CallingConvention = CallingConvention.Cdecl)]
         public static unsafe extern void SamplesFromBinaryNative(byte[] dataBuffer, int bytesRead, int destSize, double[] samplesI, double[] samplesQ, int dataFormat, bool invertedSpectrum);
-        [DllImport("libRXFFT_native.dll", EntryPoint = "SamplesToBinary")]
+        [DllImport("libRXFFT_native.dll", EntryPoint = "SamplesToBinary", CallingConvention = CallingConvention.Cdecl)]
         public static unsafe extern void SamplesToBinaryNative(byte[] dataBuffer, int samplePairs, double[] samplesI, double[] samplesQ, int dataFormat, bool invertedSpectrum);
         
 
@@ -458,7 +458,7 @@ namespace LibRXFFT.Libraries
 
         public static void SamplesFromBinary(byte[] dataBuffer, int bytesRead, double[] samplesI, double[] samplesQ, eSampleFormat dataFormat, bool invertedSpectrum)
         {
-            if (false && UseNative)
+            if (false/* native code doesnt support it yet */)
             {
                 SamplesFromBinaryNative(dataBuffer, bytesRead, samplesI.Length, samplesI, samplesQ, (int)dataFormat, invertedSpectrum);
             }
@@ -578,7 +578,7 @@ namespace LibRXFFT.Libraries
 
         public static void SamplesToBinary(byte[] dataBuffer, int samplePairs, double[] samplesI, double[] samplesQ, eSampleFormat dataFormat, bool invertedSpectrum)
         {
-            if (false && UseNative)
+            if (false /* native code doesnt support it yet */)
             {
                 /* causes crash! */
                 SamplesToBinaryNative(dataBuffer, samplePairs, samplesI, samplesQ, (int)dataFormat, invertedSpectrum);

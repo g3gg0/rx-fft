@@ -16,6 +16,8 @@ namespace LibRXFFT.Libraries.SoundSinks
         private Guid SelectedDevice = Guid.Empty;
         private SoundCardSinkControl Control = null;
         private Control DisplayControl = null;
+        private Oversampler Oversampler = null;
+        private int OutputRate = 96000;
 
         public SoundCardSink(Control displayControl)
         {
@@ -23,6 +25,8 @@ namespace LibRXFFT.Libraries.SoundSinks
             Control.Dock = DockStyle.Fill;
             DisplayControl = displayControl;
             DisplayControl.Controls.Add(Control);
+
+            Oversampler = new Oversampler(1.0f);
         }
 
         public DeviceInfo[] GetDevices()
@@ -43,7 +47,7 @@ namespace LibRXFFT.Libraries.SoundSinks
 
         #region SoundSink Member
 
-        public long SamplingRate
+        public double SamplingRate
         {
             get
             {
@@ -53,7 +57,8 @@ namespace LibRXFFT.Libraries.SoundSinks
             {
                 if (SoundDevice != null)
                 {
-                    SoundDevice.SetInputRate((int)value);
+                    Oversampler = new Oversampler(OutputRate / value);
+                    SoundDevice.SetInputRate(OutputRate);
                 }
             }
         }
@@ -120,7 +125,8 @@ namespace LibRXFFT.Libraries.SoundSinks
         {
             if (SoundDevice != null)
             {
-                SoundDevice.Write(samples);
+                double[] ret = Oversampler.Oversample(samples);
+                SoundDevice.Write(ret);
             }
         }
 

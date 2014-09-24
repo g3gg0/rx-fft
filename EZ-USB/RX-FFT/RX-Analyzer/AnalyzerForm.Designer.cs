@@ -105,6 +105,7 @@
             this.sharedMemoryToolStripMenuItem.Name = "sharedMemoryToolStripMenuItem";
             this.sharedMemoryToolStripMenuItem.Size = new System.Drawing.Size(158, 22);
             this.sharedMemoryToolStripMenuItem.Text = "Shared memory";
+            this.sharedMemoryToolStripMenuItem.Click += new System.EventHandler(this.sharedMemoryToolStripMenuItem_Click);
             // 
             // fileToolStripMenuItem
             // 

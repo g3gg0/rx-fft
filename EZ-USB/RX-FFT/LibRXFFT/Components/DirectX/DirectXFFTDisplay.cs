@@ -11,6 +11,7 @@ using Timer = LibRXFFT.Libraries.Timers.AccurateTimer;
 using LibRXFFT.Components.DirectX.Drawables;
 using RX_FFT.Components.GDI;
 using System.Collections;
+using System.Threading.Tasks;
 
 namespace LibRXFFT.Components.DirectX
 {
@@ -55,10 +56,29 @@ namespace LibRXFFT.Components.DirectX
         protected int ScaleVertexesUsed = 0;
         protected int OverlayVertexesUsed = 0;
 
-        protected Timer ScreenRefreshTimer;
-        protected Timer LinePointUpdateTimer;
+        protected Thread ScreenRefreshTimer;
+        protected Thread LinePointUpdateTimer;
         protected Thread DisplayThread;
-        protected bool NeedsUpdate = false;
+        public object LinePointUpdateSignal = new object();
+        protected bool _NeedsUpdate = false;
+        protected bool NeedsUpdate
+        {
+            get
+            {
+                return _NeedsUpdate;
+            }
+            set
+            {
+                if (value)
+                {
+                    lock (LinePointUpdateSignal)
+                    {
+                        Monitor.Pulse(LinePointUpdateSignal);
+                    }
+                }
+                _NeedsUpdate = value;
+            }
+        }
         public bool EnoughData = false;
         public bool EnoughDataReset = false;
 
@@ -143,8 +163,8 @@ namespace LibRXFFT.Components.DirectX
                 RenderSleepDelay = 1000 / value;
                 if (!double.IsNaN(RenderSleepDelay) && !double.IsInfinity(RenderSleepDelay) && LinePointUpdateTimer != null)
                 {
-                    LinePointUpdateTimer.Interval = (uint)RenderSleepDelay;
-                    ScreenRefreshTimer.Interval = (uint)(1000 / MinRefreshRate);// ((value < MinRefreshRate) ? (1000 / MinRefreshRate) : RenderSleepDelay);
+                    //LinePointUpdateTimer.Interval = (uint)RenderSleepDelay;
+                    //ScreenRefreshTimer.Interval = (uint)(1000 / MinRefreshRate);// ((value < MinRefreshRate) ? (1000 / MinRefreshRate) : RenderSleepDelay);
                 }
             }
         }
@@ -178,15 +198,35 @@ namespace LibRXFFT.Components.DirectX
 
             if (!slaveMode)
             {
-                ScreenRefreshTimer = new Timer();
-                ScreenRefreshTimer.Interval = (uint)(1000 / DefaultRefreshRate);
-                ScreenRefreshTimer.Timer += new EventHandler(ScreenRefreshTimer_Func);
+                ScreenRefreshTimer = new Thread(ScreenRefreshTask);
                 ScreenRefreshTimer.Start();
 
-                LinePointUpdateTimer = new Timer();
-                LinePointUpdateTimer.Interval = (uint)RenderSleepDelay;
-                LinePointUpdateTimer.Timer += new EventHandler(LinePointUpdateTimer_Func);
+                LinePointUpdateTimer = new Thread(LinePointUpdateTask);
                 LinePointUpdateTimer.Start();
+            }
+        }
+
+        void ScreenRefreshTask()
+        {
+            while (ScreenRefreshTimer != null)
+            {
+                lock (NeedsRenderSignal)
+                {
+                    Monitor.Wait(NeedsRenderSignal);
+                }
+                ScreenRefreshTimer_Func(ScreenRefreshTimer, null);
+            }
+        }
+
+        void LinePointUpdateTask()
+        {
+            while (LinePointUpdateTimer != null)
+            {
+                lock (LinePointUpdateSignal)
+                {
+                    Monitor.Wait(LinePointUpdateSignal);
+                }
+                LinePointUpdateTimer_Func(LinePointUpdateTimer, null);
             }
         }
 

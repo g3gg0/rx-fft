@@ -52,9 +52,9 @@ namespace LibRXFFT.Libraries.SoundSinks
 
         #region SoundSink Member
 
-        public long OutSamplingRate = 0;
-        public long InSamplingRate = 0;
-        public long SamplingRate
+        public double OutSamplingRate = 0;
+        public double InSamplingRate = 0;
+        public double SamplingRate
         {
             get
             {
@@ -91,7 +91,7 @@ namespace LibRXFFT.Libraries.SoundSinks
                         OutSamplingRate = 48000;
                     }
 
-                    AudioOversampler = new Oversampler((float)OutSamplingRate / value);
+                    AudioOversampler = new Oversampler(OutSamplingRate / value);
                     AudioOversampler.Type = eOversamplingType.SinC;
                     AudioOversampler.SinCDepth = 4;
 

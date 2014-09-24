@@ -46,7 +46,9 @@
             this.FilterList = new LibRXFFT.Components.GDI.FilterList();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.groupBox5 = new System.Windows.Forms.GroupBox();
-            this.txtMgcValue = new LibRXFFT.Components.GDI.TextBoxMouseScroll();
+            this.label4 = new System.Windows.Forms.Label();
+            this.txtChannel = new LibRXFFT.Components.GDI.TextBoxMouseScrollLong();
+            this.txtMgcValue = new LibRXFFT.Components.GDI.TextBoxMouseScrollLong();
             this.radioAgcOff = new System.Windows.Forms.RadioButton();
             this.radioAgcManual = new System.Windows.Forms.RadioButton();
             this.radioAgcFast = new System.Windows.Forms.RadioButton();
@@ -54,7 +56,7 @@
             this.radioAgcSlow = new System.Windows.Forms.RadioButton();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.txtAtt = new LibRXFFT.Components.GDI.TextBoxMouseScroll();
+            this.txtAtt = new LibRXFFT.Components.GDI.TextBoxMouseScrollLong();
             this.radioTuner = new System.Windows.Forms.RadioButton();
             this.chkAtt = new System.Windows.Forms.CheckBox();
             this.radioRf1 = new System.Windows.Forms.RadioButton();
@@ -66,13 +68,13 @@
             this.radioAcqStream = new System.Windows.Forms.RadioButton();
             this.radioAcqBlock = new System.Windows.Forms.RadioButton();
             this.radioAcqOff = new System.Windows.Forms.RadioButton();
-            this.txtChannel = new LibRXFFT.Components.GDI.TextBoxMouseScroll();
-            this.label4 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).BeginInit();
             this.splitContainer2.Panel1.SuspendLayout();
             this.splitContainer2.Panel2.SuspendLayout();
             this.splitContainer2.SuspendLayout();
@@ -257,6 +259,26 @@
             this.groupBox5.TabIndex = 5;
             this.groupBox5.TabStop = false;
             this.groupBox5.Text = "AGC";
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(6, 87);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(88, 13);
+            this.label4.TabIndex = 18;
+            this.label4.Text = "AD6636 Channel";
+            // 
+            // txtChannel
+            // 
+            this.txtChannel.Location = new System.Drawing.Point(100, 84);
+            this.txtChannel.LowerLimit = ((long)(0));
+            this.txtChannel.Name = "txtChannel";
+            this.txtChannel.Size = new System.Drawing.Size(26, 20);
+            this.txtChannel.TabIndex = 17;
+            this.txtChannel.Text = "0";
+            this.txtChannel.UpperLimit = ((long)(5));
+            this.txtChannel.Value = ((long)(0));
             // 
             // txtMgcValue
             // 
@@ -504,31 +526,11 @@
             this.radioAcqOff.UseVisualStyleBackColor = true;
             this.radioAcqOff.CheckedChanged += new System.EventHandler(this.radioAcqOff_CheckedChanged);
             // 
-            // txtChannel
-            // 
-            this.txtChannel.Location = new System.Drawing.Point(100, 84);
-            this.txtChannel.LowerLimit = ((long)(0));
-            this.txtChannel.Name = "txtChannel";
-            this.txtChannel.Size = new System.Drawing.Size(26, 20);
-            this.txtChannel.TabIndex = 17;
-            this.txtChannel.UpperLimit = ((long)(5));
-            this.txtChannel.Value = ((long)(0));
-            // 
-            // label4
-            // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(6, 87);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(88, 13);
-            this.label4.TabIndex = 18;
-            this.label4.Text = "AD6636 Channel";
-            // 
             // USBRXDeviceControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(565, 228);
-            this.ControlBox = false;
             this.Controls.Add(this.splitContainer2);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
             this.MaximumSize = new System.Drawing.Size(1024, 1024);
@@ -540,10 +542,12 @@
             this.groupBox2.ResumeLayout(false);
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
             this.splitContainer2.Panel1.ResumeLayout(false);
             this.splitContainer2.Panel2.ResumeLayout(false);
             this.splitContainer2.Panel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).EndInit();
             this.splitContainer2.ResumeLayout(false);
             this.groupBox5.ResumeLayout(false);
             this.groupBox5.PerformLayout();
@@ -584,13 +588,13 @@
         private System.Windows.Forms.RadioButton radioAgcFast;
         private System.Windows.Forms.RadioButton radioAgcMedium;
         private System.Windows.Forms.RadioButton radioAgcSlow;
-        private LibRXFFT.Components.GDI.TextBoxMouseScroll txtMgcValue;
+        private LibRXFFT.Components.GDI.TextBoxMouseScrollLong txtMgcValue;
         private System.Windows.Forms.Button btnAtmel;
         private System.Windows.Forms.Button btnFiles;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label1;
-        private LibRXFFT.Components.GDI.TextBoxMouseScroll txtAtt;
+        private LibRXFFT.Components.GDI.TextBoxMouseScrollLong txtAtt;
         private System.Windows.Forms.Label label4;
-        private LibRXFFT.Components.GDI.TextBoxMouseScroll txtChannel;
+        private LibRXFFT.Components.GDI.TextBoxMouseScrollLong txtChannel;
     }
 }

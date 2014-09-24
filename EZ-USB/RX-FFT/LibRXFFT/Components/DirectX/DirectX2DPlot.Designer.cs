@@ -14,9 +14,9 @@
         protected override void Dispose(bool disposing)
         {
             if (ScreenRefreshTimer != null)
-                ScreenRefreshTimer.Stop();
+                ScreenRefreshTimer.Abort();
             if (LinePointUpdateTimer != null)
-                LinePointUpdateTimer.Stop();
+                LinePointUpdateTimer.Abort();
             if (DisplayThread != null)
                 DisplayThread.Abort(); 
             

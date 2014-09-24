@@ -32,7 +32,7 @@
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.radioLSB = new System.Windows.Forms.RadioButton();
             this.radioUSB = new System.Windows.Forms.RadioButton();
-            this.txtDecim = new LibRXFFT.Components.GDI.TextBoxMouseScroll();
+            this.txtDecim = new LibRXFFT.Components.GDI.TextBoxMouseScrollLong();
             this.label3 = new System.Windows.Forms.Label();
             this.radioFMAccurate = new System.Windows.Forms.RadioButton();
             this.radioFMFast = new System.Windows.Forms.RadioButton();
@@ -66,11 +66,11 @@
             this.label7 = new System.Windows.Forms.Label();
             this.chkNative = new System.Windows.Forms.CheckBox();
             this.chkAmplify = new System.Windows.Forms.CheckBox();
-            this.txtAmplify = new LibRXFFT.Components.GDI.TextBoxMouseScroll();
+            this.txtAmplify = new LibRXFFT.Components.GDI.TextBoxMouseScrollLong();
             this.chkShowDemod = new System.Windows.Forms.CheckBox();
             this.groupBox6 = new System.Windows.Forms.GroupBox();
             this.barSquelchPower = new LibRXFFT.Components.GDI.PowerBar();
-            this.txtSquelchLimit = new LibRXFFT.Components.GDI.TextBoxMouseScroll();
+            this.txtSquelchLimit = new LibRXFFT.Components.GDI.TextBoxMouseScrollLong();
             this.txtSquelchMax = new System.Windows.Forms.TextBox();
             this.txtSquelchAvg = new System.Windows.Forms.TextBox();
             this.chkEnableSquelch = new System.Windows.Forms.CheckBox();
@@ -738,7 +738,7 @@
         private System.Windows.Forms.CheckBox chkEnableLowpass;
         private System.Windows.Forms.GroupBox groupBox5;
         private System.Windows.Forms.CheckBox chkShowDemod;
-        private LibRXFFT.Components.GDI.TextBoxMouseScroll txtAmplify;
+        private LibRXFFT.Components.GDI.TextBoxMouseScrollLong txtAmplify;
         private System.Windows.Forms.CheckBox chkAmplify;
         private System.Windows.Forms.RadioButton radioFilter256;
         private System.Windows.Forms.RadioButton radioFilter128;
@@ -746,14 +746,14 @@
         private System.Windows.Forms.RadioButton radioLowPass256;
         private System.Windows.Forms.RadioButton radioLowPass128;
         private System.Windows.Forms.RadioButton radioLowPass64;
-        private LibRXFFT.Components.GDI.TextBoxMouseScroll txtDecim;
+        private LibRXFFT.Components.GDI.TextBoxMouseScrollLong txtDecim;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.CheckBox chkNative;
         private System.Windows.Forms.GroupBox groupBox6;
         private System.Windows.Forms.CheckBox chkEnableSquelch;
         private System.Windows.Forms.TextBox txtSquelchAvg;
         private System.Windows.Forms.TextBox txtSquelchMax;
-        private LibRXFFT.Components.GDI.TextBoxMouseScroll txtSquelchLimit;
+        private LibRXFFT.Components.GDI.TextBoxMouseScrollLong txtSquelchLimit;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label6;

@@ -22,6 +22,14 @@ namespace RX_Oscilloscope.Components
         private int SamplesPreTrigger = 0;
         private bool Triggered = false;
 
+        private long SampleDistance = 1;
+
+        private decimal SamplesExact = 0;
+        /* number of samples to throw away "per sample" */
+        private decimal SamplesThrowAwayDistance = 0;
+        /* used for throwing away samples to round sampling rate */
+        private decimal SamplesThrowAwayCounter = 0;
+
         private bool DisplayPhase = false;
 
         /* when this is set, force waveform display to draw all samples */
@@ -125,45 +133,58 @@ namespace RX_Oscilloscope.Components
         internal void Process(double I, double Q)
         {
             double level = 0;
+            bool process = true;
+
+            /* fine tune sampling rate */
+            SamplesThrowAwayCounter += SamplesThrowAwayDistance;
+            if (SamplesThrowAwayCounter >= 1)
+            {
+                SamplesThrowAwayCounter -= 1;
+                process = false;
+            }
 
             if (DisplayPhase)
             {
-
                 double phase;
 
                 phase = UseFastAtan2 ? FastAtan2b(I, Q) : Math.Atan2(I, Q);
 
                 while (phase - LastPhase < -(Math.PI / 2))
+                {
                     phase += Math.PI;
+                }
 
                 while (phase - LastPhase > Math.PI / 2)
+                {
                     phase -= Math.PI;
+                }
 
                 /* catch the case where I and Q are zero */
                 if (double.IsNaN(phase))
+                {
                     phase = LastPhase;
+                }
 
                 double diff = phase - LastPhase;
-                
+
                 level = diff;
-                
+
                 LastPhase = phase % (2 * Math.PI);
             }
             else
             {
                 if (LowPass != null)
                 {
-                    level = Math.Sqrt(I*I + Q*Q);
+                    level = Math.Sqrt(I * I + Q * Q);
                     level = LowPass.ProcessSample(level);
                     level = DBTools.SampleTodB(level);
                 }
                 else
                 {
-                    level = I*I + Q*Q;
+                    level = I * I + Q * Q;
                     level = DBTools.SquaredSampleTodB(level);
                 }
             }
-
 
             if (!Triggered)
             {
@@ -194,13 +215,19 @@ namespace RX_Oscilloscope.Components
                 }
 
                 LastLevel = level;
-                waveForm.ProcessData(level, ForceShowSamples);
+                if (process)
+                {
+                    waveForm.ProcessData(level, ForceShowSamples);
+                }
             }
             else
             {
                 if (TriggeredSamples < SamplesTotal / 2 - SamplesPreTrigger)
                 {
-                    waveForm.ProcessData(level, Triggered);
+                    if (process)
+                    {
+                        waveForm.ProcessData(level, Triggered);
+                    }
                     TriggeredSamples++;
                 }
             }
@@ -217,12 +244,9 @@ namespace RX_Oscilloscope.Components
         }
 
 
-        private void txtBufferTime_ValueChanged(object sender, EventArgs e)
+        private void txtBufferTime_Changed(object sender, EventArgs e)
         {
-            SamplesTotal = (int)txtBufferTime.Value;
-            waveForm.MaxSamples = SamplesTotal;
-
-            UpdateSampleTimes();
+            UpdateBufferSizes();
         }
 
         private void txtPreTrigSamples_ValueChanged(object sender, EventArgs e)
@@ -370,6 +394,67 @@ namespace RX_Oscilloscope.Components
             waveForm.RealTimeMode = chkEyePlot.Checked;
             History.HistLength = txtEyePlotBlocks.Value;
             History.Enabled = chkEyePlot.Checked;
+        }
+
+        private void radioBufferTime_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateBufferSizes();
+        }
+
+        private void radioBufferSamples_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateBufferSizes();
+        }
+
+        private void UpdateBufferSizes()
+        {
+            decimal rate = (decimal)waveForm.SamplingRate;
+
+            try
+            {
+                if (radioBufferSamples.Checked)
+                {
+                    SamplesExact = txtBufferSamples.Value;
+
+                    /* calculate the number of samples being shown and the number of samples to throw away */
+                    SamplesTotal = (int)SamplesExact;
+                    SamplesThrowAwayDistance = (SamplesExact - SamplesTotal) / SamplesTotal;
+
+                    txtBufferTime.Value = (SamplesExact / rate) * 1000000.0m;
+                }
+                else
+                {
+                    decimal time = 0;
+                    decimal.TryParse(txtBufferTime.Text, out time);
+                    decimal samples = rate * time / 1000000.0m;
+
+                    SamplesExact = samples;
+
+                    /* calculate the number of samples being shown and the number of samples to throw away */
+                    SamplesTotal = (int)SamplesExact;
+                    SamplesThrowAwayDistance = (SamplesExact - SamplesTotal) / SamplesTotal;
+
+                    txtBufferSamples.Value = SamplesExact;
+                }
+                waveForm.MaxSamples = SamplesTotal;
+            }
+            catch (Exception ex)
+            {
+            }
+            UpdateSampleTimes();
+        }
+
+        private void txtSampling_ValueChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                History.SampleDist = txtSamplingDistance.Value;
+                History.SamplePos = txtSamplingTime.Value;
+            }
+            catch (Exception ex)
+            {
+            }
+
         }
     }
 }

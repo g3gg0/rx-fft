@@ -154,16 +154,23 @@ namespace RX_Oscilloscope
 
         public void OpenSharedMem(int srcChan)
         {
-            SampleSource = new ShmemSampleSource("RX-Oscilloscope", srcChan, 1, 0);
+            try
+            {
+                SampleSource = new ShmemSampleSource("RX-Oscilloscope", srcChan, 1, 0);
 
-            SampleSource.DataFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPointLE;
-            SampleSource.SamplingRateChanged += new EventHandler(SampleSource_SamplingRateChanged);
+                SampleSource.DataFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPointLE;
+                SampleSource.SamplingRateChanged += new EventHandler(SampleSource_SamplingRateChanged);
 
-            Processing = true;
-            ProcessThread = new Thread(ProcessMain);
-            ProcessThread.Start();
+                Processing = true;
+                ProcessThread = new Thread(ProcessMain);
+                ProcessThread.Start();
 
-            btnOpen.Text = "Close";
+                btnOpen.Text = "Close";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Failed to open shared memory. Is the correct shmemchain.dll in the program directory?");
+            }
         }
 
         private MenuItem btnOpen_SharedMemoryCreateMenuItem(string name, int srcChan)
@@ -189,24 +196,31 @@ namespace RX_Oscilloscope
 
         private void btnOpen_SharedMemory(object sender, EventArgs e)
         {
-            ContextMenu menu = new ContextMenu();
-            NodeInfo[] infos = SharedMem.GetNodeInfos();
-
-            foreach (NodeInfo info in infos)
+            try
             {
-                MenuItem item = btnOpen_SharedMemoryCreateMenuItem(info.name, info.dstChan);
-                menu.MenuItems.Add(item);
-            }
+                ContextMenu menu = new ContextMenu();
+                NodeInfo[] infos = SharedMem.GetNodeInfos();
 
-            if (infos.Length == 0)
+                foreach (NodeInfo info in infos)
+                {
+                    MenuItem item = btnOpen_SharedMemoryCreateMenuItem(info.name, info.dstChan);
+                    menu.MenuItems.Add(item);
+                }
+
+                if (infos.Length == 0)
+                {
+                    MenuItem item = new MenuItem("(No nodes found)");
+                    item.Enabled = false;
+                    menu.MenuItems.Add(item);
+                }
+
+                btnOpen.ContextMenu = menu;
+                btnOpen.ContextMenu.Show(btnOpen, new System.Drawing.Point(10, 10));
+            }
+            catch (Exception ex)
             {
-                MenuItem item = new MenuItem("(No nodes found)");
-                item.Enabled = false;
-                menu.MenuItems.Add(item);
+                MessageBox.Show("Failed to init shared memory. Is the correct shmemchain.dll in the program directory?");
             }
-
-            btnOpen.ContextMenu = menu;
-            btnOpen.ContextMenu.Show(btnOpen, new System.Drawing.Point(10, 10));
         }
     }
 }

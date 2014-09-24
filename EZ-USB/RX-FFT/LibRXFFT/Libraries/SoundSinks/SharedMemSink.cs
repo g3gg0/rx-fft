@@ -44,7 +44,7 @@ namespace LibRXFFT.Libraries.SoundSinks
         private byte[] ProcessByteBuffer = new byte[0];
         private short[] ProcessShortBuffer = new short[0];
 
-        public long SamplingRate
+        public double SamplingRate
         {
             get;
             set;

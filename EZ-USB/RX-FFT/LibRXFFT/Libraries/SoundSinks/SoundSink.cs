@@ -8,7 +8,7 @@ namespace LibRXFFT.Libraries.SoundSinks
 {
     public interface SoundSink
     {
-        long SamplingRate { get; set; }
+        double SamplingRate { get; set; }
         string Status { get; }
         string Description { set; }
         DemodulationState.eSquelchState SquelchState { set; }

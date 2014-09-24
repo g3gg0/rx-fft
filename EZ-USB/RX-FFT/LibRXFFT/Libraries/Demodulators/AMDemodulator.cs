@@ -5,11 +5,11 @@ namespace LibRXFFT.Libraries.Demodulators
 {
     public class AMDemodulator : Demodulator
     {
-        [DllImport("LibRXFFT_native.dll", EntryPoint = "AMDemodInit")]
+        [DllImport("LibRXFFT_native.dll", EntryPoint = "AMDemodInit", CallingConvention = CallingConvention.Cdecl)]
         public static unsafe extern IntPtr AMDemodInit();
-        [DllImport("LibRXFFT_native.dll", EntryPoint = "AMDemodProcess")]
+        [DllImport("LibRXFFT_native.dll", EntryPoint = "AMDemodProcess", CallingConvention = CallingConvention.Cdecl)]
         public static unsafe extern void AMDemodProcess(IntPtr ctx, double[] inDataI, double[] inDataQ, double[] outData, int entries);
-        [DllImport("LibRXFFT_native.dll", EntryPoint = "AMDemodFree")]
+        [DllImport("LibRXFFT_native.dll", EntryPoint = "AMDemodFree", CallingConvention = CallingConvention.Cdecl)]
         public static unsafe extern void AMDemodFree(IntPtr ctx);
 
         public AMDemodulator()

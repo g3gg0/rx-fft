@@ -8,6 +8,9 @@ namespace LibRXFFT.Components.DirectX.Drawables
 {
     public class PlotVertsHistory : DirectXDrawable, PlotVertsSink
     {
+        public decimal SampleDist = 1;
+        public decimal SamplePos = 0;
+
         public bool Enabled = true;
         public long HistLength
         {
@@ -49,7 +52,14 @@ namespace LibRXFFT.Components.DirectX.Drawables
                 {
                     if (HistPlotVertsEntries[pos] > 0)
                     {
-                        MainPlot.Device.DrawUserPrimitives(PrimitiveType.LineStrip, HistPlotVertsEntries[pos], HistPlotVerts[pos]);
+                        if (SampleDist == 1)
+                        {
+                            MainPlot.Device.DrawUserPrimitives(PrimitiveType.LineStrip, HistPlotVertsEntries[pos], HistPlotVerts[pos]);
+                        }
+                        else
+                        {
+                            MainPlot.Device.DrawUserPrimitives(PrimitiveType.PointList, HistPlotVertsEntries[pos], HistPlotVerts[pos]);
+                        }
                     }
                 }
             }
@@ -71,12 +81,22 @@ namespace LibRXFFT.Components.DirectX.Drawables
                     HistPlotVerts[HistPos] = new Vertex[lineCount + 1];
                 }
 
-                for (int pos = 0; pos < lineCount + 1; pos++)
+                decimal dist = SampleDist;
+                int outPos = 0;
+
+                if (dist < 0.01m)
                 {
-                    HistPlotVerts[HistPos][pos] = lineStripBuffer[pos];
+                    dist = 0.01m;
                 }
 
-                HistPlotVertsEntries[HistPos] = lineCount;
+                for (decimal pos = SamplePos; pos < lineCount + 1; pos += dist)
+                {
+                    HistPlotVerts[HistPos][outPos] = lineStripBuffer[(int)pos];
+                    HistPlotVerts[HistPos][outPos].Color = 0xFFFF0000;
+                    outPos++;
+                }
+
+                HistPlotVertsEntries[HistPos] = outPos - 1;
                 HistPos = (HistPos + 1) % HistLength;
             }
         }

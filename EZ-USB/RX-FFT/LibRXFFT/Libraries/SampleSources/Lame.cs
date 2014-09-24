@@ -100,29 +100,29 @@ namespace LibRXFFT.Libraries.SampleSources
             private const string mmdll = "winmm.dll";
 
             // native calls
-            [DllImport(mmdll)]
+            [DllImport(mmdll, CallingConvention = CallingConvention.Cdecl)]
             public static extern int waveOutGetNumDevs();
-            [DllImport(mmdll)]
+            [DllImport(mmdll, CallingConvention = CallingConvention.Cdecl)]
             public static extern int waveOutPrepareHeader(IntPtr hWaveOut, ref WaveHdr lpWaveOutHdr, int uSize);
-            [DllImport(mmdll)]
+            [DllImport(mmdll, CallingConvention = CallingConvention.Cdecl)]
             public static extern int waveOutUnprepareHeader(IntPtr hWaveOut, ref WaveHdr lpWaveOutHdr, int uSize);
-            [DllImport(mmdll)]
+            [DllImport(mmdll, CallingConvention = CallingConvention.Cdecl)]
             public static extern int waveOutWrite(IntPtr hWaveOut, ref WaveHdr lpWaveOutHdr, int uSize);
-            [DllImport(mmdll)]
+            [DllImport(mmdll, CallingConvention = CallingConvention.Cdecl)]
             public static extern int waveOutOpen(out IntPtr hWaveOut, int uDeviceID, WaveFormat lpFormat, WaveDelegate dwCallback, int dwInstance, int dwFlags);
-            [DllImport(mmdll)]
+            [DllImport(mmdll, CallingConvention = CallingConvention.Cdecl)]
             public static extern int waveOutReset(IntPtr hWaveOut);
-            [DllImport(mmdll)]
+            [DllImport(mmdll, CallingConvention = CallingConvention.Cdecl)]
             public static extern int waveOutClose(IntPtr hWaveOut);
-            [DllImport(mmdll)]
+            [DllImport(mmdll, CallingConvention = CallingConvention.Cdecl)]
             public static extern int waveOutPause(IntPtr hWaveOut);
-            [DllImport(mmdll)]
+            [DllImport(mmdll, CallingConvention = CallingConvention.Cdecl)]
             public static extern int waveOutRestart(IntPtr hWaveOut);
-            [DllImport(mmdll)]
+            [DllImport(mmdll, CallingConvention = CallingConvention.Cdecl)]
             public static extern int waveOutGetPosition(IntPtr hWaveOut, out int lpInfo, int uSize);
-            [DllImport(mmdll)]
+            [DllImport(mmdll, CallingConvention = CallingConvention.Cdecl)]
             public static extern int waveOutSetVolume(IntPtr hWaveOut, int dwVolume);
-            [DllImport(mmdll)]
+            [DllImport(mmdll, CallingConvention = CallingConvention.Cdecl)]
             public static extern int waveOutGetVolume(IntPtr hWaveOut, out int dwVolume);
         }
     
@@ -416,7 +416,7 @@ namespace LibRXFFT.Libraries.SampleSources
         /// <param name="dwBufferSize">Receives the minimun number of bytes that must have the output(result) buffer</param>
         /// <param name="phbeStream">Receives the stream handle on return</param>
         /// <returns>On success: BE_ERR_SUCCESSFUL</returns>
-        [DllImport("Lame_enc.dll")]
+        [DllImport("Lame_enc.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern uint beInitStream(BE_CONFIG pbeConfig, ref uint dwSamples, ref uint dwBufferSize, ref uint phbeStream);
         /// <summary>
         /// Encodes a chunk of samples. Please note that if you have set the output to 
@@ -434,7 +434,7 @@ namespace LibRXFFT.Libraries.SampleSources
         /// <param name="pdwOutput">Returns the number of bytes of encoded data written. 
         /// The amount of data written might vary from chunk to chunk</param>
         /// <returns>On success: BE_ERR_SUCCESSFUL</returns>
-        [DllImport("Lame_enc.dll")]
+        [DllImport("Lame_enc.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern uint beEncodeChunk(uint hbeStream, uint nSamples, short[] pInSamples, [In, Out] byte[] pOutput, ref uint pdwOutput);
         /// <summary>
         /// Encodes a chunk of samples. Please note that if you have set the output to 
@@ -453,7 +453,7 @@ namespace LibRXFFT.Libraries.SampleSources
         /// <param name="pdwOutput">Returns the number of bytes of encoded data written. 
         /// The amount of data written might vary from chunk to chunk</param>
         /// <returns>On success: BE_ERR_SUCCESSFUL</returns>
-        [DllImport("Lame_enc.dll")]
+        [DllImport("Lame_enc.dll", CallingConvention = CallingConvention.Cdecl)]
         protected static extern uint beEncodeChunk(uint hbeStream, uint nSamples, IntPtr pSamples, [In, Out] byte[] pOutput, ref uint pdwOutput);
         /// <summary>
         /// Encodes a chunk of samples. Samples are contained in a byte array
@@ -507,7 +507,7 @@ namespace LibRXFFT.Libraries.SampleSources
         /// at least of the minimum size returned by beInitStream().</param>
         /// <param name="pdwOutput">Returns number of bytes of encoded data written.</param>
         /// <returns>On success: BE_ERR_SUCCESSFUL</returns>
-        [DllImport("Lame_enc.dll")]
+        [DllImport("Lame_enc.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern uint beDeinitStream(uint hbeStream, [In, Out] byte[] pOutput, ref uint pdwOutput);
         /// <summary>
         /// Last function to be called when finished encoding a stream. 
@@ -515,7 +515,7 @@ namespace LibRXFFT.Libraries.SampleSources
         /// </summary>
         /// <param name="hbeStream">Handle of the stream.</param>
         /// <returns>On success: BE_ERR_SUCCESSFUL</returns>
-        [DllImport("Lame_enc.dll")]
+        [DllImport("Lame_enc.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern uint beCloseStream(uint hbeStream);
         /// <summary>
         /// Returns information like version numbers (both of the DLL and encoding engine), 
@@ -525,15 +525,15 @@ namespace LibRXFFT.Libraries.SampleSources
         /// </summary>
         /// <param name="pbeVersion"Where version number, release date and URL for homepage 
         /// is returned.</param>
-        [DllImport("Lame_enc.dll")]
+        [DllImport("Lame_enc.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern void beVersion([Out] BE_VERSION pbeVersion);
-        [DllImport("Lame_enc.dll", CharSet = CharSet.Ansi)]
+        [DllImport("Lame_enc.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
         public static extern void beWriteVBRHeader(string pszMP3FileName);
-        [DllImport("Lame_enc.dll")]
+        [DllImport("Lame_enc.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern uint beEncodeChunkFloatS16NI(uint hbeStream, uint nSamples, [In]float[] buffer_l, [In]float[] buffer_r, [In, Out]byte[] pOutput, ref uint pdwOutput);
-        [DllImport("Lame_enc.dll")]
+        [DllImport("Lame_enc.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern uint beFlushNoGap(uint hbeStream, [In, Out]byte[] pOutput, ref uint pdwOutput);
-        [DllImport("Lame_enc.dll", CharSet = CharSet.Ansi)]
+        [DllImport("Lame_enc.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
         public static extern uint beWriteInfoTag(uint hbeStream, string lpszFileName);
     }
 }

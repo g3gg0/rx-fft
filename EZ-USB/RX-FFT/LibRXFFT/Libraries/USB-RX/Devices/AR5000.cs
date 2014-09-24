@@ -83,7 +83,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                 SendCommand("RF0", false);
                 SendCommand("ACF", true); /* AR-5000: AGC control fast */
                 SendCommand("AI1", true); /* AR-5000: EXIT-IF 1 ON */
-                SendCommand("AN2", true); /* AR-5000: ANTENNA 2 */
+                SendCommand("AN1", true); /* AR-5000: ANTENNA 2 */
             }
             catch (Exception e)
             {

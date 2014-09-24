@@ -12,11 +12,11 @@ namespace LibRXFFT.Libraries.Filters
         protected int DelayLinePosition = 0;
         protected IntPtr NativeContext;
 
-        [DllImport("libRXFFT_native.dll", EntryPoint = "FIRInit")]
+        [DllImport("libRXFFT_native.dll", EntryPoint = "FIRInit", CallingConvention = CallingConvention.Cdecl)]
         public static unsafe extern IntPtr FIRInit(double[] coeff, int entries);
-        [DllImport("libRXFFT_native.dll", EntryPoint = "FIRProcess")]
+        [DllImport("libRXFFT_native.dll", EntryPoint = "FIRProcess", CallingConvention = CallingConvention.Cdecl)]
         public static unsafe extern void FIRProcess(IntPtr ctx, double[] inData, double[] outData, int samples);
-        [DllImport("libRXFFT_native.dll", EntryPoint = "FIRFree")]
+        [DllImport("libRXFFT_native.dll", EntryPoint = "FIRFree", CallingConvention = CallingConvention.Cdecl)]
         public static unsafe extern void FIRFree(IntPtr ctx);
 
 

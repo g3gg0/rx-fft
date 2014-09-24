@@ -572,12 +572,6 @@
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\LibRXFFT_native\LibRXFFT_native.vcxproj">
-      <Project>{10de60ef-d6c1-4d92-a6c3-149e81960879}</Project>
-      <Name>LibRXFFT_native</Name>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

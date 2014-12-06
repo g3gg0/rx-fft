@@ -1,4 +1,6 @@
-
+-- TETRA
+-- 21759,9305 samples make up a frame which contains 4 bursts
+-- thats 56,66 ms a
 
 -- globals for GMSK demodulation
 SymbolsPerSecond = 8000;   -- 
@@ -36,9 +38,31 @@ function Init()
 
 	-- set up a differential decoder which calls 'ClockDiffedBit' 
 	Undiffer = new("DifferenceDecoder");
-	Undiffer.BitSink = new("LUAFunctionSink");
-	Undiffer.BitSink.LuaVm = this().LuaVm;
-	Undiffer.BitSink.Clock = "ClockDiffedBit";	
+	Undiffer.BitSink = new_args("ScriptableSink", this().LuaVm);
+	Undiffer.BitSink.FunctionPrefix = "Undiffer_";
+	Undiffer.BitSink.Running = true;
+end
+
+-- called from differential decoder
+function Undiffer_ClockBit(state)
+	-- clock a new bit. simply append to the UndiffedBitStream buffer
+	if(state) then
+		UndiffedBitStream = UndiffedBitStream.."1";
+	else
+		UndiffedBitStream = UndiffedBitStream.."0";
+	end	
+end
+
+-- those are empty
+function Undiffer_Resynchronized()
+end
+function Undiffer_Desynchronized()
+end
+function Undiffer_TransmissionStart()
+end
+function Undiffer_TransmissionEnd()
+end
+function Undiffer_Init()
 end
 
 -- called whenever sampling rate has changed
@@ -58,16 +82,6 @@ end
 function Resynchronized()
 	BitStream = "";
 	BitsProcessed = 0;
-end
-
--- called from differential decoder
-function ClockDiffedBit(state)
-	-- clock a new bit. simply append to the UndiffedBitStream buffer
-	if(state) then
-		UndiffedBitStream = UndiffedBitStream.."1";
-	else
-		UndiffedBitStream = UndiffedBitStream.."0";
-	end	
 end
 
 

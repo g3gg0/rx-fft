@@ -13,7 +13,7 @@ namespace RX_Oscilloscope.Components
     public partial class IQPlot : UserControl
     {
         private int SamplesTotal = 10000;
-        private PlotVertsHistory History;
+        public PlotVertsHistory History;
 
 
         public IQPlot()
@@ -21,6 +21,7 @@ namespace RX_Oscilloscope.Components
             InitializeComponent();
             waveForm.MaxSamples = SamplesTotal;
             waveForm.KeepText = true;
+            waveForm.RenderAsLines = false;
 
             History = new PlotVertsHistory(waveForm);
             History.HistLength = 1;

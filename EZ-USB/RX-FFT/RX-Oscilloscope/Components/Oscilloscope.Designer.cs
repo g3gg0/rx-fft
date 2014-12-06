@@ -33,6 +33,8 @@
             this.tabControl = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.groupBox7 = new System.Windows.Forms.GroupBox();
+            this.label6 = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
             this.txtSamplingDistance = new LibRXFFT.Components.GDI.TextBoxMouseScrollDecimal();
             this.txtSamplingTime = new LibRXFFT.Components.GDI.TextBoxMouseScrollDecimal();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
@@ -48,6 +50,7 @@
             this.chkEyePlot = new System.Windows.Forms.CheckBox();
             this.label5 = new System.Windows.Forms.Label();
             this.radioPhase = new System.Windows.Forms.RadioButton();
+            this.radioDeltaPhase = new System.Windows.Forms.RadioButton();
             this.radioPower = new System.Windows.Forms.RadioButton();
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
@@ -63,8 +66,6 @@
             this.lblPreTrigTime = new System.Windows.Forms.Label();
             this.txtPreTrigSamples = new LibRXFFT.Components.GDI.TextBoxMouseScrollLong();
             this.label4 = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
-            this.label6 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -98,7 +99,7 @@
             // 
             this.splitContainer1.Panel2.Controls.Add(this.tabControl);
             this.splitContainer1.Size = new System.Drawing.Size(997, 511);
-            this.splitContainer1.SplitterDistance = 426;
+            this.splitContainer1.SplitterDistance = 418;
             this.splitContainer1.SplitterWidth = 1;
             this.splitContainer1.TabIndex = 1;
             // 
@@ -115,7 +116,7 @@
             this.waveForm.MaxSamples = 10000;
             this.waveForm.Name = "waveForm";
             this.waveForm.SamplingRate = 0D;
-            this.waveForm.Size = new System.Drawing.Size(997, 426);
+            this.waveForm.Size = new System.Drawing.Size(997, 418);
             this.waveForm.SpectParts = 1;
             this.waveForm.TabIndex = 0;
             this.waveForm.UpdateRate = 25D;
@@ -135,7 +136,7 @@
             this.tabControl.Location = new System.Drawing.Point(0, 0);
             this.tabControl.Name = "tabControl";
             this.tabControl.SelectedIndex = 0;
-            this.tabControl.Size = new System.Drawing.Size(997, 84);
+            this.tabControl.Size = new System.Drawing.Size(997, 92);
             this.tabControl.TabIndex = 10;
             // 
             // tabPage1
@@ -147,7 +148,7 @@
             this.tabPage1.Location = new System.Drawing.Point(4, 22);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(989, 58);
+            this.tabPage1.Size = new System.Drawing.Size(989, 66);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "Source Signal";
             this.tabPage1.UseVisualStyleBackColor = true;
@@ -165,30 +166,72 @@
             this.groupBox7.TabStop = false;
             this.groupBox7.Text = "Sample Points";
             // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(13, 18);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(35, 13);
+            this.label6.TabIndex = 4;
+            this.label6.Text = "Offset";
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(13, 37);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(63, 13);
+            this.label3.TabIndex = 4;
+            this.label3.Text = "Sample Dist";
+            // 
             // txtSamplingDistance
             // 
             this.txtSamplingDistance.Location = new System.Drawing.Point(82, 34);
-            this.txtSamplingDistance.LowerLimit = ((long)(1));
+            this.txtSamplingDistance.LowerLimit = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
             this.txtSamplingDistance.Name = "txtSamplingDistance";
             this.txtSamplingDistance.Size = new System.Drawing.Size(51, 20);
             this.txtSamplingDistance.TabIndex = 3;
             this.txtSamplingDistance.Text = "1";
             this.txtSamplingDistance.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.txtSamplingDistance.UpperLimit = ((long)(1000000));
-            this.txtSamplingDistance.Value = ((long)(1));
+            this.txtSamplingDistance.UpperLimit = new decimal(new int[] {
+            1000000,
+            0,
+            0,
+            0});
+            this.txtSamplingDistance.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
             this.txtSamplingDistance.ValueChanged += new System.EventHandler(this.txtSampling_ValueChanged);
             // 
-            // txtSamplingOffset
+            // txtSamplingTime
             // 
             this.txtSamplingTime.Location = new System.Drawing.Point(82, 15);
-            this.txtSamplingTime.LowerLimit = 1;
-            this.txtSamplingTime.Name = "txtSamplingOffset";
+            this.txtSamplingTime.LowerLimit = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.txtSamplingTime.Name = "txtSamplingTime";
             this.txtSamplingTime.Size = new System.Drawing.Size(51, 20);
             this.txtSamplingTime.TabIndex = 3;
-            this.txtSamplingTime.Text = "0";
+            this.txtSamplingTime.Text = "1";
             this.txtSamplingTime.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.txtSamplingTime.UpperLimit = 10000000;
-            this.txtSamplingTime.Value = 1;
+            this.txtSamplingTime.UpperLimit = new decimal(new int[] {
+            10000000,
+            0,
+            0,
+            0});
+            this.txtSamplingTime.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
             this.txtSamplingTime.ValueChanged += new System.EventHandler(this.txtSampling_ValueChanged);
             // 
             // groupBox3
@@ -317,6 +360,7 @@
             this.groupBox6.Controls.Add(this.chkEyePlot);
             this.groupBox6.Controls.Add(this.label5);
             this.groupBox6.Controls.Add(this.radioPhase);
+            this.groupBox6.Controls.Add(this.radioDeltaPhase);
             this.groupBox6.Controls.Add(this.radioPower);
             this.groupBox6.Location = new System.Drawing.Point(119, 6);
             this.groupBox6.Name = "groupBox6";
@@ -360,13 +404,24 @@
             // radioPhase
             // 
             this.radioPhase.AutoSize = true;
-            this.radioPhase.Location = new System.Drawing.Point(68, 16);
+            this.radioPhase.Location = new System.Drawing.Point(68, 23);
             this.radioPhase.Name = "radioPhase";
-            this.radioPhase.Size = new System.Drawing.Size(62, 17);
+            this.radioPhase.Size = new System.Drawing.Size(55, 17);
             this.radioPhase.TabIndex = 0;
-            this.radioPhase.Text = "ΔPhase";
+            this.radioPhase.Text = "Phase";
             this.radioPhase.UseVisualStyleBackColor = true;
             this.radioPhase.CheckedChanged += new System.EventHandler(this.radioPhase_CheckedChanged);
+            // 
+            // radioDeltaPhase
+            // 
+            this.radioDeltaPhase.AutoSize = true;
+            this.radioDeltaPhase.Location = new System.Drawing.Point(68, 4);
+            this.radioDeltaPhase.Name = "radioDeltaPhase";
+            this.radioDeltaPhase.Size = new System.Drawing.Size(62, 17);
+            this.radioDeltaPhase.TabIndex = 0;
+            this.radioDeltaPhase.Text = "ΔPhase";
+            this.radioDeltaPhase.UseVisualStyleBackColor = true;
+            this.radioDeltaPhase.CheckedChanged += new System.EventHandler(this.radioDeltaPhase_CheckedChanged);
             // 
             // radioPower
             // 
@@ -387,7 +442,7 @@
             this.tabPage2.Location = new System.Drawing.Point(4, 22);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(989, 61);
+            this.tabPage2.Size = new System.Drawing.Size(989, 55);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "Pre-Processing";
             this.tabPage2.UseVisualStyleBackColor = true;
@@ -427,7 +482,7 @@
             this.tabPage3.Controls.Add(this.groupBox2);
             this.tabPage3.Location = new System.Drawing.Point(4, 22);
             this.tabPage3.Name = "tabPage3";
-            this.tabPage3.Size = new System.Drawing.Size(989, 61);
+            this.tabPage3.Size = new System.Drawing.Size(989, 55);
             this.tabPage3.TabIndex = 2;
             this.tabPage3.Text = "Triggering";
             this.tabPage3.UseVisualStyleBackColor = true;
@@ -542,24 +597,6 @@
             this.label4.TabIndex = 1;
             this.label4.Text = "Samples, = ";
             // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(13, 37);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(63, 13);
-            this.label3.TabIndex = 4;
-            this.label3.Text = "Sample Dist";
-            // 
-            // label6
-            // 
-            this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(13, 18);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(35, 13);
-            this.label6.TabIndex = 4;
-            this.label6.Text = "Offset";
-            // 
             // Oscilloscope
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -615,7 +652,7 @@
         private System.Windows.Forms.GroupBox groupBox5;
         private LibRXFFT.Components.GDI.FrequencySelector txtSamplingRate;
         private System.Windows.Forms.GroupBox groupBox6;
-        private System.Windows.Forms.RadioButton radioPhase;
+        private System.Windows.Forms.RadioButton radioDeltaPhase;
         private System.Windows.Forms.RadioButton radioPower;
         private System.Windows.Forms.TabControl tabControl;
         private System.Windows.Forms.TabPage tabPage1;
@@ -632,5 +669,6 @@
         private LibRXFFT.Components.GDI.TextBoxMouseScrollDecimal txtSamplingTime;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.RadioButton radioPhase;
     }
 }

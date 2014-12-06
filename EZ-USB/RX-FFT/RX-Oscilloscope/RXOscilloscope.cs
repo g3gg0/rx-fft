@@ -27,6 +27,8 @@ namespace RX_Oscilloscope
             iqPlot.waveForm.UserEventCallback = UserEventCallbackFunc;
             scope.waveForm.UserEventCallback = UserEventCallbackFunc;
 
+            scope.iqPlot = iqPlot;
+
             AddUserEventCallback(eUserEvent.MouseEnter);
             AddUserEventCallback(eUserEvent.MouseClickRight);
         }
@@ -126,7 +128,7 @@ namespace RX_Oscilloscope
                                 double I = SampleSource.SourceSamplesI[pos];
                                 double Q = SampleSource.SourceSamplesQ[pos];
 
-                                iqPlot.Process(I, Q);
+                                //iqPlot.Process(I, Q);
                                 scope.Process(I, Q);
                             }
                         }

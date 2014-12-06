@@ -14,9 +14,10 @@ namespace DemodulatorCollection.BitClockSinks
 {
     public class ScriptableSink : BitClockSink
     {
-        private bool Running = false;
         private Lua LuaVm;
 
+        public bool Running = false;
+        public string FunctionPrefix = "";
         public DigitalDemodulator Demodulator;
 
         public ScriptableSink()
@@ -75,34 +76,34 @@ namespace DemodulatorCollection.BitClockSinks
 
         public void Init()
         {
-            CallFunction("Init");
+            CallFunction(FunctionPrefix + "Init");
         }
 
         #region BitClockSink Member
 
         public void Resynchronized()
         {
-            CallFunction("Resynchronized");
+            CallFunction(FunctionPrefix + "Resynchronized");
         }
 
         public void Desynchronized()
         {
-            CallFunction("Desynchronized");
+            CallFunction(FunctionPrefix + "Desynchronized");
         }
 
         public void TransmissionStart()
         {
-            CallFunction("TransmissionStart");
+            CallFunction(FunctionPrefix + "TransmissionStart");
         }
 
         public void ClockBit(bool state)
         {
-            CallFunction("ClockBit", state);
+            CallFunction(FunctionPrefix + "ClockBit", state);
         }
 
         public void TransmissionEnd()
         {
-            CallFunction("TransmissionEnd");
+            CallFunction(FunctionPrefix + "TransmissionEnd");
         }
 
         #endregion

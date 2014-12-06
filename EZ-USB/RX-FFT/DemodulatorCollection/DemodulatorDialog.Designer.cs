@@ -42,6 +42,7 @@
             this.btnLua = new System.Windows.Forms.Button();
             this.txtPocsag = new System.Windows.Forms.TextBox();
             this.txtLua = new System.Windows.Forms.TextBox();
+            this.btnPpmDemod = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // btnOpenPulseDelay
@@ -156,11 +157,22 @@
             this.txtLua.TabIndex = 6;
             this.txtLua.Text = "LUA script based demodulator";
             // 
+            // btnPpmDemod
+            // 
+            this.btnPpmDemod.Location = new System.Drawing.Point(208, 12);
+            this.btnPpmDemod.Name = "btnPpmDemod";
+            this.btnPpmDemod.Size = new System.Drawing.Size(75, 23);
+            this.btnPpmDemod.TabIndex = 7;
+            this.btnPpmDemod.Text = "PPM";
+            this.btnPpmDemod.UseVisualStyleBackColor = true;
+            this.btnPpmDemod.Click += new System.EventHandler(this.btnPpmDemod_Click);
+            // 
             // DemodulatorDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(592, 452);
+            this.ClientSize = new System.Drawing.Size(582, 437);
+            this.Controls.Add(this.btnPpmDemod);
             this.Controls.Add(this.txtLua);
             this.Controls.Add(this.txtPocsag);
             this.Controls.Add(this.btnLua);
@@ -198,6 +210,7 @@
         private System.Windows.Forms.Button btnLua;
         private System.Windows.Forms.TextBox txtPocsag;
         private System.Windows.Forms.TextBox txtLua;
+        private System.Windows.Forms.Button btnPpmDemod;
     }
 }
 

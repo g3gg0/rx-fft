@@ -265,5 +265,32 @@ namespace DemodulatorCollection
             btnOpen.ContextMenu = menu;
             btnOpen.ContextMenu.Show(btnOpen, new Point(10, 10));
         }
+
+        private void btnPpmDemod_Click(object sender, EventArgs e)
+        {
+            CloseDemod();
+
+            if (SampleSource == null)
+                return;
+
+            PPMDemodulator ppm = new PPMDemodulator();
+            ppm.Plot = new LibRXFFT.Components.DirectX.DirectXWaveformDisplay();
+            ppm.Plot.SamplingRate = SampleSource.SamplingRate;
+            ppm.Plot.Dock = DockStyle.Fill;
+
+            Form form = new Form();
+            form.Controls.Add(ppm.Plot);
+            form.Show();
+
+            DigitalDemodulator demod = ppm;
+            demod.SamplingRate = SampleSource.SamplingRate;
+            demod.Init();
+            Demodulator = demod;
+
+            ManchesterBitSink dec = new ManchesterBitSink();
+            dec.BitSink = new LogSink();
+
+            demod.BitSink = dec.BitSink;
+        }
     }
 }

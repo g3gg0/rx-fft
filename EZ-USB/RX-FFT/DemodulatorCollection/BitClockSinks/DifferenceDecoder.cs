@@ -15,7 +15,10 @@ namespace DemodulatorCollection.BitClockSinks
 
         public void Synchronize(bool positivePhase)
         {
-            BitSink.Resynchronized();
+            if (BitSink != null)
+            {
+                BitSink.Resynchronized();
+            }
         }
 
         #region BitClockSink Member
@@ -24,7 +27,10 @@ namespace DemodulatorCollection.BitClockSinks
         {
             bool newState = LastBitState ^ state;
 
-            BitSink.ClockBit(newState);
+            if (BitSink != null)
+            {
+                BitSink.ClockBit(newState);
+            }
 
             LastBitState = newState;
         }
@@ -32,22 +38,34 @@ namespace DemodulatorCollection.BitClockSinks
         public void Resynchronized()
         {
             LastBitState = false;
-            BitSink.Resynchronized();
+            if (BitSink != null)
+            {
+                BitSink.Resynchronized();
+            }
         }
 
         public void Desynchronized()
         {
-            BitSink.Desynchronized();
+            if (BitSink != null)
+            {
+                BitSink.Desynchronized();
+            }
         }
 
         public void TransmissionStart()
         {
-            BitSink.TransmissionStart();
+            if (BitSink != null)
+            {
+                BitSink.TransmissionStart();
+            }
         }
 
         public void TransmissionEnd()
         {
-            BitSink.TransmissionEnd();
+            if (BitSink != null)
+            {
+                BitSink.TransmissionEnd();
+            }
         }
 
         #endregion

@@ -28,7 +28,10 @@ namespace DemodulatorCollection.BitClockSinks
         public void Synchronize(bool positivePhase)
         {
             PositivePhase = positivePhase;
-            BitSink.Resynchronized();
+            if (BitSink != null)
+            {
+                BitSink.Resynchronized();
+            }
             State = eLearnState.ProcessingBit1;
         }
 
@@ -53,8 +56,11 @@ namespace DemodulatorCollection.BitClockSinks
                         {
                             Log.AddMessage("BiphaseDecoder", "Synchronized.");
                         }
-                        BitSink.Resynchronized();
-                        BitSink.ClockBit(false);
+                        if (BitSink != null)
+                        {
+                            BitSink.Resynchronized();
+                            BitSink.ClockBit(false);
+                        }
                         State = eLearnState.ProcessingBit1;
                     }
                     else
@@ -77,14 +83,20 @@ namespace DemodulatorCollection.BitClockSinks
                             {
                                 Log.AddMessage("BiphaseDecoder", "Decoding failed. Resynchronizing.");
                             }
-                            BitSink.Desynchronized();
+                            if (BitSink != null)
+                            {
+                                BitSink.Desynchronized();
+                            }
                             State = eLearnState.Idle;
                             return;
                         }
                         else
                         {
                             PositivePhase ^= true;
-                            BitSink.ClockBit(false);
+                            if (BitSink != null)
+                            {
+                                BitSink.ClockBit(false);
+                            }
                         }
                     }
                     else
@@ -95,13 +107,19 @@ namespace DemodulatorCollection.BitClockSinks
                             {
                                 Log.AddMessage("BiphaseDecoder", "Decoding failed. Resynchronizing.");
                             }
-                            BitSink.Desynchronized();
+                            if (BitSink != null)
+                            {
+                                BitSink.Desynchronized();
+                            }
                             State = eLearnState.Idle;
                             return;
                         }
                         else
                         {
-                            BitSink.ClockBit(true);
+                            if (BitSink != null)
+                            {
+                                BitSink.ClockBit(true);
+                            }
                         }
                     }
                     State = eLearnState.ProcessingBit1;
@@ -120,12 +138,18 @@ namespace DemodulatorCollection.BitClockSinks
 
         public void TransmissionStart()
         {
-            BitSink.TransmissionStart();
+            if (BitSink != null)
+            {
+                BitSink.TransmissionStart();
+            }
         }
 
         public void TransmissionEnd()
         {
-            BitSink.TransmissionEnd();
+            if (BitSink != null)
+            {
+                BitSink.TransmissionEnd();
+            }
         }
 
         #endregion

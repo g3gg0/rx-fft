@@ -335,10 +335,9 @@ namespace LibRXFFT.Components.DirectX
                 if (SampleValues.Length != spectSize * spectParts)
                 {
                     Array.Resize(ref SampleValues, spectSize * spectParts);
-                    //SampleValues = new double[spectSize * spectParts];
                 }
 
-                if (SamplesToAverage == 0)
+                if (SamplesToAverage < 2)
                 {
                     /* no preference made, just average all samples we get */
                     if (SampleValuesAveraged == 0)
@@ -407,24 +406,22 @@ namespace LibRXFFT.Components.DirectX
                     }
 
                     /* to reduce CPU load */
-                    lock (SampleValues)
+                    if (SampleValuesAveraged >= SamplesToAverage)
                     {
-                        if (SampleValuesAveraged >= SamplesToAverage)
+                        if (spectPart + 1 == spectParts)
                         {
-                            if (spectPart + 1 == spectParts)
-                            {
-                                EnoughData = true;
-                                NeedsUpdate = true;
-                            }
-                            else
-                            {
-                                SampleValuesAveraged = 0;
-                            }
+                            EnoughData = true;
+                            NeedsUpdate = true;
+                        }
+                        else
+                        {
+                            SampleValuesAveraged = 0;
                         }
                     }
                 }
             }
         }
+        
 
 
         public void ProcessRawData(byte[] dataBuffer)

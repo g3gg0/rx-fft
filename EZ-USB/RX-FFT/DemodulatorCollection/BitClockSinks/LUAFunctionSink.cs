@@ -13,7 +13,7 @@ using DemodulatorCollection.Demodulators;
 
 namespace DemodulatorCollection.BitClockSinks
 {
-    public class LUAFunctionSink_obsolete : BitClockSink
+    public class LUAFunctionSink : BitClockSink
     {
         private bool Running = true;
         public Lua LuaVm;
@@ -25,11 +25,11 @@ namespace DemodulatorCollection.BitClockSinks
 
         public DigitalDemodulator Demodulator;
 
-        public LUAFunctionSink_obsolete()
+        public LUAFunctionSink()
         {
         }
 
-        public LUAFunctionSink_obsolete(ScriptableDemodulator source, string clockBit, string resync, string desync, string end, string start)
+        public LUAFunctionSink(ScriptableDemodulator source, string clockBit, string resync, string desync, string end, string start)
         {
             LuaVm = source.LuaVm;
 

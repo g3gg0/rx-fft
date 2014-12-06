@@ -52,7 +52,7 @@ namespace LibRXFFT.Components.DirectX.Drawables
                 {
                     if (HistPlotVertsEntries[pos] > 0)
                     {
-                        if (SampleDist == 1)
+                        if (SampleDist < 2)
                         {
                             MainPlot.Device.DrawUserPrimitives(PrimitiveType.LineStrip, HistPlotVertsEntries[pos], HistPlotVerts[pos]);
                         }
@@ -92,7 +92,7 @@ namespace LibRXFFT.Components.DirectX.Drawables
                 for (decimal pos = SamplePos; pos < lineCount + 1; pos += dist)
                 {
                     HistPlotVerts[HistPos][outPos] = lineStripBuffer[(int)pos];
-                    HistPlotVerts[HistPos][outPos].Color = 0xFFFF0000;
+                    HistPlotVerts[HistPos][outPos].Color = 0xFFFF00FF;
                     outPos++;
                 }
 

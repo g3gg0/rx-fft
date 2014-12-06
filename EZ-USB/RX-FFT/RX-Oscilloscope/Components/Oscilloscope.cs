@@ -23,6 +23,7 @@ namespace RX_Oscilloscope.Components
         private bool Triggered = false;
 
         private long SampleDistance = 1;
+        public IQPlot iqPlot = null;
 
         private decimal SamplesExact = 0;
         /* number of samples to throw away "per sample" */
@@ -30,7 +31,13 @@ namespace RX_Oscilloscope.Components
         /* used for throwing away samples to round sampling rate */
         private decimal SamplesThrowAwayCounter = 0;
 
-        private bool DisplayPhase = false;
+        enum eDisplayMode
+        {
+            Power,
+            Phase,
+            DeltaPhase
+        }
+        private eDisplayMode DisplayPhase = eDisplayMode.Power;
 
         /* when this is set, force waveform display to draw all samples */
         private bool ForceShowSamples = false;
@@ -40,6 +47,8 @@ namespace RX_Oscilloscope.Components
         private PlotVertsHistory History;
 
         private IIRFilter LowPass = null;
+        private IIRFilter LowPassI = null;
+        private IIRFilter LowPassQ = null;
         private double LastPhase;
 
         public Oscilloscope()
@@ -143,7 +152,16 @@ namespace RX_Oscilloscope.Components
                 process = false;
             }
 
-            if (DisplayPhase)
+            lock (this)
+            {
+                if (LowPassI != null && LowPassQ != null)
+                {
+                    I = LowPassI.ProcessSample(I);
+                    Q = LowPassQ.ProcessSample(Q);
+                }
+            }
+
+            if (DisplayPhase == eDisplayMode.DeltaPhase)
             {
                 double phase;
 
@@ -171,12 +189,40 @@ namespace RX_Oscilloscope.Components
 
                 LastPhase = phase % (2 * Math.PI);
             }
+            else if (DisplayPhase == eDisplayMode.Phase)
+            {
+                double phase;
+
+                phase = UseFastAtan2 ? FastAtan2b(I, Q) : Math.Atan2(I, Q);
+
+                while (phase - LastPhase < -(Math.PI / 2))
+                {
+                    phase += Math.PI;
+                }
+
+                while (phase - LastPhase > Math.PI / 2)
+                {
+                    phase -= Math.PI;
+                }
+
+                /* catch the case where I and Q are zero */
+                if (double.IsNaN(phase))
+                {
+                    phase = LastPhase;
+                }
+
+                double diff = phase - LastPhase;
+
+                level = phase;
+
+                LastPhase = phase % (2 * Math.PI);
+            }
             else
             {
                 if (LowPass != null)
                 {
                     level = Math.Sqrt(I * I + Q * Q);
-                    level = LowPass.ProcessSample(level);
+                    //level = LowPass.ProcessSample(level);
                     level = DBTools.SampleTodB(level);
                 }
                 else
@@ -218,6 +264,7 @@ namespace RX_Oscilloscope.Components
                 if (process)
                 {
                     waveForm.ProcessData(level, ForceShowSamples);
+                    iqPlot.Process(I, Q);
                 }
             }
             else
@@ -227,6 +274,7 @@ namespace RX_Oscilloscope.Components
                     if (process)
                     {
                         waveForm.ProcessData(level, Triggered);
+                        iqPlot.Process(I, Q);
                     }
                     TriggeredSamples++;
                 }
@@ -313,48 +361,77 @@ namespace RX_Oscilloscope.Components
 
         private void cmbLowPass_SelectedIndexChanged(object sender, EventArgs e)
         {
-            switch (cmbLowPass.SelectedIndex)
+            lock (this)
             {
-                case 0:
-                    LowPass = null;
-                    break;
-                case 1:
-                    LowPass = new IIRFilter(IIRCoefficients.IIRLowPass_2);
-                    break;
-                case 2:
-                    LowPass = new IIRFilter(IIRCoefficients.IIRLowPass_4);
-                    break;
-                case 3:
-                    LowPass = new IIRFilter(IIRCoefficients.IIRLowPass_8);
-                    break;
-                case 4:
-                    LowPass = new IIRFilter(IIRCoefficients.IIRLowPass_16);
-                    break;
-                case 5:
-                    LowPass = new IIRFilter(IIRCoefficients.IIRLowPass_32);
-                    break;
-                case 6:
-                    LowPass = new IIRFilter(IIRCoefficients.IIRLowPass_64);
-                    break;
-                case 7:
-                    LowPass = new IIRFilter(IIRCoefficients.IIRLowPass_128);
-                    break;
-                case 8:
-                    LowPass = new IIRFilter(IIRCoefficients.IIRLowPass_256);
-                    break;
+                switch (cmbLowPass.SelectedIndex)
+                {
+                    case 0:
+                        LowPass = null;
+                        LowPassI = null;
+                        LowPassQ = null;
+                        break;
+                    case 1:
+                        LowPass = new IIRFilter(IIRCoefficients.IIRLowPass_2);
+                        LowPassI = new IIRFilter(IIRCoefficients.IIRLowPass_2);
+                        LowPassQ = new IIRFilter(IIRCoefficients.IIRLowPass_2);
+                        break;
+                    case 2:
+                        LowPass = new IIRFilter(IIRCoefficients.IIRLowPass_4);
+                        LowPassI = new IIRFilter(IIRCoefficients.IIRLowPass_4);
+                        LowPassQ = new IIRFilter(IIRCoefficients.IIRLowPass_4);
+                        break;
+                    case 3:
+                        LowPass = new IIRFilter(IIRCoefficients.IIRLowPass_8);
+                        LowPassI = new IIRFilter(IIRCoefficients.IIRLowPass_8);
+                        LowPassQ = new IIRFilter(IIRCoefficients.IIRLowPass_8);
+                        break;
+                    case 4:
+                        LowPass = new IIRFilter(IIRCoefficients.IIRLowPass_16);
+                        LowPassI = new IIRFilter(IIRCoefficients.IIRLowPass_16);
+                        LowPassQ = new IIRFilter(IIRCoefficients.IIRLowPass_16);
+                        break;
+                    case 5:
+                        LowPass = new IIRFilter(IIRCoefficients.IIRLowPass_32);
+                        LowPassI = new IIRFilter(IIRCoefficients.IIRLowPass_32);
+                        LowPassQ = new IIRFilter(IIRCoefficients.IIRLowPass_32);
+                        break;
+                    case 6:
+                        LowPass = new IIRFilter(IIRCoefficients.IIRLowPass_64);
+                        LowPassI = new IIRFilter(IIRCoefficients.IIRLowPass_64);
+                        LowPassQ = new IIRFilter(IIRCoefficients.IIRLowPass_64);
+                        break;
+                    case 7:
+                        LowPass = new IIRFilter(IIRCoefficients.IIRLowPass_128);
+                        LowPassI = new IIRFilter(IIRCoefficients.IIRLowPass_128);
+                        LowPassQ = new IIRFilter(IIRCoefficients.IIRLowPass_128);
+                        break;
+                    case 8:
+                        LowPass = new IIRFilter(IIRCoefficients.IIRLowPass_256);
+                        LowPassI = new IIRFilter(IIRCoefficients.IIRLowPass_256);
+                        LowPassQ = new IIRFilter(IIRCoefficients.IIRLowPass_256);
+                        break;
+                }
             }
         }
 
 
         private void UpdateScale()
         {
-            if (DisplayPhase)
+            if (DisplayPhase == eDisplayMode.DeltaPhase)
             {
                 waveForm.ScalePosMax = 10;
                 waveForm.ScalePosMin = -10;
                 waveForm.ScaleBarDistance = 1;
                 waveForm.ScaleTextDistance = 2;
                 waveForm.ScaleUnit = "rad/s";
+            }
+            else if (DisplayPhase == eDisplayMode.Phase)
+            {
+                waveForm.ScalePosMax = 10;
+                waveForm.ScalePosMin = -10;
+                waveForm.ScaleBarDistance = 1;
+                waveForm.ScaleTextDistance = 2;
+                waveForm.ScaleUnit = "rad";
             }
             else
             {
@@ -372,18 +449,34 @@ namespace RX_Oscilloscope.Components
 
         private void radioPower_CheckedChanged(object sender, EventArgs e)
         {
-            DisplayPhase = !radioPower.Checked;
+            if (radioPower.Checked)
+            {
+                DisplayPhase = eDisplayMode.Power;
+            }
             UpdateScale();
         }
         private void radioPhase_CheckedChanged(object sender, EventArgs e)
         {
-            DisplayPhase = radioPhase.Checked;
+            if (radioPhase.Checked)
+            {
+                DisplayPhase = eDisplayMode.Phase;
+            }
+            UpdateScale();
+        }
+
+        private void radioDeltaPhase_CheckedChanged(object sender, EventArgs e)
+        {
+            if (radioDeltaPhase.Checked)
+            {
+                DisplayPhase = eDisplayMode.DeltaPhase;
+            }
             UpdateScale();
         }
 
         private void txtEyePlotBlocks_ValueChanged(object sender, System.EventArgs e)
         {
             History.HistLength = txtEyePlotBlocks.Value;
+            iqPlot.History.HistLength = txtEyePlotBlocks.Value;
 
             //waveForm.HistLength = txtEyePlotBlocks.Value;
         }
@@ -392,8 +485,11 @@ namespace RX_Oscilloscope.Components
         {
             txtEyePlotBlocks.Enabled = chkEyePlot.Checked;
             waveForm.RealTimeMode = chkEyePlot.Checked;
+            iqPlot.waveForm.RealTimeMode = chkEyePlot.Checked;
             History.HistLength = txtEyePlotBlocks.Value;
             History.Enabled = chkEyePlot.Checked;
+            iqPlot.History.HistLength = txtEyePlotBlocks.Value;
+            iqPlot.History.Enabled = chkEyePlot.Checked;
         }
 
         private void radioBufferTime_CheckedChanged(object sender, EventArgs e)
@@ -437,6 +533,7 @@ namespace RX_Oscilloscope.Components
                     txtBufferSamples.Value = SamplesExact;
                 }
                 waveForm.MaxSamples = SamplesTotal;
+                iqPlot.waveForm.MaxSamples = SamplesTotal;
             }
             catch (Exception ex)
             {
@@ -450,6 +547,8 @@ namespace RX_Oscilloscope.Components
             {
                 History.SampleDist = txtSamplingDistance.Value;
                 History.SamplePos = txtSamplingTime.Value;
+                iqPlot.History.SampleDist = txtSamplingDistance.Value;
+                iqPlot.History.SamplePos = txtSamplingTime.Value;
             }
             catch (Exception ex)
             {

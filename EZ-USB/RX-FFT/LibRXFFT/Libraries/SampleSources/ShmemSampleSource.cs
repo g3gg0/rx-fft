@@ -106,7 +106,7 @@ namespace LibRXFFT.Libraries.SampleSources
             if (read == 0)
             {
                 SamplesRead = 0;
-                return true;
+                return false;
             }
 
             /* in case we could not read enough bytes, return */

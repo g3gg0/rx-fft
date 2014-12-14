@@ -128,6 +128,7 @@ namespace RX_FFT
             this.menuFft2048 = new System.Windows.Forms.ToolStripMenuItem();
             this.menuFft4096 = new System.Windows.Forms.ToolStripMenuItem();
             this.menuFft8192 = new System.Windows.Forms.ToolStripMenuItem();
+            this.dCOffsetCorrectionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip1.SuspendLayout();
             this.mainMenu.SuspendLayout();
             this.toolStripContainer1.ContentPanel.SuspendLayout();
@@ -163,9 +164,9 @@ namespace RX_FFT
             // statusLabel
             // 
             this.statusLabel.AutoSize = false;
-            this.statusLabel.BorderSides = ((System.Windows.Forms.ToolStripStatusLabelBorderSides)((((System.Windows.Forms.ToolStripStatusLabelBorderSides.Left | System.Windows.Forms.ToolStripStatusLabelBorderSides.Top)
-                        | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right)
-                        | System.Windows.Forms.ToolStripStatusLabelBorderSides.Bottom)));
+            this.statusLabel.BorderSides = ((System.Windows.Forms.ToolStripStatusLabelBorderSides)((((System.Windows.Forms.ToolStripStatusLabelBorderSides.Left | System.Windows.Forms.ToolStripStatusLabelBorderSides.Top) 
+            | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right) 
+            | System.Windows.Forms.ToolStripStatusLabelBorderSides.Bottom)));
             this.statusLabel.Name = "statusLabel";
             this.statusLabel.Size = new System.Drawing.Size(120, 23);
             this.statusLabel.Text = "Idle";
@@ -181,9 +182,9 @@ namespace RX_FFT
             // samplingRateLabel
             // 
             this.samplingRateLabel.AutoSize = false;
-            this.samplingRateLabel.BorderSides = ((System.Windows.Forms.ToolStripStatusLabelBorderSides)((((System.Windows.Forms.ToolStripStatusLabelBorderSides.Left | System.Windows.Forms.ToolStripStatusLabelBorderSides.Top)
-                        | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right)
-                        | System.Windows.Forms.ToolStripStatusLabelBorderSides.Bottom)));
+            this.samplingRateLabel.BorderSides = ((System.Windows.Forms.ToolStripStatusLabelBorderSides)((((System.Windows.Forms.ToolStripStatusLabelBorderSides.Left | System.Windows.Forms.ToolStripStatusLabelBorderSides.Top) 
+            | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right) 
+            | System.Windows.Forms.ToolStripStatusLabelBorderSides.Bottom)));
             this.samplingRateLabel.Name = "samplingRateLabel";
             this.samplingRateLabel.Size = new System.Drawing.Size(100, 23);
             this.samplingRateLabel.Text = "(none)";
@@ -199,9 +200,9 @@ namespace RX_FFT
             // fpsLabel
             // 
             this.fpsLabel.AutoSize = false;
-            this.fpsLabel.BorderSides = ((System.Windows.Forms.ToolStripStatusLabelBorderSides)((((System.Windows.Forms.ToolStripStatusLabelBorderSides.Left | System.Windows.Forms.ToolStripStatusLabelBorderSides.Top)
-                        | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right)
-                        | System.Windows.Forms.ToolStripStatusLabelBorderSides.Bottom)));
+            this.fpsLabel.BorderSides = ((System.Windows.Forms.ToolStripStatusLabelBorderSides)((((System.Windows.Forms.ToolStripStatusLabelBorderSides.Left | System.Windows.Forms.ToolStripStatusLabelBorderSides.Top) 
+            | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right) 
+            | System.Windows.Forms.ToolStripStatusLabelBorderSides.Bottom)));
             this.fpsLabel.Name = "fpsLabel";
             this.fpsLabel.Size = new System.Drawing.Size(80, 23);
             this.fpsLabel.Text = "0";
@@ -216,9 +217,9 @@ namespace RX_FFT
             // maxDbLabel
             // 
             this.maxDbLabel.AutoSize = false;
-            this.maxDbLabel.BorderSides = ((System.Windows.Forms.ToolStripStatusLabelBorderSides)((((System.Windows.Forms.ToolStripStatusLabelBorderSides.Left | System.Windows.Forms.ToolStripStatusLabelBorderSides.Top)
-                        | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right)
-                        | System.Windows.Forms.ToolStripStatusLabelBorderSides.Bottom)));
+            this.maxDbLabel.BorderSides = ((System.Windows.Forms.ToolStripStatusLabelBorderSides)((((System.Windows.Forms.ToolStripStatusLabelBorderSides.Left | System.Windows.Forms.ToolStripStatusLabelBorderSides.Top) 
+            | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right) 
+            | System.Windows.Forms.ToolStripStatusLabelBorderSides.Bottom)));
             this.maxDbLabel.Name = "maxDbLabel";
             this.maxDbLabel.Size = new System.Drawing.Size(60, 23);
             // 
@@ -280,56 +281,56 @@ namespace RX_FFT
             // openBO35Menu
             // 
             this.openBO35Menu.Name = "openBO35Menu";
-            this.openBO35Menu.Size = new System.Drawing.Size(250, 22);
+            this.openBO35Menu.Size = new System.Drawing.Size(237, 22);
             this.openBO35Menu.Text = "USB-RX";
             this.openBO35Menu.Click += new System.EventHandler(this.openBO35Menu_Click);
             // 
             // openBO35PlainMenu
             // 
             this.openBO35PlainMenu.Name = "openBO35PlainMenu";
-            this.openBO35PlainMenu.Size = new System.Drawing.Size(250, 22);
+            this.openBO35PlainMenu.Size = new System.Drawing.Size(237, 22);
             this.openBO35PlainMenu.Text = "USB-RX (autodetect ext. Tuner)";
             this.openBO35PlainMenu.Click += new System.EventHandler(this.openBO35PlainMenu_Click);
             // 
             // openFileMenu
             // 
             this.openFileMenu.Name = "openFileMenu";
-            this.openFileMenu.Size = new System.Drawing.Size(250, 22);
+            this.openFileMenu.Size = new System.Drawing.Size(237, 22);
             this.openFileMenu.Text = "File on Disk";
             this.openFileMenu.Click += new System.EventHandler(this.openFileMenu_Click);
             // 
             // openShMemMenu
             // 
             this.openShMemMenu.Name = "openShMemMenu";
-            this.openShMemMenu.Size = new System.Drawing.Size(250, 22);
+            this.openShMemMenu.Size = new System.Drawing.Size(237, 22);
             this.openShMemMenu.Text = "Shared Memory";
             this.openShMemMenu.Click += new System.EventHandler(this.openShMemMenu_Click);
             // 
             // openNetworkDeviceMenu
             // 
             this.openNetworkDeviceMenu.Name = "openNetworkDeviceMenu";
-            this.openNetworkDeviceMenu.Size = new System.Drawing.Size(250, 22);
+            this.openNetworkDeviceMenu.Size = new System.Drawing.Size(237, 22);
             this.openNetworkDeviceMenu.Text = "Network Device";
             this.openNetworkDeviceMenu.Click += new System.EventHandler(this.openNetworkDeviceMenu_Click);
             // 
             // openRandomDataMenu
             // 
             this.openRandomDataMenu.Name = "openRandomDataMenu";
-            this.openRandomDataMenu.Size = new System.Drawing.Size(250, 22);
+            this.openRandomDataMenu.Size = new System.Drawing.Size(237, 22);
             this.openRandomDataMenu.Text = "Random Data";
             this.openRandomDataMenu.Click += new System.EventHandler(this.openRandomDataMenu_Click);
             // 
             // openUSRPMenu
             // 
             this.openUSRPMenu.Name = "openUSRPMenu";
-            this.openUSRPMenu.Size = new System.Drawing.Size(250, 22);
+            this.openUSRPMenu.Size = new System.Drawing.Size(237, 22);
             this.openUSRPMenu.Text = "USRP Device";
             this.openUSRPMenu.Click += new System.EventHandler(this.openUSRPMenu_Click);
             // 
             // hiQSDRToolStripMenuItem
             // 
             this.hiQSDRToolStripMenuItem.Name = "hiQSDRToolStripMenuItem";
-            this.hiQSDRToolStripMenuItem.Size = new System.Drawing.Size(250, 22);
+            this.hiQSDRToolStripMenuItem.Size = new System.Drawing.Size(237, 22);
             this.hiQSDRToolStripMenuItem.Text = "HiQ-SDR";
             this.hiQSDRToolStripMenuItem.Click += new System.EventHandler(this.openHiQSDRMenuItem_Click);
             // 
@@ -485,7 +486,8 @@ namespace RX_FFT
             this.dynamicWaterfallMenu,
             this.fitSpectrumMenu,
             this.displayFilterMarginsMenu,
-            this.agcMenu});
+            this.agcMenu,
+            this.dCOffsetCorrectionToolStripMenuItem});
             this.optionsMenu.Name = "optionsMenu";
             this.optionsMenu.Size = new System.Drawing.Size(61, 20);
             this.optionsMenu.Text = "Options";
@@ -744,7 +746,7 @@ namespace RX_FFT
             // 
             // FFTDisplay
             // 
-            this.FFTDisplay.CenterFrequency = 0;
+            this.FFTDisplay.CenterFrequency = 0D;
             this.FFTDisplay.ChannelBandDetails = null;
             this.FFTDisplay.ChannelMode = false;
             this.FFTDisplay.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -756,22 +758,22 @@ namespace RX_FFT
             this.FFTDisplay.LimiterColor = System.Drawing.Color.Green;
             this.FFTDisplay.LimiterDisplayEnabled = false;
             this.FFTDisplay.LimiterLowerDescription = "";
-            this.FFTDisplay.LimiterLowerLimit = 0;
+            this.FFTDisplay.LimiterLowerLimit = 0D;
             this.FFTDisplay.LimiterUpperDescription = "";
-            this.FFTDisplay.LimiterUpperLimit = 0;
+            this.FFTDisplay.LimiterUpperLimit = 0D;
             this.FFTDisplay.Location = new System.Drawing.Point(0, 0);
             this.FFTDisplay.Name = "FFTDisplay";
             this.FFTDisplay.ReceiverCorrection = attenuationCorrection2;
             this.FFTDisplay.SamplesToAverage = ((long)(1));
             this.FFTDisplay.SampleValuesTrackPeaks = true;
-            this.FFTDisplay.SamplingRate = 0;
+            this.FFTDisplay.SamplingRate = 0D;
             this.FFTDisplay.SavingEnabled = false;
             this.FFTDisplay.SavingName = "waterfall.png";
             this.FFTDisplay.Size = new System.Drawing.Size(924, 329);
             this.FFTDisplay.SpectParts = 1;
             this.FFTDisplay.TabIndex = 0;
-            this.FFTDisplay.UpdateRate = 10;
-            this.FFTDisplay.VerticalSmooth = 1;
+            this.FFTDisplay.UpdateRate = 10D;
+            this.FFTDisplay.VerticalSmooth = 1D;
             this.FFTDisplay.WindowingFunction = LibRXFFT.Libraries.FFTW.FFTTransformer.eWindowingFunction.BlackmanHarris;
             // 
             // menuButtons
@@ -788,7 +790,6 @@ namespace RX_FFT
             this.toolStripSeparator10,
             this.toolStripSplitButton1});
             this.menuButtons.Location = new System.Drawing.Point(0, 0);
-            this.menuButtons.MinimumSize = new System.Drawing.Size(0, 0);
             this.menuButtons.Name = "menuButtons";
             this.menuButtons.Size = new System.Drawing.Size(924, 31);
             this.menuButtons.Stretch = true;
@@ -892,6 +893,13 @@ namespace RX_FFT
             this.menuFft8192.Size = new System.Drawing.Size(98, 22);
             this.menuFft8192.Text = "8192";
             this.menuFft8192.Click += new System.EventHandler(this.menuFft8192_Click);
+            // 
+            // dCOffsetCorrectionToolStripMenuItem
+            // 
+            this.dCOffsetCorrectionToolStripMenuItem.Name = "dCOffsetCorrectionToolStripMenuItem";
+            this.dCOffsetCorrectionToolStripMenuItem.Size = new System.Drawing.Size(214, 22);
+            this.dCOffsetCorrectionToolStripMenuItem.Text = "DC Offset Correction";
+            this.dCOffsetCorrectionToolStripMenuItem.Click += new System.EventHandler(this.dCOffsetCorrectionToolStripMenuItem_Click);
             // 
             // MainScreen
             // 
@@ -1016,6 +1024,7 @@ namespace RX_FFT
         private System.Windows.Forms.ToolStripMenuItem menuFft2048;
         private System.Windows.Forms.ToolStripMenuItem menuFft4096;
         private System.Windows.Forms.ToolStripMenuItem menuFft8192;
+        private System.Windows.Forms.ToolStripMenuItem dCOffsetCorrectionToolStripMenuItem;
     }
 }
 

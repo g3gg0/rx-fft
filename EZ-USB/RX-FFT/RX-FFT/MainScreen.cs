@@ -37,13 +37,12 @@ namespace RX_FFT
         public delegate DigitalTuner delegateGetTuner();
 
         DCOffsetCorrection corr = new DCOffsetCorrection();
-        bool CorrectDCOffset = true;
-        bool WindowActivated = true;
-        bool ProcessPaused;
-        bool ReadThreadRun;
-        bool AudioThreadRun;
+        private bool CorrectDCOffset = true;
+        private bool WindowActivated = true;
+        private bool ProcessPaused;
+        private bool ReadThreadRun;
 
-        RemoteControl Remote;
+        private RemoteControl Remote;
 
         private LinkedListNode<FrequencyMarker> CurrentScanFreq;
 
@@ -273,6 +272,7 @@ namespace RX_FFT
 
             dynamicWaterfallMenu.Checked = true;
             displayFilterMarginsMenu.Checked = true;
+            dCOffsetCorrectionToolStripMenuItem.Checked = true;
 
             FFTDisplay.DynamicLimits = true;
             DisplayFilterMargins = true;
@@ -1269,7 +1269,7 @@ namespace RX_FFT
                             }
                             else
                             {
-                                Thread.Sleep(100);
+                                Thread.Sleep(20);
                             }
                         }
                     }
@@ -1550,7 +1550,6 @@ namespace RX_FFT
             /* pause transfers and finish threads */
             ProcessPaused = true;
             ReadThreadRun = false;
-            AudioThreadRun = false;
 
             if (DemodState.Dialog != null)
             {
@@ -2179,6 +2178,12 @@ namespace RX_FFT
         private void btnOpenDevice_Click(object sender, EventArgs e)
         {
             openBO35PlainMenu_Click(sender, e);
+        }
+
+        private void dCOffsetCorrectionToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            dCOffsetCorrectionToolStripMenuItem.Checked ^= true;
+            CorrectDCOffset = dCOffsetCorrectionToolStripMenuItem.Checked;
         }
     }
 }

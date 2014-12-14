@@ -14,6 +14,14 @@ namespace LibRXFFT.Libraries.SampleSources
 
         public bool TraceReads = false;
 
+        public override long SamplesAvailable
+        {
+            get
+            {
+                return ShmemChannel.Length / BytesPerSamplePair;
+            }
+        }
+
         public override int SamplesPerBlock
         {
             set

@@ -59,7 +59,12 @@ namespace LibRXFFT.Libraries.SampleSources
         public byte[] ForwardDataBuffer;
         public object SampleBufferLock = new object();
         public object SavingLock = new object();
-        
+
+
+        public virtual long SamplesAvailable
+        {
+            get { return 0; }
+        }
 
         public int SamplesRead;
         protected int _SamplesPerBlock;
@@ -173,7 +178,7 @@ namespace LibRXFFT.Libraries.SampleSources
             DataFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPointLE;
 
             InternalOversampling = oversampling;
-            SamplesPerBlock = 1024;
+            SamplesPerBlock = 32768;
 
             IOversampler = new Oversampler(InternalOversampling);
             IOversampler.Type = DefaultOversamplingType;

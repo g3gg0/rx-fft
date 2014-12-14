@@ -153,6 +153,14 @@ namespace LibRXFFT.Components.DirectX
             SaveThread.Start();
         }
 
+        ~DirectXWaterfallDisplay()
+        {
+            if(SaveThread != null)
+            {
+                SaveThread.Abort();
+                SaveThread = null;
+            }
+        }
 
         private void SaveThreadFunc()
         {

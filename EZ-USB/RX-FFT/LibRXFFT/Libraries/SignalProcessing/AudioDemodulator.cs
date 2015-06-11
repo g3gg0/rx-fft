@@ -104,7 +104,10 @@ namespace LibRXFFT.Libraries.SignalProcessing
             {
                 foreach (SoundSinkInfo info in DemodState.SoundSinkInfos)
                 {
-                    info.Sink.SamplingRate = rate;
+                    if (info.Sink.SamplingRate != rate)
+                    {
+                        info.Sink.SamplingRate = rate;
+                    }
                 }
             }
         }
@@ -250,7 +253,6 @@ namespace LibRXFFT.Libraries.SignalProcessing
             {
                 try
                 {
-
                     PerformanceCounters.CounterRuntime.Update();
 
                     if (DemodState.DemodulationEnabled)
@@ -301,8 +303,8 @@ namespace LibRXFFT.Libraries.SignalProcessing
                                             Array.Resize<double>(ref AudioSampleBuffer, inputI.Length / lastInputDecim);
                                             Array.Resize<double>(ref AudioSampleBufferDecim, inputI.Length / lastAudioDecim / lastInputDecim);
 
-                                            Array.Resize<double>(ref DecimatedSSBInputI, inputI.Length / (lastInputDecim / 2));
-                                            Array.Resize<double>(ref DecimatedSSBInputQ, inputQ.Length / (lastInputDecim / 2));
+                                            Array.Resize<double>(ref DecimatedSSBInputI, inputI.Length / Math.Max(1, lastInputDecim / 2));
+                                            Array.Resize<double>(ref DecimatedSSBInputQ, inputQ.Length / Math.Max(1, lastInputDecim / 2));
                                             Array.Resize<double>(ref DecimatedInputI, inputI.Length / lastInputDecim);
                                             Array.Resize<double>(ref DecimatedInputQ, inputQ.Length / lastInputDecim);
                                         }
@@ -572,6 +574,7 @@ namespace LibRXFFT.Libraries.SignalProcessing
                     else
                     {
                         Thread.Sleep(100);
+                        SampleSource.Flush();
                     }
                 }
                 catch (ThreadAbortException e)

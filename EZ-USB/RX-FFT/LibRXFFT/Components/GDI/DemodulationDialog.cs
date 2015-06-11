@@ -819,13 +819,12 @@ namespace LibRXFFT.Components.GDI
 
         private void btnWav_Click(object sender, EventArgs e)
         {
-            /*
             SoundSinkInfo info = new SoundSinkInfo();
-            info.Page = new TabPage("WAV");
+            info.Page = new SinkTab("WAV");
+            info.Sink = new SoundFileSink(eFileType.WAV, info.Page.splitContainer.Panel2);
 
             PrepareSinkTab(info);
             DemodState.AddSink(info);
-             * */
         }
 
         private void btnMp3_Click(object sender, EventArgs e)
@@ -842,7 +841,7 @@ namespace LibRXFFT.Components.GDI
         {
             SoundSinkInfo info = new SoundSinkInfo();
             info.Page = new SinkTab("MP3");
-            info.Sink = new SoundFileSink(info.Page.splitContainer.Panel2);
+            info.Sink = new SoundFileSink(eFileType.MP3, info.Page.splitContainer.Panel2);
 
             PrepareSinkTab(info);
             DemodState.AddSink(info);

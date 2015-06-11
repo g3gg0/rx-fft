@@ -28,26 +28,90 @@ namespace LibRXFFT.Libraries.SoundSinks
     {
         private Mp3Writer Mp3Writer = null;
         private string Description = "";
-        private string FileName = "audio.mp3";
-        private Stream FileStream = null;
+        private string FileName = "";
+        private FileStream FileStream = null;
         private Oversampler AudioOversampler = null;
 
         private long NextFlushPosition = 0;
         private long FlushDelta = 1024 * 8;
         private Label StatusLabel = null;
+        private Button SaveAsButton = null;
 
         private double SquelchClosedDelay = 0.5f;
         private int SquelchClosedCounter = 0;
         private bool Started = false;
+        private eFileType FileType = eFileType.Unknown;
 
-        public SoundFileSink(Control displayControl)
+        public SoundFileSink(eFileType type, Control displayControl)
         {
+            FileType = type;
+
+            switch (FileType)
+            {
+                case eFileType.MP3:
+                    FileName = "audio.mp3";
+                    break;
+
+                case eFileType.WAV:
+                    FileName = "audio.wav";
+                    break;
+            }
+
             StatusLabel = new Label();
             StatusLabel.Text = FileName + ": Writer idle";
-            StatusLabel.Dock = DockStyle.Fill;
+            //StatusLabel.Dock = DockStyle.Fill;
+
+            SaveAsButton = new Button();
+            SaveAsButton.Text = "Save As...";
+            SaveAsButton.Click += (object sender, EventArgs e) => 
+            {
+                SaveFileDialog dlg = new SaveFileDialog();
+                switch (FileType)
+                {
+                    case eFileType.MP3:
+                        dlg.Filter = "MP3 File (*.mp3)|*.mp3|All files (*.*)|*.*";
+                        break;
+
+                    case eFileType.WAV:
+                        dlg.Filter = "WAV File (*.wav)|*.wav|All files (*.*)|*.*";
+                        break;
+                }
+
+                if (dlg.ShowDialog() == DialogResult.OK)
+                {
+                    try
+                    {
+                        try
+                        {
+                            File.Delete(dlg.FileName);
+                        }
+                        catch (Exception ex)
+                        {
+                        }
+
+                        FileName = dlg.FileName;
+
+                        if (Started)
+                        {
+                            Stop();
+                            Start();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("Could not create file: " + ex.GetType().ToString());
+                    }
+                }
+            };
             Status = "";
 
-            displayControl.Controls.Add(StatusLabel);
+            SplitContainer split = new SplitContainer();
+            split.Orientation = System.Windows.Forms.Orientation.Horizontal;
+            split.SplitterDistance = 60;
+            split.Panel1.Controls.Add(StatusLabel);
+            split.Panel2.Controls.Add(SaveAsButton);
+
+            displayControl.Controls.Add(split);
         }
 
         #region SoundSink Member
@@ -127,26 +191,97 @@ namespace LibRXFFT.Libraries.SoundSinks
             }
         }
 
+
+        private void WriteHeader(FileStream OutFile)
+        {
+            /* Samples per second. */
+            uint sample_rate = (uint)SamplingRate;
+            /* Bytes per second */
+            uint byte_sample_rate = sample_rate * 2;
+            /* This is the size of the "fmt " subchunk */
+            uint fmtsize = 16;
+            /* WAV */
+            ushort fmt = 1;
+            /* Mono = 1 channel */
+            ushort chans = 1;
+            ushort block_align = 2;
+            ushort bits_per_sample = 16;
+            ushort extra_format = 320;
+            /* This is the size of the "fact" subchunk */
+            uint factsize = 4;
+            /* Number of samples in the data chunk */
+            uint num_samples = 0;
+            /* Number of bytes in the data chunk */
+            uint size = 0;
+            /* Write a GSM header, ignoring sizes which will be filled in later */
+
+            ASCIIEncoding enc = new ASCIIEncoding();
+
+            OutFile.Seek(0, SeekOrigin.Begin);
+
+            /*  0: Chunk ID */
+            WriteBuffer(OutFile, enc.GetBytes("RIFF"));
+            /*  4: Chunk Size */
+            WriteBuffer(OutFile, BitConverter.GetBytes((uint)(OutFile.Length - 8)));
+            /*  8: Chunk Format */
+            WriteBuffer(OutFile, enc.GetBytes("WAVE"));
+            /* 12: Subchunk 1: ID */
+            WriteBuffer(OutFile, enc.GetBytes("fmt "));
+            /* 16: Subchunk 1: Size (minus 8) */
+            WriteBuffer(OutFile, BitConverter.GetBytes(fmtsize));
+            /* 20: Subchunk 1: Audio format */
+            WriteBuffer(OutFile, BitConverter.GetBytes(fmt));
+            /* 22: Subchunk 1: Number of channels */
+            WriteBuffer(OutFile, BitConverter.GetBytes(chans));
+            /* 24: Subchunk 1: Sample rate */
+            WriteBuffer(OutFile, BitConverter.GetBytes(sample_rate));
+            /* 28: Subchunk 1: Byte rate */
+            WriteBuffer(OutFile, BitConverter.GetBytes(byte_sample_rate));
+            /* 32: Subchunk 1: Block align */
+            WriteBuffer(OutFile, BitConverter.GetBytes(block_align));
+            /* 36: Subchunk 1: Bits per sample */
+            WriteBuffer(OutFile, BitConverter.GetBytes(bits_per_sample));
+
+            /* 52: Subchunk 3: ID */
+            WriteBuffer(OutFile, enc.GetBytes("data"));
+            /* 56: Subchunk 3: Size */
+            WriteBuffer(OutFile, BitConverter.GetBytes((uint)(OutFile.Length - (OutFile.Position + 4))));
+
+            OutFile.Seek(0, SeekOrigin.End);
+        }
+
+        private void WriteBuffer(FileStream OutFile, byte[] data)
+        {
+            OutFile.Write(data, 0, data.Length);
+        }
+
         public void Start()
         {
             try
             {
                 lock (this)
                 {
-                    if (FileStream == null)
+                    if (File.Exists(FileName))
                     {
-                        Mp3Writer = new Mp3Writer(new WaveFormat((int)OutSamplingRate, 16, 1));
-
-                        if (File.Exists(FileName))
-                        {
-                            FileStream = File.Open(FileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
-                        }
-                        else
-                        {
-                            FileStream = File.Open(FileName, FileMode.CreateNew, FileAccess.Write, FileShare.ReadWrite);
-                        }
-                        NextFlushPosition = FlushDelta;
+                        FileStream = File.Open(FileName, FileMode.OpenOrCreate, FileAccess.Write, FileShare.ReadWrite);
                     }
+                    else
+                    {
+                        FileStream = File.Open(FileName, FileMode.CreateNew, FileAccess.Write, FileShare.ReadWrite);
+                    }
+
+                    switch (FileType)
+                    {
+                        case eFileType.MP3:
+                            Mp3Writer = new Mp3Writer(new WaveFormat((int)OutSamplingRate, 16, 1));
+                            break;
+
+                        case eFileType.WAV:
+                            WriteHeader(FileStream);
+                            break;
+                    }
+
+                    NextFlushPosition = FlushDelta;
 
                     Started = true;
                     DisplayedStatus = "File opened...";
@@ -167,9 +302,24 @@ namespace LibRXFFT.Libraries.SoundSinks
             {
                 if (FileStream != null)
                 {
+                    switch (FileType)
+                    {
+                        case eFileType.MP3:
+                            break;
+
+                        case eFileType.WAV:
+                            WriteHeader(FileStream);
+                            break;
+                    }
                     FileStream.Close();
                     FileStream = null;
                 }
+                if (Mp3Writer != null)
+                {
+                    Mp3Writer.Close();
+                    Mp3Writer = null;
+                }
+
                 Started = false;
                 Status = "";
                 DisplayedStatus = "File closed...";
@@ -221,7 +371,7 @@ namespace LibRXFFT.Libraries.SoundSinks
         {
             lock (this)
             {
-                if (Mp3Writer == null || FileStream == null)
+                if (FileStream == null)
                 {
                     return;
                 }
@@ -243,17 +393,32 @@ namespace LibRXFFT.Libraries.SoundSinks
                     SquelchClosedCounter = 0;
                 }
 
-                /* feed samples into mp3 converter */
-                Mp3Writer.Write(data);
-
-                if (Mp3Writer.DataAvailable == 0)
+                switch (FileType)
                 {
-                    return;
-                }
+                    case eFileType.MP3:
+                        if (Mp3Writer == null)
+                        {
+                            return;
+                        }
 
-                /* write mp3 data */
-                FileStream.Write(Mp3Writer.m_OutBuffer, 0, Mp3Writer.DataAvailable);
-                Mp3Writer.DataAvailable = 0;
+                        /* feed samples into mp3 converter */
+                        Mp3Writer.Write(data);
+
+                        if (Mp3Writer.DataAvailable == 0)
+                        {
+                            return;
+                        }
+
+                        /* write mp3 data */
+                        FileStream.Write(Mp3Writer.m_OutBuffer, 0, Mp3Writer.DataAvailable);
+                        Mp3Writer.DataAvailable = 0;
+
+                        break;
+
+                    case eFileType.WAV:
+                        FileStream.Write(data, 0, data.Length);
+                        break;
+                }
 
                 /* flush every block */
                 if (FileStream.Position > NextFlushPosition)

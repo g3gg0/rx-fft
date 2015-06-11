@@ -28,6 +28,7 @@ namespace LibRXFFT.Libraries.HiQ_SDR
 
         private EndPoint LocalEndpoint = null;
         private EndPoint ReceiveEndpoint = null;
+        private EndPoint TransmitEndpoint = null;
         private EndPoint ControlEndpoint = null;
         private Socket RemoteSocket = null;
         private IPAddress RemoteAddress = null;
@@ -45,6 +46,7 @@ namespace LibRXFFT.Libraries.HiQ_SDR
 
             LocalEndpoint = new IPEndPoint(IPAddress.Any, HIQSDR_RX_PORT);
             ReceiveEndpoint = new IPEndPoint(host, HIQSDR_RX_PORT);
+            TransmitEndpoint = new IPEndPoint(host, HIQSDR_TX_PORT);
             ControlEndpoint = new IPEndPoint(host, HIQSDR_CTL_PORT);
 
             RemoteSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
@@ -293,21 +295,21 @@ namespace LibRXFFT.Libraries.HiQ_SDR
         public void SetTxCw(bool enabled)
         {
             TransmitBuffer[11] &= 0xFE;
-            TransmitBuffer[11] = (byte)(enabled ? 0x01 : 0);
+            TransmitBuffer[11] |= (byte)(enabled ? 0x01 : 0);
             TransmitControl();
         }
 
         public void SetTxOther(bool enabled)
         {
             TransmitBuffer[11] &= 0xFD;
-            TransmitBuffer[11] = (byte)(enabled ? 0x02 : 0);
+            TransmitBuffer[11] |= (byte)(enabled ? 0x02 : 0);
             TransmitControl();
         }
 
         public void SetTxPtt(bool enabled)
         {
             TransmitBuffer[11] &= 0xF7;
-            TransmitBuffer[11] = (byte)(enabled ? 0x08 : 0);
+            TransmitBuffer[11] |= (byte)(enabled ? 0x08 : 0);
             TransmitControl();
         }
 
@@ -380,6 +382,11 @@ namespace LibRXFFT.Libraries.HiQ_SDR
                 return;
             }
             RemoteSocket.SendTo(new byte[] { (byte)'r', (byte)'r' }, ReceiveEndpoint);
+        }
+
+        internal void SendTxData(byte[] txBuffer)
+        {
+            RemoteSocket.SendTo(txBuffer, TransmitEndpoint);
         }
 
         internal int Receive(byte[] receiveBuffer, ref EndPoint Endpoint)

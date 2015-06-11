@@ -22,6 +22,43 @@ namespace LibRXFFT.Libraries.SignalProcessing
             }
         }
 
+        public void PerformDCDetection(ref double[] input)
+        {
+            if (input.Length == 0)
+            {
+                return;
+            }
+
+            double avgI = 0.0f;
+            double avgQ = 0.0f;
+            for (int pos = 0; pos < input.Length; pos++)
+            {
+                avgI += (input[pos] - OffsetI) / input.Length;
+            }
+
+            OffsetINext = OffsetI + avgI * RampSpeed;
+        }
+
+        public void PerformDCCorrection(ref double[] input)
+        {
+            if (input.Length == 0)
+            {
+                return;
+            }
+            ValidateCoeff(ref OffsetI, 0);
+            ValidateCoeff(ref OffsetINext, 0);
+
+            double rampI = (OffsetINext - OffsetI) / input.Length;
+
+            for (int pos = 0; pos < input.Length; pos++)
+            {
+                input[pos] -= OffsetI + rampI * pos;
+            }
+
+            OffsetI = OffsetINext;
+        }
+
+
         public void PerformDCDetection(ref double[] inputI, ref double[] inputQ)
         {
             if (inputI.Length != inputQ.Length || inputI.Length == 0)

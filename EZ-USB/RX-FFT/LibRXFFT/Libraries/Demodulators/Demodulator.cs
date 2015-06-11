@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LibRXFFT.Libraries.SignalProcessing;
+using System;
 
 namespace LibRXFFT.Libraries.Demodulators
 {
@@ -7,7 +8,10 @@ namespace LibRXFFT.Libraries.Demodulators
         public string Description = "TemplateDemod";
         public string ShortDescription = "TemplateDemod";
         public static bool UseNative = true;
+        public bool CorrectDcOffset = true;
         protected IntPtr NativeContext;
+        protected double DcOffset = 0.0f;
+        public double DcOffsetWeighting = 0.005;
 
         public virtual double[] ProcessData(byte[] inBuffer, double[] outData)
         {
@@ -46,7 +50,7 @@ namespace LibRXFFT.Libraries.Demodulators
 
             if (UseNative && NativeContext != IntPtr.Zero)
             {
-                return ProcessDataNative(iDataIn, qDataIn, outData);
+                outData = ProcessDataNative(iDataIn, qDataIn, outData);
             }
             else
             {
@@ -56,6 +60,15 @@ namespace LibRXFFT.Libraries.Demodulators
                     double Q = qDataIn[samplePair];
 
                     outData[samplePair] = ProcessSample(I, Q);
+                }
+            }
+
+            if (CorrectDcOffset)
+            {
+                for (int sample = 0; sample < outData.Length; sample++)
+                {
+                    DcOffset = DcOffset * (1 - DcOffsetWeighting) + outData[sample] * DcOffsetWeighting;
+                    outData[sample] -= DcOffset;
                 }
             }
 

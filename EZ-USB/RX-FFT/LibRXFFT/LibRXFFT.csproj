@@ -346,6 +346,7 @@
     <Compile Include="Libraries\GSM\Layer1\PacketDump\PacketDumpWriter.cs" />
     <Compile Include="Libraries\GSM\Layer3\SMSDecoder.cs" />
     <Compile Include="Libraries\HiQ-SDR\HiQSDRControl.cs" />
+    <Compile Include="Libraries\HiQ-SDR\SNDP.cs" />
     <Compile Include="Libraries\LuaHelpers.cs" />
     <Compile Include="Libraries\Misc\TraceMutex.cs" />
     <Compile Include="Libraries\GSM\Layer1\PacketDump\PcapPacket.cs" />

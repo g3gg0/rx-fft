@@ -19,6 +19,8 @@ namespace LibRXFFT.Libraries.SoundSinks
         private Oversampler Oversampler = null;
         private int OutputRate = 96000;
 
+        public double OversamplingFactor { get { return OutputRate / _SamplingRate; } }
+
         public SoundCardSink(Control displayControl)
         {
             Control = new SoundCardSinkControl(this);
@@ -47,17 +49,27 @@ namespace LibRXFFT.Libraries.SoundSinks
 
         #region SoundSink Member
 
+        public double _SamplingRate = 0;
         public double SamplingRate
         {
             get
             {
+                if (SoundDevice != null)
+                {
+                    return _SamplingRate;
+                }
+
                 return 0;
             }
             set
             {
                 if (SoundDevice != null)
                 {
-                    Oversampler = new Oversampler(OutputRate / value);
+                    _SamplingRate = value;
+
+                    Oversampler = new Oversampler(OversamplingFactor);
+                    Oversampler.Type = eOversamplingType.SinC;
+                    Oversampler.SinCDepth = 4;
                     SoundDevice.SetInputRate(OutputRate);
                 }
             }
@@ -127,6 +139,21 @@ namespace LibRXFFT.Libraries.SoundSinks
             {
                 double[] ret = Oversampler.Oversample(samples);
                 SoundDevice.Write(ret);
+
+                double bufferLoad = (double)BufferUsage / (double)BufferSize;
+
+                if (bufferLoad < 0.5)
+                {
+                    Oversampler.Oversampling = Math.Min(OversamplingFactor * 1.01, Oversampler.Oversampling * 1.0001);
+                }
+                else if (bufferLoad > 0.8)
+                {
+                    Oversampler.Oversampling = Math.Max(OversamplingFactor / 1.02, Oversampler.Oversampling / 1.001);
+                }
+                else
+                {
+                    Oversampler.Oversampling = OversamplingFactor;
+                }
             }
         }
 

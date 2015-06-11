@@ -28,6 +28,7 @@ using LuaInterface;
 using LibRXFFT.Libraries.Demodulators;
 using LibRXFFT.Components.GDI;
 using LibRXFFT.Components.DeviceControls;
+using LibRXFFT.Libraries.HiQ_SDR;
 
 namespace RX_FFT
 {
@@ -161,6 +162,8 @@ namespace RX_FFT
 
         public MainScreen()
         {
+            SNDP.Instance.Discover();
+
             Instance = this;
 
             InitializeComponent();
@@ -283,6 +286,10 @@ namespace RX_FFT
             LuaHelpers.RegisterNamespace("DemodulatorCollection.BitClockSinks");
             RegisterScript("startup.lua", true);
 
+            if(SNDP.Instance.Devices.Length > 0)
+            {
+                openHiQSDRMenuItem_Click(null, null);
+            }
         }
 
         void AreaSelectionUpdate()

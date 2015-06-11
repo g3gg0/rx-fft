@@ -27,19 +27,17 @@ namespace LibRXFFT.Libraries.SoundDevices
 
                 if (Secondary != null)
                 {
-                    int currentPlayPosition = Secondary.CurrentPlayPosition;
-
                     /* get the number of samples that we are able to write total */
-                    bytesUsed = CurrentWritePosition - currentPlayPosition;
+                    bytesUsed = CurrentWritePosition - Secondary.CurrentPlayPosition;
                     if (bytesUsed < 0)
                     {
-                        bytesUsed += BufferSize;
+                        bytesUsed += BufferSize - 1;
                     }
                 }
                 return bytesUsed;
             }
         }
-        private const double SecondsToBuffer = 0.5f;
+        private const double SecondsToBuffer = 1.0f;
         private SoundBufferDescription Desc;
         private DirectSound Device;
 
@@ -290,9 +288,8 @@ namespace LibRXFFT.Libraries.SoundDevices
                     int bytesToWrite = samplesToWrite * Secondary.Format.BlockAlignment;
                     int currentPlayPosition = Secondary.CurrentPlayPosition;
 
-
                     /* get the number of samples that we are able to write total */
-                    int bytesUsed = CurrentWritePosition - currentPlayPosition;
+                    int bytesUsed = CurrentWritePosition - Secondary.CurrentWritePosition;
                     if (bytesUsed < 0)
                     {
                         bytesUsed += BufferSize;
@@ -335,7 +332,6 @@ namespace LibRXFFT.Libraries.SoundDevices
                     CurrentWritePosition %= BufferSize;
 
                     BytesWritten += bytesToWrite;
-
 
                     /* start playing when n packets were buffered */
                     if (!PlayingStarted && BytesWritten > PrebufferBytes)

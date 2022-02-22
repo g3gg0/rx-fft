@@ -19,6 +19,7 @@ namespace LibRXFFT.Components.DeviceControls
 {
     public partial class FileSourceDeviceControl : Form, DeviceControl
     {
+
         private FileSampleSource Source;
         private bool Repeat = false;
         private double LastPosition = 0;
@@ -59,9 +60,14 @@ namespace LibRXFFT.Components.DeviceControls
                 FileName = fileName;
                 Source = new FileSampleSource(FileName, InternalOversampling);
                 Source.ForwardEnabled = true;
-                Source.SamplesPerBlock = (int)(ReadFrameRate * Source.InputSamplingRate);
+                Source.SamplesPerBlock = (int)Math.Min(ReadFrameRate * Source.InputSamplingRate, 32768);
 
                 trackBar.Maximum = (int)(Source.GetTotalTime() / 0.01f);
+
+                if(trackBar.Maximum < 0)
+                {
+                    trackBar.Maximum = int.MaxValue;
+                }
 
                 Timer.Interval = (uint)((double)(Source.OutputBlockSize * 1000.0f) / Source.OutputSamplingRate);
 
@@ -211,6 +217,10 @@ namespace LibRXFFT.Components.DeviceControls
                 {
                     TransferModeChanged(this, null);
                 }
+                lock (ReadTick)
+                {
+                    Monitor.Pulse(ReadTick);
+                }
             }
         }
 
@@ -293,6 +303,29 @@ namespace LibRXFFT.Components.DeviceControls
                     {
                         /* seems to have reached the end. stop playback */
                         TransferMode = eTransferMode.Stopped;
+
+                        string[] ext = FileName.Split('.');
+                        string[] parts = ext[0].Split('_');
+
+                        if (parts.Length > 1 && ext.Length > 1)
+                        {
+                            string counter = parts[parts.Length - 1];
+                            int num = 0;
+
+                            if(int.TryParse(counter, out num))
+                            {
+                                num++;
+                                string newName = string.Join("_", parts.SubArray(0,parts.Length-1)) + "_" + num.ToString().PadLeft(counter.Length, '0') + "." + ext[1];
+                                if (File.Exists(newName))
+                                {
+                                    BeginInvoke(new Action(() =>
+                                    {
+                                        LoadFile(newName);
+                                        TransferMode = eTransferMode.Stream;
+                                    }));
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -305,6 +338,7 @@ namespace LibRXFFT.Components.DeviceControls
 
             return success;
         }
+
 
         private void UpdateDisplay()
         {
@@ -516,4 +550,14 @@ namespace LibRXFFT.Components.DeviceControls
         }
 
     }
+    public static class Extension
+    {
+        public static T[] SubArray<T>(this T[] data, int index, int length)
+        {
+            T[] result = new T[length];
+            Array.Copy(data, index, result, 0, length);
+            return result;
+        }
+    }
+
 }

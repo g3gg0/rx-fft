@@ -30,7 +30,7 @@ namespace LibRXFFT.Libraries.SoundSinks
         private string Description = "";
         private string FileName = "";
         private FileStream FileStream = null;
-        private Oversampler AudioOversampler = null;
+        private Resampler AudioOversampler = null;
 
         private long NextFlushPosition = 0;
         private long FlushDelta = 1024 * 8;
@@ -155,8 +155,8 @@ namespace LibRXFFT.Libraries.SoundSinks
                         OutSamplingRate = 48000;
                     }
 
-                    AudioOversampler = new Oversampler(OutSamplingRate / value);
-                    AudioOversampler.Type = eOversamplingType.SinC;
+                    AudioOversampler = new Resampler((decimal)OutSamplingRate / (decimal)value);
+                    AudioOversampler.Type = eResamplingType.SinC;
                     AudioOversampler.SinCDepth = 4;
 
                     /* start again if it was active before */
@@ -334,7 +334,7 @@ namespace LibRXFFT.Libraries.SoundSinks
         {
             lock (this)
             {
-                ProcessDoubleBuffer = AudioOversampler.Oversample(data, ProcessDoubleBuffer);
+                AudioOversampler.Resample(data, ref ProcessDoubleBuffer);
             }
 
             if (ProcessShortBuffer.Length != ProcessDoubleBuffer.Length)

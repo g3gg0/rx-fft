@@ -185,20 +185,20 @@ namespace LibRXFFT.Libraries.USB_RX.Misc
             {
                 try
                 {
-                    long ret = ReadSectionFieldLong(section, "", pos);
-                    srcValues.Add(ret);
-                }
-                catch (NoSuchFieldException e)
-                {
-                    try
+                    long ret1 = ReadSectionFieldLong(section, "", pos);
+                    if (ret1 != long.MinValue)
+                    {
+                        srcValues.Add(ret1);
+                    }
+                    else
                     {
                         long ret = ReadSectionFieldLong(section, (pos + 1).ToString());
                         srcValues.Add(ret);
                     }
-                    catch (NoSuchFieldException ex)
-                    {
-                        return null;
-                    }
+                }
+                catch (NoSuchFieldException ex)
+                {
+                    return null;
                 }
             }
 
@@ -240,7 +240,9 @@ namespace LibRXFFT.Libraries.USB_RX.Misc
         {
             String ret = ReadSectionFieldString(section, key, skips);
             if (ret == null)
-                throw new NoSuchFieldException("Could not find Field '" + key + "' in Section '" + section + "'");
+            {
+                return long.MinValue;
+            }
 
             return long.Parse(ret);
         }

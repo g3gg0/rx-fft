@@ -68,6 +68,7 @@
             this.radioAcqStream = new System.Windows.Forms.RadioButton();
             this.radioAcqBlock = new System.Windows.Forms.RadioButton();
             this.radioAcqOff = new System.Windows.Forms.RadioButton();
+            this.radioTunerInt = new System.Windows.Forms.RadioButton();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -358,6 +359,7 @@
             // 
             // groupBox4
             // 
+            this.groupBox4.Controls.Add(this.radioTunerInt);
             this.groupBox4.Controls.Add(this.label1);
             this.groupBox4.Controls.Add(this.txtAtt);
             this.groupBox4.Controls.Add(this.radioTuner);
@@ -399,12 +401,12 @@
             // radioTuner
             // 
             this.radioTuner.AutoSize = true;
-            this.radioTuner.Location = new System.Drawing.Point(6, 88);
+            this.radioTuner.Location = new System.Drawing.Point(51, 65);
             this.radioTuner.Name = "radioTuner";
             this.radioTuner.Size = new System.Drawing.Size(53, 17);
             this.radioTuner.TabIndex = 11;
             this.radioTuner.TabStop = true;
-            this.radioTuner.Text = "Tuner";
+            this.radioTuner.Text = "Ext.T.";
             this.radioTuner.UseVisualStyleBackColor = true;
             this.radioTuner.CheckedChanged += new System.EventHandler(this.radioTuner_CheckedChanged);
             // 
@@ -434,7 +436,7 @@
             // radioRf4
             // 
             this.radioRf4.AutoSize = true;
-            this.radioRf4.Location = new System.Drawing.Point(80, 65);
+            this.radioRf4.Location = new System.Drawing.Point(6, 65);
             this.radioRf4.Name = "radioRf4";
             this.radioRf4.Size = new System.Drawing.Size(45, 17);
             this.radioRf4.TabIndex = 10;
@@ -446,7 +448,7 @@
             // radioRf2
             // 
             this.radioRf2.AutoSize = true;
-            this.radioRf2.Location = new System.Drawing.Point(80, 42);
+            this.radioRf2.Location = new System.Drawing.Point(51, 42);
             this.radioRf2.Name = "radioRf2";
             this.radioRf2.Size = new System.Drawing.Size(45, 17);
             this.radioRf2.TabIndex = 8;
@@ -469,7 +471,7 @@
             // radioRf3
             // 
             this.radioRf3.AutoSize = true;
-            this.radioRf3.Location = new System.Drawing.Point(6, 65);
+            this.radioRf3.Location = new System.Drawing.Point(108, 42);
             this.radioRf3.Name = "radioRf3";
             this.radioRf3.Size = new System.Drawing.Size(45, 17);
             this.radioRf3.TabIndex = 9;
@@ -525,6 +527,18 @@
             this.radioAcqOff.Text = "Off";
             this.radioAcqOff.UseVisualStyleBackColor = true;
             this.radioAcqOff.CheckedChanged += new System.EventHandler(this.radioAcqOff_CheckedChanged);
+            // 
+            // radioTunerInt
+            // 
+            this.radioTunerInt.AutoSize = true;
+            this.radioTunerInt.Location = new System.Drawing.Point(108, 65);
+            this.radioTunerInt.Name = "radioTunerInt";
+            this.radioTunerInt.Size = new System.Drawing.Size(49, 17);
+            this.radioTunerInt.TabIndex = 14;
+            this.radioTunerInt.TabStop = true;
+            this.radioTunerInt.Text = "int.T.";
+            this.radioTunerInt.UseVisualStyleBackColor = true;
+            this.radioTunerInt.CheckedChanged += new System.EventHandler(this.radioTunerInt_CheckedChanged);
             // 
             // USBRXDeviceControl
             // 
@@ -596,5 +610,6 @@
         private LibRXFFT.Components.GDI.TextBoxMouseScrollLong txtAtt;
         private System.Windows.Forms.Label label4;
         private LibRXFFT.Components.GDI.TextBoxMouseScrollLong txtChannel;
+        private System.Windows.Forms.RadioButton radioTunerInt;
     }
 }

@@ -351,7 +351,7 @@ void kf_factor(int n,int * facbuf)
  * */
 kiss_fft_cfg kiss_fft_alloc(int nfft,int inverse_fft,void * mem,size_t * lenmem )
 {
-	kiss_fft_alloc_buffered(nfft, inverse_fft, mem, lenmem, NULL, NULL);
+	return kiss_fft_alloc_buffered(nfft, inverse_fft, mem, lenmem, NULL, NULL);
 }
 
 kiss_fft_cfg kiss_fft_alloc_buffered(int nfft,int inverse_fft,void * mem,size_t * lenmem, kiss_fft_cpx *inData, kiss_fft_cpx *outData )

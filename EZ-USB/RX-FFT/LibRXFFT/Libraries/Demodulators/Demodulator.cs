@@ -72,6 +72,12 @@ namespace LibRXFFT.Libraries.Demodulators
                 }
             }
 
+            /* recover from NaN and alike */
+            if (!(DcOffset > -1) || !(DcOffset < 1))
+            {
+                DcOffset = 0;
+            }
+
             return outData;
         }
 

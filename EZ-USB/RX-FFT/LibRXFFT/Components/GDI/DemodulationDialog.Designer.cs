@@ -32,6 +32,7 @@
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.radioLSB = new System.Windows.Forms.RadioButton();
             this.radioUSB = new System.Windows.Forms.RadioButton();
+            this.txtDecim = new LibRXFFT.Components.GDI.TextBoxMouseScrollLong();
             this.label3 = new System.Windows.Forms.Label();
             this.radioFMAccurate = new System.Windows.Forms.RadioButton();
             this.radioFMFast = new System.Windows.Forms.RadioButton();
@@ -67,8 +68,11 @@
             this.label7 = new System.Windows.Forms.Label();
             this.chkNative = new System.Windows.Forms.CheckBox();
             this.chkAmplify = new System.Windows.Forms.CheckBox();
+            this.txtAmplify = new LibRXFFT.Components.GDI.TextBoxMouseScrollLong();
             this.btnDemodFft = new System.Windows.Forms.Button();
             this.groupBox6 = new System.Windows.Forms.GroupBox();
+            this.barSquelchPower = new LibRXFFT.Components.GDI.PowerBar();
+            this.txtSquelchLimit = new LibRXFFT.Components.GDI.TextBoxMouseScrollLong();
             this.txtSquelchMax = new System.Windows.Forms.TextBox();
             this.txtSquelchAvg = new System.Windows.Forms.TextBox();
             this.chkEnableSquelch = new System.Windows.Forms.CheckBox();
@@ -85,10 +89,6 @@
             this.cmbSourceFrequency = new System.Windows.Forms.ComboBox();
             this.lblDebugText = new System.Windows.Forms.Label();
             this.frequencySelector = new LibRXFFT.Components.GDI.FrequencySelector();
-            this.barSquelchPower = new LibRXFFT.Components.GDI.PowerBar();
-            this.txtSquelchLimit = new LibRXFFT.Components.GDI.TextBoxMouseScrollLong();
-            this.txtAmplify = new LibRXFFT.Components.GDI.TextBoxMouseScrollLong();
-            this.txtDecim = new LibRXFFT.Components.GDI.TextBoxMouseScrollLong();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -150,6 +150,19 @@
             this.radioUSB.Text = "USB";
             this.radioUSB.UseVisualStyleBackColor = true;
             this.radioUSB.CheckedChanged += new System.EventHandler(this.radioUSB_CheckedChanged);
+            // 
+            // txtDecim
+            // 
+            this.txtDecim.Location = new System.Drawing.Point(75, 158);
+            this.txtDecim.LowerLimit = ((long)(1));
+            this.txtDecim.Name = "txtDecim";
+            this.txtDecim.Size = new System.Drawing.Size(32, 20);
+            this.txtDecim.TabIndex = 5;
+            this.txtDecim.Text = "0";
+            this.txtDecim.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.txtDecim.UpperLimit = ((long)(64));
+            this.txtDecim.Value = ((long)(0));
+            this.txtDecim.TextChanged += new System.EventHandler(this.txtDecim_TextChanged);
             // 
             // label3
             // 
@@ -556,6 +569,19 @@
             this.chkAmplify.UseVisualStyleBackColor = true;
             this.chkAmplify.CheckedChanged += new System.EventHandler(this.chkAmplify_CheckedChanged);
             // 
+            // txtAmplify
+            // 
+            this.txtAmplify.Location = new System.Drawing.Point(70, 41);
+            this.txtAmplify.LowerLimit = ((long)(-500));
+            this.txtAmplify.Name = "txtAmplify";
+            this.txtAmplify.Size = new System.Drawing.Size(46, 20);
+            this.txtAmplify.TabIndex = 2;
+            this.txtAmplify.Text = "0";
+            this.txtAmplify.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.txtAmplify.UpperLimit = ((long)(500));
+            this.txtAmplify.Value = ((long)(0));
+            this.txtAmplify.TextChanged += new System.EventHandler(this.txtAmplify_TextChanged);
+            // 
             // btnDemodFft
             // 
             this.btnDemodFft.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
@@ -583,6 +609,30 @@
             this.groupBox6.TabIndex = 6;
             this.groupBox6.TabStop = false;
             this.groupBox6.Text = "Squelch";
+            // 
+            // barSquelchPower
+            // 
+            this.barSquelchPower.Amplitude = 0D;
+            this.barSquelchPower.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            this.barSquelchPower.LinePosition = 0D;
+            this.barSquelchPower.Location = new System.Drawing.Point(10, 110);
+            this.barSquelchPower.Name = "barSquelchPower";
+            this.barSquelchPower.Size = new System.Drawing.Size(104, 18);
+            this.barSquelchPower.TabIndex = 3;
+            this.barSquelchPower.Text = "powerBar1";
+            // 
+            // txtSquelchLimit
+            // 
+            this.txtSquelchLimit.Location = new System.Drawing.Point(75, 84);
+            this.txtSquelchLimit.LowerLimit = ((long)(-100));
+            this.txtSquelchLimit.Name = "txtSquelchLimit";
+            this.txtSquelchLimit.Size = new System.Drawing.Size(39, 20);
+            this.txtSquelchLimit.TabIndex = 2;
+            this.txtSquelchLimit.Text = "-25";
+            this.txtSquelchLimit.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.txtSquelchLimit.UpperLimit = ((long)(0));
+            this.txtSquelchLimit.Value = ((long)(-25));
+            this.txtSquelchLimit.TextChanged += new System.EventHandler(this.txtSquelchLimit_TextChanged);
             // 
             // txtSquelchMax
             // 
@@ -645,15 +695,15 @@
             // tabSoundOut
             // 
             this.tabSoundOut.Alignment = System.Windows.Forms.TabAlignment.Left;
-            this.tabSoundOut.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.tabSoundOut.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.tabSoundOut.Controls.Add(this.tabGeneral);
             this.tabSoundOut.Location = new System.Drawing.Point(611, 19);
             this.tabSoundOut.Multiline = true;
             this.tabSoundOut.Name = "tabSoundOut";
             this.tabSoundOut.SelectedIndex = 0;
-            this.tabSoundOut.Size = new System.Drawing.Size(255, 339);
+            this.tabSoundOut.Size = new System.Drawing.Size(255, 337);
             this.tabSoundOut.TabIndex = 10;
             // 
             // tabGeneral
@@ -667,7 +717,7 @@
             this.tabGeneral.Location = new System.Drawing.Point(23, 4);
             this.tabGeneral.Name = "tabGeneral";
             this.tabGeneral.Padding = new System.Windows.Forms.Padding(3);
-            this.tabGeneral.Size = new System.Drawing.Size(228, 331);
+            this.tabGeneral.Size = new System.Drawing.Size(228, 329);
             this.tabGeneral.TabIndex = 0;
             this.tabGeneral.Text = "General";
             // 
@@ -755,61 +805,11 @@
             this.frequencySelector.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.frequencySelector.FrequencyChanged += new System.EventHandler(this.frequencySelector_FrequencyChanged);
             // 
-            // barSquelchPower
-            // 
-            this.barSquelchPower.Amplitude = 0;
-            this.barSquelchPower.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
-            this.barSquelchPower.LinePosition = 0;
-            this.barSquelchPower.Location = new System.Drawing.Point(10, 110);
-            this.barSquelchPower.Name = "barSquelchPower";
-            this.barSquelchPower.Size = new System.Drawing.Size(104, 18);
-            this.barSquelchPower.TabIndex = 3;
-            this.barSquelchPower.Text = "powerBar1";
-            // 
-            // txtSquelchLimit
-            // 
-            this.txtSquelchLimit.Location = new System.Drawing.Point(75, 84);
-            this.txtSquelchLimit.LowerLimit = ((long)(-100));
-            this.txtSquelchLimit.Name = "txtSquelchLimit";
-            this.txtSquelchLimit.Size = new System.Drawing.Size(39, 20);
-            this.txtSquelchLimit.TabIndex = 2;
-            this.txtSquelchLimit.Text = "-25";
-            this.txtSquelchLimit.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.txtSquelchLimit.UpperLimit = ((long)(0));
-            this.txtSquelchLimit.Value = ((long)(-25));
-            this.txtSquelchLimit.TextChanged += new System.EventHandler(this.txtSquelchLimit_TextChanged);
-            // 
-            // txtAmplify
-            // 
-            this.txtAmplify.Location = new System.Drawing.Point(70, 41);
-            this.txtAmplify.LowerLimit = ((long)(-500));
-            this.txtAmplify.Name = "txtAmplify";
-            this.txtAmplify.Size = new System.Drawing.Size(46, 20);
-            this.txtAmplify.TabIndex = 2;
-            this.txtAmplify.Text = "0";
-            this.txtAmplify.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.txtAmplify.UpperLimit = ((long)(500));
-            this.txtAmplify.Value = ((long)(0));
-            this.txtAmplify.TextChanged += new System.EventHandler(this.txtAmplify_TextChanged);
-            // 
-            // txtDecim
-            // 
-            this.txtDecim.Location = new System.Drawing.Point(75, 158);
-            this.txtDecim.LowerLimit = ((long)(1));
-            this.txtDecim.Name = "txtDecim";
-            this.txtDecim.Size = new System.Drawing.Size(32, 20);
-            this.txtDecim.TabIndex = 5;
-            this.txtDecim.Text = "0";
-            this.txtDecim.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.txtDecim.UpperLimit = ((long)(64));
-            this.txtDecim.Value = ((long)(0));
-            this.txtDecim.TextChanged += new System.EventHandler(this.txtDecim_TextChanged);
-            // 
             // DemodulationDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(878, 370);
+            this.ClientSize = new System.Drawing.Size(878, 368);
             this.Controls.Add(this.lblDebugText);
             this.Controls.Add(this.cmbSourceFrequency);
             this.Controls.Add(this.tabSoundOut);

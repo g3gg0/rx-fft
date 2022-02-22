@@ -37,8 +37,10 @@
             this.label1 = new System.Windows.Forms.Label();
             this.lblRate = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
+            this.txtAttenuation = new LibRXFFT.Components.GDI.TextBoxMouseScrollLong();
             this.label2 = new System.Windows.Forms.Label();
             this.cmbRate = new System.Windows.Forms.ComboBox();
+            this.txtFreqRx = new LibRXFFT.Components.GDI.FrequencySelector();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.radioAcqStream = new System.Windows.Forms.RadioButton();
             this.radioAcqOff = new System.Windows.Forms.RadioButton();
@@ -51,13 +53,15 @@
             this.groupBox4 = new System.Windows.Forms.GroupBox();
             this.label5 = new System.Windows.Forms.Label();
             this.comboBox1 = new System.Windows.Forms.ComboBox();
+            this.txtTxLevel = new LibRXFFT.Components.GDI.TextBoxMouseScrollLong();
             this.chkTxPTT = new System.Windows.Forms.CheckBox();
+            this.txtFreqTx = new LibRXFFT.Components.GDI.FrequencySelector();
             this.label6 = new System.Windows.Forms.Label();
             this.lblFirmware = new System.Windows.Forms.Label();
-            this.txtTxLevel = new LibRXFFT.Components.GDI.TextBoxMouseScrollLong();
-            this.txtFreqTx = new LibRXFFT.Components.GDI.FrequencySelector();
-            this.txtAttenuation = new LibRXFFT.Components.GDI.TextBoxMouseScrollLong();
-            this.txtFreqRx = new LibRXFFT.Components.GDI.FrequencySelector();
+            this.label7 = new System.Windows.Forms.Label();
+            this.label8 = new System.Windows.Forms.Label();
+            this.lblSerial = new System.Windows.Forms.Label();
+            this.lblName = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.groupBox3.SuspendLayout();
             this.groupBox2.SuspendLayout();
@@ -106,6 +110,22 @@
             this.label3.TabIndex = 8;
             this.label3.Text = "Attenuation";
             // 
+            // txtAttenuation
+            // 
+            this.txtAttenuation.BackColor = System.Drawing.Color.Black;
+            this.txtAttenuation.Font = new System.Drawing.Font("Courier New", 8.25F);
+            this.txtAttenuation.ForeColor = System.Drawing.Color.Cyan;
+            this.txtAttenuation.Location = new System.Drawing.Point(249, 19);
+            this.txtAttenuation.LowerLimit = ((long)(-1));
+            this.txtAttenuation.Name = "txtAttenuation";
+            this.txtAttenuation.Size = new System.Drawing.Size(48, 20);
+            this.txtAttenuation.TabIndex = 7;
+            this.txtAttenuation.Text = "0";
+            this.txtAttenuation.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.txtAttenuation.UpperLimit = ((long)(44));
+            this.txtAttenuation.Value = ((long)(0));
+            this.txtAttenuation.ValueChanged += new System.EventHandler(this.txtAttenuation_ValueChanged);
+            // 
             // label2
             // 
             this.label2.AutoSize = true;
@@ -153,6 +173,22 @@
             this.cmbRate.SelectedIndexChanged += new System.EventHandler(this.cmbRate_SelectedIndexChanged);
             this.cmbRate.TextChanged += new System.EventHandler(this.cmbRate_TextChanged);
             // 
+            // txtFreqRx
+            // 
+            this.txtFreqRx.BackColor = System.Drawing.Color.Black;
+            this.txtFreqRx.FixedLengthDecades = 10;
+            this.txtFreqRx.FixedLengthString = true;
+            this.txtFreqRx.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txtFreqRx.ForeColor = System.Drawing.Color.Cyan;
+            this.txtFreqRx.Frequency = ((long)(0));
+            this.txtFreqRx.Location = new System.Drawing.Point(13, 19);
+            this.txtFreqRx.Name = "txtFreqRx";
+            this.txtFreqRx.Size = new System.Drawing.Size(154, 20);
+            this.txtFreqRx.TabIndex = 1;
+            this.txtFreqRx.Text = "0.000.000.000 Hz";
+            this.txtFreqRx.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.txtFreqRx.FrequencyChanged += new System.EventHandler(this.txtFreqRx_FrequencyChanged);
+            // 
             // groupBox3
             // 
             this.groupBox3.Controls.Add(this.radioAcqStream);
@@ -197,7 +233,7 @@
             this.groupBox2.Size = new System.Drawing.Size(234, 51);
             this.groupBox2.TabIndex = 4;
             this.groupBox2.TabStop = false;
-            this.groupBox2.Text = "IP Address";
+            this.groupBox2.Text = "IP Address to assign";
             // 
             // btnConnect
             // 
@@ -297,35 +333,6 @@
             this.comboBox1.SelectedIndexChanged += new System.EventHandler(this.cmbRate_SelectedIndexChanged);
             this.comboBox1.TextChanged += new System.EventHandler(this.cmbRate_TextChanged);
             // 
-            // chkTxPTT
-            // 
-            this.chkTxPTT.AutoSize = true;
-            this.chkTxPTT.Location = new System.Drawing.Point(185, 69);
-            this.chkTxPTT.Name = "chkTxPTT";
-            this.chkTxPTT.Size = new System.Drawing.Size(47, 17);
-            this.chkTxPTT.TabIndex = 9;
-            this.chkTxPTT.Text = "PTT";
-            this.chkTxPTT.UseVisualStyleBackColor = true;
-            this.chkTxPTT.CheckedChanged += new System.EventHandler(this.chkTxPtt_CheckedChanged);
-            // 
-            // label6
-            // 
-            this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(252, 34);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(52, 13);
-            this.label6.TabIndex = 5;
-            this.label6.Text = "Firmware:";
-            // 
-            // lblFirmware
-            // 
-            this.lblFirmware.AutoSize = true;
-            this.lblFirmware.Location = new System.Drawing.Point(310, 34);
-            this.lblFirmware.Name = "lblFirmware";
-            this.lblFirmware.Size = new System.Drawing.Size(27, 13);
-            this.lblFirmware.TabIndex = 5;
-            this.lblFirmware.Text = "N/A";
-            // 
             // txtTxLevel
             // 
             this.txtTxLevel.BackColor = System.Drawing.Color.Black;
@@ -341,6 +348,17 @@
             this.txtTxLevel.UpperLimit = ((long)(255));
             this.txtTxLevel.Value = ((long)(0));
             this.txtTxLevel.ValueChanged += new System.EventHandler(this.txtTxLevel_ValueChanged);
+            // 
+            // chkTxPTT
+            // 
+            this.chkTxPTT.AutoSize = true;
+            this.chkTxPTT.Location = new System.Drawing.Point(185, 69);
+            this.chkTxPTT.Name = "chkTxPTT";
+            this.chkTxPTT.Size = new System.Drawing.Size(47, 17);
+            this.chkTxPTT.TabIndex = 9;
+            this.chkTxPTT.Text = "PTT";
+            this.chkTxPTT.UseVisualStyleBackColor = true;
+            this.chkTxPTT.CheckedChanged += new System.EventHandler(this.chkTxPtt_CheckedChanged);
             // 
             // txtFreqTx
             // 
@@ -358,37 +376,59 @@
             this.txtFreqTx.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.txtFreqTx.FrequencyChanged += new System.EventHandler(this.txtFreqTx_FrequencyChanged);
             // 
-            // txtAttenuation
+            // label6
             // 
-            this.txtAttenuation.BackColor = System.Drawing.Color.Black;
-            this.txtAttenuation.Font = new System.Drawing.Font("Courier New", 8.25F);
-            this.txtAttenuation.ForeColor = System.Drawing.Color.Cyan;
-            this.txtAttenuation.Location = new System.Drawing.Point(249, 19);
-            this.txtAttenuation.LowerLimit = ((long)(-1));
-            this.txtAttenuation.Name = "txtAttenuation";
-            this.txtAttenuation.Size = new System.Drawing.Size(48, 20);
-            this.txtAttenuation.TabIndex = 7;
-            this.txtAttenuation.Text = "0";
-            this.txtAttenuation.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.txtAttenuation.UpperLimit = ((long)(44));
-            this.txtAttenuation.Value = ((long)(0));
-            this.txtAttenuation.ValueChanged += new System.EventHandler(this.txtAttenuation_ValueChanged);
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(254, 47);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(52, 13);
+            this.label6.TabIndex = 5;
+            this.label6.Text = "Firmware:";
             // 
-            // txtFreqRx
+            // lblFirmware
             // 
-            this.txtFreqRx.BackColor = System.Drawing.Color.Black;
-            this.txtFreqRx.FixedLengthDecades = 10;
-            this.txtFreqRx.FixedLengthString = true;
-            this.txtFreqRx.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtFreqRx.ForeColor = System.Drawing.Color.Cyan;
-            this.txtFreqRx.Frequency = ((long)(0));
-            this.txtFreqRx.Location = new System.Drawing.Point(13, 19);
-            this.txtFreqRx.Name = "txtFreqRx";
-            this.txtFreqRx.Size = new System.Drawing.Size(154, 20);
-            this.txtFreqRx.TabIndex = 1;
-            this.txtFreqRx.Text = "0.000.000.000 Hz";
-            this.txtFreqRx.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.txtFreqRx.FrequencyChanged += new System.EventHandler(this.txtFreqRx_FrequencyChanged);
+            this.lblFirmware.AutoSize = true;
+            this.lblFirmware.Location = new System.Drawing.Point(312, 47);
+            this.lblFirmware.Name = "lblFirmware";
+            this.lblFirmware.Size = new System.Drawing.Size(27, 13);
+            this.lblFirmware.TabIndex = 5;
+            this.lblFirmware.Text = "N/A";
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(254, 34);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(36, 13);
+            this.label7.TabIndex = 5;
+            this.label7.Text = "Serial:";
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(254, 21);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(38, 13);
+            this.label8.TabIndex = 5;
+            this.label8.Text = "Name:";
+            // 
+            // lblSerial
+            // 
+            this.lblSerial.AutoSize = true;
+            this.lblSerial.Location = new System.Drawing.Point(312, 34);
+            this.lblSerial.Name = "lblSerial";
+            this.lblSerial.Size = new System.Drawing.Size(27, 13);
+            this.lblSerial.TabIndex = 11;
+            this.lblSerial.Text = "N/A";
+            // 
+            // lblName
+            // 
+            this.lblName.AutoSize = true;
+            this.lblName.Location = new System.Drawing.Point(312, 21);
+            this.lblName.Name = "lblName";
+            this.lblName.Size = new System.Drawing.Size(27, 13);
+            this.lblName.TabIndex = 11;
+            this.lblName.Text = "N/A";
             // 
             // HiQSDRDeviceControl
             // 
@@ -396,11 +436,15 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(430, 251);
             this.ControlBox = false;
+            this.Controls.Add(this.lblName);
+            this.Controls.Add(this.lblSerial);
             this.Controls.Add(this.groupBox4);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.lblFirmware);
+            this.Controls.Add(this.label8);
+            this.Controls.Add(this.label7);
             this.Controls.Add(this.label6);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
             this.MaximumSize = new System.Drawing.Size(1024, 1024);
@@ -446,5 +490,9 @@
         private GDI.FrequencySelector txtFreqTx;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Label lblFirmware;
+        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.Label lblSerial;
+        private System.Windows.Forms.Label lblName;
     }
 }

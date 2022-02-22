@@ -21,6 +21,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             AR5000,
             VUHF_RX,
             MT2131,
+            R820,
             None
         }
 
@@ -111,8 +112,9 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
 
                 bool success = false;
                 BO35 bo35 = null;
-                AR5000 ar5000 = null;
+                AR5000N ar5000 = null;
                 MT2131 mt2131 = null;
+                USBRX_R820 r820 = null;
                 VUHF_RX vuhfrx = null;
 
                 if (mainTuner == null && (TunerCombination == eCombinationType.BO35 || TunerCombination == eCombinationType.Automatic))
@@ -141,7 +143,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                 if (mainTuner == null && (TunerCombination == eCombinationType.AR5000 || TunerCombination == eCombinationType.Automatic))
                 {
                     /* try to open BO-35 */
-                    ar5000 = new AR5000(true);
+                    ar5000 = new AR5000N("AR5000");
 
                     try
                     {
@@ -214,6 +216,31 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
                                     return false;
                                 }
                             }
+
+                            if (mainTuner == null && (TunerCombination == eCombinationType.R820 || TunerCombination == eCombinationType.Automatic))
+                            {
+                                r820 = new USBRX_R820(this);
+                                try
+                                {
+                                    success = r820.OpenTuner();
+                                }
+                                catch (Exception e)
+                                {
+                                }
+
+                                if (success)
+                                {
+                                    stepSize = r820.IFStepSize;
+                                    mainTuner = r820;
+                                }
+                                else if (TunerCombination == eCombinationType.MT2131)
+                                {
+                                    ReleaseDeviceNum(DevNum);
+                                    return false;
+                                }
+                            }
+
+                            
 
                             if (mainTuner == null && (TunerCombination == eCombinationType.VUHF_RX || TunerCombination == eCombinationType.Automatic))
                             {
@@ -421,6 +448,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         public enum eRfSource
         {
             Tuner,
+            InternalTuner,
             RF1,
             RF2,
             RF3,

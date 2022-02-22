@@ -3,6 +3,7 @@ using LibRXFFT.Components.DirectX;
 using LibRXFFT.Libraries.SignalProcessing;
 using RX_FFT.Components.GDI;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -20,7 +21,7 @@ namespace DemodulatorCollection.Demodulators
             DataStream,
             Init
         }
-        private bool[] Preamble = new bool[] { false, false, false, false, true, false, true, false, false, false, false, true, false, true, false, false, false, false, false, false };
+        private bool[] Preamble = new bool[] { false, false, false, false, true, false, true, false, false, false, false, true, false, true, false, false, false, false, false /*, false*/ };
         private double[] PreambleSignalBuffer = new double[0];
         private double[] BitGroupSignalBuffer = new double[0];
         private double[] WholeSignalBuffer = new double[0];
@@ -34,7 +35,7 @@ namespace DemodulatorCollection.Demodulators
         private double NoiseFloorInteg;
         private int SameBits;
         private bool LastBit;
-        private int IntegratedSignalCount;
+        private decimal IntegratedSignalCount;
         private int WholeSignalBufferPos = 0;
 
         private eLearningState State = eLearningState.BackgroundNoise;
@@ -119,6 +120,7 @@ namespace DemodulatorCollection.Demodulators
         }
 
         double prev = 0;
+        private decimal SamplesToSkip;
 
         private void Process(double power)
         {
@@ -168,6 +170,9 @@ namespace DemodulatorCollection.Demodulators
                     {
                         DetermineLevels();
 
+                        SamplesToSkip = DetectOffset() + SamplesPerBit;
+                        Log.AddMessage("Offset: " + SamplesToSkip);
+
                         IntegratedSignal = 0;
                         IntegratedSignalCount = 0;
                         DataBitSample = 0;
@@ -182,10 +187,6 @@ namespace DemodulatorCollection.Demodulators
                         Plot.LabelledVertLines.Clear();
                         Plot.LabelledVertLines.AddLast(new LabelledLine("" + DataBitNumber, WholeSignalBufferPos, Color.Yellow));
 
-                        IntegratedSignal += power * prev * 1000;
-                        IntegratedSignalCount++;
-                        IntegratedSignal += power * prev * 1000;
-                        IntegratedSignalCount++;
 
                         BitSink.TransmissionStart();
                         State = eLearningState.DataStream;
@@ -193,15 +194,12 @@ namespace DemodulatorCollection.Demodulators
                     break;
 
                 case eLearningState.DataStream:
-
-#if false
-                    BitGroupSignalBuffer[BitPos] = power;
-                    BitPos++;
-                    if(BitPos >= BitGroupSignalBuffer.Length)
+                    if(SamplesToSkip > 0)
                     {
-
+                        SamplesToSkip--;
+                        break;
                     }
-#else
+
                     if (WholeSignalBufferPos < WholeSignalBuffer.Length)
                     {
                         WholeSignalBuffer[WholeSignalBufferPos++] = power * prev * 1000;
@@ -220,13 +218,15 @@ namespace DemodulatorCollection.Demodulators
                         Plot.LabelledVertLines.AddLast(new LabelledLine("" + DataBitNumber, WholeSignalBufferPos, Color.Green));
 
                         bool bit = false;
-                        double level = IntegratedSignal / IntegratedSignalCount;
+                        double level = IntegratedSignal / (double)IntegratedSignalCount;
+
 
                         if (level > DecisionLevel)
                         {
                             bit = true;
                         }
 
+                        Log.AddMessage("Bit " + DataBitNumber + " Level: " + level.ToString("0.00") + " -> " + bit);
                         if(LastBit == bit)
                         {
                             SameBits++;
@@ -259,9 +259,65 @@ namespace DemodulatorCollection.Demodulators
                         BitSink.TransmissionEnd();
                         State = eLearningState.Synchronizing;
                     }
-#endif
                     break;
             }
+        }
+
+        private decimal DetectOffset()
+        {
+            ArrayList edgeOffsetsList = new ArrayList();
+
+            for(int pos = 0; pos < Preamble.Length; pos++)
+            {
+                if (pos > 0)
+                {
+                    if(Preamble[pos-1] != Preamble[pos])
+                    {
+                        edgeOffsetsList.Add((int)(pos * SamplesPerBit));
+                    }
+                }
+            }
+
+            int[] edgeOffsetsExpect = (int[]) edgeOffsetsList.ToArray(typeof(int));
+            int[] edgeOffsets = new int[edgeOffsetsExpect.Length];
+            int offset = 0;
+
+            for (int pos = 0; pos < PreambleSignalBuffer.Length; pos++)
+            {
+                if (pos > 0)
+                {
+                    double prev = PreambleSignalBuffer[pos-1];
+                    double value = PreambleSignalBuffer[pos];
+
+                    if (prev < DecisionLevel && value > DecisionLevel)
+                    {
+                        edgeOffsets[offset] = pos;
+                        offset++;
+                    }
+                    else if (prev > DecisionLevel && value < DecisionLevel)
+                    {
+                        edgeOffsets[offset] = pos;
+                        offset++;
+                    }
+
+                    if (offset >= edgeOffsets.Length)
+                    {
+                        break;
+                    }
+                }
+            }
+
+            decimal accumulatedOffset = 0;
+            for(int pos = 0; pos < edgeOffsets.Length; pos++)
+            {
+                int delta = edgeOffsets[pos] - edgeOffsetsExpect[pos];
+
+                accumulatedOffset += delta;
+            }
+
+            accumulatedOffset /= edgeOffsets.Length;
+
+            return accumulatedOffset;
         }
 
         private void DumpWholeSignalBuffer()
@@ -314,7 +370,7 @@ namespace DemodulatorCollection.Demodulators
             lowBitLevel /= lowBits;
 
             DecisionDistance = highBitLevel - lowBitLevel;
-            DecisionLevel = lowBitLevel + DecisionDistance / 2;
+            DecisionLevel = lowBitLevel + DecisionDistance / 5;
         }
 
         private void DumpSignalBuffer()

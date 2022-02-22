@@ -61,7 +61,6 @@ namespace LibRXFFT.Libraries.SampleSources
 
                     SourceSamplesI[pos] += Math.Sin(0.1f * rel * Math.PI) * Math.Sin(rel * Math.PI);
                     SourceSamplesQ[pos] += Math.Cos(0.5f * rel * Math.PI) * Math.Cos(rel * Math.PI);
-
                 }
 
                 ModulationPos += SourceSamplesI.Length;

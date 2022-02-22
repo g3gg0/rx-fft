@@ -303,6 +303,10 @@ namespace LibRXFFT.Components.GDI
         {
             try
             {
+                if(IsDisposed)
+                {
+                    return;
+                }
                 BeginInvoke(new MethodInvoker(UpdateFrequencyInternal));
             }
             catch (Exception e)
@@ -347,6 +351,7 @@ namespace LibRXFFT.Components.GDI
             lblDebugText.Text += " Demod: /" + DemodState.DemodulatorFiltering;
             lblDebugText.Text += " Decim: /" + DemodState.AudioDecimation;
             lblDebugText.Text += " => Output: " + DemodState.AudioRate;
+            lblDebugText.Text += "  (rate in: " + DemodState.InputRateMeter.Rate + ")";
 
             txtDemodRate.Text = FrequencyFormatter.FreqToString(DemodState.AudioRate);
             txtDecim.Value = DemodState.AudioDecimation;

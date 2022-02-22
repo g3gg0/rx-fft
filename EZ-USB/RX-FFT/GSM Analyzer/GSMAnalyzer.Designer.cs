@@ -134,7 +134,7 @@ namespace GSM_Analyzer
             this.btnQuit = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.asdToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.txtArfcn = new LibRXFFT.Components.GDI.TextBoxMouseScroll<long>();
+            this.txtArfcn = new LibRXFFT.Components.GDI.TextBoxMouseScrollLong();
             this.krakenStatusBox1 = new GSM_Analyzer.KrakenStatusBox();
             this.slotUsageControl = new GSM_Analyzer.SlotUsageControl();
             this.statusSearch = new LibRXFFT.Components.GDI.StatusLamp();
@@ -1044,7 +1044,7 @@ namespace GSM_Analyzer
         private System.Windows.Forms.Label label15;
         private System.Windows.Forms.Label lblFreqOffset;
         private System.Windows.Forms.Button btnScan;
-        private TextBoxMouseScroll<long> txtArfcn;
+        private TextBoxMouseScrollLong txtArfcn;
         private System.Windows.Forms.Label label16;
         private System.Windows.Forms.Label lblPower;
         private System.Windows.Forms.Label label17;

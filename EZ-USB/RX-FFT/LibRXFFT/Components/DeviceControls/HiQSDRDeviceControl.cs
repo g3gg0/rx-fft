@@ -85,7 +85,7 @@ namespace LibRXFFT.Components.DeviceControls
 
         void TransferThreadMain()
         {
-            byte[] receiveBuffer = new byte[8192];
+            byte[] receiveBuffer = null;
             byte[] outBuffer = new byte[1440 * 4];
             int received = 0;
 
@@ -97,7 +97,7 @@ namespace LibRXFFT.Components.DeviceControls
                     {
                         if (HiQControl != null)
                         {
-                            received = HiQControl.Receive(receiveBuffer, ref Endpoint);
+                            received = HiQControl.Receive(ref receiveBuffer, ref Endpoint);
                         }
                         else
                         {
@@ -115,8 +115,8 @@ namespace LibRXFFT.Components.DeviceControls
 
                             for (int sample = 0; sample < samples; sample++)
                             {
-                                double I = ByteUtil.getDoubleFromBytes(receiveBuffer, 2 + sample * (byteMode * 2), byteMode, true);
-                                double Q = ByteUtil.getDoubleFromBytes(receiveBuffer, 2 + sample * (byteMode * 2) + byteMode, byteMode, true);
+                                double I = 50*ByteUtil.getDoubleFromBytes(receiveBuffer, 2 + sample * (byteMode * 2), byteMode, true);
+                                double Q = 50*ByteUtil.getDoubleFromBytes(receiveBuffer, 2 + sample * (byteMode * 2) + byteMode, byteMode, true);
 
                                 ByteUtil.putBytesFromDouble(outBuffer, sample * 4, I);
                                 ByteUtil.putBytesFromDouble(outBuffer, sample * 4 + 2, Q);
@@ -132,7 +132,14 @@ namespace LibRXFFT.Components.DeviceControls
                             if (delta > 250)
                             {
                                 long rate = (long)((double)SamplesReceived / (delta / 1000.0f));
-                                AverageRate = (AverageRate + rate) / 2;
+                                if (AverageRate != 0)
+                                {
+                                    AverageRate = (9 * AverageRate + rate) / 10;
+                                }
+                                else
+                                {
+                                    AverageRate = rate;
+                                }
                                 LastTime = now;
                                 SamplesReceived = 0;
 
@@ -153,11 +160,11 @@ namespace LibRXFFT.Components.DeviceControls
                     }
                     else if (received > 0)
                     {
-                        //Thread.Sleep(100);
+                        Thread.Sleep(10);
                     }
                     else 
                     {
-                        Thread.Sleep(100);
+                        Thread.Sleep(10);
                     }
                 }
             }
@@ -639,6 +646,12 @@ namespace LibRXFFT.Components.DeviceControls
 
                         if (SamplingRateChanged != null)
                             SamplingRateChanged(this, null);
+
+                        BeginInvoke(new Action(() =>
+                        {
+                            radioAcqStream.Checked = true;
+                        }));
+                        StartStreamRead();
                     }
                     catch (Exception ex)
                     {
@@ -689,6 +702,8 @@ namespace LibRXFFT.Components.DeviceControls
                         break;
 
                     case HiQSDRDeviceControl.eStatus.Connected:
+                        lblName.Text = "\"" + HiQControl.DeviceInfo.Name + "\"";
+                        lblSerial.Text = "\"" + HiQControl.DeviceInfo.Serial + "\"";
                         lblFirmware.Text = "v1." + HiQControl.FirmwareVersion;
                         txtFreqRx.Frequency = HiQControl.RxFrequency;
                         txtFreqTx.Frequency = HiQControl.TxFrequency;

@@ -69,8 +69,8 @@ namespace GaussGenerator
             //            byte[] srcData = new byte[] {0xB9, 0x62, 0x04, 0x0F, 0x2D, 0x45, 0x76, 0x1B};
             //            srcData = DifferenceCode.Encode(srcData);
 
-            Oversampler sampler = new Oversampler(Oversampling);
-            double[] samples = sampler.Oversample(srcData);
+            Resampler sampler = new Resampler((decimal)Oversampling);
+            double[] samples = sampler.Resample(srcData);
 
             GaussFilter filter = new GaussFilter(BT);
             double[] gaussSamples = filter.Process(samples, Oversampling);
@@ -88,7 +88,6 @@ namespace GaussGenerator
                 double[] diffSamples = Differenciator.Differenciate(gaussSamples);
                 ShmemChannel.Write(ByteUtil.convertToBytesInterleaved(gaussSamples, diffSamples));
             }
-
         }
 
         private void txtSequence_TextChanged(object sender, EventArgs e)

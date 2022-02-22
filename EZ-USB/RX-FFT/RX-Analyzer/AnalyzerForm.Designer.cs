@@ -97,7 +97,7 @@
             this.sharedMemoryToolStripMenuItem,
             this.fileToolStripMenuItem});
             this.openToolStripMenuItem.Name = "openToolStripMenuItem";
-            this.openToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.openToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.openToolStripMenuItem.Text = "Open";
             // 
             // sharedMemoryToolStripMenuItem
@@ -144,6 +144,7 @@
             this.newEyePlotToolStripMenuItem.Name = "newEyePlotToolStripMenuItem";
             this.newEyePlotToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
             this.newEyePlotToolStripMenuItem.Text = "New phase shift plot";
+            this.newEyePlotToolStripMenuItem.Click += new System.EventHandler(this.newEyePlotToolStripMenuItem_Click);
             // 
             // newEyePlotToolStripMenuItem1
             // 

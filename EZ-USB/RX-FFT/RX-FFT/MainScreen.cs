@@ -48,7 +48,7 @@ namespace RX_FFT
         private LinkedListNode<FrequencyMarker> CurrentScanFreq;
 
         /* update signal strength every n miliseconds */
-        private const int StrengthUpdateTime = 125;
+        private const int StrengthUpdateTime = 1000;
 
         private long ScanStartFreq = 0;
         private long ScanEndFreq = 0;
@@ -162,8 +162,6 @@ namespace RX_FFT
 
         public MainScreen()
         {
-            SNDP.Instance.Discover();
-
             Instance = this;
 
             InitializeComponent();
@@ -222,7 +220,7 @@ namespace RX_FFT
             AreaSelection.Draggable = true;
             AreaSelection.SelectionUpdated += new EventHandler(FFTAreaSelection_SelectionUpdated);
 
-            AudioDemodulator demod = new AudioDemodulator();
+            AudioDemodulator demod = new AudioDemodulator(PerformanceCounters);
             AudioDemodulators.AddLast(demod);
             DemodState = demod.DemodState;
             DemodState.CursorWindowFilterChanged += new EventHandler(DemodOptions_CursorWindowFilterChanged);
@@ -280,11 +278,17 @@ namespace RX_FFT
             FFTDisplay.DynamicLimits = true;
             DisplayFilterMargins = true;
 
-            LuaShellWindow = new LuaShell();
-            LuaShellWindow.RunCommand = LuaRunCommand;
-            LuaHelpers.RegisterNamespace("DemodulatorCollection.Demodulators");
-            LuaHelpers.RegisterNamespace("DemodulatorCollection.BitClockSinks");
-            RegisterScript("startup.lua", true);
+            try
+            {
+                LuaShellWindow = new LuaShell();
+                LuaShellWindow.RunCommand = LuaRunCommand;
+                LuaHelpers.RegisterNamespace("DemodulatorCollection.Demodulators");
+                LuaHelpers.RegisterNamespace("DemodulatorCollection.BitClockSinks");
+                RegisterScript("startup.lua", true);
+            }
+            catch(Exception ex)
+            {
+            }
 
             if(SNDP.Instance.Devices.Length > 0)
             {
@@ -300,7 +304,7 @@ namespace RX_FFT
 
             string text = "";
 
-            if (!DeviceOpened || DemodState == null || !DemodState.DemodulationEnabled || !DemodState.BandwidthLimiter)
+            if (!DeviceOpened || !DemodState.DemodulationEnabled || !DemodState.BandwidthLimiter)
             {
                 sel.Text = text;
                 return;
@@ -1108,6 +1112,7 @@ namespace RX_FFT
                 double[] inputQ;
 
                 DateTime lastStrengthUpdate = DateTime.Now;
+                DateTime lastDisplayUpdate = DateTime.Now;
 
                 int spectPart = 0;
                 //FFTDisplay.SpectParts = ScanFrequencies.Count;
@@ -1124,17 +1129,18 @@ namespace RX_FFT
                          */
                         if (UpdateRate > 0)
                         {
+                            /*
                             if (UpdateRate < 100)
                             {
                                 lock (UpdateRateSignal)
                                 {
                                     Monitor.Wait(UpdateRateSignal, (int)(1000 / UpdateRate));
                                 }
-                            }
+                            }*/
                         }
                         else
                         {
-                            Thread.Sleep(500);
+                            //Thread.Sleep(500);
                         }
                     }
 
@@ -1147,6 +1153,8 @@ namespace RX_FFT
                         {
                             if (!ProcessPaused && Device.ReadBlock())
                             {
+                                DateTime now = DateTime.Now;
+
                                 if (Device.TransferMode == eTransferMode.Block)
                                 {
                                     long avail = ((ShmemSampleSource)Device.SampleSource).ShmemChannel.Length;
@@ -1158,125 +1166,136 @@ namespace RX_FFT
                                     //Device.SampleSource.Flush();
                                 }
 
-                                lock (Device.SampleSource.SampleBufferLock)
+                                if (Device.SampleSource.BufferOverrun)
                                 {
-                                    inputI = Device.SampleSource.SourceSamplesI;
-                                    inputQ = Device.SampleSource.SourceSamplesQ;
+                                    Log.AddMessage("FFTReadFunc: Buffer overrun. Flushing.");
+                                    Device.SampleSource.Flush();
+                                }
 
-                                    if (CorrectDCOffset)
+                                /* only proceed if it is time to update the FFT display */
+                                if (UpdateRate > 0 && (now - lastDisplayUpdate).TotalMilliseconds > (1000 / UpdateRate))
+                                {
+                                    lock (Device.SampleSource.SampleBufferLock)
                                     {
-                                        corr.PerformDCDetection(ref inputI, ref inputQ);
-                                        corr.PerformDCCorrection(ref inputI, ref inputQ);
-                                    }
+                                        inputI = Device.SampleSource.SourceSamplesI;
+                                        inputQ = Device.SampleSource.SourceSamplesQ;
 
-                                    /* update strength display every some ms */
-                                    if (DateTime.Now.Subtract(lastStrengthUpdate).TotalMilliseconds > StrengthUpdateTime)
-                                    {
-                                        lastStrengthUpdate = DateTime.Now;
-
-                                        double maxDb = DBTools.MaximumDb(inputI, inputQ);
-                                        double fact = CurrentMaxSignalDb / maxDb;
-                                        double maxFact = 1.5f;
-                                        double smoothFact = 5;
-
-                                        /* check if 
-                                         *  a) had no signal before
-                                         *  b) have no signal now
-                                         *  c) old and new strength differ by factor 'maxFact'
-                                         */
-                                        if (CurrentMaxSignalDb == 0 || maxDb == 0 || fact > maxFact || fact < (1.0f / maxFact))
+                                        if (CorrectDCOffset)
                                         {
-                                            /* if so, use current strength */
-                                            CurrentMaxSignalDb = maxDb;
-                                        }
-                                        else
-                                        {
-                                            /* if not, smooth value */
-                                            CurrentMaxSignalDb = ((smoothFact - 1) * CurrentMaxSignalDb + maxDb) / smoothFact;
+                                            corr.PerformDCDetection(ref inputI, ref inputQ);
+                                            corr.PerformDCCorrection(ref inputI, ref inputQ);
                                         }
 
-                                        SignalPowerBar.Power = CurrentMaxSignalDb;
-
-                                        /* allow a maximum of -10dB input signal power */
-                                        double desired = -CurrentMaxSignalDb + DesiredInputSignalPower + Device.Amplification;
-
-                                        if (AGCEnabled)
+                                        /* update strength display every some ms */
+                                        if (now.Subtract(lastStrengthUpdate).TotalMilliseconds > StrengthUpdateTime)
                                         {
-                                            Device.Amplification = desired;
-                                        }
-                                    }
+                                            lastStrengthUpdate = now;
 
-                                    //Log.AddMessage("FFTReadFunc: Read " + inputI.Length + " Samples");
+                                            double maxDb = DBTools.MaximumDb(inputI, inputQ);
+                                            double fact = CurrentMaxSignalDb / maxDb;
+                                            double maxFact = 1.5f;
+                                            double smoothFact = 5;
 
-                                    if (rateChanged)
-                                    {
-                                        lock (DemodState)
-                                        {
-                                            LastSamplingRate = rate;
-
-                                            FFTDisplay.SamplingRate = rate;
-
-                                            /*
-                                            DemodState.InputRate = rate;
-                                            DemodState.ReinitSound = true;
-
-                                            if (DemodState.Dialog != null && DemodState.Dialog.Visible)
-                                                DemodState.Dialog.UpdateInformation();
-                                            */
-                                        }
-
-                                        try
-                                        {
-                                            BeginInvoke(new Action(() => setRateTextbox(rate)));
-                                        }
-                                        catch (Exception)
-                                        {
-                                        }
-
-                                        lastRate = rate;
-                                    }
-
-                                    if (ScanFrequenciesEnabled)
-                                    {
-                                        PerformanceCounters.CounterVisualization.Start();
-                                        if (ScanStrongestFrequency)
-                                        {
-                                            FFTDisplay.ProcessData(inputI, inputQ, 0, Device.Amplification - Device.Attenuation);
-                                        }
-                                        else
-                                        {
-                                            FFTDisplay.ProcessData(inputI, inputQ, spectPart, Device.Amplification - Device.Attenuation);
-                                        }
-
-                                        PerformanceCounters.CounterVisualization.Stop();
-
-                                        if (!ScanStrongestFrequency || DemodState.SquelchState == DemodulationState.eSquelchState.Closed)
-                                        {
-                                            if (CurrentScanFreq.Next != null)
+                                            /* check if 
+                                             *  a) had no signal before
+                                             *  b) have no signal now
+                                             *  c) old and new strength differ by factor 'maxFact'
+                                             */
+                                            if (CurrentMaxSignalDb == 0 || maxDb == 0 || fact > maxFact || fact < (1.0f / maxFact))
                                             {
-                                                spectPart++;
-                                                CurrentScanFreq = CurrentScanFreq.Next;
+                                                /* if so, use current strength */
+                                                CurrentMaxSignalDb = maxDb;
                                             }
                                             else
                                             {
-                                                spectPart = 0;
-                                                CurrentScanFreq = ScanFrequencies.First;
+                                                /* if not, smooth value */
+                                                CurrentMaxSignalDb = ((smoothFact - 1) * CurrentMaxSignalDb + maxDb) / smoothFact;
                                             }
 
-                                            CurrentFrequency = CurrentScanFreq.Value.Frequency;
+                                            SignalPowerBar.Power = CurrentMaxSignalDb;
+
+                                            /* allow a maximum of -10dB input signal power */
+                                            double desired = -CurrentMaxSignalDb + DesiredInputSignalPower + Device.Amplification;
+
+                                            if (AGCEnabled)
+                                            {
+                                                Device.Amplification = desired;
+                                            }
                                         }
-                                    }
-                                    else
-                                    {
-                                        PerformanceCounters.CounterVisualization.Start();
-                                        FFTDisplay.ProcessData(inputI, inputQ, 0, Device.Amplification - Device.Attenuation);
-                                        PerformanceCounters.CounterVisualization.Stop();
+
+                                        //Log.AddMessage("FFTReadFunc: Read " + inputI.Length + " Samples");
+
+                                        if (rateChanged)
+                                        {
+                                            lock (DemodState)
+                                            {
+                                                LastSamplingRate = rate;
+
+                                                FFTDisplay.SamplingRate = rate;
+
+                                                /*
+                                                DemodState.InputRate = rate;
+                                                DemodState.ReinitSound = true;
+
+                                                if (DemodState.Dialog != null && DemodState.Dialog.Visible)
+                                                    DemodState.Dialog.UpdateInformation();
+                                                */
+                                            }
+
+                                            try
+                                            {
+                                                BeginInvoke(new Action(() => setRateTextbox(rate)));
+                                            }
+                                            catch (Exception)
+                                            {
+                                            }
+
+                                            lastRate = rate;
+                                        }
+
+                                        if (ScanFrequenciesEnabled)
+                                        {
+                                            PerformanceCounters.CounterVisualization.Start();
+                                            if (ScanStrongestFrequency)
+                                            {
+                                                FFTDisplay.ProcessData(inputI, inputQ, 0, Device.Amplification - Device.Attenuation);
+                                            }
+                                            else
+                                            {
+                                                FFTDisplay.ProcessData(inputI, inputQ, spectPart, Device.Amplification - Device.Attenuation);
+                                            }
+
+                                            PerformanceCounters.CounterVisualization.Stop();
+
+                                            if (!ScanStrongestFrequency || DemodState.SquelchState == DemodulationState.eSquelchState.Closed)
+                                            {
+                                                if (CurrentScanFreq.Next != null)
+                                                {
+                                                    spectPart++;
+                                                    CurrentScanFreq = CurrentScanFreq.Next;
+                                                }
+                                                else
+                                                {
+                                                    spectPart = 0;
+                                                    CurrentScanFreq = ScanFrequencies.First;
+                                                }
+
+                                                CurrentFrequency = CurrentScanFreq.Value.Frequency;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            lastDisplayUpdate = now;
+                                            PerformanceCounters.CounterVisualization.Start();
+                                            FFTDisplay.ProcessData(inputI, inputQ, 0, Device.Amplification - Device.Attenuation);
+                                            PerformanceCounters.CounterVisualization.Stop();
+                                        }
                                     }
                                 }
                             }
                             else
                             {
-                                Thread.Sleep(20);
+                                Thread.Sleep(1);
                             }
                         }
                     }
@@ -1533,11 +1552,13 @@ namespace RX_FFT
         {
             while(UpdateRateThread != null)
             {
-                if (UpdateRate < 100)
+                double rate = UpdateRate;
+
+                if (rate < 100 && rate > 0)
                 {
                     lock (UpdateRateThread)
                     {
-                        Monitor.Wait(UpdateRateThread, (int)(1000 / UpdateRate));
+                        Monitor.Wait(UpdateRateThread, (int)(1000 / rate));
                     }
 
                     lock (UpdateRateSignal)
@@ -1608,6 +1629,11 @@ namespace RX_FFT
                 DeviceOpened = false;
                 Device.CloseControl();
                 Device = null;
+                if(DemodState.Dialog != null)
+                {
+                    DemodState.Dialog.Close();
+                    DemodState.Dialog = null;
+                }
             }
         }
 
@@ -1816,7 +1842,7 @@ namespace RX_FFT
                 StatusTextDock.Hide();
             }).Start();
 
-            OpenBO35Device(USBRXDevice.eCombinationType.BO35);
+            OpenBO35Device(USBRXDevice.eCombinationType.None);
 
             animateStatus = false;
             StatusTextDock.Hide();

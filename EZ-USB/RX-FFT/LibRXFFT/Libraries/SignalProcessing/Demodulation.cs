@@ -8,6 +8,7 @@ using LibRXFFT.Libraries.SoundSinks;
 using System.Windows.Forms;
 using System.Collections.Generic;
 using LibRXFFT.Components.GDI;
+using LibRXFFT.Libraries.Misc;
 
 namespace LibRXFFT.Libraries.SignalProcessing
 {
@@ -31,6 +32,8 @@ namespace LibRXFFT.Libraries.SignalProcessing
 
 
         public DemodulationDialog Dialog = null;
+        public RateMeter InputRateMeter = new RateMeter();
+        public RateMeter OutputRateMeter = new RateMeter();
         public event EventHandler DataUpdated;
         public bool ReinitSound = false;
         public double InputRate = 0;

@@ -182,5 +182,10 @@ namespace RX_Analyzer
                 MessageBox.Show("Failed to init shared memory. Is the correct shmemchain.dll in the program directory? (" + ex.ToString() + ")");
             }
         }
+
+        private void newEyePlotToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }

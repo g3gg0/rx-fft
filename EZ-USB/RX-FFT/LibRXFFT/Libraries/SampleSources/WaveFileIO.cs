@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using System.Globalization;
 
 namespace LibRXFFT.Libraries.SampleSources
 {
@@ -11,21 +12,187 @@ namespace LibRXFFT.Libraries.SampleSources
         Unknown,
         WAV,
         RawIQ,
-        CFile
+        CFile,
+        Rtsa,
+        CSV
+    }
+    public enum eSampleType
+    {
+        Complex,
+        Simple
+    }
+
+    public class CsvFileReader : WaveFileReader
+    {
+        private TextReader Reader;
+        private long _Length;
+        private long _Position;
+        public eSampleType SampleType = eSampleType.Complex;
+        public decimal TimeBase = 0.001m;
+
+        public CsvFileReader(string fileName) : base(fileName)
+        {
+            Reader = File.OpenText(fileName);
+
+            _Length = 0;
+            string line = "";
+            DataStartPos = 0;
+
+            decimal firstTime = 0;
+            decimal lastTime = 0;
+            do
+            {
+                line = Reader.ReadLine();
+
+                if (line != null)
+                {
+                    var entries = line.Split(',');
+                    decimal val1 = 0;
+                    decimal val2 = 0;
+
+                    if(entries.Length == 2)
+                    {
+                        switch(entries[0].Trim(new[] { ' ', '(', ')' }))
+                        {
+                            case "Zeit":
+                            case "Time":
+                                SampleType = eSampleType.Simple;
+                                break;
+                            case "ms":
+                            case "msec":
+                                TimeBase = 1000;
+                                SampleType = eSampleType.Simple;
+                                break;
+                            case "s":
+                            case "sec":
+                                TimeBase = 1;
+                                SampleType = eSampleType.Simple;
+                                break;
+                        }
+                    }
+
+                    if (decimal.TryParse(entries[0], NumberStyles.Float, CultureInfo.InvariantCulture, out val1) && decimal.TryParse(entries[1], NumberStyles.Float, CultureInfo.InvariantCulture, out val2))
+                    {
+                        if(_Length == 0)
+                        {
+                            firstTime = val1;
+                        }
+                        lastTime = val1;
+                        _Length++;
+                    }
+                    else if (_Length == 0)
+                    {
+                        DataStartPos++;
+                    }
+                }
+            } while (line != null);
+
+            Rewind();
+
+            decimal div = (lastTime - firstTime);
+
+            if (div > 0)
+            {
+                SamplingRate = (int)(1.0m / div * TimeBase * _Length);
+            }
+        }
+
+        private void Rewind()
+        {
+            (Reader as StreamReader).BaseStream.Position = 0;
+            (Reader as StreamReader).DiscardBufferedData();
+
+            int pos = 0;
+            do
+            {
+                string line = Reader.ReadLine();
+
+            } while (++pos < DataStartPos);
+
+            _Position = 0;
+        }
+
+        public override long Seek(int pos, SeekOrigin seekOrigin)
+        {
+            Rewind();
+            while(pos-- > 0)
+            {
+                string line = Reader.ReadLine();
+                _Position++;
+            }
+            return 0;
+        }
+
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            int read = 0;
+            while (count >= 8)
+            {
+                string line = Reader.ReadLine();
+
+                if (line != null)
+                {
+                    var entries = line.Split(',');
+                    float val1 = 0;
+                    float val2 = 0;
+
+                    if (float.TryParse(entries[0], NumberStyles.Float, CultureInfo.InvariantCulture, out val1) && float.TryParse(entries[1], NumberStyles.Float, CultureInfo.InvariantCulture, out val2))
+                    {
+                        switch(SampleType)
+                        {
+                            case eSampleType.Complex:
+                                Array.Copy(BitConverter.GetBytes(val1), 0, buffer, offset, 4);
+                                Array.Copy(BitConverter.GetBytes(val2), 0, buffer, offset + 4, 4);
+                                break;
+                            case eSampleType.Simple:
+                                Array.Copy(BitConverter.GetBytes(val2), 0, buffer, offset, 4);
+                                break;
+                        }
+
+                        offset += 8;
+                        read += 8;
+                        count -= 8;
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            return read;
+        }
+
+        public override long Position
+        {
+            get
+            {
+                return _Position * 8;
+            }
+        }
+        public override long Length
+        {
+            get
+            {
+                return _Length * 8;
+            }
+        }
     }
 
     public class WaveFileReader
     {
         private BinaryReader Reader;
-        private int DataLength;
         private WaveHeader WavHeader;
         private eFileType Type;
-        private long DataStartPos;
+        protected long DataStartPos;
 
         public FileStream InputStream { get; set; }
         public int SamplingRate { get; set; }
 
         public WaveFileReader(string fileName) : this(File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)) { }
+        public WaveFileReader()
+        { 
+        }
 
         public WaveFileReader(string fileName, eFileType type) : this(File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)) { }
 
@@ -56,38 +223,7 @@ namespace LibRXFFT.Libraries.SampleSources
             }
         }
 
-        public long Length
-        {
-            get
-            {
-                return InputStream.Length - DataStartPos;
-            }
-        }
-
-        public long Position
-        {
-            get
-            {
-                return InputStream.Position - DataStartPos;
-            }
-        }
-
-        public long Seek(int pos, SeekOrigin seekOrigin)
-        {
-            return InputStream.Seek(DataStartPos + pos, seekOrigin) - DataStartPos;
-        }
-
-        public void Close()
-        {
-            InputStream.Close();
-        }
-
-        public int Read(byte[] buffer, int offset, int count)
-        {
-            return InputStream.Read(buffer, offset, count);
-        }
-
-        private static eFileType EstimateType(string name)
+        public static eFileType EstimateType(string name)
         {
             if (name.EndsWith(".cfile"))
             {
@@ -97,8 +233,47 @@ namespace LibRXFFT.Libraries.SampleSources
             {
                 return eFileType.WAV;
             }
+            if (name.EndsWith(".csv"))
+            {
+                return eFileType.CSV;
+            }
+            if (name.EndsWith(".rtsa"))
+            {
+                return eFileType.Rtsa;
+            }
 
             return eFileType.RawIQ;
+        }
+
+        public virtual long Length
+        {
+            get
+            {
+                return InputStream.Length - DataStartPos;
+            }
+        }
+
+        public virtual long Position
+        {
+            get
+            {
+                return InputStream.Position - DataStartPos;
+            }
+        }
+
+        public virtual long Seek(int pos, SeekOrigin seekOrigin)
+        {
+            return InputStream.Seek(DataStartPos + pos, seekOrigin) - DataStartPos;
+        }
+
+        public virtual void Close()
+        {
+            InputStream.Close();
+        }
+
+        public virtual int Read(byte[] buffer, int offset, int count)
+        {
+            return InputStream.Read(buffer, offset, count);
         }
     }
 

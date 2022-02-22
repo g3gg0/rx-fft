@@ -37,7 +37,7 @@ namespace LibRXFFT.Libraries.ShmemChain
         public static extern uint shmemchain_read_data(int node_id, byte[] buffer, uint bytes, int read_mode);
 
         [DllImport("shmemchain.dll", CallingConvention = CallingConvention.StdCall)]
-        public static extern int shmemchain_get_infos(int node_id, byte[] name, long[] data);
+        public static extern int shmemchain_get_infos(int node_id, byte[] name, ulong[] data);
         [DllImport("shmemchain.dll", CallingConvention = CallingConvention.StdCall)]
         public static extern int shmemchain_get_all_nodes(int[] node_ids, int max_nodes);
         [DllImport("shmemchain.dll", CallingConvention = CallingConvention.StdCall)]

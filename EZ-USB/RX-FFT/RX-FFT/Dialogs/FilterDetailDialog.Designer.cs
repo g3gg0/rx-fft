@@ -45,6 +45,7 @@
             this.txtFilterGain = new LibRXFFT.Components.GDI.TextBoxMouseScrollLong();
             this.groupBox1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -55,7 +56,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(5, 31);
+            this.label1.Location = new System.Drawing.Point(5, 30);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(51, 13);
             this.label1.TabIndex = 0;
@@ -68,7 +69,7 @@
             this.groupBox1.Location = new System.Drawing.Point(0, 0);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Padding = new System.Windows.Forms.Padding(8);
-            this.groupBox1.Size = new System.Drawing.Size(201, 128);
+            this.groupBox1.Size = new System.Drawing.Size(201, 126);
             this.groupBox1.TabIndex = 1;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Filter Details";
@@ -82,10 +83,10 @@
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 241F));
             this.tableLayoutPanel1.Controls.Add(this.txtFilterWidth, 1, 1);
             this.tableLayoutPanel1.Controls.Add(this.label1, 0, 1);
-            this.tableLayoutPanel1.Controls.Add(this.label2, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.txtFilterLocation, 1, 0);
             this.tableLayoutPanel1.Controls.Add(this.txtFilterRate, 1, 2);
             this.tableLayoutPanel1.Controls.Add(this.label3, 0, 2);
+            this.tableLayoutPanel1.Controls.Add(this.label2, 0, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.GrowStyle = System.Windows.Forms.TableLayoutPanelGrowStyle.AddColumns;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(8, 21);
@@ -94,13 +95,13 @@
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 36F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(185, 99);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(185, 97);
             this.tableLayoutPanel1.TabIndex = 3;
             // 
             // txtFilterWidth
             // 
             this.txtFilterWidth.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.txtFilterWidth.Location = new System.Drawing.Point(68, 34);
+            this.txtFilterWidth.Location = new System.Drawing.Point(68, 33);
             this.txtFilterWidth.Name = "txtFilterWidth";
             this.txtFilterWidth.ReadOnly = true;
             this.txtFilterWidth.Size = new System.Drawing.Size(112, 20);
@@ -127,7 +128,7 @@
             // txtFilterRate
             // 
             this.txtFilterRate.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.txtFilterRate.Location = new System.Drawing.Point(68, 63);
+            this.txtFilterRate.Location = new System.Drawing.Point(68, 61);
             this.txtFilterRate.Name = "txtFilterRate";
             this.txtFilterRate.ReadOnly = true;
             this.txtFilterRate.Size = new System.Drawing.Size(112, 20);
@@ -136,7 +137,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(5, 60);
+            this.label3.Location = new System.Drawing.Point(5, 58);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(38, 13);
             this.label3.TabIndex = 1;
@@ -156,8 +157,8 @@
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.groupBox2);
-            this.splitContainer1.Size = new System.Drawing.Size(201, 219);
-            this.splitContainer1.SplitterDistance = 128;
+            this.splitContainer1.Size = new System.Drawing.Size(201, 216);
+            this.splitContainer1.SplitterDistance = 126;
             this.splitContainer1.TabIndex = 2;
             // 
             // groupBox2
@@ -167,7 +168,7 @@
             this.groupBox2.Location = new System.Drawing.Point(0, 0);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Padding = new System.Windows.Forms.Padding(8);
-            this.groupBox2.Size = new System.Drawing.Size(201, 87);
+            this.groupBox2.Size = new System.Drawing.Size(201, 86);
             this.groupBox2.TabIndex = 2;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Filter Correction";
@@ -191,13 +192,13 @@
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 36F));
-            this.tableLayoutPanel2.Size = new System.Drawing.Size(185, 58);
+            this.tableLayoutPanel2.Size = new System.Drawing.Size(185, 57);
             this.tableLayoutPanel2.TabIndex = 3;
             // 
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(5, 30);
+            this.label4.Location = new System.Drawing.Point(5, 29);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(32, 13);
             this.label4.TabIndex = 0;
@@ -227,7 +228,7 @@
             // txtFilterGain
             // 
             this.txtFilterGain.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtFilterGain.Location = new System.Drawing.Point(80, 33);
+            this.txtFilterGain.Location = new System.Drawing.Point(80, 32);
             this.txtFilterGain.LowerLimit = ((long)(0));
             this.txtFilterGain.Name = "txtFilterGain";
             this.txtFilterGain.Size = new System.Drawing.Size(100, 20);
@@ -240,7 +241,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(221, 239);
+            this.ClientSize = new System.Drawing.Size(221, 236);
             this.Controls.Add(this.splitContainer1);
             this.MaximumSize = new System.Drawing.Size(1200, 275);
             this.MinimumSize = new System.Drawing.Size(237, 275);
@@ -252,6 +253,7 @@
             this.tableLayoutPanel1.PerformLayout();
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
             this.groupBox2.ResumeLayout(false);
             this.tableLayoutPanel2.ResumeLayout(false);

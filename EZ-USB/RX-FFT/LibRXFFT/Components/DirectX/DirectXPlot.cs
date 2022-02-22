@@ -222,9 +222,14 @@ namespace LibRXFFT.Components.DirectX
 
         protected override void Dispose(bool disposing)
         {
-            ReleaseResources();
-            ReleaseDevices();
-            ReleaseDirectX();
+            try
+            {
+                ReleaseResources();
+                ReleaseDevices();
+                ReleaseDirectX();
+            }
+            catch(Exception ex)
+            { }
 
             base.Dispose(disposing);
         }

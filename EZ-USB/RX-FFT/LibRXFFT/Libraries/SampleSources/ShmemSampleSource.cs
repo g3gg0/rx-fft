@@ -10,7 +10,7 @@ namespace LibRXFFT.Libraries.SampleSources
         private byte[] NextInBuffer;
         private bool NextInBufferAvailable;
         private static double DefaultRate = 2184533;
-        private static long DefaultBufferSize = 32 * 1024 * 1024;
+        private static long DefaultBufferSize = 256 * 1024 * 1024;
 
         public bool TraceReads = false;
 
@@ -126,11 +126,11 @@ namespace LibRXFFT.Libraries.SampleSources
 
             lock (SampleBufferLock)
             {
-                if (InternalOversampling > 1)
+                if (InternalOversampling != 1)
                 {
                     ByteUtil.SamplesFromBinary(InBuffer, OversampleI, OversampleQ, DataFormat, InvertedSpectrum);
-                    IOversampler.Oversample(OversampleI, SourceSamplesI);
-                    QOversampler.Oversample(OversampleQ, SourceSamplesQ);
+                    IOversampler.Resample(OversampleI, ref SourceSamplesI);
+                    QOversampler.Resample(OversampleQ, ref SourceSamplesQ);
                 }
                 else
                 {

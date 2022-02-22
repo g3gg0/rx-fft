@@ -11,8 +11,8 @@ namespace LibRXFFT.Libraries.SampleSources
 
         public string SourceName = "<unnamed>";
         public bool InvertedSpectrum = false;
-        protected Oversampler IOversampler;
-        protected Oversampler QOversampler;
+        protected Resampler IOversampler;
+        protected Resampler QOversampler;
 
         public SharedMem OutputShmemChannel;
 
@@ -23,8 +23,8 @@ namespace LibRXFFT.Libraries.SampleSources
 
         public bool BufferOverrun = false;
 
-        public static eOversamplingType DefaultOversamplingType = eOversamplingType.SinC;
-        public eOversamplingType OversamplingType
+        public static eResamplingType DefaultOversamplingType = eResamplingType.SinC;
+        public eResamplingType OversamplingType
         {
             get { return IOversampler.Type; }
             set { IOversampler.Type = value; }
@@ -126,7 +126,6 @@ namespace LibRXFFT.Libraries.SampleSources
                         SavingFile = new WaveFileWriter(SavingFileName);
                         SavingFile.SamplingRate = (int)OutputSamplingRate;
                         _SavingEnabled = true;
-
                     }
                     else
                     {
@@ -180,11 +179,11 @@ namespace LibRXFFT.Libraries.SampleSources
             InternalOversampling = oversampling;
             SamplesPerBlock = 32768;
 
-            IOversampler = new Oversampler(InternalOversampling);
+            IOversampler = new Resampler(InternalOversampling);
             IOversampler.Type = DefaultOversamplingType;
             IOversampler.SinCDepth = DefaultSinXDepth;
 
-            QOversampler = new Oversampler(InternalOversampling);
+            QOversampler = new Resampler(InternalOversampling);
             QOversampler.Type = DefaultOversamplingType;
             QOversampler.SinCDepth = DefaultSinXDepth;
 

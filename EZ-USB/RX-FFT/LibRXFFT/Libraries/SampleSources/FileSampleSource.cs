@@ -1,6 +1,6 @@
 ﻿using System.IO;
 using LibRXFFT.Components.GDI;
-
+using System;
 
 namespace LibRXFFT.Libraries.SampleSources
 {
@@ -15,7 +15,7 @@ namespace LibRXFFT.Libraries.SampleSources
         {
             SourceName = fileName;
 
-            switch (EstimateType(fileName))
+            switch (WaveFileReader.EstimateType(fileName))
             {
                 case eFileType.CFile:
                     /* USRP has an inverted spectrum */
@@ -52,10 +52,25 @@ namespace LibRXFFT.Libraries.SampleSources
 
                     break;
 
+                case eFileType.Rtsa:
+                    InvertedSpectrum = false;
+
+                    InputStream = new RtsaFileReader(fileName);
+                    InputSamplingRate = 0;// dlg.SamplingRate;
+                    DataFormat = ByteUtil.eSampleFormat.Direct32BitIQFloat;
+
+                    break;
+
                 case eFileType.WAV:
                     InputStream = new WaveFileReader(fileName, eFileType.WAV);
                     InputSamplingRate = InputStream.SamplingRate;
                     DataFormat = ByteUtil.eSampleFormat.Direct16BitIQFixedPointLE;
+                    break;
+
+                case eFileType.CSV:
+                    InputStream = new CsvFileReader(fileName);
+                    InputSamplingRate = InputStream.SamplingRate;
+                    DataFormat = ByteUtil.eSampleFormat.Direct32BitIQFloat;
                     break;
 
                 case eFileType.Unknown:
@@ -66,22 +81,15 @@ namespace LibRXFFT.Libraries.SampleSources
 
         protected override void AllocateBuffers()
         {
-            InBuffer = new byte[SamplesPerBlock * BytesPerSamplePair];
+            int size = SamplesPerBlock * BytesPerSamplePair;
+
+            if (InputStream != null)
+            {
+                size = (int)Math.Min(size, InputStream.Length);
+            }
+
+            InBuffer = new byte[size];
             base.AllocateBuffers();
-        }
-
-        private static eFileType EstimateType(string name)
-        {
-            if (name.EndsWith(".cfile"))
-            {
-                return eFileType.CFile;
-            }
-            if (name.EndsWith(".wav") || name.EndsWith(".riff"))
-            {
-                return eFileType.WAV;
-            }
-
-            return eFileType.RawIQ;
         }
 
         public override void Close()
@@ -131,8 +139,8 @@ namespace LibRXFFT.Libraries.SampleSources
                 if (InternalOversampling > 1)
                 {
                     ByteUtil.SamplesFromBinary(InBuffer, OversampleI, OversampleQ, DataFormat, InvertedSpectrum);
-                    IOversampler.Oversample(OversampleI, SourceSamplesI);
-                    QOversampler.Oversample(OversampleQ, SourceSamplesQ);
+                    IOversampler.Resample(OversampleI, ref SourceSamplesI);
+                    QOversampler.Resample(OversampleQ, ref SourceSamplesQ);
                 }
                 else
                 {

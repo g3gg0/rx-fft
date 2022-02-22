@@ -50,7 +50,7 @@ namespace LibRXFFT.Components.DeviceControls
         {
             if (e.Button == MouseButtons.Right)
             {
-                USBRX.ShowConsole(true);
+                //USBRX.ShowConsole(true);
             }
         }
 
@@ -269,14 +269,14 @@ namespace LibRXFFT.Components.DeviceControls
 #endif
 
             USBRX = new USBRXDevice();
-            USBRX.ShowConsole(true);
+            //USBRX.ShowConsole(true);
             USBRX.TunerCombination = TunerCombination;
 
             try
             {
                 if (!USBRX.Init())
                 {
-                    ErrorMessage = "There was no BO-35digi found on USB bus.";
+                    ErrorMessage = "Could not find USB-RX on USB.";
 #if false
                     waitDlg.Close();
 #endif
@@ -343,12 +343,12 @@ namespace LibRXFFT.Components.DeviceControls
             Show();
 
             radioAcqOff.Checked = true;
-            radioTuner.Checked = true;
+            radioTunerInt.Checked = true;
             radioAgcOff.Checked = true;
             chkAtt.Checked = false;
             chkPreAmp.Checked = false;
 
-            radioTuner_CheckedChanged(null, null);
+            radioTunerInt_CheckedChanged(null, null);
             chkAtt_CheckedChanged(null, null);
             chkPreAmp_CheckedChanged(null, null);
             radioAgcOff_CheckedChanged(null, null);
@@ -477,7 +477,7 @@ namespace LibRXFFT.Components.DeviceControls
             {
                 ArrayList lines = new ArrayList();
 
-                lines.Add("BO-35digi");
+                lines.Add("USB-RX");
                 if (USBRX != null && USBRX.Tuner != null)
                 {
                     lines.Add("with tuners:");
@@ -825,6 +825,14 @@ namespace LibRXFFT.Components.DeviceControls
             if (radioTuner.Checked)
             {
                 USBRX.SetRfSource(USBRXDevice.eRfSource.Tuner);
+            }
+        }
+
+        private void radioTunerInt_CheckedChanged(object sender, EventArgs e)
+        {
+            if (radioTunerInt.Checked)
+            {
+                USBRX.SetRfSource(USBRXDevice.eRfSource.InternalTuner);
             }
         }
 

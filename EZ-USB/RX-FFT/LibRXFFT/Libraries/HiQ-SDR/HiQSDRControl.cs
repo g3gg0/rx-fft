@@ -26,20 +26,40 @@ namespace LibRXFFT.Libraries.HiQ_SDR
 
         private byte[] TransmitBuffer = new byte[22];
 
-        private EndPoint LocalEndpoint = null;
-        private EndPoint ReceiveEndpoint = null;
-        private EndPoint TransmitEndpoint = null;
-        private EndPoint ControlEndpoint = null;
-        private Socket RemoteSocket = null;
+        private IPEndPoint LocalEndpoint = null;
+        private IPEndPoint ReceiveEndpoint = null;
+        private IPEndPoint TransmitEndpoint = null;
+        private IPEndPoint ControlEndpoint = null;
+        private UdpClient StreamClient = null;
+        //private Socket RemoteSocket = null;
         private IPAddress RemoteAddress = null;
 
         private Thread ControlThread = null;
         public int FirmwareVersion = -1;
 
+        public struct UdpState
+        {
+            public UdpClient u;
+            public IPEndPoint e;
+        }
 
         public HiQSDRControl(IPAddress host)
         {
             RemoteAddress = host;
+
+            SNDP.Instance.Discover();
+
+            if(SNDP.Instance.Devices.Length == 0)
+            {
+                throw new Exception("No device found");
+            }
+
+            if(!SNDP.Instance.Assign(host))
+            {
+                throw new Exception("Failed to assign address");
+            }
+
+            DeviceInfo = SNDP.Instance.Devices[0];
 
             TransmitBuffer[0] = (byte)'S';
             TransmitBuffer[1] = (byte)'t';
@@ -49,9 +69,16 @@ namespace LibRXFFT.Libraries.HiQ_SDR
             TransmitEndpoint = new IPEndPoint(host, HIQSDR_TX_PORT);
             ControlEndpoint = new IPEndPoint(host, HIQSDR_CTL_PORT);
 
-            RemoteSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            RemoteSocket.Bind(LocalEndpoint);
-            RemoteSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, 5);
+            StreamClient = new UdpClient(LocalEndpoint);
+            UdpState s = new UdpState();
+            s.e = LocalEndpoint;
+            s.u = StreamClient;
+
+            StreamClient.BeginReceive(new AsyncCallback(ReceiveCallback), s);
+
+            //RemoteSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            //RemoteSocket.Bind(LocalEndpoint);
+            //RemoteSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, 5);
             //RemoteSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Linger, 0);
 
             Running = true;
@@ -72,12 +99,12 @@ namespace LibRXFFT.Libraries.HiQ_SDR
             SetTxPtt(false);
 
             /* do a receive to get information about the device */
-            byte[] receiveBuffer = new byte[8192];
+            byte[] receiveBuffer = null;
             EndPoint endpoint = new IPEndPoint(IPAddress.Any, 0);
 
             for (int loop = 0; loop < 20; loop++)
             {
-                int ret = Receive(receiveBuffer, ref endpoint);
+                int ret = Receive(ref receiveBuffer, ref endpoint);
 
                 if (ret >= 1442)
                 {
@@ -120,8 +147,8 @@ namespace LibRXFFT.Libraries.HiQ_SDR
                     ControlThread.Abort();
                 }
 
-                RemoteSocket.Shutdown(SocketShutdown.Both);
-                RemoteSocket.Close();
+                //RemoteSocket.Shutdown(SocketShutdown.Both);
+                StreamClient.Close();
             }
             catch (Exception e)
             {
@@ -137,7 +164,7 @@ namespace LibRXFFT.Libraries.HiQ_SDR
                 
                 try
                 {
-                    RemoteSocket.SendTo(TransmitBuffer, ControlEndpoint);
+                    StreamClient.Send(TransmitBuffer, TransmitBuffer.Length, ControlEndpoint);
                 }
                 catch (Exception e)
                 {
@@ -170,6 +197,8 @@ namespace LibRXFFT.Libraries.HiQ_SDR
         }
 
         private long _TxFrequency = 0;
+        public SNDP.DiscoverMessage DeviceInfo;
+
         public long TxFrequency
         {
             get
@@ -372,7 +401,8 @@ namespace LibRXFFT.Libraries.HiQ_SDR
             {
                 return;
             }
-            RemoteSocket.SendTo(new byte[] { (byte)'s', (byte)'s' }, ReceiveEndpoint);
+            StreamClient.Send(new byte[] { (byte)'s', (byte)'s' }, 2, ReceiveEndpoint);
+            ReceivedBuffers.Clear();
         }
 
         internal void StartTransfer()
@@ -381,15 +411,40 @@ namespace LibRXFFT.Libraries.HiQ_SDR
             {
                 return;
             }
-            RemoteSocket.SendTo(new byte[] { (byte)'r', (byte)'r' }, ReceiveEndpoint);
+            ReceivedBuffers.Clear();
+            StreamClient.Send(new byte[] { (byte)'r', (byte)'r' }, 2, ReceiveEndpoint);
         }
 
         internal void SendTxData(byte[] txBuffer)
         {
-            RemoteSocket.SendTo(txBuffer, TransmitEndpoint);
+            StreamClient.Send(txBuffer, txBuffer.Length, TransmitEndpoint);
         }
 
-        internal int Receive(byte[] receiveBuffer, ref EndPoint Endpoint)
+        private Queue<byte[]> ReceivedBuffers = new Queue<byte[]>(100);
+
+        public void ReceiveCallback(IAsyncResult ar)
+        {
+            UdpClient u = ((UdpState)(ar.AsyncState)).u;
+            IPEndPoint e = ((UdpState)(ar.AsyncState)).e;
+
+            try
+            {
+                byte[] ret = u.EndReceive(ar, ref e);
+
+                lock (ReceivedBuffers)
+                {
+                    if (ret != null && ReceivedBuffers.Count < 100)
+                    {
+                        ReceivedBuffers.Enqueue((byte[])ret.Clone());
+                    }
+                }
+                u.BeginReceive(ReceiveCallback, ar.AsyncState);
+            }
+            catch (Exception ex)
+            { }
+        }
+
+        internal int Receive(ref byte[] retBuf, ref EndPoint Endpoint)
         {
             if (!Running)
             {
@@ -398,37 +453,47 @@ namespace LibRXFFT.Libraries.HiQ_SDR
 
             try
             {
-                int ret = RemoteSocket.ReceiveFrom(receiveBuffer, receiveBuffer.Length, SocketFlags.Partial, ref Endpoint);
-
-                if(ret >= 14 && ret <= 100)
+                if (ReceivedBuffers.Count > 0)
                 {
-                    if (receiveBuffer[0] == 'S' && receiveBuffer[1] == 't')
+                    byte[] buf = null;
+                    lock (ReceivedBuffers)
                     {
-                        double rxFreq = receiveBuffer[2] + (receiveBuffer[3] << 8) + (receiveBuffer[4] << 16) + (receiveBuffer[5] << 24);
-                        double txFreq = receiveBuffer[6] + (receiveBuffer[7] << 8) + (receiveBuffer[8] << 16) + (receiveBuffer[9] << 24);
+                        buf = ReceivedBuffers.Dequeue();
+                    }
+                    //int ret = RemoteSocket.ReceiveFrom(receiveBuffer, receiveBuffer.Length, SocketFlags.Partial, ref Endpoint);
 
-                        _RxFrequency = (long)(rxFreq * RX_CLOCK / 0x100000000 + 0.5f);
-                        _TxFrequency = (long)(txFreq * RX_CLOCK / 0x100000000 + 0.5f);
-
-                        if (FirmwareVersion < 0)
+                    if (buf.Length >= 14 && buf.Length <= 100)
+                    {
+                        if (buf[0] == 'S' && buf[1] == 't')
                         {
-                            FirmwareVersion = receiveBuffer[13];
+                            double rxFreq = buf[2] + (buf[3] << 8) + (buf[4] << 16) + (buf[5] << 24);
+                            double txFreq = buf[6] + (buf[7] << 8) + (buf[8] << 16) + (buf[9] << 24);
+
+                            _RxFrequency = (long)(rxFreq * RX_CLOCK / 0x100000000 + 0.5f);
+                            _TxFrequency = (long)(txFreq * RX_CLOCK / 0x100000000 + 0.5f);
+
+                            if (FirmwareVersion < 0)
+                            {
+                                FirmwareVersion = buf[13];
+                            }
+                            else
+                            {
+                                if (FirmwareVersion != buf[13])
+                                {
+                                    Log.AddMessage("Firmware version changed from v1." + FirmwareVersion + " to v1." + buf[13]);
+                                    FirmwareVersion = buf[13];
+                                }
+                            }
                         }
                         else
                         {
-                            if(FirmwareVersion != receiveBuffer[13])
-                            {
-                                Log.AddMessage("Firmware version changed from v1." + FirmwareVersion + " to v1." + receiveBuffer[13]);
-                                FirmwareVersion = receiveBuffer[13];
-                            }
+                            Log.AddMessage("Received " + buf.Length + " bytes: " + buf[0] + buf[1] + "");
                         }
                     }
-                    else
-                    {
-                        Log.AddMessage("Received " + ret + " bytes: " + receiveBuffer[0] + receiveBuffer[1] + "");
-                    }
+                    retBuf = buf;
+                    return buf.Length;
                 }
-                return ret;
+                return 0;
             }
             catch (SocketException se)
             {

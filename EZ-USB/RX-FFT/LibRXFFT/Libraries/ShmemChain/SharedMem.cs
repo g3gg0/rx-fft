@@ -20,10 +20,10 @@ namespace LibRXFFT.Libraries.ShmemChain
         public int shmemID;
         public int srcChan;
         public int dstChan;
-        public long bytesRead;
-        public long bytesWritten;
-        public int bufferSize;
-        public int bufferUsed;
+        public ulong bytesRead;
+        public ulong bytesWritten;
+        public uint bufferSize;
+        public uint bufferUsed;
         public int pct;
         public string name;
     }
@@ -89,7 +89,7 @@ namespace LibRXFFT.Libraries.ShmemChain
             for (int pos = 0; pos < used; pos++)
             {
                 byte[] name = new byte[SharedMemNative.MAX_NAME_LENGTH];
-                long[] data = new long[7];
+                ulong[] data = new ulong[7];
 
                 SharedMemNative.shmemchain_get_infos(nodeIds[pos], name, data);
 
@@ -106,8 +106,8 @@ namespace LibRXFFT.Libraries.ShmemChain
                 info.dstChan = (int)data[1];
                 info.bytesRead = data[2];
                 info.bytesWritten = data[3];
-                info.bufferSize = (int)data[4];
-                info.bufferUsed = (int)data[5];
+                info.bufferSize = (uint)data[4];
+                info.bufferUsed = (uint)data[5];
                 info.pct = (int)data[6];
 
                 nodes.Add(info);
@@ -215,7 +215,9 @@ namespace LibRXFFT.Libraries.ShmemChain
             int readParam = (int)readMode;
 
             if (SharedMemNative.shmemchain_get_last_error() != -100)
-            Log.AddMessage("Shmem Error: " + SharedMemNative.shmemchain_get_last_error() + " " + SharedMemNative.shmemchain_get_last_errorcode());
+            {
+                Log.AddMessage("Shmem Error: " + SharedMemNative.shmemchain_get_last_error() + " " + SharedMemNative.shmemchain_get_last_errorcode());
+            }
 
             /* dynamic and time limited modes have the timeout in 100ms steps as parameter */
             if (readMode == eReadMode.Dynamic || readMode == eReadMode.TimeLimited || readMode == eReadMode.TimeLimitedNoPartial)

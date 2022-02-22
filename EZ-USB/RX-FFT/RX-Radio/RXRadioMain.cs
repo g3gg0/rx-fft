@@ -56,7 +56,7 @@ namespace RX_Radio
                 USBRXDevice device = new USBRXDevice();
 
                 device.ShowConsole(false);
-                device.TunerCombination = USBRXDevice.eCombinationType.Automatic;
+                device.TunerCombination = USBRXDevice.eCombinationType.AR5000;
 
                 try
                 {

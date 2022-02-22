@@ -34,9 +34,11 @@
             this.btnClearPlot = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.waveForm = new LibRXFFT.Components.DirectX.DirectXWaveformDisplay();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).BeginInit();
             this.splitContainer2.Panel1.SuspendLayout();
             this.splitContainer2.Panel2.SuspendLayout();
             this.splitContainer2.SuspendLayout();
@@ -120,7 +122,7 @@
             // 
             // waveForm
             // 
-            this.waveForm.CenterFrequency = 0;
+            this.waveForm.CenterFrequency = 0D;
             this.waveForm.ColorBG = System.Drawing.Color.Black;
             this.waveForm.ColorCursor = System.Drawing.Color.Red;
             this.waveForm.ColorFG = System.Drawing.Color.Cyan;
@@ -130,17 +132,17 @@
             this.waveForm.Location = new System.Drawing.Point(3, 16);
             this.waveForm.MaxSamples = 0;
             this.waveForm.Name = "waveForm";
-            this.waveForm.SamplingRate = 0;
+            this.waveForm.SamplingRate = 0D;
             this.waveForm.Size = new System.Drawing.Size(651, 441);
             this.waveForm.SpectParts = 1;
             this.waveForm.TabIndex = 0;
-            this.waveForm.UpdateRate = 60.000003814697266;
-            this.waveForm.XZoomFactor = 1;
-            this.waveForm.XZoomFactorMax = 20;
-            this.waveForm.XZoomFactorMin = 1;
-            this.waveForm.YZoomFactor = 1;
-            this.waveForm.YZoomFactorMax = 50;
-            this.waveForm.YZoomFactorMin = 0.01;
+            this.waveForm.UpdateRate = 60.000003814697266D;
+            this.waveForm.XZoomFactor = 1D;
+            this.waveForm.XZoomFactorMax = 20D;
+            this.waveForm.XZoomFactorMin = 1D;
+            this.waveForm.YZoomFactor = 1D;
+            this.waveForm.YZoomFactorMax = 50D;
+            this.waveForm.YZoomFactorMin = 0.01D;
             // 
             // SoundCardSinkControl
             // 
@@ -151,10 +153,12 @@
             this.Size = new System.Drawing.Size(657, 489);
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
             this.splitContainer2.Panel1.ResumeLayout(false);
             this.splitContainer2.Panel2.ResumeLayout(false);
             this.splitContainer2.Panel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).EndInit();
             this.splitContainer2.ResumeLayout(false);
             this.groupBox1.ResumeLayout(false);
             this.ResumeLayout(false);

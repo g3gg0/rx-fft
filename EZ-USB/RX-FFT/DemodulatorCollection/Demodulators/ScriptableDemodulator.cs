@@ -171,7 +171,7 @@ namespace DemodulatorCollection.Demodulators
 
         public void Process(double iValue, double qValue)
         {
-            if (Demodulator != null)
+            if (Demodulator != null && Demodulator != this)
             {
                 Demodulator.Process(iValue, qValue);
             }

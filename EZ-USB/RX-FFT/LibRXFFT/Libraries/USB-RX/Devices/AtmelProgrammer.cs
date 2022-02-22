@@ -115,6 +115,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
             new sAtmelTypes ( 0x1E9702, 0, 0, 0, 0, "ATmega128" ),
             new sAtmelTypes ( 0x1E9703, 0, 0, 0, 0, "ATmega1280" ),
             new sAtmelTypes ( 0x1E9704, 0, 0, 0, 0, "ATmega1281" ),
+            new sAtmelTypes ( 0x1E9706, 0, 0, 0, 0, "ATmega1284" ),
             new sAtmelTypes ( 0x1E974C, 0, 0, 0, 0, "ATxmega128A1" ),
             new sAtmelTypes ( 0x1E974E, 0, 0, 0, 0, "ATxmega192A1" ),
             new sAtmelTypes ( 0x1E9781, 0, 0, 0, 0, "AT90CAN128" ),

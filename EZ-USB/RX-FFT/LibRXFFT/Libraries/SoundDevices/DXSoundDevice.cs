@@ -14,7 +14,7 @@ namespace LibRXFFT.Libraries.SoundDevices
         private int BytesWritten = 0;
         private bool PlayingStarted = false;
         private bool Started = false;
-        private int SamplingRate = 48000;
+        private int RealAudioSamplingRate = 0;
         private int InputSamplingRate = 48000;
         public int BufferSize = 0;
         private int PrebufferBytes = 0;
@@ -37,14 +37,14 @@ namespace LibRXFFT.Libraries.SoundDevices
                 return bytesUsed;
             }
         }
-        private const double SecondsToBuffer = 1.0f;
+        private const double SecondsToBuffer = 0.1f;
         private SoundBufferDescription Desc;
         private DirectSound Device;
 
-        private Oversampler SignalOversampler = new Oversampler(1);
-        private double[] OversampleIn;
-        private double[] OversampleOut;
-        private short[] OversampledSamples;
+        private Resampler SignalResampler = new Resampler(1);
+        private double[] ResampleIn = new double[0];
+        private double[] ResampledOut = new double[0];
+        private short[] ResampledShorts = new short[0];
 
         private string ErrorString = null;
         private IntPtr Handle;
@@ -62,6 +62,8 @@ namespace LibRXFFT.Libraries.SoundDevices
             Desc.Format.BlockAlignment = 2;
             Desc.Format.Channels = 1;
             Desc.Format.FormatTag = WaveFormatTag.Pcm;
+
+            SignalResampler = new Resampler(1);
 
             InitDevice(device);
         }
@@ -100,7 +102,7 @@ namespace LibRXFFT.Libraries.SoundDevices
 
         public int Rate
         {
-            get { return SamplingRate; }
+            get { return InputSamplingRate; }
             set { SetInputRate(value); }
         }
 
@@ -145,19 +147,18 @@ namespace LibRXFFT.Libraries.SoundDevices
         {
             lock (this)
             {
-                if (rate != InputSamplingRate || SignalOversampler == null)
+                if (rate != InputSamplingRate || SignalResampler == null)
                 {
                     Stop();
 
-                    if (rate > SamplingRate)
+                    /*
+                    if (rate > RealAudioSamplingRate)
                     {
                         ErrorString = "Sampling rate too high";
                         return false;
-                    }
+                    }*/
 
                     InputSamplingRate = rate;
-                    SignalOversampler = new Oversampler((double)SamplingRate / (double)rate);
-                    SignalOversampler.Type = eOversamplingType.SinC;
 
                     Start();
                 }
@@ -171,11 +172,11 @@ namespace LibRXFFT.Libraries.SoundDevices
             {
                 Stop();
 
-                SamplingRate = rate;
+                RealAudioSamplingRate = rate;
 
                 /* update sound buffer description */
-                Desc.Format.SamplesPerSecond = SamplingRate;
-                Desc.Format.AverageBytesPerSecond = SamplingRate * 2;
+                Desc.Format.SamplesPerSecond = RealAudioSamplingRate;
+                Desc.Format.AverageBytesPerSecond = RealAudioSamplingRate * 2;
                 Desc.SizeInBytes = (int)(Desc.Format.AverageBytesPerSecond * SecondsToBuffer);
                 Desc.Flags = BufferFlags.GlobalFocus | BufferFlags.GetCurrentPosition2;
 
@@ -205,7 +206,7 @@ namespace LibRXFFT.Libraries.SoundDevices
                 }
                 catch (Exception e)
                 {
-                    SamplingRate = 0;
+                    RealAudioSamplingRate = 0;
                     return false;
                 }
             }
@@ -252,7 +253,7 @@ namespace LibRXFFT.Libraries.SoundDevices
                     return;
                 }
 
-                if (Secondary == null || InputSamplingRate == 0 || SamplingRate == 0)
+                if (Secondary == null || InputSamplingRate == 0 || RealAudioSamplingRate == 0)
                 {
                     ErrorString = "Invalid sampling rate";
                     return;
@@ -260,28 +261,31 @@ namespace LibRXFFT.Libraries.SoundDevices
 
                 try
                 {
-                    if (InputSamplingRate != SamplingRate)
+                    /* resample shorts in sampleBuffer */
+                    if (InputSamplingRate != RealAudioSamplingRate)
                     {
-                        if (OversampleIn == null || OversampleIn.Length != sampleBuffer.Length)
+                        if (ResampleIn.Length != sampleBuffer.Length)
                         {
-                            OversampleIn = new double[sampleBuffer.Length];
+                            Array.Resize(ref ResampleIn, sampleBuffer.Length);
                         }
                         for (int pos = 0; pos < sampleBuffer.Length; pos++)
                         {
-                            OversampleIn[pos] = sampleBuffer[pos] / (double)short.MaxValue;
-                        }
-                        OversampleOut = SignalOversampler.Oversample(OversampleIn, OversampleOut);
-
-                        if (OversampledSamples == null || OversampledSamples.Length != OversampleOut.Length)
-                        {
-                            OversampledSamples = new short[OversampleOut.Length];
-                        }
-                        for (int pos = 0; pos < OversampleOut.Length; pos++)
-                        {
-                            OversampledSamples[pos] = (short)(OversampleOut[pos] * (double)short.MaxValue);
+                            ResampleIn[pos] = sampleBuffer[pos] / (double)short.MaxValue;
                         }
 
-                        sampleBuffer = OversampledSamples;
+                        SignalResampler.Oversampling = (decimal)RealAudioSamplingRate / InputSamplingRate; 
+                        SignalResampler.Resample(ResampleIn, ref ResampledOut);
+
+                        if (ResampledShorts.Length != ResampledOut.Length)
+                        {
+                            Array.Resize(ref ResampledShorts, ResampledOut.Length);
+                        }
+                        for (int pos = 0; pos < ResampledShorts.Length; pos++)
+                        {
+                            ResampledShorts[pos] = (short)(ResampledOut[pos] * (double)short.MaxValue);
+                        }
+
+                        sampleBuffer = ResampledShorts;
                     }
 
                     int samplesToWrite = sampleBuffer.Length;
@@ -324,7 +328,10 @@ namespace LibRXFFT.Libraries.SoundDevices
                     }
                     else
                     {
-                        Secondary.Write(sampleBuffer, 0, maxSamples, CurrentWritePosition, LockFlags.None);
+                        if (maxSamples > 0)
+                        {
+                            Secondary.Write(sampleBuffer, 0, maxSamples, CurrentWritePosition, LockFlags.None);
+                        }
                     }
 
                     /* whole data was written, increment position */

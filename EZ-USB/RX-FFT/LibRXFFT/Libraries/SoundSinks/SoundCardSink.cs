@@ -16,10 +16,10 @@ namespace LibRXFFT.Libraries.SoundSinks
         private Guid SelectedDevice = Guid.Empty;
         private SoundCardSinkControl Control = null;
         private Control DisplayControl = null;
-        private Oversampler Oversampler = null;
+        private Resampler Oversampler = new Resampler(1);
         private int OutputRate = 96000;
 
-        public double OversamplingFactor { get { return OutputRate / _SamplingRate; } }
+        public decimal OversamplingFactor { get { return  OutputRate / (decimal)_SamplingRate; } }
 
         public SoundCardSink(Control displayControl)
         {
@@ -27,8 +27,6 @@ namespace LibRXFFT.Libraries.SoundSinks
             Control.Dock = DockStyle.Fill;
             DisplayControl = displayControl;
             DisplayControl.Controls.Add(Control);
-
-            Oversampler = new Oversampler(1.0f);
         }
 
         public DeviceInfo[] GetDevices()
@@ -67,8 +65,9 @@ namespace LibRXFFT.Libraries.SoundSinks
                 {
                     _SamplingRate = value;
 
-                    Oversampler = new Oversampler(OversamplingFactor);
-                    Oversampler.Type = eOversamplingType.SinC;
+                    OutputRate = (int) _SamplingRate;
+                    Oversampler.Oversampling = OversamplingFactor;
+                    Oversampler.Type = eResamplingType.SinC;
                     Oversampler.SinCDepth = 4;
                     SoundDevice.SetInputRate(OutputRate);
                 }
@@ -133,27 +132,33 @@ namespace LibRXFFT.Libraries.SoundSinks
             Control = null;
         }
 
+        bool DynamicResample = false;
         public void Process(double[] samples)
         {
             if (SoundDevice != null)
             {
-                double[] ret = Oversampler.Oversample(samples);
+                decimal bufferLoad = (decimal)BufferUsage / (decimal)BufferSize;
+                decimal midDelta = 0.5m - bufferLoad;
+
+                Oversampler.Oversampling = OversamplingFactor;
+
+                /* start resampling when out of range */
+                if(bufferLoad > 0.8m || bufferLoad< 0.2m)
+                {
+                    DynamicResample = true;
+                }
+                if (Math.Abs(midDelta) < 0.1m)
+                {
+                    DynamicResample = false;
+                }
+
+                if (DynamicResample)
+                {
+                    Oversampler.Oversampling = OversamplingFactor + 1.0m * midDelta;
+                }
+
+                double[] ret = Oversampler.Resample(samples);
                 SoundDevice.Write(ret);
-
-                double bufferLoad = (double)BufferUsage / (double)BufferSize;
-
-                if (bufferLoad < 0.5)
-                {
-                    Oversampler.Oversampling = Math.Min(OversamplingFactor * 1.01, Oversampler.Oversampling * 1.0001);
-                }
-                else if (bufferLoad > 0.8)
-                {
-                    Oversampler.Oversampling = Math.Max(OversamplingFactor / 1.02, Oversampler.Oversampling / 1.001);
-                }
-                else
-                {
-                    Oversampler.Oversampling = OversamplingFactor;
-                }
             }
         }
 

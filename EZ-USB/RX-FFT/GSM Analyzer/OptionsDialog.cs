@@ -114,16 +114,16 @@ namespace GSM_Analyzer
             {
                 txtRate.Text = Analyzer.Source.SampleSource.InputSamplingRate.ToString();
                 txtInternalOvers.Text = Analyzer.Source.SampleSource.InternalOversampling.ToString();
-                radioOvsLinear.Checked = Analyzer.Source.SampleSource.OversamplingType == eOversamplingType.Linear;
-                radioOvsSinx.Checked = Analyzer.Source.SampleSource.OversamplingType == eOversamplingType.SinC;
+                radioOvsLinear.Checked = Analyzer.Source.SampleSource.OversamplingType == eResamplingType.Linear;
+                radioOvsSinx.Checked = Analyzer.Source.SampleSource.OversamplingType == eResamplingType.SinC;
                 txtSinxDepth.Text = Analyzer.Source.SampleSource.SinXDepth.ToString();
             }
             else
             {
                 txtRate.Text = Analyzer.DefaultSamplingRate.ToString();
                 txtInternalOvers.Text = Analyzer.InternalOversampling.ToString();
-                radioOvsLinear.Checked = SampleSource.DefaultOversamplingType == eOversamplingType.Linear;
-                radioOvsSinx.Checked = SampleSource.DefaultOversamplingType == eOversamplingType.SinC;
+                radioOvsLinear.Checked = SampleSource.DefaultOversamplingType == eResamplingType.Linear;
+                radioOvsSinx.Checked = SampleSource.DefaultOversamplingType == eResamplingType.SinC;
                 txtSinxDepth.Text = SampleSource.DefaultSinXDepth.ToString();
             }
         }
@@ -240,9 +240,9 @@ namespace GSM_Analyzer
             if (radioOvsLinear.Checked)
             {
                 if (Analyzer.Source != null)
-                    Analyzer.Source.SampleSource.OversamplingType = eOversamplingType.Linear;
+                    Analyzer.Source.SampleSource.OversamplingType = eResamplingType.Linear;
 
-                SampleSource.DefaultOversamplingType = eOversamplingType.Linear;
+                SampleSource.DefaultOversamplingType = eResamplingType.Linear;
             }
         }
 
@@ -251,9 +251,9 @@ namespace GSM_Analyzer
             if (radioOvsSinx.Checked)
             {
                 if (Analyzer.Source != null)
-                    Analyzer.Source.SampleSource.OversamplingType = eOversamplingType.SinC;
+                    Analyzer.Source.SampleSource.OversamplingType = eResamplingType.SinC;
 
-                SampleSource.DefaultOversamplingType = eOversamplingType.SinC;
+                SampleSource.DefaultOversamplingType = eResamplingType.SinC;
             }
         }
 

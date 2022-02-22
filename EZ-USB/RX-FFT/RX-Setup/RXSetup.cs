@@ -217,9 +217,10 @@ namespace RX_Setup
                 Thread.Sleep(800);
                 Log.AddMessage("");
                 Log.AddMessage("Atmel commands...");
-                Log.AddMessage("  Atmel serial: " + Device.Atmel.SerialNumber);
-                Log.AddMessage("  AD6636 TCXO:  " + Device.Atmel.TCXOFreq);
-                Log.AddMessage("  Filter count: " + Device.Atmel.GetFilterCount());
+                Log.AddMessage("  Atmel serial:       " + Device.Atmel.SerialNumber);
+                Log.AddMessage("  Atmel serial (fix): " + Device.Atmel.InternalSerialNumber);
+                Log.AddMessage("  AD6636 TCXO:        " + Device.Atmel.TCXOFreq);
+                Log.AddMessage("  Filter count:       " + Device.Atmel.GetFilterCount());
                 Log.AddMessage("");
 
                 Log.AddMessage("EEPROM...");
@@ -1407,7 +1408,7 @@ namespace RX_Setup
                             devName = (string)I2CDeviceNames[dev];
                         }
 
-                        for (tries = 0; tries < 50; tries++)
+                        for (tries = 0; tries < 10; tries++)
                         {
                             if (Device.I2CDeviceAck(dev))
                             {

@@ -8,6 +8,13 @@ using System.Threading;
 using System.Net.Sockets;
 using System.Net;
 using LibRXFFT.Components.GDI;
+using Newtonsoft.Json;
+using System.Text;
+using System.Linq;
+using System.IO;
+using SlimDX.Direct3D9;
+using RX_FFT.Components.GDI;
+using System.Drawing.Drawing2D;
 
 namespace LibRXFFT.Components.DeviceControls
 {
@@ -32,6 +39,7 @@ namespace LibRXFFT.Components.DeviceControls
             None,
             UdpClient,
             TcpClient,
+            RtsaClient,
             TcpServer
         };
 
@@ -75,6 +83,32 @@ namespace LibRXFFT.Components.DeviceControls
                     ReceiveSocket.Connect(Endpoint);
                     break;
 
+                case eConnType.RtsaClient:
+                    Endpoint = new IPEndPoint(addr, port);
+                    ReceiveSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                    try
+                    {
+                        /* SIO_LOOPBACK_FAST_PATH */
+                        ReceiveSocket.IOControl(-1744830448, new byte[4] { 1, 0, 0, 0 }, null);
+                    }
+                    catch(Exception ex)
+                    {
+
+                    }
+                    ReceiveSocket.Connect(Endpoint);
+
+                    StreamWriter sw = new StreamWriter(new NetworkStream(ReceiveSocket));
+
+                    sw.Write("GET /stream?format=raw32 HTTP/1.1\n\n");
+                    sw.Flush();
+
+                    while(ReadLine(ReceiveSocket) != "")
+                    {
+
+                    }
+
+                    break;
+
                 case eConnType.TcpServer:
                     Endpoint = new IPEndPoint(addr, port);
                     ServerSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -89,6 +123,68 @@ namespace LibRXFFT.Components.DeviceControls
             StopTransfers = false;
             TransferThread = new Thread(TransferThreadMain);
             TransferThread.Start();
+        }
+
+        private string ReadLine(Socket sock)
+        {
+            string line = "";
+            while (true)
+            {
+                byte[] buf = new byte[1];
+                if (sock.Receive(buf) != 1)
+                {
+                    sock.Close();
+                    return null;
+                }
+                if (buf[0] == '\r')
+                {
+                }
+                else if (buf[0] == '\n')
+                {
+                    return line;
+                }
+                else
+                {
+                    line += (char)buf[0];
+                }
+            }
+        }
+
+        public class RtsaAntennaInfo
+        {
+            public string name;
+        }
+
+        public class RtsaHeader
+        {
+            public double startTime;
+            public double endTime;
+            public double startFrequency;
+            public double endFrequency;
+            public int minPower;
+            public int maxPower;
+            public int sampleSize;
+            public int sampleDepth;
+            public string payload;
+            public string unit;
+            public RtsaAntennaInfo antenna;
+            public int scale;
+            public int samples;
+        }
+
+        /* https://i.kym-cdn.com/entries/icons/mobile/000/032/744/maneuver.jpg */
+        private bool PrepareRtsa(Socket receiveSocket, out RtsaHeader infos)
+        {
+            string lengthString = ReadLine(ReceiveSocket);
+
+            string json = ReadLine(receiveSocket);
+            receiveSocket.Receive(new byte[1]);
+
+            RtsaHeader obj = JsonConvert.DeserializeObject<RtsaHeader>(json);
+
+            infos = obj;
+
+            return true;
         }
 
         private void AcceptConnection(IAsyncResult iar)
@@ -132,6 +228,9 @@ namespace LibRXFFT.Components.DeviceControls
         {
             byte[] receiveBuffer = new byte[8192];
             int received = 0;
+            ulong lastRate = 0;
+            int lastBlockSize = 0;
+            double lastCenter = 0;
 
             try
             {
@@ -155,6 +254,78 @@ namespace LibRXFFT.Components.DeviceControls
                                 {
                                     throw se;
                                 }
+                            }
+                            break;
+
+                        case eConnType.RtsaClient:
+                            if (ReceiveSocket != null)
+                            {
+                                if (PrepareRtsa(ReceiveSocket, out RtsaHeader obj))
+                                {
+                                    double start = obj.startFrequency;
+                                    double end = obj.endFrequency;
+                                    double width = end - start;
+                                    double center = start + width / 2;
+
+                                    ulong rate = 0;
+
+                                    if (width > 200000000)
+                                    {
+                                        rate = 245759924;
+                                    }
+                                    else if (width > 150000000)
+                                    {
+                                        rate = 184319943;
+                                    }
+                                    else if (width > 100000000)
+                                    {
+                                        rate = 122879962;
+                                    }
+                                    else if (width > 50000000)
+                                    {
+                                        rate = 92159971;
+                                    }
+
+                                    if (lastRate != (rate * (ulong)obj.sampleSize))
+                                    {
+                                        Log.AddMessage(String.Format("[RTSA] Rate changed from {0} to {1}.", lastRate, rate));
+                                        lastRate = (rate * (ulong)obj.sampleSize);
+                                        _SampleSource.ForceInputRate(rate);
+                                        NetShmemSink.Rate = (long)(rate * (ulong)obj.sampleSize);
+                                        SampleFormat = ByteUtil.eSampleFormat.Direct32BitIQFloat;
+
+                                        _SampleSource.DataFormat = SampleFormat;
+                                        _SampleSource.SamplesPerBlock = obj.samples;
+                                        NetShmemSink.Flush();
+                                    }
+
+                                    int blockSize = obj.samples * obj.sampleSize * 4;
+                                    if (receiveBuffer.Length != blockSize)
+                                    {
+                                        Log.AddMessage(String.Format("[RTSA] Block size changed from {0} to {1}.", receiveBuffer.Length, blockSize));
+                                        receiveBuffer = new byte[blockSize];
+                                        NetShmemSink.Flush();
+                                    }
+
+                                    if (lastCenter != center)
+                                    {
+                                        Log.AddMessage(String.Format("[RTSA] Center frequency count changed from {0} to {1}.", lastCenter, center));
+                                        lastCenter = center;
+                                        _Frequency = (long)center;
+                                        FrequencyChanged(null, null);
+                                    }
+
+                                    received = ReceiveSocket.Receive(receiveBuffer);
+                                    if(received != receiveBuffer.Length)
+                                    {
+                                        Log.AddMessage(String.Format("[RTSA] Received {0} instead of {1}.", received, receiveBuffer.Length));
+                                    }
+                                    string dummy = ReadLine(ReceiveSocket);
+                                }
+                            }
+                            else
+                            {
+                                received = 0;
                             }
                             break;
 
@@ -410,9 +581,10 @@ namespace LibRXFFT.Components.DeviceControls
             return true;
         }
 
+        private long _Frequency = 0;
         public long GetFrequency()
         {
-            return 0;
+            return _Frequency;
         }
 
         public long FilterWidth
@@ -443,7 +615,8 @@ namespace LibRXFFT.Components.DeviceControls
                     try
                     {
                         port = int.Parse(txtPort.Text);
-                        host = Dns.GetHostEntry(txtHost.Text).AddressList[0];
+                        host = IPAddress.Parse(txtHost.Text);
+                        //host = Dns.GetHostEntry(txtHost.Text).AddressList.Where(n => n.AddressFamily == AddressFamily.InterNetwork).FirstOrDefault();
                     }
                     catch (Exception ex)
                     {
@@ -462,6 +635,10 @@ namespace LibRXFFT.Components.DeviceControls
                     else if (radioUDPListener.Checked)
                     {
                         SetupConnection(eConnType.UdpClient, IPAddress.Any, port);
+                    }
+                    else if (radioRtsaClient.Checked)
+                    {
+                        SetupConnection(eConnType.RtsaClient, host, port);
                     }
                 }
                 catch (Exception ex)
@@ -493,6 +670,11 @@ namespace LibRXFFT.Components.DeviceControls
             UpdateDisplay();
         }
 
+        private void radioRtsaClient_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateDisplay();
+        }
+
         private void UpdateDisplay()
         {
             if (radioTCPClient.Checked)
@@ -509,6 +691,14 @@ namespace LibRXFFT.Components.DeviceControls
             {
                 txtHost.Enabled = false;
                 txtPort.Enabled = true;
+            }
+            else if (radioRtsaClient.Checked)
+            {
+                txtHost.Enabled = true;
+                txtPort.Enabled = true;
+
+                txtHost.Text = "127.0.0.1";
+                txtPort.Text = "54664";
             }
         }
 

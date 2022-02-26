@@ -458,9 +458,18 @@ namespace LibRXFFT.Libraries
 
         public static void SamplesFromBinary(byte[] dataBuffer, int bytesRead, double[] samplesI, double[] samplesQ, eSampleFormat dataFormat, bool invertedSpectrum)
         {
-            if (true)
+            if (UseNative)
             {
-                SamplesFromBinaryNative(dataBuffer, bytesRead, samplesI.Length, samplesI, samplesQ, (int)dataFormat, invertedSpectrum);
+                try
+                {
+                    SamplesFromBinaryNative(dataBuffer, bytesRead, samplesI.Length, samplesI, samplesQ, (int)dataFormat, invertedSpectrum);
+                }
+                catch (Exception)
+                {
+                    UseNative = false;
+                    SamplesFromBinary(dataBuffer, bytesRead, samplesI, samplesQ, dataFormat, invertedSpectrum);
+                    return;
+                }
             }
             else
             {
@@ -578,10 +587,18 @@ namespace LibRXFFT.Libraries
 
         public static void SamplesToBinary(byte[] dataBuffer, int samplePairs, double[] samplesI, double[] samplesQ, eSampleFormat dataFormat, bool invertedSpectrum)
         {
-            if (false /* native code doesnt support it yet */)
+            if (UseNative)
             {
-                /* causes crash! */
-                SamplesToBinaryNative(dataBuffer, samplePairs, samplesI, samplesQ, (int)dataFormat, invertedSpectrum);
+                try
+                {
+                    SamplesToBinaryNative(dataBuffer, samplePairs, samplesI, samplesQ, (int)dataFormat, invertedSpectrum);
+                }
+                catch (Exception)
+                {
+                    UseNative = false;
+                    SamplesToBinary(dataBuffer, samplePairs, samplesI, samplesQ, dataFormat, invertedSpectrum);
+                    return;
+                }
             }
             else
             {
@@ -590,8 +607,6 @@ namespace LibRXFFT.Libraries
 
                 bytesPerSamplePair = GetBytePerSamplePair(dataFormat);
                 bytesPerSample = GetBytePerSample(dataFormat);
-
-                int samplePos = 0;
 
                 if (samplesI.Length < samplePairs || samplesQ.Length < samplePairs)
                     return;

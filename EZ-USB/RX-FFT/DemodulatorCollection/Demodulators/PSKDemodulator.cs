@@ -20,7 +20,8 @@ namespace DemodulatorCollection.Demodulators
             TransmissionStart,
             TransmissionActive,
             TransmissionStop,
-            TransmissionIdle
+            TransmissionIdle,
+            Prepare
         }
 
         public int BaudRate = 1200;
@@ -133,9 +134,20 @@ namespace DemodulatorCollection.Demodulators
                 case eLearningState.Idle:
                     break;
 
+                case eLearningState.Prepare:
+                    if(SamplingRate != 0)
+                    {
+                        Log.AddMessage("PSKDemodulator", "Waiting for Sampling rate being published.");
+                        State = eLearningState.Start;
+                    }
+                    break;
+
                 case eLearningState.Start:
-                    Log.AddMessage("PSKDemodulator", "Learn background noise for " + FrequencyFormatter.TimeToString(NoiseFloorLearnSamples/SamplingRate) + ".");
-                    State = eLearningState.BackgroundNoise;
+                    if (SamplingRate != 0)
+                    {
+                        Log.AddMessage("PSKDemodulator", "Learn background noise for " + FrequencyFormatter.TimeToString(NoiseFloorLearnSamples / SamplingRate) + ".");
+                        State = eLearningState.BackgroundNoise;
+                    }
                     break;
 
                 case eLearningState.BackgroundNoise:

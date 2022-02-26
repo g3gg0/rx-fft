@@ -187,12 +187,30 @@ namespace DemodulatorCollection
                 ContextMenu menu = new ContextMenu();
 
                 menu.MenuItems.Add(new MenuItem("Shared Memory", new EventHandler(btnOpen_SharedMemory)));
-                menu.MenuItems.Add(new MenuItem("IQ Wave File", new EventHandler(btnOpen_IQFile)));
+                menu.MenuItems.Add(new MenuItem("IQ Wave File", new EventHandler(btnOpen_IQFile))); ;
+                menu.MenuItems.Add(new MenuItem("Network Device", new EventHandler(btnOpen_NetworkDevice)));
                 btnOpen.ContextMenu = menu;
                 btnOpen.ContextMenu.Show(btnOpen, new Point(10, 10));
             }
         }
 
+
+        private void btnOpen_NetworkDevice(object sender, EventArgs e)
+        {
+            SampleSource = new NetworkDeviceControl();
+
+            if (!SampleSource.Connected)
+            {
+                MessageBox.Show("Failed to open the device. Reason: " + SampleSource.ErrorMessage);
+                return;
+            }
+            Processing = true;
+            ProcessThread = new Thread(ProcessMain);
+            ProcessThread.Start();
+
+            btnOpen.Text = "Close";
+            return;
+        }
 
         private void btnOpen_IQFile(object sender, EventArgs e)
         {

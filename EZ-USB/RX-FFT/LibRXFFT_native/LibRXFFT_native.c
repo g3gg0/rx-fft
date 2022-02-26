@@ -294,93 +294,259 @@ LIBRXFFT_NATIVE_API void DownmixProcess(int *ctx, double *iDataIn, double *qData
 	state->TimePos = timePos;
 }
 
-int getIntFromBytes(unsigned char *readBuffer, int pos)
+__inline uint16_t getUInt16FromBytes(unsigned char* buffer, int pos)
 {
-	int value = 0;
-	if (readBuffer == NULL)
-		return 0;
-
-	value = (readBuffer[pos + 1] << 8) | readBuffer[pos];
-
-	if (value > 0x7FFF)
-		value = value - 0x10000;
-
-	value = MAX(value, -0x7FFF);
-	value = MIN(value, 0x7FFF);
-
-	return value;
+	return (buffer[pos]) | (buffer[pos + 1] << 8);
 }
 
-void putBytesFromInt(unsigned char *writeBuffer, int pos, int value)
+__inline uint16_t getUInt16FromBytesSwapped(unsigned char* buffer, int pos)
 {
-    if (writeBuffer == NULL)
-        return;
-
-    value = MAX(value, -0x7FFF);
-    value = MIN(value, 0x7FFF);
-
-    if (value < 0)
-        value = 0x10000 + value;
-
-    writeBuffer[pos + 0] = (value & 0xFF);
-    writeBuffer[pos + 1] = (value >> 8);
+	return (buffer[pos] << 8) | (buffer[pos + 1]);
 }
 
-__inline uint16_t getUInt16FromBytes(unsigned char* readBuffer, int pos)
+__inline uint32_t getUInt24FromBytes(unsigned char* buffer, int pos)
 {
-	return (readBuffer[pos]) | (readBuffer[pos + 1] << 8);
+	return (buffer[pos]) | (buffer[pos + 1] << 8) | (buffer[pos + 2] << 16);
 }
 
-__inline uint16_t getUInt16FromBytesSwapped(unsigned char* readBuffer, int pos)
+__inline uint32_t getUInt24FromBytesSwapped(unsigned char* buffer, int pos)
 {
-	return (readBuffer[pos] << 8) | (readBuffer[pos + 1]);
-}
-
-__inline uint32_t getUInt24FromBytes(unsigned char* readBuffer, int pos)
-{
-	return (readBuffer[pos]) | (readBuffer[pos + 1] << 8) | (readBuffer[pos + 2] << 16);
-}
-
-__inline uint32_t getUInt24FromBytesSwapped(unsigned char* readBuffer, int pos)
-{
-	return (readBuffer[pos + 2]) | (readBuffer[pos + 1] << 8) | (readBuffer[pos] << 16);
-}
-
-__inline double getDoubleFromUInt16(unsigned char* readBuffer, int pos)
-{
-	return (double)(getUInt16FromBytes(readBuffer, 2 * pos));
-}
-
-__inline double getDoubleFromUInt16Swapped(unsigned char* readBuffer, int pos)
-{
-	return (double)(getUInt16FromBytesSwapped(readBuffer, 2 * pos));
-}
-
-__inline double getDoubleFrom24Bit(unsigned char* readBuffer, int pos)
-{
-	return (double)(getUInt24FromBytes(readBuffer, 3 * pos));
-}
-
-__inline double getDoubleFrom24BitSwapped(unsigned char* readBuffer, int pos)
-{
-	return (double)(getUInt24FromBytesSwapped(readBuffer, 3 * pos));
-}
-
-__inline double getDoubleFromFloat(unsigned char* readBuffer, int pos)
-{
-	return (double)((float*)readBuffer)[pos];
+	return (buffer[pos + 2]) | (buffer[pos + 1] << 8) | (buffer[pos] << 16);
 }
 
 
 
-
-__inline void putBytesFromDouble(unsigned char *writeBuffer, int pos, double sampleValue)
+__inline double getDoubleFromUInt16(unsigned char* buffer, int pos)
 {
-	(((short*)writeBuffer)[pos/sizeof(short)]) = sampleValue * 0x7FFF;
-    //putBytesFromInt(readBuffer, pos, (int)(sampleValue * 0x7FFF));
+	return (double)(getUInt16FromBytes(buffer, 2 * pos));
 }
 
-LIBRXFFT_NATIVE_API void SamplesFromBinary(unsigned char *dataBuffer, int bytesRead, int destSize, double *samplesI, double *samplesQ, int dataFormat, int invertedSpectrum)
+__inline double getDoubleFromUInt16Swapped(unsigned char* buffer, int pos)
+{
+	return (double)(getUInt16FromBytesSwapped(buffer, 2 * pos));
+}
+
+__inline double getDoubleFrom24Bit(unsigned char* buffer, int pos)
+{
+	return (double)(getUInt24FromBytes(buffer, 3 * pos));
+}
+
+__inline double getDoubleFrom24BitSwapped(unsigned char* buffer, int pos)
+{
+	return (double)(getUInt24FromBytesSwapped(buffer, 3 * pos));
+}
+
+__inline double getDoubleFromFloat(unsigned char* buffer, int pos)
+{
+	return (double)((float*)buffer)[pos];
+}
+
+__inline void setUInt16ToBytes(uint16_t value, unsigned char* buffer, int pos)
+{
+	buffer[pos + 0] = value & 0xFF;
+	buffer[pos + 1] = (value >> 8) & 0xFF;
+}
+
+__inline void setUInt16ToBytesSwapped(uint16_t value, unsigned char* buffer, int pos)
+{
+	buffer[pos + 0] = (value >> 8) & 0xFF;
+	buffer[pos + 1] = value & 0xFF;
+}
+
+__inline void setUInt24ToBytes(uint32_t value, unsigned char* buffer, int pos)
+{
+	buffer[pos + 0] = value & 0xFF;
+	buffer[pos + 1] = (value >> 8) & 0xFF;
+	buffer[pos + 2] = (value >> 16) & 0xFF;
+}
+
+__inline void setUInt24ToBytesSwapped(uint32_t value, unsigned char* buffer, int pos)
+{
+	buffer[pos + 0] = (value >> 16) & 0xFF;
+	buffer[pos + 1] = (value >> 8) & 0xFF;
+	buffer[pos + 2] = value & 0xFF;
+}
+
+__inline void setDoubleToUInt16(double value, unsigned char* buffer, int pos)
+{
+	setUInt16ToBytes((uint16_t)value, buffer, 2 * pos);
+}
+
+__inline void setDoubleToUInt16Swapped(double value, unsigned char* buffer, int pos)
+{
+	setUInt16ToBytesSwapped((uint16_t)value, buffer, 2 * pos);
+}
+
+__inline void setDoubleTo24Bit(double value, unsigned char* buffer, int pos)
+{
+	setUInt24ToBytes((uint32_t)value, buffer, 3 * pos);
+}
+
+__inline void setDoubleTo24BitSwapped(double value, unsigned char* buffer, int pos)
+{
+	setUInt24ToBytesSwapped((uint32_t)value, buffer, 3 * pos);
+}
+
+__inline void setDoubleToFloat(double value, unsigned char* buffer, int pos)
+{
+	((float*)buffer)[pos] = (float)value;
+}
+
+
+
+LIBRXFFT_NATIVE_API void SamplesFromBinary(unsigned char* dataBuffer, int bytesRead, int destSize, double* samplesI, double* samplesQ, int dataFormat, int invertedSpectrum)
+{
+	int bytesPerSamplePair = 0;
+
+	switch (dataFormat)
+	{
+	case 0:
+	case 1:
+		bytesPerSamplePair = 4;
+		break;
+
+	case 2:
+	case 3:
+		bytesPerSamplePair = 6;
+		break;
+
+	case 4:
+	case 5:
+		bytesPerSamplePair = 8;
+		break;
+
+	default:
+		bytesPerSamplePair = 0;
+		break;
+	}
+
+	if (destSize == 0)
+	{
+		printf("SamplesFromBinary: ERROR - destSize is zero\r\n");
+		return;
+	}
+
+	if (bytesPerSamplePair == 0)
+	{
+		printf("SamplesFromBinary: ERROR - bytesPerSamplePair is zero\r\n");
+		return;
+	}
+
+	if ((bytesRead % bytesPerSamplePair) != 0)
+	{
+		printf("SamplesFromBinary: ERROR - buffer does not contain an even amount of values\r\n");
+		return;
+	}
+
+	int samplePairs = bytesRead / bytesPerSamplePair;
+
+	if (samplePairs > destSize)
+	{
+		printf("SamplesFromBinary: ERROR - too many bytes to read\r\n");
+		return;
+	}
+
+	double divI = 1;
+	double divQ = 1;
+	int pos = 0;
+
+	if (invertedSpectrum)
+	{
+		divI *= -1;
+	}
+
+	switch (dataFormat)
+	{
+			/* Direct16BitIQFixedPointLE */
+		case 0:
+			divI *= 0x7FFF;
+			divQ *= 0x7FFF;
+#pragma omp parallel
+#pragma omp for
+			for (pos = 0; pos < samplePairs; pos++)
+			{
+				samplesI[pos] = getDoubleFromUInt16(dataBuffer, 2 * pos) / divI;
+				samplesQ[pos] = getDoubleFromUInt16(dataBuffer, 2 * pos + 1) / divQ;
+			}
+
+			break;
+
+			/* Direct16BitIQFixedPointBE */
+		case 1:
+			divI *= 0x7FFF;
+			divQ *= 0x7FFF;
+#pragma omp parallel
+#pragma omp for
+			for (pos = 0; pos < samplePairs; pos++)
+			{
+				samplesI[pos] = getDoubleFromUInt16Swapped(dataBuffer, 2 * pos) / divI;
+				samplesQ[pos] = getDoubleFromUInt16Swapped(dataBuffer, 2 * pos + 1) / divQ;
+			}
+
+			break;
+
+			/* Direct24BitIQFixedPointLE */
+		case 2:
+			divI *= 0x7FFFFF;
+			divQ *= 0x7FFFFF;
+#pragma omp parallel
+#pragma omp for
+			for (pos = 0; pos < samplePairs; pos++)
+			{
+				samplesI[pos] = getDoubleFrom24Bit(dataBuffer, 2 * pos) / divI;
+				samplesQ[pos] = getDoubleFrom24Bit(dataBuffer, 2 * pos + 1) / divQ;
+			}
+
+			break;
+
+			/* Direct24BitIQFixedPointBE */
+		case 3:
+			divI *= 0x7FFFFF;
+			divQ *= 0x7FFFFF;
+#pragma omp parallel
+#pragma omp for
+			for (pos = 0; pos < samplePairs; pos++)
+			{
+				samplesI[pos] = getDoubleFrom24BitSwapped(dataBuffer, 2 * pos) / divI;
+				samplesQ[pos] = getDoubleFrom24BitSwapped(dataBuffer, 2 * pos + 1) / divQ;
+			}
+
+			break;
+
+			/* Direct32BitIQFloat */
+		case 4:
+#pragma omp parallel
+#pragma omp for
+			for (pos = 0; pos < samplePairs; pos++)
+			{
+				samplesI[pos] = getDoubleFromFloat(dataBuffer, 2 * pos) / divI;
+				samplesQ[pos] = getDoubleFromFloat(dataBuffer, 2 * pos + 1) / divQ;
+			}
+
+			break;
+
+			/* Direct32BitIQFloat64k */
+		case 5:
+			divI *= 0xFFFF;
+			divQ *= 0xFFFF;
+#pragma omp parallel
+#pragma omp for
+			for (pos = 0; pos < samplePairs; pos++)
+			{
+				samplesI[pos] = getDoubleFromFloat(dataBuffer, 2 * pos) / divI;
+				samplesQ[pos] = getDoubleFromFloat(dataBuffer, 2 * pos + 1) / divQ;
+			}
+
+			break;
+
+		default:
+			break;
+	}
+
+	return;
+}
+
+LIBRXFFT_NATIVE_API void SamplesToBinary(unsigned char *dataBuffer, int samplePairs, double *samplesI, double *samplesQ, int dataFormat, int invertedSpectrum)
 {
 	int bytesPerSamplePair = 0;
 
@@ -406,147 +572,107 @@ LIBRXFFT_NATIVE_API void SamplesFromBinary(unsigned char *dataBuffer, int bytesR
 			break;
 	}
 
-	if (destSize == 0)
-	{
-		printf("SamplesFromBinary: ERROR - destSize is zero\r\n");
-		return;
-	}
-
 	if (bytesPerSamplePair == 0)
 	{
 		printf("SamplesFromBinary: ERROR - bytesPerSamplePair is zero\r\n");
 		return;
 	}
 
-	if ((bytesRead % bytesPerSamplePair) != 0)
-	{
-		printf("SamplesFromBinary: ERROR - buffer does not contain an even amount of values\r\n");
-		return;
-	}
-
-	int samplePairs = bytesRead / bytesPerSamplePair;
-
-	if(samplePairs > destSize)
-	{
-		printf ( "SamplesFromBinary: ERROR - too many bytes to read\r\n");
-		return;
-	}
-
-	for (int pos = 0; pos < samplePairs; pos++)
-	{
-		double I;
-		double Q;
-
-		switch (dataFormat)
-		{
-			/* Direct16BitIQFixedPointLE */
-			case 0:
-				I = getDoubleFromUInt16(dataBuffer, 2 * pos) / 0x7FFF;
-				Q = getDoubleFromUInt16(dataBuffer, 2 * pos + 1) / 0x7FFF;
-				break;
-
-			/* Direct16BitIQFixedPointBE */
-			case 1:
-				I = getDoubleFromUInt16Swapped(dataBuffer, 2 * pos) / 0x7FFF;
-				Q = getDoubleFromUInt16Swapped(dataBuffer, 2 * pos + 1) / 0x7FFF;
-				break;
-
-			/* Direct24BitIQFixedPointLE */
-			case 2:
-				I = getDoubleFrom24Bit(dataBuffer, 2 * pos) / 0x7FFFFF;
-				Q = getDoubleFrom24Bit(dataBuffer, 2 * pos + 1) / 0x7FFFFF;
-				break;
-
-			/* Direct24BitIQFixedPointBE */
-			case 3:
-				I = getDoubleFrom24BitSwapped(dataBuffer, 2 * pos) / 0x7FFFFF;
-				Q = getDoubleFrom24BitSwapped(dataBuffer, 2 * pos + 1) / 0x7FFFFF;
-				break;
-
-			/* Direct32BitIQFloat */
-			case 4:
-				I = getDoubleFromFloat(dataBuffer, 2 * pos);
-				Q = getDoubleFromFloat(dataBuffer, 2 * pos + 1);
-				break;
-
-			/* Direct32BitIQFloat64k */
-			case 5:
-				I = getDoubleFromFloat(dataBuffer, 2 * pos) / 65535;
-				Q = getDoubleFromFloat(dataBuffer, 2 * pos + 1) / 65535;
-				break;
-
-			default:
-				break;
-		}
-
-		if (invertedSpectrum)
-		{
-			I = -I;
-		}
-
-		samplesI[pos] = I;
-		samplesQ[pos] = Q;
-	}
-
-	return;
-}
-
-LIBRXFFT_NATIVE_API void SamplesToBinary(unsigned char *dataBuffer, int samplePairs, double *samplesI, double *samplesQ, int dataFormat, int invertedSpectrum)
-{
-	int bytesPerSample = 0;
-	int bytesPerSamplePair = 0;
-	int samplePos = 0;
+	double divI = 1;
+	double divQ = 1;
 	int pos = 0;
+
+	if (invertedSpectrum)
+	{
+		divI *= -1;
+	}
 
 	switch (dataFormat)
 	{
-		case 0:
-			bytesPerSamplePair = 4;
-			bytesPerSample = 2;
-			break;
-
-		case 1:
-		case 2:
-			bytesPerSamplePair = 8;
-			bytesPerSample = 4;
-			break;
-
-		default:
-			bytesPerSamplePair = 0;
-			bytesPerSample = 0;
-			break;
-	}
-
-	samplePos = 0;
-
-	for (pos = 0; pos < samplePairs; pos++)
-	{
-		double I = samplesI[pos];
-		double Q = samplesQ[pos];
-
-		if (invertedSpectrum)
-			I = -I;
-
-		switch (dataFormat)
+		/* Direct16BitIQFixedPointLE */
+	case 0:
+		divI *= 0x7FFF;
+		divQ *= 0x7FFF;
+#pragma omp parallel
+#pragma omp for
+		for (pos = 0; pos < samplePairs; pos++)
 		{
-			case 0:
-				putBytesFromDouble(dataBuffer, bytesPerSamplePair * pos, I);
-				putBytesFromDouble(dataBuffer, bytesPerSamplePair * pos + bytesPerSample, Q);
-				break;
-
-			case 1:
-				((float*)dataBuffer)[2 * pos] = I;
-				((float*)dataBuffer)[2 * pos + 1] = Q;
-				break;
-
-			case 2:
-				((float*)dataBuffer)[2 * pos] = I * 65536;
-				((float*)dataBuffer)[2 * pos + 1] = I * 65536;
-				break;
-
-			default:
-				break;
+			setDoubleToUInt16(samplesI[pos] * divI, dataBuffer, 2 * pos);
+			setDoubleToUInt16(samplesQ[pos] * divQ, dataBuffer, 2 * pos + 1);
 		}
+
+		break;
+
+		/* Direct16BitIQFixedPointBE */
+	case 1:
+		divI *= 0x7FFF;
+		divQ *= 0x7FFF;
+#pragma omp parallel
+#pragma omp for
+		for (pos = 0; pos < samplePairs; pos++)
+		{
+			setDoubleToUInt16Swapped(samplesI[pos] * divI, dataBuffer, 2 * pos);
+			setDoubleToUInt16Swapped(samplesQ[pos] * divQ, dataBuffer, 2 * pos + 1);
+		}
+
+		break;
+
+		/* Direct24BitIQFixedPointLE */
+	case 2:
+		divI *= 0x7FFFFF;
+		divQ *= 0x7FFFFF;
+#pragma omp parallel
+#pragma omp for
+		for (pos = 0; pos < samplePairs; pos++)
+		{
+			setDoubleTo24Bit(samplesI[pos] * divI, dataBuffer, 2 * pos);
+			setDoubleTo24Bit(samplesQ[pos] * divQ, dataBuffer, 2 * pos + 1);
+		}
+
+		break;
+
+		/* Direct24BitIQFixedPointBE */
+	case 3:
+		divI *= 0x7FFFFF;
+		divQ *= 0x7FFFFF;
+#pragma omp parallel
+#pragma omp for
+		for (pos = 0; pos < samplePairs; pos++)
+		{
+			setDoubleTo24BitSwapped(samplesI[pos] * divI, dataBuffer, 2 * pos);
+			setDoubleTo24BitSwapped(samplesQ[pos] * divQ, dataBuffer, 2 * pos + 1);
+		}
+
+		break;
+
+		/* Direct32BitIQFloat */
+	case 4:
+#pragma omp parallel
+#pragma omp for
+		for (pos = 0; pos < samplePairs; pos++)
+		{
+			setDoubleToFloat(samplesI[pos] * divI, dataBuffer, 2 * pos);
+			setDoubleToFloat(samplesQ[pos] * divQ, dataBuffer, 2 * pos + 1);
+		}
+
+		break;
+
+		/* Direct32BitIQFloat64k */
+	case 5:
+		divI *= 0xFFFF;
+		divQ *= 0xFFFF;
+#pragma omp parallel
+#pragma omp for
+		for (pos = 0; pos < samplePairs; pos++)
+		{
+			 setDoubleToFloat(samplesI[pos] * divI, dataBuffer, 2 * pos);
+			 setDoubleToFloat(samplesQ[pos] * divQ, dataBuffer, 2 * pos + 1);
+		}
+
+		break;
+
+	default:
+		break;
 	}
 
 	return;

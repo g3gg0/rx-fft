@@ -2,4 +2,6 @@
 /**/bin/
 /**/obj/
 /**/x64/
+/**/Release/
+/**/packages/
 *.user

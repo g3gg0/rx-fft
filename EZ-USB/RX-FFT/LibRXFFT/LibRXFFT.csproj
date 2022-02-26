@@ -361,6 +361,7 @@
     <Compile Include="Libraries\SampleSources\Mp3Writer.cs" />
     <Compile Include="Libraries\SampleSources\RandomSampleSource.cs" />
     <Compile Include="Libraries\SampleSources\RtsaFileReader.cs" />
+    <Compile Include="Libraries\SampleSources\RtsaHttpIO.cs" />
     <Compile Include="Libraries\SampleSources\WaveFileIO.cs" />
     <Compile Include="Libraries\SignalProcessing\AttenuationCorrection.cs" />
     <Compile Include="Libraries\SignalProcessing\AudioDemodulator.cs" />

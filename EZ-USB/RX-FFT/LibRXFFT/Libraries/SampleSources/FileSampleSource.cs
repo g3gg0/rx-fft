@@ -56,7 +56,7 @@ namespace LibRXFFT.Libraries.SampleSources
                     InvertedSpectrum = false;
 
                     InputStream = new RtsaFileReader(fileName);
-                    InputSamplingRate = 0;// dlg.SamplingRate;
+                    InputSamplingRate = InputStream.SamplingRate;
                     DataFormat = ByteUtil.eSampleFormat.Direct32BitIQFloat;
 
                     break;
@@ -153,7 +153,5 @@ namespace LibRXFFT.Libraries.SampleSources
             }
             return true;
         }
-
-
     }
 }

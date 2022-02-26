@@ -112,7 +112,7 @@ namespace LibRXFFT.Libraries.SampleSources
             _Position = 0;
         }
 
-        public override long Seek(int pos, SeekOrigin seekOrigin)
+        public override long Seek(long pos, SeekOrigin seekOrigin)
         {
             Rewind();
             while(pos-- > 0)
@@ -261,7 +261,7 @@ namespace LibRXFFT.Libraries.SampleSources
             }
         }
 
-        public virtual long Seek(int pos, SeekOrigin seekOrigin)
+        public virtual long Seek(long pos, SeekOrigin seekOrigin)
         {
             return InputStream.Seek(DataStartPos + pos, seekOrigin) - DataStartPos;
         }

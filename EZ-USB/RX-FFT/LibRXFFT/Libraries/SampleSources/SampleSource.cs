@@ -49,6 +49,7 @@ namespace LibRXFFT.Libraries.SampleSources
                 _DataFormat = value;
                 BytesPerSamplePair = ByteUtil.GetBytePerSamplePair(value);
                 BytesPerSample = ByteUtil.GetBytePerSample(value);
+                AllocateBuffers();
             }
         }
         public readonly int InternalOversampling;

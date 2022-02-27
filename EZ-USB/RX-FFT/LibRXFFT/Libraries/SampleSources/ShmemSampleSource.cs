@@ -26,14 +26,20 @@ namespace LibRXFFT.Libraries.SampleSources
         {
             set
             {
-                NextInBuffer = new byte[value * BytesPerSamplePair];
-                NextInBufferAvailable = true;
+                _SamplesPerBlock = value;
                 AllocateBuffers();
             }
             get
             {
-                return NextInBuffer.Length / BytesPerSamplePair;
+                return _SamplesPerBlock;
             }
+        }
+
+        protected override void AllocateBuffers()
+        {
+            NextInBuffer = new byte[_SamplesPerBlock * BytesPerSamplePair];
+            NextInBufferAvailable = true;
+            base.AllocateBuffers();
         }
 
         public ShmemSampleSource(string name, int oversampling)

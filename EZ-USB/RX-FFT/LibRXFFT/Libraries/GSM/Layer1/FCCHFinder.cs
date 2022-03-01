@@ -1,5 +1,6 @@
 ﻿using System;
 using LibRXFFT.Libraries.GSM.Layer1.Bursts;
+using RX_FFT.Components.GDI;
 
 namespace LibRXFFT.Libraries.GSM.Layer1
 {
@@ -13,10 +14,11 @@ namespace LibRXFFT.Libraries.GSM.Layer1
          * relative to the highest sample value.
          * to detect logical 0 (high signal) of the FCH.
          * normally, checking for >0 should be enough, but there might be a offset.
-         * for now lets check if the samples are all > 20% of the highest value.
+         * //for now lets check if the samples are all > 20% of the highest value.
          */
-        public static double SampleHighMark = 0.20; 
+        public static double SampleHighMark = 0.00;
         private double OversampleBitCount = 0;
+        private double Oversampling = 1;
 
         public long BurstStartPosition { get; set; }
         public long CurrentPosition { get; set; }
@@ -34,7 +36,8 @@ namespace LibRXFFT.Libraries.GSM.Layer1
 
         public FCCHFinder(double oversampling)
         {
-            OversampleBitCount = (int) ((FCHBurst.NetBitCount - 2)*oversampling);
+            Oversampling = oversampling;
+            OversampleBitCount = (int)((FCHBurst.NetBitCount - 2) * Oversampling);
         }
 
         public void Reset()

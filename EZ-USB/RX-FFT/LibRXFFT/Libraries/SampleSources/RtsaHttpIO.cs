@@ -93,9 +93,14 @@ namespace LibRXFFT.Libraries.SampleSources
                 {
                     json = Encoding.ASCII.GetString(block, 0, pos);
                     payloadStart = pos + 2;
-                    payloadLength = block.Length - pos - 2;
+                    payloadLength = length - pos - 2;
                     break;
                 }
+            }
+
+            if((payloadLength & 7) != 0)
+            {
+                payloadLength &= ~7;
             }
 
             RtsaHeader obj = JsonConvert.DeserializeObject<RtsaHeader>(json);
@@ -122,7 +127,7 @@ namespace LibRXFFT.Libraries.SampleSources
                 else if ((now - LastStatistics).TotalMilliseconds > 1000)
                 {
                     double rate = BytesTransferred / (now - LastStatistics).TotalSeconds;
-                    Log.AddMessage("Statistics: " + (long)rate + " bytes/s, " + ((long)(rate / 8)) + " IQ-samples/s");
+                    Log.AddMessage("RtsaHttpIO: " + (long)rate + " bytes/s, " + ((long)(rate / 8)) + " IQ-samples/s");
 
                     BytesTransferred = 0;
                     LastStatistics = now;

@@ -58,6 +58,7 @@ namespace LibRXFFT.Components.DeviceControls
             _SampleSource.InvertedSpectrum = false;
             _SampleSource.SamplingRateChanged += new EventHandler(_SampleSource_SamplingRateChanged);
             _SampleSource.DataFormat = SampleFormat;
+            _SampleSource.SamplesPerBlock = 8192;
 
             Show();
             UpdateDisplay();
@@ -268,11 +269,11 @@ namespace LibRXFFT.Components.DeviceControls
         {
             get
             {
-                return SampleSource.SamplesPerBlock;
+                return _SampleSource.SamplesPerBlock;
             }
             set
             {
-                SampleSource.SamplesPerBlock = value;
+                _SampleSource.SamplesPerBlock = value;
             }
         }
 
@@ -283,11 +284,7 @@ namespace LibRXFFT.Components.DeviceControls
 
         public bool ReadBlock()
         {
-            bool ret;
-
-            ret = SampleSource.Read();
-
-            return ret;
+            return _SampleSource.Read();
         }
 
         public bool Connected
@@ -299,7 +296,7 @@ namespace LibRXFFT.Components.DeviceControls
         {
             CloseConnection();
             NetShmemSink.Close();
-            SampleSource.Close();
+            _SampleSource.Close();
             CloseTuner();
             Close();
         }
@@ -327,7 +324,7 @@ namespace LibRXFFT.Components.DeviceControls
         {
             get
             {
-                return (long)SampleSource.OutputSamplingRate;
+                return (long)_SampleSource.OutputSamplingRate;
             }
         }
 

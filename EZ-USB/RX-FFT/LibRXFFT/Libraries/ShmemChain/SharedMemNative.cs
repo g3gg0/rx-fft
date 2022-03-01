@@ -32,6 +32,8 @@ namespace LibRXFFT.Libraries.ShmemChain
         [DllImport("shmemchain.dll", CallingConvention = CallingConvention.StdCall)]
         public static extern int shmemchain_write_data(int node_id, byte[] buffer, uint bytes);
         [DllImport("shmemchain.dll", CallingConvention = CallingConvention.StdCall)]
+        public static extern int shmemchain_write_data_ex(int node_id, byte[] buffer, uint offset, uint bytes);
+        [DllImport("shmemchain.dll", CallingConvention = CallingConvention.StdCall)]
         public static extern int shmemchain_is_write_blocking(int node_id, uint bytes);
         [DllImport("shmemchain.dll", CallingConvention = CallingConvention.StdCall)]
         public static extern uint shmemchain_read_data(int node_id, byte[] buffer, uint bytes, int read_mode);

@@ -22,19 +22,6 @@ namespace LibRXFFT.Libraries.SampleSources
             }
         }
 
-        public override int SamplesPerBlock
-        {
-            set
-            {
-                _SamplesPerBlock = value;
-                AllocateBuffers();
-            }
-            get
-            {
-                return _SamplesPerBlock;
-            }
-        }
-
         protected override void AllocateBuffers()
         {
             NextInBuffer = new byte[_SamplesPerBlock * BytesPerSamplePair];

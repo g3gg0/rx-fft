@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Text;
 using RX_FFT.Components.GDI;
@@ -38,6 +39,7 @@ namespace LibRXFFT.Libraries.ShmemChain
         protected int readTimeout = 1000;
         public long bufferSize;
         public string name;
+        public bool Failed = false;
 
         public SharedMem() : this("") {}
 
@@ -64,19 +66,19 @@ namespace LibRXFFT.Libraries.ShmemChain
 
             shmemID = SharedMemNative.shmemchain_register_node_special(srcChan, dstChan, (int)bufferSize, enc.GetBytes(name));
 
+            if (shmemID < 0)
+            {
+                throw new NotSupportedException("Failed to register shmem node. Error code #" + SharedMemNative.shmemchain_get_last_error() + " #" + SharedMemNative.shmemchain_get_last_errorcode());
+            }
+
             /* try to get the real channel ids */
-            foreach(NodeInfo info in GetNodeInfos())
+            foreach (NodeInfo info in GetNodeInfos())
             {
                 if (info.shmemID== shmemID)
                 {
                     this.srcChan = info.srcChan;
                     this.dstChan = info.dstChan;
                 }
-            }
-
-            if (shmemID < 0)
-            {
-                throw new NotSupportedException("Failed to register shmem node. Error code #" + SharedMemNative.shmemchain_get_last_error() + " #" + SharedMemNative.shmemchain_get_last_errorcode());
             }
         }
 
@@ -148,7 +150,7 @@ namespace LibRXFFT.Libraries.ShmemChain
             set { SharedMemNative.shmemchain_set_rate(shmemID, value); }
         }
 
-        public eReadMode ReadMode
+        public eReadMode ReadMode 
         {
             get { return readMode; }
             set { readMode = value; }
@@ -251,16 +253,7 @@ namespace LibRXFFT.Libraries.ShmemChain
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            if (offset == 0)
-            {
-                SharedMemNative.shmemchain_write_data(shmemID, buffer, (uint)count);
-            }
-            else
-            {
-                byte[] tmpBuffer = new byte[count];
-                Array.Copy(buffer, offset, tmpBuffer, 0, count);
-                SharedMemNative.shmemchain_write_data(shmemID, tmpBuffer, (uint)count);
-            }
+            Failed |= SharedMemNative.shmemchain_write_data_ex(shmemID, buffer, (uint)offset, (uint)count) < 0;
         }
 
         #endregion

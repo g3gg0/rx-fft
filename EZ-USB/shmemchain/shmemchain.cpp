@@ -1333,7 +1333,8 @@ SHMEMCHAIN_API unsigned __int32 shmemchain_read_data ( __int32 node_id, unsigned
 	__int32 loop = 0;
 	__int32 maxloops = 2;
 	__int32 dynamic = 0;
-	
+
+#ifdef RESTRICT_FLOAT
 	// dont accept data blocks that are not a multiple of 4 byte
 	if ( bytes % 4 )
 	{
@@ -1342,6 +1343,7 @@ SHMEMCHAIN_API unsigned __int32 shmemchain_read_data ( __int32 node_id, unsigned
 		printf ( "%s:%i: Error reading node %i: Size %i is not a multiple of 4 byte.\n", __FILE__, __LINE__, node_id, bytes );
 		return 0;
 	}
+#endif
 
 	// in case of a blocking read, we will restart here
 	read_restart:
@@ -1451,7 +1453,8 @@ SHMEMCHAIN_API unsigned __int32 shmemchain_read_data ( __int32 node_id, unsigned
 			// not more than we should read
 			if ( bytes_read + maxbytes > bytes )
 				maxbytes = bytes - bytes_read;
-			
+
+#ifdef RESTRICT_FLOAT
 			// dont accept data blocks that are not a multiple of 4 byte
 			if ( maxbytes % 4 )
 			{
@@ -1462,6 +1465,8 @@ SHMEMCHAIN_API unsigned __int32 shmemchain_read_data ( __int32 node_id, unsigned
 				printf ( "%s:%i: Error reading node %i: Size %i is not a multiple of 4 byte.\n", __FILE__, __LINE__, node_id, maxbytes );
 				return 0;
 			}
+#endif
+
 
 #ifdef UNLOCK_MEMCPY
 			// unlock for expensive memcpy
@@ -1527,6 +1532,12 @@ SHMEMCHAIN_API unsigned __int32 shmemchain_read_data ( __int32 node_id, unsigned
 	return bytes_read;
 }
 
+/*
+	return 
+	  E_FAIL internal error
+	  0/1 success
+	
+*/
 __int32 shmemchain_write_node ( __int32 node_id, unsigned char *buffer, unsigned __int32 bytes, __int32 check_blocking )
 {
 	unsigned __int32 bytes_written = 0;
@@ -1535,21 +1546,26 @@ __int32 shmemchain_write_node ( __int32 node_id, unsigned char *buffer, unsigned
 	unsigned __int32 writepos = 0;
 	unsigned __int32 already_written = 0;
 
-	if ( shmemchain_node_is_ok ( node_id ) != E_OK )
+	if (shmemchain_node_is_ok(node_id) != E_OK)
+	{
+		printf("shmemchain_node_is_ok(%d) failed\n", node_id);
 		return E_FAIL;
+	}
 		
 	// dont accept data blocks that are not a multiple of 4 byte
+#ifdef RESTRICT_FLOAT
 	if ( bytes % 4 )
 	{
 		printf ( "%s:%i: Error writing to node %i: Size %i is not a multiple of 4 byte.\n", __FILE__, __LINE__, node_id, bytes );
-		return 0;
+		return E_FAIL;
 	}
+#endif
 		
 	// we need locking of the node below
 	if ( shmemchain_lock_node_write ( node_id ) != E_OK )
 	{
 		printf ( "%s:%i: Error locking node %i\n", __FILE__, __LINE__, node_id );
-		return 0;
+		return E_FAIL;
 	}
 
 	free = shmlib_nodeinfo[node_id].buffer_size - shmlib_nodeinfo[node_id].buffer_used;
@@ -1560,17 +1576,19 @@ __int32 shmemchain_write_node ( __int32 node_id, unsigned char *buffer, unsigned
 		shmemchain_last_errorcode = __LINE__;
 		shmemchain_unlock_node_write ( node_id );
 		printf ( "%s:%i: Error writing to node %i: (free < 4), free == %i\n", __FILE__, __LINE__, node_id, free );
-		return 0;
+		return E_FAIL;
 	}
 
+#ifdef RESTRICT_FLOAT
 	if(free % 4)
 	{
 		shmemchain_last_error = ERR_UNALIGNED_ACCESS;
 		shmemchain_last_errorcode = __LINE__;
 		shmemchain_unlock_node_write ( node_id );
 		printf ( "%s:%i: Error writing to node %i: (free % 4), free == %i\n", __FILE__, __LINE__, node_id, free );
-		return 0;
+		return E_FAIL;
 	}
+#endif
 
 	free -= 4;
 
@@ -1581,7 +1599,7 @@ __int32 shmemchain_write_node ( __int32 node_id, unsigned char *buffer, unsigned
 		shmemchain_unlock_node_write ( node_id );
 
 		if ( free >= bytes )
-			return 0;
+			return E_FAIL;
 
 		return 1;
 	}
@@ -1634,7 +1652,7 @@ __int32 shmemchain_write_node ( __int32 node_id, unsigned char *buffer, unsigned
 	{
 		printf ( "Error locking node %i\n", node_id );
 		shmemchain_unlock_read ( );
-		return 0;
+		return E_FAIL;
 	}
 #endif
 
@@ -1645,43 +1663,56 @@ __int32 shmemchain_write_node ( __int32 node_id, unsigned char *buffer, unsigned
 	
 	SetEvent ( local_nodes[node_id].node_event );
 
-
 	return E_OK;
 }
 
-SHMEMCHAIN_API __int32 __stdcall shmemchain_write_data ( __int32 node_id, unsigned char *buffer, unsigned __int32 bytes )
+SHMEMCHAIN_API __int32 __stdcall shmemchain_write_data_ex(__int32 node_id, unsigned char* buffer, unsigned __int32 offset, unsigned __int32 bytes)
 {
 	__int32 pos = 0;
+	__int32 ret = E_OK;
 
-	if ( shmemchain_lock_read () == E_OK ) 
+	if (shmemchain_lock_read() == E_OK)
 	{
-		if ( shmemchain_node_is_ok ( node_id ) != E_OK )
+		if (shmemchain_node_is_ok(node_id) != E_OK)
 		{
-			shmemchain_unlock_read ();
+			printf("shmemchain_node_is_ok(%d) failed\n", node_id);
+			shmemchain_unlock_read();
 			return E_FAIL;
 		}
-		
-		if ( !buffer || !bytes )
+
+		if (!buffer || !bytes)
 		{
-			shmemchain_unlock_read ();
+			shmemchain_unlock_read();
 			return 0;
 		}
 
-		while ( pos < MAX_NODES )
+		while (pos < MAX_NODES)
 		{
-			if ( shmlib_nodeinfo[pos].used && (shmlib_nodeinfo[pos].src_chan >= 0) && (shmlib_nodeinfo[pos].src_chan == shmlib_nodeinfo[node_id].dst_chan ) )
+			if (shmlib_nodeinfo[pos].used && (shmlib_nodeinfo[pos].src_chan >= 0) && (shmlib_nodeinfo[pos].src_chan == shmlib_nodeinfo[node_id].dst_chan))
 			{
-				shmemchain_write_node ( pos, buffer, bytes, 0 );
+				if (shmemchain_write_node(pos, &buffer[offset], bytes, 0) < 0)
+				{
+					ret |= 1;
+				}
 			}
 
 			pos++;
 		}
 		shmlib_nodeinfo[node_id].bytes_written += bytes;
 
-		shmemchain_unlock_read ();
+		shmemchain_unlock_read();
+	}
+	else
+	{
+		printf("shmemchain_lock_read() failed\n");
 	}
 
-	return E_OK;
+	return ret;
+}
+
+SHMEMCHAIN_API __int32 __stdcall shmemchain_write_data(__int32 node_id, unsigned char* buffer, unsigned __int32 bytes)
+{
+	return shmemchain_write_data_ex(node_id, buffer, 0, bytes);
 }
 
 SHMEMCHAIN_API __int32 __stdcall shmemchain_is_write_blocking ( __int32 node_id, unsigned __int32 bytes )

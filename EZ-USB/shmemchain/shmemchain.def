@@ -10,6 +10,7 @@ EXPORTS
 	_shmemchain_update_buffer_size@8
 	_shmemchain_is_write_blocking@8
 	_shmemchain_write_data@12
+	_shmemchain_write_data_ex@16
 	
 	_shmemchain_update_node_name@8
 	_shmemchain_get_last_error@0

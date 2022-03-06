@@ -16,7 +16,7 @@ namespace LibRXFFT.Libraries.SampleSources
         private Socket ReceiveSocket;
         private DateTime LastStatistics = DateTime.MinValue;
         private long BytesTransferred = 0;
-
+        private readonly Dictionary<ulong, (ulong, uint)> WidthRateMap = new Dictionary<ulong, (ulong, uint)>();
 
         public double FilterWidth = 0;
         public double SamplingRate;
@@ -28,9 +28,27 @@ namespace LibRXFFT.Libraries.SampleSources
         public event EventHandler FrequencyChanged;
 
 
+
         public RtsaHttpIO()
         {
+            /* only build table for two rates as these are just doubled frequncy. */
+            var widthRatePairs = new (ulong, ulong)[] {
+                    //( 76500000,  92159971),
+                    //(102000000, 122879962),
+                    (153000000, 184319943),
+                    (204000000, 245759924)
+            };
 
+            foreach (var pair in widthRatePairs)
+            {
+                /* build the map for all decimations from 1 to 1024 */
+                for(int dec = 0; dec < 11; dec++ )
+                {
+                    ulong width = (pair.Item1 >> dec) / 1000;
+                    ulong rate = pair.Item2;
+                    WidthRateMap.Add(width, (rate, 1U << dec));
+                }
+            }
         }
 
         public bool ConnectInput(IPAddress addr, int port)
@@ -116,81 +134,79 @@ namespace LibRXFFT.Libraries.SampleSources
             payloadLength = 0;
             payloadStart = 0;
 
-            if (ReceiveSocket != null)
+            if (ReceiveSocket == null)
             {
-                DateTime now = DateTime.Now;
-
-                if (LastStatistics == DateTime.MinValue)
-                {
-                    LastStatistics = now;
-                }
-                else if ((now - LastStatistics).TotalMilliseconds > 1000)
-                {
-                    double rate = BytesTransferred / (now - LastStatistics).TotalSeconds;
-                    Log.AddMessage("RtsaHttpIO: " + (long)rate + " bytes/s, " + ((long)(rate / 8)) + " IQ-samples/s");
-
-                    BytesTransferred = 0;
-                    LastStatistics = now;
-                }
-
-                if (ParseChunk(ReceiveSocket, out RtsaHeader obj, ref receiveBuffer, out payloadStart, out payloadLength))
-                {
-                    double start = obj.startFrequency;
-                    double end = obj.endFrequency;
-                    double width = end - start;
-                    double center = start + width / 2;
-
-                    ulong rate = 0;
-                    
-                    if (width > 200000000)
-                    {
-                        rate = 245759924;
-                    }
-                    else if (width > 150000000)
-                    {
-                        rate = 184319943;
-                    }
-                    else if (width > 100000000)
-                    {
-                        rate = 122879962;
-                    }
-                    else if (width > 50000000)
-                    {
-                        rate = 92159971;
-                    }
-
-                    if(FilterWidth != width)
-                    {
-                        Log.AddMessage(String.Format("[RTSA] Width changed from {0} to {1}.", FilterWidth, width));
-                        FilterWidth = width;
-                        FilterWidthChanged?.Invoke(this, null);
-                    }
-
-                    if (SamplingRate != rate)
-                    {
-                        Log.AddMessage(String.Format("[RTSA] Rate changed from {0} to {1}.", SamplingRate, rate));
-                        SamplingRate = rate;
-                        SamplingRateChanged?.Invoke(this, null);
-                    }
-
-                    if (Frequency != (long)center)
-                    {
-                        Log.AddMessage(String.Format("[RTSA] Center frequency changed from {0} to {1}.", Frequency, center));
-                        Frequency = (long)center;
-                        FrequencyChanged?.Invoke(this, null);
-                    }
-                    
-                    if (receiveBuffer.Length < payloadLength)
-                    {
-                        Log.AddMessage(String.Format("[RTSA] Block size changed from {0} to {1}.", receiveBuffer.Length, payloadLength));
-                        Array.Resize(ref receiveBuffer, payloadLength);
-                    }
-
-                    BytesTransferred += payloadLength;
-
-                    ret = true;
-                }
+                return false;
             }
+            DateTime now = DateTime.Now;
+
+            if (LastStatistics == DateTime.MinValue)
+            {
+                LastStatistics = now;
+            }
+            else if ((now - LastStatistics).TotalMilliseconds > 1000)
+            {
+                double xferRate = BytesTransferred / (now - LastStatistics).TotalSeconds;
+                Log.AddMessage("RtsaHttpIO: " + (long)xferRate + " bytes/s, " + ((long)(xferRate / 8)) + " IQ-samples/s");
+
+                BytesTransferred = 0;
+                LastStatistics = now;
+            }
+
+            if (!ParseChunk(ReceiveSocket, out RtsaHeader obj, ref receiveBuffer, out payloadStart, out payloadLength))
+            {
+                return false;
+            }
+
+            /* process metadata */
+            double start = obj.startFrequency;
+            double end = obj.endFrequency;
+            double width = end - start;
+            double center = start + width / 2;
+
+            double rate = SamplingRate;
+
+            if (FilterWidth != width)
+            {
+                Log.AddMessage(String.Format("[RTSA] Width changed from {0} to {1}.", FilterWidth, width));
+
+                ulong widthRounded = (ulong)(width / 1000);
+                if (!WidthRateMap.ContainsKey(widthRounded))
+                {
+                    rate = 0;
+                }
+                else
+                {
+                    rate = 2 * WidthRateMap[widthRounded].Item1 / WidthRateMap[widthRounded].Item2;
+                }
+
+                FilterWidth = width;
+                FilterWidthChanged?.Invoke(this, null);
+            }
+
+            if (SamplingRate != rate)
+            {
+                Log.AddMessage(String.Format("[RTSA] Rate changed from {0} to {1}.", SamplingRate, rate));
+                SamplingRate = rate;
+                SamplingRateChanged?.Invoke(this, null);
+            }
+
+            if (Frequency != (long)center)
+            {
+                Log.AddMessage(String.Format("[RTSA] Center frequency changed from {0} to {1}.", Frequency, center));
+                Frequency = (long)center;
+                FrequencyChanged?.Invoke(this, null);
+            }
+
+            if (receiveBuffer.Length < payloadLength)
+            {
+                Log.AddMessage(String.Format("[RTSA] Block size changed from {0} to {1}.", receiveBuffer.Length, payloadLength));
+                Array.Resize(ref receiveBuffer, payloadLength);
+            }
+
+            BytesTransferred += payloadLength;
+
+            ret = true;
 
             return ret;
         }

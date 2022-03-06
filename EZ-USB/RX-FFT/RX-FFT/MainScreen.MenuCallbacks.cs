@@ -9,6 +9,7 @@ using LibRXFFT.Libraries;
 using RX_FFT.Dialogs;
 using RX_Oscilloscope;
 using LibRXFFT.Components.GDI;
+using LibRXFFT.Libraries.SampleSources;
 
 namespace RX_FFT
 {
@@ -502,6 +503,7 @@ namespace RX_FFT
             if (Device != null)
             {
                 GsmAnalyzerWindow.OpenSharedMem(Device.ShmemChannel);
+                GsmAnalyzerWindow.Source.SampleSource.DataFormat = Device.SampleSource.DataFormat;
                 GsmAnalyzerWindow.Device = Device;
             }
         }

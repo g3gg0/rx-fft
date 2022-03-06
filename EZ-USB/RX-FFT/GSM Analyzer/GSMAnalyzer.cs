@@ -1418,6 +1418,8 @@ namespace GSM_Analyzer
                             Demodulator[num].ProcessData(chan.SampleBufferI, chan.SampleBufferQ, sourceSignal[num], sourceStrength[num]);
                         }
 
+                        //Log.AddMessage("[GSM] Received " + Source.SampleSource.OutputBlockSize + " samples");
+
                         /* go through every sample */
                         for (int pos = 0; pos < Source.SampleSource.OutputBlockSize; pos++)
                         {

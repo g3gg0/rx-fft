@@ -728,7 +728,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         #region DigitalTuner Members
 
         public event EventHandler SamplingRateChanged;
-
+        public event EventHandler DeviceOpened;
 
         public long SamplingRate
         {

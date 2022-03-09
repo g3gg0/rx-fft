@@ -47,6 +47,7 @@ namespace LibRXFFT.Libraries.USB_RX.Devices
         public event EventHandler DeviceDisappeared;
         public event EventHandler FilterWidthChanged;
         public event EventHandler DeviceClosed;
+        public event EventHandler DeviceOpened;
 
         public bool OpenTuner()
         {

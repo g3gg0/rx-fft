@@ -355,11 +355,16 @@ namespace LibRXFFT.Components.DeviceControls
 
             radioAcqBlock.Checked = true;
 
+
+            DeviceOpened?.Invoke(this, EventArgs.Empty);
+
             return true;
         }
 
         public virtual void CloseTuner()
         {
+            DeviceClosed?.Invoke(this, EventArgs.Empty);
+
             if (Connected)
             {
                 USBRX.Tuner.CloseTuner();
@@ -563,6 +568,7 @@ namespace LibRXFFT.Components.DeviceControls
 
 
         public event EventHandler TransferModeChanged;
+        public event EventHandler DeviceOpened;
 
         public eTransferMode TransferMode
         {

@@ -66,8 +66,6 @@ namespace LibRXFFT.Components.DeviceControls
             TransferThread.Start();
             
             radioAcqOff.Checked = true;
-
-            Show();
         }
 
         public int ShmemChannel
@@ -392,15 +390,19 @@ namespace LibRXFFT.Components.DeviceControls
         public event EventHandler FrequencyChanged;
         public event EventHandler InvertedSpectrumChanged;
         public event EventHandler DeviceDisappeared;
+        public event EventHandler DeviceOpened;
         public event EventHandler DeviceClosed;
 
         public bool OpenTuner()
         {
+            Show();
             return true;
         }
 
         public void CloseTuner()
         {
+            DeviceClosed?.Invoke(this, EventArgs.Empty);
+
             lock (this)
             {
                 if (HiQControl != null)
@@ -639,7 +641,8 @@ namespace LibRXFFT.Components.DeviceControls
                             return;
                         }
 
-                        SetStatus(eStatus.Connected); ;
+                        SetStatus(eStatus.Connected);
+                        DeviceOpened?.Invoke(this, EventArgs.Empty);
 
                         if (FrequencyChanged != null)
                             FrequencyChanged(this, null); ;

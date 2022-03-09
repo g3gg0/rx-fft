@@ -1330,27 +1330,25 @@ namespace RX_FFT
 
                 dev.TunerCombination = type;
 
-                if (!dev.OpenTuner())
-                {
-                    MessageBox.Show("Failed to open the device. Reason: " + dev.ErrorMessage);
-                    return;
-                }
-
-                Device = dev;
-                Remote.Tuner = dev;
-
                 dev.FrequencyChanged += new EventHandler(Device_FrequencyChanged);
                 dev.SamplingRateChanged += new EventHandler(Device_RateChanged);
                 dev.FilterWidthChanged += new EventHandler(Device_FilterWidthChanged);
                 dev.TransferModeChanged += new EventHandler(Device_TransferModeChanged);
                 dev.InvertedSpectrumChanged += new EventHandler(Device_InvertedSpectrumChanged);
                 dev.DeviceDisappeared += new EventHandler(Device_DeviceDisappeared);
+                dev.DeviceOpened += new EventHandler(Device_DeviceOpened);
                 dev.DeviceClosed += new EventHandler(Device_DeviceClosed);
                 dev.SamplesPerBlock = Math.Min(32, Math.Max(1, SamplesToAverage)) * FFTSize;
 
-                StartThreads();
+                if (!dev.OpenTuner())
+                {
+                    MessageBox.Show("Failed to open the device. Reason: " + dev.ErrorMessage);
+                    return;
+                }
+
                 CurrentFrequency = dev.GetFrequency();
-                DeviceOpened = true;
+                Device = dev;
+                Remote.Tuner = dev;
             }
             catch (Exception e)
             {
@@ -1367,6 +1365,15 @@ namespace RX_FFT
         {
             FileSourceDeviceControl dev = new FileSourceDeviceControl(fileName);
 
+            dev.FrequencyChanged += new EventHandler(Device_FrequencyChanged);
+            dev.SamplingRateChanged += new EventHandler(Device_RateChanged);
+            dev.FilterWidthChanged += new EventHandler(Device_FilterWidthChanged);
+            dev.DeviceDisappeared += new EventHandler(Device_DeviceDisappeared);
+            dev.DeviceOpened += new EventHandler(Device_DeviceOpened);
+            dev.DeviceClosed += new EventHandler(Device_DeviceClosed);
+            dev.SamplesPerBlock = Math.Min(32, Math.Max(1, SamplesToAverage)) * FFTSize;
+
+
             if (!dev.Connected)
             {
                 MessageBox.Show("Failed to open the device. Reason: " + dev.ErrorMessage);
@@ -1374,17 +1381,6 @@ namespace RX_FFT
             }
 
             Device = dev;
-
-            dev.FrequencyChanged += new EventHandler(Device_FrequencyChanged);
-            dev.SamplingRateChanged += new EventHandler(Device_RateChanged);
-            dev.FilterWidthChanged += new EventHandler(Device_FilterWidthChanged);
-            dev.DeviceDisappeared += new EventHandler(Device_DeviceDisappeared);
-            dev.DeviceClosed += new EventHandler(Device_DeviceClosed);
-            dev.SamplesPerBlock = Math.Min(32, Math.Max(1, SamplesToAverage)) * FFTSize;
-
-            StartThreads();
-
-            DeviceOpened = true;
         }
 
 
@@ -1392,6 +1388,13 @@ namespace RX_FFT
         {
             SharedMemDeviceControl dev = new SharedMemDeviceControl(srcChan);
 
+            dev.FrequencyChanged += new EventHandler(Device_FrequencyChanged);
+            dev.SamplingRateChanged += new EventHandler(Device_RateChanged);
+            dev.FilterWidthChanged += new EventHandler(Device_FilterWidthChanged);
+            dev.DeviceOpened += new EventHandler(Device_DeviceOpened);
+            dev.DeviceClosed += new EventHandler(Device_DeviceClosed);
+            dev.SamplesPerBlock = Math.Max(1, SamplesToAverage) * FFTSize;
+
             if (!dev.Connected)
             {
                 MessageBox.Show("Failed to open the device. Reason: " + dev.ErrorMessage);
@@ -1399,16 +1402,6 @@ namespace RX_FFT
             }
 
             Device = dev;
-
-            dev.FrequencyChanged += new EventHandler(Device_FrequencyChanged);
-            dev.SamplingRateChanged += new EventHandler(Device_RateChanged);
-            dev.FilterWidthChanged += new EventHandler(Device_FilterWidthChanged);
-            dev.DeviceClosed += new EventHandler(Device_DeviceClosed);
-            dev.SamplesPerBlock = Math.Max(1, SamplesToAverage) * FFTSize;
-
-            StartThreads();
-
-            DeviceOpened = true;
         }
 
         private MenuItem OpenSharedMemoryDeviceCreateMenuItem(string name, int srcChan)
@@ -1458,6 +1451,14 @@ namespace RX_FFT
         {
             RandomDataDeviceControl dev = new RandomDataDeviceControl();
 
+            dev.FrequencyChanged += new EventHandler(Device_FrequencyChanged);
+            dev.SamplingRateChanged += new EventHandler(Device_RateChanged);
+            dev.FilterWidthChanged += new EventHandler(Device_FilterWidthChanged);
+            dev.DeviceClosed += new EventHandler(Device_DeviceClosed);
+            dev.DeviceOpened += new EventHandler(Device_DeviceOpened);
+
+            dev.OpenTuner();
+
             if (!dev.Connected)
             {
                 MessageBox.Show("Failed to open the device. Reason: " + dev.ErrorMessage);
@@ -1466,21 +1467,20 @@ namespace RX_FFT
 
             Device = dev;
             Remote.Tuner = dev;
-
-            dev.FrequencyChanged += new EventHandler(Device_FrequencyChanged);
-            dev.SamplingRateChanged += new EventHandler(Device_RateChanged);
-            dev.FilterWidthChanged += new EventHandler(Device_FilterWidthChanged);
-            dev.DeviceClosed += new EventHandler(Device_DeviceClosed);
-
-            StartThreads();
-
-            DeviceOpened = true;
         }
 
         private void OpenNetworkDevice()
         {
             NetworkDeviceControl dev = new NetworkDeviceControl();
 
+            dev.FrequencyChanged += new EventHandler(Device_FrequencyChanged);
+            dev.SamplingRateChanged += new EventHandler(Device_RateChanged);
+            dev.FilterWidthChanged += new EventHandler(Device_FilterWidthChanged);
+            dev.DeviceClosed += new EventHandler(Device_DeviceClosed);
+            dev.DeviceOpened += new EventHandler(Device_DeviceOpened);
+
+            dev.OpenTuner();
+
             if (!dev.Connected)
             {
                 MessageBox.Show("Failed to open the device. Reason: " + dev.ErrorMessage);
@@ -1489,21 +1489,20 @@ namespace RX_FFT
 
             Device = dev;
             Remote.Tuner = dev;
-
-            dev.FrequencyChanged += new EventHandler(Device_FrequencyChanged);
-            dev.SamplingRateChanged += new EventHandler(Device_RateChanged);
-            dev.FilterWidthChanged += new EventHandler(Device_FilterWidthChanged);
-            dev.DeviceClosed += new EventHandler(Device_DeviceClosed);
-
-            StartThreads();
-
-            DeviceOpened = true;
         }
 
         private void OpenHiQSDR()
         {
             HiQSDRDeviceControl dev = new HiQSDRDeviceControl();
 
+            dev.FrequencyChanged += new EventHandler(Device_FrequencyChanged);
+            dev.SamplingRateChanged += new EventHandler(Device_RateChanged);
+            dev.FilterWidthChanged += new EventHandler(Device_FilterWidthChanged);
+            dev.DeviceOpened += new EventHandler(Device_DeviceOpened);
+            dev.DeviceClosed += new EventHandler(Device_DeviceClosed);
+
+            dev.OpenTuner();
+
             if (!dev.Connected)
             {
                 MessageBox.Show("Failed to open the device. Reason: " + dev.ErrorMessage);
@@ -1512,12 +1511,10 @@ namespace RX_FFT
 
             Device = dev;
             Remote.Tuner = dev;
+        }
 
-            dev.FrequencyChanged += new EventHandler(Device_FrequencyChanged);
-            dev.SamplingRateChanged += new EventHandler(Device_RateChanged);
-            dev.FilterWidthChanged += new EventHandler(Device_FilterWidthChanged);
-            dev.DeviceClosed += new EventHandler(Device_DeviceClosed);
-
+        void Device_DeviceOpened(object sender, EventArgs e)
+        {
             StartThreads();
 
             DeviceOpened = true;
@@ -1528,6 +1525,7 @@ namespace RX_FFT
             /* create an extra shmem channel for audio decoding */
             AudioShmem = new ShmemSampleSource("RX-FFT Audio Decoder", Device.ShmemChannel, 1, 0);
             AudioShmem.InvertedSpectrum = Device.SampleSource.InvertedSpectrum;
+            AudioShmem.DataFormat = Device.SampleSource.DataFormat;
 
             ReadThreadRun = true;
             ReadThread = new Thread(FFTReadFunc);
@@ -1661,9 +1659,6 @@ namespace RX_FFT
                 {
                     if (dev.OpenTuner())
                     {
-                        StartThreads();
-                        //Device = oldDevice;
-                        DeviceOpened = true;
                     }
                 }
             }));

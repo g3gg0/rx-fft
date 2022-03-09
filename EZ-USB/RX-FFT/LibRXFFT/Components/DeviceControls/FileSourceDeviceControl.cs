@@ -19,7 +19,6 @@ namespace LibRXFFT.Components.DeviceControls
 {
     public partial class FileSourceDeviceControl : Form, DeviceControl
     {
-
         private FileSampleSource Source;
         private bool Repeat = false;
         private double LastPosition = 0;
@@ -73,7 +72,6 @@ namespace LibRXFFT.Components.DeviceControls
 
                 UpdateDisplay();
                 Timer.Start();
-                Show();
             }
         }
 
@@ -232,7 +230,6 @@ namespace LibRXFFT.Components.DeviceControls
         public void CloseControl()
         {
             CloseTuner();
-            Close();
         }
 
         public bool Connected
@@ -387,14 +384,19 @@ namespace LibRXFFT.Components.DeviceControls
         public event EventHandler InvertedSpectrumChanged;
         public event EventHandler DeviceDisappeared;
         public event EventHandler DeviceClosed;
+        public event EventHandler DeviceOpened;
 
         public bool OpenTuner()
         {
+            Show();
+            DeviceOpened?.Invoke(this, EventArgs.Empty);
             return true;
         }
 
         public void CloseTuner()
         {
+            DeviceClosed?.Invoke(this, EventArgs.Empty);
+
             if (Source != null)
             {
                 Source.Close();
@@ -403,6 +405,7 @@ namespace LibRXFFT.Components.DeviceControls
 
             TransferMode = eTransferMode.Stopped;
             Timer.Stop();
+            Close();
         }
 
         public bool SetFrequency(long frequency)

@@ -59,9 +59,6 @@ namespace LibRXFFT.Components.DeviceControls
             _SampleSource.SamplingRateChanged += new EventHandler(_SampleSource_SamplingRateChanged);
             _SampleSource.DataFormat = SampleFormat;
             _SampleSource.SamplesPerBlock = 8192;
-
-            Show();
-            UpdateDisplay();
         }
 
 
@@ -106,6 +103,8 @@ namespace LibRXFFT.Components.DeviceControls
             StopTransfers = false;
             TransferThread = new Thread(TransferThreadMain);
             TransferThread.Start();
+
+            DeviceOpened?.Invoke(this, EventArgs.Empty);
         }
 
 
@@ -294,11 +293,7 @@ namespace LibRXFFT.Components.DeviceControls
 
         public void CloseControl()
         {
-            CloseConnection();
-            NetShmemSink.Close();
-            _SampleSource.Close();
             CloseTuner();
-            Close();
         }
 
         public void StartRead()
@@ -339,14 +334,25 @@ namespace LibRXFFT.Components.DeviceControls
         public event EventHandler InvertedSpectrumChanged;
         public event EventHandler DeviceDisappeared;
         public event EventHandler DeviceClosed;
+        public event EventHandler DeviceOpened;
 
         public bool OpenTuner()
         {
+            Show();
+            UpdateDisplay();
+
             return true;
         }
 
         public void CloseTuner()
         {
+            DeviceClosed?.Invoke(this, EventArgs.Empty);
+
+            CloseConnection();
+            NetShmemSink.Close();
+            _SampleSource.Close();
+            CloseTuner();
+            Close();
         }
 
         public double Amplification

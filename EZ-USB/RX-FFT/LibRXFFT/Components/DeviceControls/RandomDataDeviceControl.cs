@@ -134,14 +134,17 @@ namespace LibRXFFT.Components.DeviceControls
         public event EventHandler InvertedSpectrumChanged;
         public event EventHandler DeviceDisappeared;
         public event EventHandler DeviceClosed;
+        public event EventHandler DeviceOpened;
 
         public bool OpenTuner()
         {
+            DeviceOpened?.Invoke(this, EventArgs.Empty);
             return true;
         }
 
         public void CloseTuner()
         {
+            DeviceClosed?.Invoke(this, EventArgs.Empty);
         }
 
         public double Amplification

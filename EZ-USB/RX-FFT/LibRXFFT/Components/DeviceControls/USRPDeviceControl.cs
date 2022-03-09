@@ -404,6 +404,7 @@ namespace LibRXFFT.Components.DeviceControls
 
 
         public event EventHandler TransferModeChanged;
+        public event EventHandler DeviceOpened;
 
         public eTransferMode TransferMode
         {

@@ -975,7 +975,7 @@ namespace GSM_Analyzer
             try
             {
                 Source = new FileSourceDeviceControl(InternalOversampling);
-
+                Source.OpenTuner();
                 if (!Source.Connected)
                 {
                     return;
@@ -1007,6 +1007,11 @@ namespace GSM_Analyzer
             try
             {
                 Source = new NetworkDeviceControl();
+                Source.OpenTuner();
+                if (!Source.Connected)
+                {
+                    return;
+                }
 
                 txtLog.Clear();
                 ThreadActive = true;
@@ -1037,6 +1042,11 @@ namespace GSM_Analyzer
         public void OpenSharedMem(int srcChan)
         {
             Source = new SharedMemDeviceControl(srcChan);
+            Source.OpenTuner();
+            if (!Source.Connected)
+            {
+                return;
+            }
 
             txtLog.Clear();
             ThreadActive = true;
@@ -1428,10 +1438,14 @@ namespace GSM_Analyzer
 
                             bool burstSampled = false;
 
+                            if (burstBufferPos >= burstBuffer[0].Length)
+                            {
+                                burstBufferPos = 0;
+                            }
                             /* write this sample into the burst buffer */
                             for (int chan = 0; chan < channels; chan++)
                             {
-                                if (burstBufferPos < burstBuffer[chan].Length && burstBufferPos > 0)
+                                if (burstBufferPos > 0)
                                 {
                                     burstBuffer[chan][burstBufferPos] = sourceSignal[chan][pos] + Parameters.PhaseOffsetValue;
                                     burstStrengthBuffer[chan][burstBufferPos] = sourceStrength[chan][pos];
@@ -1525,10 +1539,36 @@ namespace GSM_Analyzer
                                                 frameStartPosition = normalFinder.BurstStartPosition;
                                             }
 
+                                            /* update pointers */
                                             frameStartPosition -= (long)(Oversampling * Handler.SpareBits);
 
+                                            long newBurstPos = currentPosition - frameStartPosition;
+                                            /* show the burst */
+                                            if (burstBuffer[0].Length > newBurstPos)
+                                            {
+                                                double[] tmpBurstBuf = new double[burstBuffer[0].Length];
+                                                double[] tmpStrengthBuf = new double[burstBuffer[0].Length];
+
+                                                Array.Copy(burstBuffer[0], newBurstPos, tmpBurstBuf, 0, burstBuffer[0].Length - newBurstPos);
+                                                Array.Clear(tmpBurstBuf, (int)newBurstPos, (int)(burstBuffer[0].Length - newBurstPos));
+                                                Array.Copy(tmpBurstBuf, burstBuffer[0], burstBuffer[0].Length - newBurstPos);
+
+                                                lock (BurstWindowLock)
+                                                {
+                                                    /* update the burst visualizer */
+                                                    if (BurstWindow != null)
+                                                    {
+                                                        BurstWindow.XAxisGridOffset = 0;
+                                                        BurstWindow.ProcessBurst(burstBuffer[displayedChannel], burstStrengthBuffer[displayedChannel]);
+                                                    }
+                                                }
+
+                                                if (SingleStep)
+                                                    SingleStepSem.WaitOne();
+                                            }
+
                                             /* update the burst buffer pointer */
-                                            burstBufferPos = currentPosition - frameStartPosition;
+                                            burstBufferPos = newBurstPos;
 
                                             /* this is TN 0 */
                                             Parameters.FN = 0;
@@ -1540,25 +1580,6 @@ namespace GSM_Analyzer
                                         AddMessage("[GSM] FCCH Exception: " + e + Environment.NewLine);
                                         return;
                                     }
-
-                                    /* if enough samples processed, update burst window */
-                                    if (burstSampled)
-                                    {
-                                        burstBufferPos = 0;
-
-                                        lock (BurstWindowLock)
-                                        {
-                                            /* update the burst visualizer */
-                                            if (BurstWindow != null)
-                                            {
-                                                BurstWindow.XAxisGridOffset = 0;
-                                                BurstWindow.ProcessBurst(burstBuffer[displayedChannel], burstStrengthBuffer[displayedChannel]);
-                                            }
-                                        }
-
-                                        if (SingleStep)
-                                            SingleStepSem.WaitOne();
-                                    }
                                     break;
 
 
@@ -1569,6 +1590,19 @@ namespace GSM_Analyzer
                                         /* if this is the eighth burst, its the first timeslot of the next frame - SCH */
                                         if (Parameters.TN == 8)
                                         {
+                                            lock (BurstWindowLock)
+                                            {
+                                                /* update the burst visualizer */
+                                                if (BurstWindow != null)
+                                                {
+                                                    BurstWindow.XAxisGridOffset = Parameters.SampleOffset;
+                                                    BurstWindow.ProcessBurst(burstBuffer[displayedChannel], burstStrengthBuffer[displayedChannel]);
+                                                }
+                                            }
+
+                                            if (SingleStep)
+                                                SingleStepSem.WaitOne();
+
                                             /* set TN to 7, since handler will increase */
                                             Parameters.TN = 7;
                                             Parameters.FirstSCH = true;
@@ -1599,18 +1633,6 @@ namespace GSM_Analyzer
 
                                         burstBufferPos = 0;
 
-                                        lock (BurstWindowLock)
-                                        {
-                                            /* update the burst visualizer */
-                                            if (BurstWindow != null)
-                                            {
-                                                BurstWindow.XAxisGridOffset = Parameters.SampleOffset;
-                                                BurstWindow.ProcessBurst(burstBuffer[displayedChannel], burstStrengthBuffer[displayedChannel]);
-                                            }
-                                        }
-
-                                        if (SingleStep)
-                                            SingleStepSem.WaitOne();
                                     }
                                     break;
 

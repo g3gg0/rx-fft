@@ -87,6 +87,10 @@ namespace LibRXFFT.Libraries.FFTW
             {
                 UseFFTW = false;
             }
+            catch (BadImageFormatException ex)
+            {
+                UseFFTW = false;
+            }
 
             try
             {
@@ -94,6 +98,9 @@ namespace LibRXFFT.Libraries.FFTW
                 Available = true;
             }
             catch (DllNotFoundException ex)
+            {
+            }
+            catch (BadImageFormatException ex)
             {
             }
         }

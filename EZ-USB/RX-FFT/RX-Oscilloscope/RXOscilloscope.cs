@@ -8,17 +8,18 @@ using LibRXFFT.Libraries.SampleSources;
 using LibRXFFT.Libraries.ShmemChain;
 using RX_Oscilloscope.Components;
 using LibRXFFT.Components.DirectX;
+using LibRXFFT.Components.DeviceControls;
 
 namespace RX_Oscilloscope
 {
     public partial class RXOscilloscope : Form
     {
+        private DeviceControl Source;
         private SampleSource SampleSource;
         private Thread ProcessThread;
         private bool Processing;
         public int SharedMemoryChannel = 0;
         private bool WindowActivated = false;
-
 
         public RXOscilloscope()
         {
@@ -149,6 +150,8 @@ namespace RX_Oscilloscope
                 ContextMenu menu = new ContextMenu();
 
                 menu.MenuItems.Add(new MenuItem("Shared Memory", new EventHandler(btnOpen_SharedMemory)));
+                menu.MenuItems.Add(new MenuItem("IQ Wave File", new EventHandler(btnOpen_IQFile)));
+                menu.MenuItems.Add(new MenuItem("Network Source", new EventHandler(btnOpen_NetworkSource)));
                 btnOpen.ContextMenu = menu;
                 btnOpen.ContextMenu.Show(btnOpen, new System.Drawing.Point(10, 10));
             }
@@ -172,6 +175,70 @@ namespace RX_Oscilloscope
             catch (Exception ex)
             {
                 MessageBox.Show("Failed to open shared memory. Is the correct shmemchain.dll in the program directory?");
+            }
+        }
+
+        private void btnOpen_IQFile(object sender, EventArgs e)
+        {
+            try
+            {
+                Source = new FileSourceDeviceControl(1);
+                Source.OpenTuner();
+                if (!Source.Connected)
+                {
+                    return;
+                }
+
+                SampleSource = Source.SampleSource;
+                SampleSource.SamplingRateChanged += new EventHandler(SampleSource_SamplingRateChanged);
+
+                Processing = true;
+                ProcessThread = new Thread(ProcessMain);
+                ProcessThread.Start();
+
+                btnOpen.Text = "Close";
+            }
+            catch (DllNotFoundException ex)
+            {
+                MessageBox.Show("There is no shmemchain.dll in your working directory.", "Error while setting up shmem");
+            }
+            catch (BadImageFormatException ex)
+            {
+                MessageBox.Show("There is a wrong shmemchain.dll in your working directory.", "Error while setting up shmem");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Exception occured while trying to set up shmem: " + ex.GetType(), "Error while setting up shmem");
+            }
+        }
+
+        public void btnOpen_NetworkSource(object sender, EventArgs e)
+        {
+            try
+            {
+                Source = new NetworkDeviceControl();
+                Source.OpenTuner();
+                if (!Source.Connected)
+                {
+                    return;
+                }
+
+                SampleSource = Source.SampleSource;
+                SampleSource.SamplingRateChanged += new EventHandler(SampleSource_SamplingRateChanged);
+
+                Processing = true;
+                ProcessThread = new Thread(ProcessMain);
+                ProcessThread.Start();
+
+                btnOpen.Text = "Close";
+            }
+            catch (BadImageFormatException ex)
+            {
+                MessageBox.Show("There is a wrong shmemchain.dll in your working directory.", "Error while setting up shmem");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Exception occured while trying to set up shmem: " + ex.GetType(), "Error while setting up shmem");
             }
         }
 

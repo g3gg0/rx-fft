@@ -106,6 +106,7 @@ namespace RX_FFT
             this.fitSpectrumMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.displayFilterMarginsMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.agcMenu = new System.Windows.Forms.ToolStripMenuItem();
+            this.dCOffsetCorrectionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.advancedMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.gsmAnalyzerMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.digitalDemodulatorsMenu = new System.Windows.Forms.ToolStripMenuItem();
@@ -128,7 +129,7 @@ namespace RX_FFT
             this.menuFft2048 = new System.Windows.Forms.ToolStripMenuItem();
             this.menuFft4096 = new System.Windows.Forms.ToolStripMenuItem();
             this.menuFft8192 = new System.Windows.Forms.ToolStripMenuItem();
-            this.dCOffsetCorrectionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.spectranV6ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip1.SuspendLayout();
             this.mainMenu.SuspendLayout();
             this.toolStripContainer1.ContentPanel.SuspendLayout();
@@ -273,7 +274,8 @@ namespace RX_FFT
             this.openNetworkDeviceMenu,
             this.openRandomDataMenu,
             this.openUSRPMenu,
-            this.hiQSDRToolStripMenuItem});
+            this.hiQSDRToolStripMenuItem,
+            this.spectranV6ToolStripMenuItem});
             this.openMenu.Name = "openMenu";
             this.openMenu.Size = new System.Drawing.Size(191, 22);
             this.openMenu.Text = "Open";
@@ -550,6 +552,7 @@ namespace RX_FFT
             // 
             // fftSizeOtherMenu
             // 
+            this.fftSizeOtherMenu.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.fftSizeOtherMenu.Name = "fftSizeOtherMenu";
             this.fftSizeOtherMenu.Size = new System.Drawing.Size(100, 23);
             this.fftSizeOtherMenu.Text = "other...";
@@ -576,6 +579,7 @@ namespace RX_FFT
             // 
             // updateRateText
             // 
+            this.updateRateText.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.updateRateText.Name = "updateRateText";
             this.updateRateText.Size = new System.Drawing.Size(100, 23);
             this.updateRateText.Text = "15";
@@ -591,6 +595,7 @@ namespace RX_FFT
             // 
             // averageSamplesText
             // 
+            this.averageSamplesText.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.averageSamplesText.Name = "averageSamplesText";
             this.averageSamplesText.Size = new System.Drawing.Size(100, 23);
             this.averageSamplesText.Text = "4";
@@ -612,6 +617,7 @@ namespace RX_FFT
             // 
             // verticalSmoothMenuText
             // 
+            this.verticalSmoothMenuText.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.verticalSmoothMenuText.Name = "verticalSmoothMenuText";
             this.verticalSmoothMenuText.Size = new System.Drawing.Size(100, 23);
             this.verticalSmoothMenuText.Text = "1";
@@ -671,6 +677,13 @@ namespace RX_FFT
             this.agcMenu.Size = new System.Drawing.Size(214, 22);
             this.agcMenu.Text = "Automatic Gain Control";
             this.agcMenu.Click += new System.EventHandler(this.agcMenu_Click);
+            // 
+            // dCOffsetCorrectionToolStripMenuItem
+            // 
+            this.dCOffsetCorrectionToolStripMenuItem.Name = "dCOffsetCorrectionToolStripMenuItem";
+            this.dCOffsetCorrectionToolStripMenuItem.Size = new System.Drawing.Size(214, 22);
+            this.dCOffsetCorrectionToolStripMenuItem.Text = "DC Offset Correction";
+            this.dCOffsetCorrectionToolStripMenuItem.Click += new System.EventHandler(this.dCOffsetCorrectionToolStripMenuItem_Click);
             // 
             // advancedMenu
             // 
@@ -894,12 +907,12 @@ namespace RX_FFT
             this.menuFft8192.Text = "8192";
             this.menuFft8192.Click += new System.EventHandler(this.menuFft8192_Click);
             // 
-            // dCOffsetCorrectionToolStripMenuItem
+            // spectranV6ToolStripMenuItem
             // 
-            this.dCOffsetCorrectionToolStripMenuItem.Name = "dCOffsetCorrectionToolStripMenuItem";
-            this.dCOffsetCorrectionToolStripMenuItem.Size = new System.Drawing.Size(214, 22);
-            this.dCOffsetCorrectionToolStripMenuItem.Text = "DC Offset Correction";
-            this.dCOffsetCorrectionToolStripMenuItem.Click += new System.EventHandler(this.dCOffsetCorrectionToolStripMenuItem_Click);
+            this.spectranV6ToolStripMenuItem.Name = "spectranV6ToolStripMenuItem";
+            this.spectranV6ToolStripMenuItem.Size = new System.Drawing.Size(237, 22);
+            this.spectranV6ToolStripMenuItem.Text = "Aaronia Spectran V6";
+            this.spectranV6ToolStripMenuItem.Click += new System.EventHandler(this.spectranV6ToolStripMenuItem_Click);
             // 
             // MainScreen
             // 
@@ -1025,6 +1038,7 @@ namespace RX_FFT
         private System.Windows.Forms.ToolStripMenuItem menuFft4096;
         private System.Windows.Forms.ToolStripMenuItem menuFft8192;
         private System.Windows.Forms.ToolStripMenuItem dCOffsetCorrectionToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem spectranV6ToolStripMenuItem;
     }
 }
 

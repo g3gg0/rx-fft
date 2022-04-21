@@ -506,6 +506,11 @@ namespace RX_Oscilloscope.Components
         {
             decimal rate = (decimal)waveForm.SamplingRate;
 
+            if(rate == 0)
+            {
+                return;
+            }
+
             try
             {
                 if (radioBufferSamples.Checked)
@@ -523,6 +528,11 @@ namespace RX_Oscilloscope.Components
                     decimal time = 0;
                     decimal.TryParse(txtBufferTime.Text, out time);
                     decimal samples = rate * time / 1000000.0m;
+
+                    if(samples == 0)
+                    {
+                        return;
+                    }
 
                     SamplesExact = samples;
 

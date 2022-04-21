@@ -235,7 +235,7 @@ namespace RX_FFT
             StatusTextDock.XOffset = 25;
             StatusTextDock.YOffset = 25;
 
-            DeviceOpened = false;
+            //DeviceOpened = false;
 
             /* build the windowing function list dropdown menu */
             foreach (string windowName in Enum.GetNames(typeof(FFTTransformer.eWindowingFunction)))
@@ -610,28 +610,31 @@ namespace RX_FFT
             {
                 _DeviceOpened = value;
 
-                closeMenu.Enabled = DeviceOpened;
-                pauseMenu.Enabled = DeviceOpened;
-                openMenu.Enabled = !DeviceOpened;
-                btnCloseDevice.Enabled = DeviceOpened;
-                btnOpenDevice.Enabled = !DeviceOpened;
-
-                if (value)
+                BeginInvoke(new Action(() =>
                 {
-                    UpdateRate = UpdateRate;
-                    FFTSize = FFTSize;
-                    CurrentFrequency = CurrentFrequency;
-                    statusLabel.Text = "Connected";
-                    CallScript("DeviceOpened", Device);
-                }
-                else
-                {
-                    statusLabel.Text = "Idle";
-                    CallScript("DeviceClosed");
-                }
+                    closeMenu.Enabled = DeviceOpened;
+                    pauseMenu.Enabled = DeviceOpened;
+                    openMenu.Enabled = !DeviceOpened;
+                    btnCloseDevice.Enabled = DeviceOpened;
+                    btnOpenDevice.Enabled = !DeviceOpened;
 
-                /* update transfer mode string */
-                Device_TransferModeChanged(null, null);
+                    if (value)
+                    {
+                        UpdateRate = UpdateRate;
+                        FFTSize = FFTSize;
+                        CurrentFrequency = CurrentFrequency;
+                        statusLabel.Text = "Connected";
+                        CallScript("DeviceOpened", Device);
+                    }
+                    else
+                    {
+                        statusLabel.Text = "Idle";
+                        CallScript("DeviceClosed");
+                    }
+
+                    /* update transfer mode string */
+                    Device_TransferModeChanged(null, null);
+                }));
             }
         }
 
@@ -1513,6 +1516,28 @@ namespace RX_FFT
             Remote.Tuner = dev;
         }
 
+        private void OpenSpectran()
+        {
+            SpectranDeviceControl dev = new SpectranDeviceControl();
+
+            dev.FrequencyChanged += new EventHandler(Device_FrequencyChanged);
+            dev.SamplingRateChanged += new EventHandler(Device_RateChanged);
+            dev.FilterWidthChanged += new EventHandler(Device_FilterWidthChanged);
+            dev.DeviceOpened += new EventHandler(Device_DeviceOpened);
+            dev.DeviceClosed += new EventHandler(Device_DeviceClosed);
+
+            dev.OpenTuner();
+
+            if (!dev.Connected)
+            {
+                MessageBox.Show("Failed to open the device. Reason: " + dev.ErrorMessage);
+                return;
+            }
+
+            Device = dev;
+            Remote.Tuner = dev;
+        }
+
         void Device_DeviceOpened(object sender, EventArgs e)
         {
             StartThreads();
@@ -1908,6 +1933,11 @@ namespace RX_FFT
             OpenHiQSDR();
         }
 
+        private void spectranV6ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenSpectran();
+        }
+
         private void markersToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (MarkerDialog == null || MarkerDialog.IsDisposed)
@@ -2083,7 +2113,7 @@ namespace RX_FFT
             return false;
         }
 
-        private bool CallScript(string function, params object[] parameters)
+        private bool CallScriptInt(string function, params object[] parameters)
         {
             foreach (Script script in RegisteredScripts)
             {
@@ -2093,12 +2123,25 @@ namespace RX_FFT
                     if (func != null)
                     {
                         func.Call(parameters);
+                        return true;
                     }
                 }
                 catch (Exception e)
                 {
                     LuaShellWindow.AddMessage("Failed to call '" + function + "' in script '" + script.fileName + "': " + e.ToString());
                 }
+            }
+            return false;
+        }
+
+        private bool CallScript(string function, params object[] parameters)
+        {
+            try
+            {
+                return CallScriptInt(function, parameters);
+            }
+            catch(Exception ex)
+            {
             }
             return false;
         }
